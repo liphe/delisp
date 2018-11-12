@@ -1,0 +1,20 @@
+{
+  "name": "delisp-repo",
+  "version": "0.1.0",
+  "description": "A delightful Lisp for Javascript",
+  "repository": "https://github.com/ams-hackers/delisp.git",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "build": "tsc --build packages/",
+    "prettier": "prettier --write '**/*.ts'"
+  },
+  "devDependencies": {
+    "@types/node": "^10.12.5",
+    "prettier": "^1.15.2",
+    "typescript": "^3.1.6"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "private": true
+}

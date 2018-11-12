@@ -1,0 +1,8 @@
+{
+  "files": [],
+  "include": [],
+  "references": [
+    { "path": "delisp/" },
+    { "path": "delisp-core/" }
+  ]
+}

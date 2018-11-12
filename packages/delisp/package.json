@@ -1,0 +1,15 @@
+{
+  "name": "delisp",
+  "version": "0.1.0",
+  "main": "index.js",
+  "license": "GPL-3.0-or-later",
+  "bin": {
+    "delisp": "index.js"
+  },
+  "scripts": {
+    "build": "tsc --build"
+  },
+  "dependencies": {
+    "@delisp/core": "0.1.0"
+  }
+}

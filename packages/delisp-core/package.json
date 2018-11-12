@@ -1,0 +1,9 @@
+{
+  "name": "@delisp/core",
+  "version": "0.1.0",
+  "main": "dist/src/index.js",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "build": "tsc"
+  }
+}
