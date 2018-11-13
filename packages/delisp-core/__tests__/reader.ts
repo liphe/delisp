@@ -13,7 +13,7 @@ describe("Reader", () => {
   //   });
   // });
 
-  it("Should read basic expessions", () => {
+  it("should read basic expessions", () => {
     expect(readFromString("1")).toEqual({ type: "LiteralNumber", value: 1 });
 
     expect(readFromString("x")).toEqual({ type: "LiteralSymbol", value: "x" });
@@ -29,5 +29,19 @@ describe("Reader", () => {
     });
 
     // expect(readFromString("(whatever (stuff)"))
+  });
+
+  it("should parse nested lists", () => {
+    expect(readFromString(" ( 1 ( 2 ) 3 )")).toEqual({
+      type: "List",
+      value: [
+        { type: "LiteralNumber", value: 1 },
+        {
+          type: "List",
+          value: [{ type: "LiteralNumber", value: 2 }]
+        },
+        { type: "LiteralNumber", value: 3 }
+      ]
+    });
   });
 });
