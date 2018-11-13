@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "A delightful Lisp for Javascript",
   "repository": "https://github.com/ams-hackers/delisp.git",
-  "license": "GPL-3.0-or-later",
+  "license": "MIT",
   "scripts": {
     "build": "tsc --build packages/",
     "prettier": "prettier --write '**/*.ts'"
