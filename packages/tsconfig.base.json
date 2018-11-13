@@ -1,12 +1,12 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es6",
     "module": "commonjs",
     
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
+    // "noUnusedLocals": true,
+    // "noUnusedParameters": true,
+    // "noImplicitReturns": true,
 
     "esModuleInterop": true,
     "composite": true
