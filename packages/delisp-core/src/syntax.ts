@@ -8,4 +8,19 @@ export interface Variable {
   name: string;
 }
 
-export type Syntax = LiteralBoolean | Variable;
+export interface LiteralNumber {
+  type: "LiteralNumber";
+  value: number;
+}
+
+export interface LiteralSymbol {
+  type: "LiteralSymbol";
+  value: string;
+}
+
+export interface List {
+  type: "List";
+  value: Array<Syntax>;
+}
+
+export type Syntax = LiteralBoolean | Variable | LiteralNumber | LiteralSymbol | List;
