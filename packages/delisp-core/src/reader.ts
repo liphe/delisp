@@ -37,7 +37,6 @@ class Parser {
 }
 
 const Atom = new Parser(input => {
-  // console.log(input.toString())
   const matches = input.toString().match(/^([^)\s]*)/);
   if (matches === null) {
     throw new Error("Unexpected");
@@ -98,6 +97,7 @@ const Expr = skipSpaces(
   })
 );
 
-console.dir(Expr.parse("(1 (x 2)  3)"), { depth: null });
-
-//  ListExpr.parse('1 2 3)')
+export function readFromString(input: string): Syntax {
+  const [syntax] = Expr.parse(input);
+  return syntax;
+}
