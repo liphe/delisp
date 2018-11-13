@@ -14,13 +14,19 @@ describe("Reader", () => {
   // });
 
   it("Should read basic expessions", () => {
-    expect(readFromString("1")).toEqual({type: "LiteralNumber", value: 1});
+    expect(readFromString("1")).toEqual({ type: "LiteralNumber", value: 1 });
 
-    expect(readFromString("x")).toEqual({type: "LiteralSymbol", value: "x"});
+    expect(readFromString("x")).toEqual({ type: "LiteralSymbol", value: "x" });
 
-    expect(readFromString("()")).toEqual({type: "List", value: []});
+    expect(readFromString("()")).toEqual({ type: "List", value: [] });
 
-    expect(readFromString("(1 2)")).toEqual({type: "List", value: [{type: "LiteralNumber", value: 1}, {type: "LiteralNumber", value: 2}]});
+    expect(readFromString("(1 2)")).toEqual({
+      type: "List",
+      value: [
+        { type: "LiteralNumber", value: 1 },
+        { type: "LiteralNumber", value: 2 }
+      ]
+    });
 
     // expect(readFromString("(whatever (stuff)"))
   });

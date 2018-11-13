@@ -23,4 +23,9 @@ export interface List {
   value: Array<Syntax>;
 }
 
-export type Syntax = LiteralBoolean | Variable | LiteralNumber | LiteralSymbol | List;
+export type Syntax =
+  | LiteralBoolean
+  | Variable
+  | LiteralNumber
+  | LiteralSymbol
+  | List;
