@@ -7,7 +7,8 @@
     "delisp": "index.js"
   },
   "scripts": {
-    "build": "tsc --build"
+    "build": "tsc --build",
+    "test": "true"
   },
   "dependencies": {
     "@delisp/core": "0.1.0"
