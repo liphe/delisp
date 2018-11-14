@@ -6,12 +6,13 @@
 //
 
 export interface Location {
-  offset: number;
+  start: number;
+  end: number;
 }
 
 class Input {
   private input: string;
-  private offset: number;
+  readonly offset: number;
 
   constructor(input: string, offset: number = 0) {
     this.input = input;
@@ -27,10 +28,6 @@ class Input {
 
   toString() {
     return this.input.slice(this.offset);
-  }
-
-  location(): Location {
-    return { offset: this.offset };
   }
 }
 
@@ -77,14 +74,20 @@ export class Parser<A> {
     });
   }
 
-  chain<B>(fn: (value: A) => Parser<B>) {
+  chain<B>(fn: (value: A, location: Location) => Parser<B>) {
     return new Parser<B>((input: Input) => {
       const result = this.run(input);
       if (result.status !== "success") {
         return result;
       }
       const { value, moreInput } = result;
-      return fn(value).run(moreInput);
+
+      const location: Location = {
+        start: input.offset,
+        end: moreInput.offset
+      };
+
+      return fn(value, location).run(moreInput);
     });
   }
 
@@ -117,8 +120,8 @@ export class Parser<A> {
     });
   }
 
-  map<B>(f: (x: A) => B): Parser<B> {
-    return this.chain(a => Parser.of(f(a)));
+  map<B>(f: (x: A, loc: Location) => B): Parser<B> {
+    return this.chain((a, location) => Parser.of(f(a, location)));
   }
 
   //
