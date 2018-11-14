@@ -42,11 +42,13 @@ const symbol: Parser<SExpr> = regex(/[a-zA-Z+<>!@$%^*/-]+/).description(
 
 const atom: Parser<SExpr> = alternatives(number, symbol).description("atom");
 
-const leftParen = spaced(regex(/\(/)).description("open parenthesis");
-const rightParen = spaced(regex(/\)/)).description("close parenthesis");
+const leftParen = regex(/\(/).description("open parenthesis");
+const rightParen = regex(/\)/).description("close parenthesis");
 
 function list<A>(x: Parser<A>) {
-  return leftParen.then(many(x)).skip(rightParen);
+  return spaced(leftParen)
+    .then(many(x))
+    .skip(spaced(rightParen));
 }
 
 const sexpr: Parser<SExpr> = spaced(atom.or(() => list(sexpr)));
