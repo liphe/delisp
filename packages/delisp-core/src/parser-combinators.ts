@@ -112,7 +112,7 @@ export class Parser<A> {
       // back to them later!
       return {
         status: "error",
-        reasons: [...result.reasons, ...alternativeResult.reasons]
+        reasons: [result, alternativeResult]
       };
     });
   }
