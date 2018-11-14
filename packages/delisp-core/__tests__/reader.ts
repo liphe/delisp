@@ -1,11 +1,14 @@
 import { readFromString } from "../src/reader";
 
 describe("Reader", () => {
-  it("should read basic booleans", () => {
-    expect(readFromString("(1 2 3)")).toEqual({
-      type: "LiteralBoolean",
-      value: true
-    });
+  it("should read basic expressions", () => {
+    expect(readFromString("12")).toMatchSnapshot();
+    expect(readFromString("  12  ")).toMatchSnapshot();
+    expect(readFromString("  xyz  ")).toMatchSnapshot();
+    expect(readFromString("()")).toMatchSnapshot();
+    expect(readFromString("(  )")).toMatchSnapshot();
+    expect(readFromString("(1 2 3)")).toMatchSnapshot();
+    expect(readFromString("(1 ( 2 ) 3)")).toMatchSnapshot();
   });
 
   // it.skip("should read basic expessions", () => {
