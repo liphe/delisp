@@ -12,7 +12,7 @@ export type ASExprSymbol = {
   location: Location;
 };
 
-export type ASexprString = {
+export type ASExprString = {
   type: "string";
   value: string;
   location: Location;
@@ -26,4 +26,4 @@ export type ASExprList = {
   location: Location;
 };
 
-export type ASExpr = ASExprNumber | ASExprSymbol | ASexprString | ASExprList;
+export type ASExpr = ASExprNumber | ASExprSymbol | ASExprString | ASExprList;
