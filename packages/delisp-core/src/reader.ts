@@ -46,9 +46,10 @@ const leftParen = regex(/\(/).description("open parenthesis");
 const rightParen = regex(/\)/).description("close parenthesis");
 
 function list<A>(x: Parser<A>) {
-  return spaced(leftParen)
+  return leftParen
     .then(many(x))
-    .skip(spaced(rightParen));
+    .skip(spaces)
+    .skip(rightParen);
 }
 
 const sexpr: Parser<SExpr> = spaced(atom.or(() => list(sexpr)));
