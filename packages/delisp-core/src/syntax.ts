@@ -1,31 +1,23 @@
-export interface LiteralBoolean {
-  type: "LiteralBoolean";
-  value: boolean;
-}
+import { Location } from "./parser-combinators";
 
-export interface Variable {
-  type: "Variable";
-  name: string;
-}
-
-export interface LiteralNumber {
-  type: "LiteralNumber";
+export type ASExprNumber = {
+  type: "number";
   value: number;
-}
+  location: Location;
+};
 
-export interface LiteralSymbol {
-  type: "LiteralSymbol";
-  value: string;
-}
+export type ASExprSymbol = {
+  type: "symbol";
+  name: string;
+  location: Location;
+};
 
-export interface List {
-  type: "List";
-  value: Array<Syntax>;
-}
+export interface SExprArray extends Array<ASExpr> {}
 
-export type Syntax =
-  | LiteralBoolean
-  | Variable
-  | LiteralNumber
-  | LiteralSymbol
-  | List;
+export type ASExprList = {
+  type: "list";
+  elements: SExprArray;
+  location: Location;
+};
+
+export type ASExpr = ASExprNumber | ASExprSymbol | ASExprList;

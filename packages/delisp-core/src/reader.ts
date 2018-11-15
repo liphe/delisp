@@ -16,8 +16,7 @@ import {
   delimited
 } from "./parser-combinators";
 
-type SExpr = number | string | SExprList;
-interface SExprList extends Array<SExpr> {}
+import { ASExpr } from "./syntax";
 
 const spaces = regex(/^\s*/);
 
@@ -25,8 +24,14 @@ function spaced<A>(x: Parser<A>) {
   return delimited(spaces, x, spaces);
 }
 
-const number: Parser<SExpr> = regex(/[0-9]+/)
-  .map(x => parseInt(x, 10))
+const number: Parser<ASExpr> = regex(/[0-9]+/)
+  .map(
+    (string, location): ASExpr => ({
+      type: "number",
+      value: parseInt(string, 10),
+      location
+    })
+  )
   .description("number");
 
 // const doubleQuote = regex(/"/).description("double quote");
@@ -36,23 +41,36 @@ const number: Parser<SExpr> = regex(/[0-9]+/)
 //   "escaped string character"
 // );
 
-const symbol: Parser<SExpr> = regex(/[a-zA-Z+<>!@$%^*/-]+/).description(
-  "symbol"
-);
+const symbol: Parser<ASExpr> = regex(/[a-zA-Z+<>!@$%^*/-]+/)
+  .map(
+    (name, location): ASExpr => ({
+      type: "symbol",
+      name,
+      location
+    })
+  )
+  .description("symbol");
 
-const atom: Parser<SExpr> = alternatives(number, symbol).description("atom");
+const atom: Parser<ASExpr> = alternatives(number, symbol).description("atom");
 
 const leftParen = regex(/\(/).description("open parenthesis");
 const rightParen = regex(/\)/).description("close parenthesis");
 
-function list<A>(x: Parser<A>) {
+function list(x: Parser<ASExpr>): Parser<ASExpr> {
   return leftParen
     .then(many(x))
     .skip(spaces)
-    .skip(rightParen);
+    .skip(rightParen)
+    .map(
+      (elements, location): ASExpr => ({
+        type: "list",
+        elements,
+        location
+      })
+    );
 }
 
-const sexpr: Parser<SExpr> = spaced(atom.or(() => list(sexpr)));
+const sexpr: Parser<ASExpr> = spaced(atom.or(() => list(sexpr)));
 
 //
 // Parser a Delisp expression from a string
