@@ -9,6 +9,9 @@ describe("Reader", () => {
     expect(readFromString("(  )")).toMatchSnapshot();
     expect(readFromString("(1 2 3)")).toMatchSnapshot();
     expect(readFromString("(1 ( 2 ) 3)")).toMatchSnapshot();
+
+    expect(readFromString('  "xyz"  ')).toMatchSnapshot();
+    expect(readFromString('  "a\nb"  ')).toMatchSnapshot();
   });
 
   // it.skip("should read basic expessions", () => {

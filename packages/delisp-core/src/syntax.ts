@@ -12,6 +12,12 @@ export type ASExprSymbol = {
   location: Location;
 };
 
+export type ASexprString = {
+  type: "string";
+  value: string;
+  location: Location;
+};
+
 export interface SExprArray extends Array<ASExpr> {}
 
 export type ASExprList = {
@@ -20,4 +26,4 @@ export type ASExprList = {
   location: Location;
 };
 
-export type ASExpr = ASExprNumber | ASExprSymbol | ASExprList;
+export type ASExpr = ASExprNumber | ASExprSymbol | ASexprString | ASExprList;

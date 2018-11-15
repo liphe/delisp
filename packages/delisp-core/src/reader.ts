@@ -34,12 +34,24 @@ const number: Parser<ASExpr> = regex(/[0-9]+/)
   )
   .description("number");
 
-// const doubleQuote = regex(/"/).description("double quote");
-//
-// const stringChar = regex(/[^"\\]/).description("non-escaped string character");
-// const stringEscapedChar = regex(/\\[n\\]/).description(
-//   "escaped string character"
-// );
+const doubleQuote = regex(/"/).description("double quote");
+
+const stringChar = regex(/[^"\\]/).description("non-escaped string character");
+const stringEscapedChar = regex(/\\[n\\]/).description(
+  "escaped string character"
+);
+const stringConsitutent = alternatives(stringChar, stringEscapedChar);
+
+const string = doubleQuote
+  .then(many(stringConsitutent))
+  .skip(doubleQuote)
+  .map(
+    (chars, location): ASExpr => ({
+      type: "string",
+      value: chars.join(""),
+      location
+    })
+  );
 
 const symbol: Parser<ASExpr> = regex(/[a-zA-Z+<>!@$%^*/-]+/)
   .map(
@@ -51,7 +63,9 @@ const symbol: Parser<ASExpr> = regex(/[a-zA-Z+<>!@$%^*/-]+/)
   )
   .description("symbol");
 
-const atom: Parser<ASExpr> = alternatives(number, symbol).description("atom");
+const atom: Parser<ASExpr> = alternatives(number, string, symbol).description(
+  "atom"
+);
 
 const leftParen = regex(/\(/).description("open parenthesis");
 const rightParen = regex(/\)/).description("close parenthesis");
