@@ -2,8 +2,6 @@
 // reader.ts --- The reader for Delisp
 //
 
-// import { List, Syntax } from "./syntax";
-
 //
 // S-Expression parser
 //
@@ -24,6 +22,9 @@ function spaced<A>(x: Parser<A>) {
   return delimited(spaces, x, spaces);
 }
 
+//
+// Number
+//
 const number: Parser<ASExpr> = regex(/[0-9]+/)
   .map(
     (string, location): ASExpr => ({
@@ -34,24 +35,40 @@ const number: Parser<ASExpr> = regex(/[0-9]+/)
   )
   .description("number");
 
+//
+// String
+//
 const doubleQuote = regex(/"/).description("double quote");
 
 const stringChar = regex(/[^"\\]/).description("non-escaped string character");
-const stringEscapedChar = regex(/\\[n\\]/).description(
-  "escaped string character"
-);
-const stringConsitutent = alternatives(stringChar, stringEscapedChar);
 
-const string = doubleQuote
-  .then(many(stringConsitutent))
-  .skip(doubleQuote)
-  .map(
-    (chars, location): ASExpr => ({
-      type: "string",
-      value: chars.join(""),
-      location
-    })
-  );
+const stringEscapedChar = regex(/\\[n\\]/)
+  .map(escaped => {
+    const ch = escaped[1];
+    switch (ch) {
+      case "n":
+        return "\n";
+      case "\\":
+        return "\\";
+      default:
+        return ch;
+    }
+  })
+  .description("escaped string character");
+
+const stringConstituent = alternatives(stringChar, stringEscapedChar);
+
+const string = delimited(doubleQuote, many(stringConstituent), doubleQuote).map(
+  (chars, location): ASExpr => ({
+    type: "string",
+    value: chars.join(""),
+    location
+  })
+);
+
+//
+// Symbol
+//
 
 const symbol: Parser<ASExpr> = regex(/[a-zA-Z+<>!@$%^*/-]+/)
   .map(
@@ -63,6 +80,10 @@ const symbol: Parser<ASExpr> = regex(/[a-zA-Z+<>!@$%^*/-]+/)
   )
   .description("symbol");
 
+//
+// Lists & S-Expressions
+//
+
 const atom: Parser<ASExpr> = alternatives(number, string, symbol).description(
   "atom"
 );
@@ -71,17 +92,13 @@ const leftParen = regex(/\(/).description("open parenthesis");
 const rightParen = regex(/\)/).description("close parenthesis");
 
 function list(x: Parser<ASExpr>): Parser<ASExpr> {
-  return leftParen
-    .then(many(x))
-    .skip(spaces)
-    .skip(rightParen)
-    .map(
-      (elements, location): ASExpr => ({
-        type: "list",
-        elements,
-        location
-      })
-    );
+  return delimited(leftParen, many(x), spaces.then(rightParen)).map(
+    (elements, location): ASExpr => ({
+      type: "list",
+      elements,
+      location
+    })
+  );
 }
 
 const sexpr: Parser<ASExpr> = spaced(atom.or(() => list(sexpr)));
