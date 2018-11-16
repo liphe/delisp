@@ -1,43 +1,108 @@
 import { readFromString } from "../src/reader";
 
 describe("Reader", () => {
-  it("should read basic expressions", () => {
-    expect(readFromString("12")).toMatchSnapshot();
-    expect(readFromString("  12  ")).toMatchSnapshot();
-    expect(readFromString("  xyz  ")).toMatchSnapshot();
-    expect(readFromString("()")).toMatchSnapshot();
-    expect(readFromString("(  )")).toMatchSnapshot();
-    expect(readFromString("(1 2 3)")).toMatchSnapshot();
-    expect(readFromString("(1 ( 2 ) 3)")).toMatchSnapshot();
+  const readWithLocation = (str: string) => {
+    const result = readFromString(str);
+    if (result.status !== "success") {
+      throw new Error(`Couldn ot read ${str}`);
+    }
+    return result.value;
+  };
 
-    expect(readFromString('  "xyz"  ')).toMatchSnapshot();
-    expect(readFromString('  "a\nb"  ')).toMatchSnapshot();
+  it("should read numbers", () => {
+    expect(readWithLocation("12")).toEqual({
+      type: "number",
+      value: 12,
+      location: { start: 0, end: 2 }
+    });
+    expect(readWithLocation("  12  ")).toEqual({
+      type: "number",
+      value: 12,
+      location: { start: 2, end: 4 }
+    });
   });
 
-  // it.skip("should read basic expessions", () => {
-  //   expect(readFromString("1")).toEqual({ type: "LiteralNumber", value: 1 });
-  //   expect(readFromString("x")).toEqual({ type: "LiteralSymbol", value: "x" });
-  //   expect(readFromString("()")).toEqual({ type: "List", value: [] });
-  //   expect(readFromString("(1 2)")).toEqual({
-  //     type: "List",
-  //     value: [
-  //       { type: "LiteralNumber", value: 1 },
-  //       { type: "LiteralNumber", value: 2 }
-  //     ]
-  //   });
-  //   // expect(readFromString("(whatever (stuff)"))
-  // });
-  // it.skip("should parse nested lists", () => {
-  //   expect(readFromString(" ( 1 ( 2 ) 3 )")).toEqual({
-  //     type: "List",
-  //     value: [
-  //       { type: "LiteralNumber", value: 1 },
-  //       {
-  //         type: "List",
-  //         value: [{ type: "LiteralNumber", value: 2 }]
-  //       },
-  //       { type: "LiteralNumber", value: 3 }
-  //     ]
-  //   });
-  // });
+  it("should read strings", () => {
+    expect(readWithLocation('  "xyz"  ')).toEqual({
+      type: "string",
+      value: "xyz",
+      location: { start: 2, end: 7 }
+    });
+
+    expect(readWithLocation('  "a\\nb"  ')).toEqual({
+      type: "string",
+      value: "a\nb",
+      location: { start: 2, end: 8 }
+    });
+  });
+
+  it("should read symbols", () => {
+    expect(readWithLocation("  xyz  ")).toEqual({
+      type: "symbol",
+      name: "xyz",
+      location: { start: 2, end: 5 }
+    });
+  });
+
+  it("should read lists", () => {
+    expect(readWithLocation("()")).toEqual({
+      type: "list",
+      elements: [],
+      location: { start: 0, end: 2 }
+    });
+    expect(readWithLocation("(  )")).toEqual({
+      type: "list",
+      elements: [],
+      location: { start: 0, end: 4 }
+    });
+    expect(readWithLocation("(1 2 3)")).toEqual({
+      type: "list",
+      elements: [
+        {
+          type: "number",
+          value: 1,
+          location: { start: 1, end: 2 }
+        },
+        {
+          type: "number",
+          value: 2,
+          location: { start: 3, end: 4 }
+        },
+        {
+          type: "number",
+          value: 3,
+          location: { start: 5, end: 6 }
+        }
+      ],
+      location: { start: 0, end: 7 }
+    });
+
+    expect(readWithLocation(" (1 ( 2 ) 3) ")).toEqual({
+      type: "list",
+      elements: [
+        {
+          type: "number",
+          value: 1,
+          location: { start: 2, end: 3 }
+        },
+        {
+          type: "list",
+          elements: [
+            {
+              type: "number",
+              value: 2,
+              location: { start: 6, end: 7 }
+            }
+          ],
+          location: { start: 4, end: 9 }
+        },
+        {
+          type: "number",
+          value: 3,
+          location: { start: 10, end: 11 }
+        }
+      ],
+      location: { start: 1, end: 12 }
+    });
+  });
 });
