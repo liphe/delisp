@@ -11,9 +11,14 @@ const rl = readline.createInterface({
 rl.prompt();
 
 rl.on("line", line => {
-  const syntax = readFromString(line);
-  console.log(syntax);
-  rl.prompt();
+  try {
+    const syntax = readFromString(line);
+    console.log(syntax);
+  } catch (err) {
+    console.error(err);
+  } finally {
+    rl.prompt();
+  }
 }).on("close", () => {
   console.log("\n; bye!");
   process.exit(0);

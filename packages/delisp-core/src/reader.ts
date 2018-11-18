@@ -11,7 +11,8 @@ import {
   regex,
   alternatives,
   many,
-  delimited
+  delimited,
+  getParserError
 } from "./parser-combinators";
 
 import { ASExpr } from "./syntax";
@@ -123,5 +124,11 @@ const sexpr: Parser<ASExpr> = spaced(
 // Parser a Delisp expression from a string
 //
 export function readFromString(str: string) {
-  return sexpr.parse(str);
+  const result = sexpr.parse(str);
+  if (result.status === "success") {
+    return result.value;
+  } else {
+    const message = getParserError(str, result);
+    throw new Error(message);
+  }
 }
