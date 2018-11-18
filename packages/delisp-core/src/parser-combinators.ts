@@ -213,7 +213,6 @@ export const regex = (regex: RegExp) => {
     if (match === null) {
       return {
         status: "error",
-        expected: `match for ${regex}`,
         reasons: [],
         offset: input.offset
       };
@@ -233,8 +232,38 @@ export const regex = (regex: RegExp) => {
 // Error reporting
 //
 
+function repeatChar(ch: string, n: number): string {
+  return Array(n)
+    .fill(ch)
+    .join("");
+}
+
+function printHighlightedSource(
+  message: string,
+  source: string,
+  offset: Offset
+) {
+  const lines = source.split("\n");
+
+  // Calculate the `line` and `column` (0 based) for this offset in
+  // source.
+  let line = 0;
+  let remainingOffset = offset;
+  while (lines.length > line && remainingOffset >= lines[line].length + 1) {
+    remainingOffset -= lines[line].length;
+    line++;
+  }
+  const column = remainingOffset;
+
+  return [
+    `file:${line + 1}:${column}: ${message}`,
+    lines[line],
+    repeatChar("-", column) + "^"
+  ].join("\n");
+}
+
 /** Get a user-friendly error message for a parser error */
-export function getParserError(error: ParserError): string {
+export function getParserError(source: string, error: ParserError): string {
   //
   // A ParseError contains a tree of errors as returned by a parser
   // and its dependencies. Leaves in this tree are where the errors
@@ -279,15 +308,20 @@ export function getParserError(error: ParserError): string {
     }
   }
 
-  // Coalesce nodes of the tree, removing unnecessary nodes
-  function coalesceErrorTree(error: ParserError): ParserError {
-    if (error.expected === undefined && error.reasons.length === 1) {
-      return coalesceErrorTree(error.reasons[0]);
+  // Map leaves of the tree to an array of errors. The function to map
+  // will receive the leave node and the list of ascendant nodes as
+  // well.
+  function mapLeaves<A>(
+    error: ParserError,
+    fn: (error: ParserError, parents: ParserError[]) => A,
+    parents: ParserError[] = []
+  ): A[] {
+    if (error.reasons.length === 0) {
+      return [fn(error, parents)];
     } else {
-      return {
-        ...error,
-        reasons: error.reasons.map(coalesceErrorTree)
-      };
+      return error.reasons
+        .map(e => mapLeaves(e, fn, [e, ...parents]))
+        .reduce((x, y) => [...x, ...y], []);
     }
   }
 
@@ -299,9 +333,24 @@ export function getParserError(error: ParserError): string {
       `Assertion failed. A tree pruned to its maximum offset should not be empty.`
     );
   }
-  const simplifiedTree = coalesceErrorTree(prunedTree);
 
-  console.log(inspect(simplifiedTree, { depth: null }));
+  const errors = mapLeaves(prunedTree, (error, parents) => {
+    return (
+      [error, ...parents].find(e => e.expected !== undefined) || {
+        ...error,
+        expected: "Parsing error"
+      }
+    );
+  });
 
-  return "Unknown error";
+  const expected = errors
+    .map(
+      (err, i) =>
+        i > 0 && i === errors.length - 1 ? `or ${err.expected}` : err.expected
+    )
+    .join(", ");
+
+  const message = `Expected ${expected}`;
+
+  return printHighlightedSource(message, source, offset);
 }

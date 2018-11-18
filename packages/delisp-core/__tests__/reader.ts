@@ -113,11 +113,12 @@ describe("Reader", () => {
       if (result.status === "success") {
         throw new Error(`This test is supposed to fail!`);
       }
-      return getParserError(result);
+      return getParserError(str, result);
     };
 
     expect(failedReadMessage("(1 2 3")).toMatchSnapshot();
     expect(failedReadMessage(")")).toMatchSnapshot();
     expect(failedReadMessage('"foo')).toMatchSnapshot();
+    expect(failedReadMessage('"ab\\xyz"')).toMatchSnapshot();
   });
 });
