@@ -1,0 +1,7 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Reader should generate user-friendly errors 1`] = `"Unknown error"`;
+
+exports[`Reader should generate user-friendly errors 2`] = `"Unknown error"`;
+
+exports[`Reader should generate user-friendly errors 3`] = `"Unknown error"`;

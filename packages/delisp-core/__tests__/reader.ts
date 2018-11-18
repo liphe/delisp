@@ -1,3 +1,4 @@
+import { getParserError } from "../src/parser-combinators";
 import { readFromString } from "../src/reader";
 
 describe("Reader", () => {
@@ -104,5 +105,19 @@ describe("Reader", () => {
       ],
       location: { start: 1, end: 12 }
     });
+  });
+
+  it("should generate user-friendly errors", () => {
+    const failedReadMessage = (str: string) => {
+      const result = readFromString(str);
+      if (result.status === "success") {
+        throw new Error(`This test is supposed to fail!`);
+      }
+      return getParserError(result);
+    };
+
+    expect(failedReadMessage("(1 2 3")).toMatchSnapshot();
+    expect(failedReadMessage(")")).toMatchSnapshot();
+    expect(failedReadMessage('"foo')).toMatchSnapshot();
   });
 });

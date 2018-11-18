@@ -1,5 +1,5 @@
 //
-// reader.ts --- The reader for Delisp
+// reader.ts --- The reader for Deisp
 //
 
 //
@@ -58,13 +58,15 @@ const stringEscapedChar = regex(/\\[n\\]/)
 
 const stringConstituent = alternatives(stringChar, stringEscapedChar);
 
-const string = delimited(doubleQuote, many(stringConstituent), doubleQuote).map(
-  (chars, location): ASExpr => ({
-    type: "string",
-    value: chars.join(""),
-    location
-  })
-);
+const string = delimited(doubleQuote, many(stringConstituent), doubleQuote)
+  .map(
+    (chars, location): ASExpr => ({
+      type: "string",
+      value: chars.join(""),
+      location
+    })
+  )
+  .description("string");
 
 //
 // Symbol
@@ -92,16 +94,30 @@ const leftParen = regex(/\(/).description("open parenthesis");
 const rightParen = regex(/\)/).description("close parenthesis");
 
 function list(x: Parser<ASExpr>): Parser<ASExpr> {
-  return delimited(leftParen, many(x), spaces.then(rightParen)).map(
-    (elements, location): ASExpr => ({
-      type: "list",
-      elements,
-      location
-    })
-  );
+  return delimited(leftParen, many(x), spaces.then(rightParen))
+    .map(
+      (elements, location): ASExpr => ({
+        type: "list",
+        elements,
+        location
+      })
+    )
+    .description("list");
 }
 
-const sexpr: Parser<ASExpr> = spaced(atom.or(() => list(sexpr)));
+const reportUnmatched: Parser<{}> = Parser.lookahead(rightParen).chain(
+  closed => {
+    if (closed) {
+      return Parser.fail("Unmatched closed parenthesis");
+    } else {
+      return Parser.of({});
+    }
+  }
+);
+
+const sexpr: Parser<ASExpr> = spaced(
+  reportUnmatched.then(atom.or(() => list(sexpr)))
+);
 
 //
 // Parser a Delisp expression from a string
