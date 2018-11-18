@@ -2,21 +2,13 @@ import { getParserError } from "../src/parser-combinators";
 import { readFromString } from "../src/reader";
 
 describe("Reader", () => {
-  const readWithLocation = (str: string) => {
-    const result = readFromString(str);
-    if (result.status !== "success") {
-      throw new Error(`Couldn ot read ${str}`);
-    }
-    return result.value;
-  };
-
   it("should read numbers", () => {
-    expect(readWithLocation("12")).toEqual({
+    expect(readFromString("12")).toEqual({
       type: "number",
       value: 12,
       location: { start: 0, end: 2 }
     });
-    expect(readWithLocation("  12  ")).toEqual({
+    expect(readFromString("  12  ")).toEqual({
       type: "number",
       value: 12,
       location: { start: 2, end: 4 }
@@ -24,13 +16,13 @@ describe("Reader", () => {
   });
 
   it("should read strings", () => {
-    expect(readWithLocation('  "xyz"  ')).toEqual({
+    expect(readFromString('  "xyz"  ')).toEqual({
       type: "string",
       value: "xyz",
       location: { start: 2, end: 7 }
     });
 
-    expect(readWithLocation('  "a\\nb"  ')).toEqual({
+    expect(readFromString('  "a\\nb"  ')).toEqual({
       type: "string",
       value: "a\nb",
       location: { start: 2, end: 8 }
@@ -38,7 +30,7 @@ describe("Reader", () => {
   });
 
   it("should read symbols", () => {
-    expect(readWithLocation("  xyz  ")).toEqual({
+    expect(readFromString("  xyz  ")).toEqual({
       type: "symbol",
       name: "xyz",
       location: { start: 2, end: 5 }
@@ -46,17 +38,17 @@ describe("Reader", () => {
   });
 
   it("should read lists", () => {
-    expect(readWithLocation("()")).toEqual({
+    expect(readFromString("()")).toEqual({
       type: "list",
       elements: [],
       location: { start: 0, end: 2 }
     });
-    expect(readWithLocation("(  )")).toEqual({
+    expect(readFromString("(  )")).toEqual({
       type: "list",
       elements: [],
       location: { start: 0, end: 4 }
     });
-    expect(readWithLocation("(1 2 3)")).toEqual({
+    expect(readFromString("(1 2 3)")).toEqual({
       type: "list",
       elements: [
         {
@@ -78,7 +70,7 @@ describe("Reader", () => {
       location: { start: 0, end: 7 }
     });
 
-    expect(readWithLocation(" (1 ( 2 ) 3) ")).toEqual({
+    expect(readFromString(" (1 ( 2 ) 3) ")).toEqual({
       type: "list",
       elements: [
         {
@@ -108,17 +100,17 @@ describe("Reader", () => {
   });
 
   it("should generate user-friendly errors", () => {
-    const failedReadMessage = (str: string) => {
-      const result = readFromString(str);
-      if (result.status === "success") {
-        throw new Error(`This test is supposed to fail!`);
+    const failedRead = (x: string) => {
+      try {
+        readFromString(x);
+        throw new Error(`This expression didn't fail!`);
+      } catch (err) {
+        return err.message;
       }
-      return getParserError(str, result);
     };
-
-    expect(failedReadMessage("(1 2 3")).toMatchSnapshot();
-    expect(failedReadMessage(")")).toMatchSnapshot();
-    expect(failedReadMessage('"foo')).toMatchSnapshot();
-    expect(failedReadMessage('"ab\\xyz"')).toMatchSnapshot();
+    expect(failedRead("(1 2 3")).toMatchSnapshot();
+    expect(failedRead(")")).toMatchSnapshot();
+    expect(failedRead('"foo')).toMatchSnapshot();
+    expect(failedRead('"ab\\xyz"')).toMatchSnapshot();
   });
 });
