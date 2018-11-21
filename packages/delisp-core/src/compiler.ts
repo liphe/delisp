@@ -1,4 +1,4 @@
-import { ASExpr, ASExprSymbol } from "./syntax";
+import { ASExpr, ASExprSymbol, ASExprList } from "./syntax";
 import * as recast from "recast";
 
 const debug = require("debug")("delisp:compiler");
@@ -70,8 +70,6 @@ function compileDefinition(args: ASExpr[], env: Environment): JSAST {
 function compileList(fn: ASExpr, args: ASExpr[], env: Environment): JSAST {
   if (fn.type === "symbol") {
     switch (fn.name) {
-      case "define":
-        return compileDefinition(args, env);
       case "lambda":
         return compileLambda(args, env);
     }
@@ -126,6 +124,23 @@ export function compile(syntax: ASExpr, env: Environment): JSAST {
   }
 }
 
+function isSpecialForm(syntax: ASExprList, name: string) {
+  if (syntax.elements.length > 0) {
+    const first = syntax.elements[0];
+    return first.type === "symbol" && first.name === name;
+  } else {
+    return false;
+  }
+}
+
+function compileTopLevel(syntax: ASExpr, env: Environment): JSAST {
+  if (syntax.type === "list" && isSpecialForm(syntax, "define")) {
+    return compileDefinition(syntax.elements.slice(1), env);
+  } else {
+    return compile(syntax, env);
+  }
+}
+
 export function compileModule(syntax: ASExpr): JSAST {
   return {
     type: "File",
@@ -135,7 +150,7 @@ export function compileModule(syntax: ASExpr): JSAST {
       body: [
         {
           type: "ExpressionStatement",
-          expression: compile(syntax, {})
+          expression: compileTopLevel(syntax, {})
         }
       ]
     }
