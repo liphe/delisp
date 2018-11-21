@@ -3,14 +3,14 @@ import * as vm from "vm";
 
 import { readFromString, compileToString } from "@delisp/core";
 
-const debug = require('debug')('delisp:repl')
+const debug = require("debug")("delisp:repl");
 
 const sandbox = {
   env: {
     foo: 42,
     log: (...args: any) => console.log(...args),
-    '+': (a: number, b: number) => a + b,
-    '*': (a: number, b: number) => a * b,
+    "+": (a: number, b: number) => a + b,
+    "*": (a: number, b: number) => a * b
   }
 };
 vm.createContext(sandbox);
@@ -22,9 +22,9 @@ const delispEval = (
   callback: Function
 ) => {
   const ast = readFromString(cmd);
-  debug('delispast:', ast)
+  debug("delispast:", ast);
   const code = compileToString(ast);
-  debug({code})
+  debug({ code });
   const result = vm.runInContext(code, sandbox);
   callback(null, result);
 };

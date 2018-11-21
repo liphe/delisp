@@ -344,9 +344,8 @@ export function getParserError(source: string, error: ParserError): string {
   });
 
   const expected = errors
-    .map(
-      (err, i) =>
-        i > 0 && i === errors.length - 1 ? `or ${err.expected}` : err.expected
+    .map((err, i) =>
+      i > 0 && i === errors.length - 1 ? `or ${err.expected}` : err.expected
     )
     .join(", ");
 

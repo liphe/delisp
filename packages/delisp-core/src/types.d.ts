@@ -1,3 +1,3 @@
-declare module 'recast' {
-  export function print(ast: object): { code: string }
+declare module "recast" {
+  export function print(ast: object): { code: string };
 }
