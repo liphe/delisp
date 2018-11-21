@@ -11,6 +11,8 @@
     "test": "true"
   },
   "dependencies": {
-    "@delisp/core": "0.1.0"
+    "@delisp/core": "0.1.0",
+    "@types/debug": "^0.0.31",
+    "debug": "^4.1.0"
   }
 }
