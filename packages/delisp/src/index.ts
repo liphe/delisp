@@ -1,19 +1,5 @@
 import repl from "repl";
-import * as vm from "vm";
-
-import { readFromString, compileToString } from "@delisp/core";
-
-const debug = require("debug")("delisp:repl");
-
-const sandbox = {
-  env: {
-    foo: 42,
-    log: (...args: any) => console.log(...args),
-    "+": (a: number, b: number) => a + b,
-    "*": (a: number, b: number) => a * b
-  }
-};
-vm.createContext(sandbox);
+import { readFromString, evaluate } from "@delisp/core";
 
 const delispEval = (
   cmd: string,
@@ -21,11 +7,8 @@ const delispEval = (
   _filename: string,
   callback: Function
 ) => {
-  const ast = readFromString(cmd);
-  debug("delispast:", ast);
-  const code = compileToString(ast);
-  debug({ code });
-  const result = vm.runInContext(code, sandbox);
+  const syntax = readFromString(cmd);
+  const result = evaluate(syntax);
   callback(null, result);
 };
 
