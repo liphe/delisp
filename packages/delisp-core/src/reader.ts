@@ -26,7 +26,7 @@ function spaced<A>(x: Parser<A>) {
 //
 // Number
 //
-const number: Parser<ASExpr> = regex(/[0-9]+/)
+const number: Parser<ASExpr> = regex(/-?[0-9]+/)
   .map(
     (string, location): ASExpr => ({
       type: "number",

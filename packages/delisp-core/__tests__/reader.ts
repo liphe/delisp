@@ -13,6 +13,11 @@ describe("Reader", () => {
       value: 12,
       location: { start: 2, end: 4 }
     });
+    expect(readFromString("  -12  ")).toEqual({
+      type: "number",
+      value: -12,
+      location: { start: 2, end: 5 }
+    });
   });
 
   it("should read strings", () => {
