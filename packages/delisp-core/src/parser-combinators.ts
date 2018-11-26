@@ -49,6 +49,7 @@ interface ParserSuccess<A> {
 interface ParserError {
   status: "error";
   expected?: string;
+  incomplete: boolean;
   reasons: ParserError[];
   offset: Offset;
 }
@@ -71,6 +72,7 @@ export class Parser<A> {
     return new Parser(input => ({
       status: "error",
       expected: message,
+      incomplete: false,
       reasons: [],
       offset: input.offset
     }));
@@ -96,6 +98,7 @@ export class Parser<A> {
         return {
           status: "error",
           expected: desc,
+          incomplete: result.incomplete,
           reasons: [result],
           offset: input.offset
         };
@@ -145,6 +148,7 @@ export class Parser<A> {
       return {
         status: "error",
         reasons: [result, alternativeResult],
+        incomplete: result.incomplete || alternativeResult.incomplete,
         offset: input.offset
       };
     });
@@ -208,6 +212,7 @@ export const character = (expected?: String) => {
       return {
         status: "error",
         reasons: [],
+        incomplete: true,
         offset: input.offset
       };
     }
@@ -216,6 +221,7 @@ export const character = (expected?: String) => {
       return {
         status: "error",
         reasons: [],
+        incomplete: false,
         offset: input.offset
       };
     }

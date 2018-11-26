@@ -169,6 +169,8 @@ export function readFromString(str: string) {
     return result.value;
   } else {
     const message = getParserError(str, result);
-    throw new Error(message);
+    const err = new Error(message);
+    (err as any).incomplete = result.incomplete;
+    throw err;
   }
 }

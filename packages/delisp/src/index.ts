@@ -7,7 +7,16 @@ const delispEval = (
   _filename: string,
   callback: Function
 ) => {
-  const syntax = readFromString(cmd);
+  let syntax;
+  try {
+    syntax = readFromString(cmd);
+  } catch (err) {
+    if (err.incomplete) {
+      return callback(new repl.Recoverable(err));
+    } else {
+      throw err;
+    }
+  }
   const result = evaluate(syntax);
   callback(null, result);
 };
