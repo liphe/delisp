@@ -119,4 +119,24 @@ describe("Reader", () => {
     expect(failedRead('"ab\\xyz"')).toMatchSnapshot();
     expect(failedRead('"abc\\')).toMatchSnapshot();
   });
+
+  it("should detect incomplete inputs", () => {
+    const read = (x: string) => {
+      try {
+        readFromString(x);
+        return undefined;
+      } catch (err) {
+        return err.incomplete;
+      }
+    };
+    expect(read("(1 2 3")).toBe(true);
+    expect(read(")")).toBe(false);
+    expect(read('"foo')).toBe(true);
+    expect(read('"ab\\xyz"')).toBe(false);
+    //
+    // TODO: This is not detected because many() will return
+    // successfully and not compute the rest of the string.
+    //
+    // expect(read('"abc\\')).toBe(true);
+  });
 });
