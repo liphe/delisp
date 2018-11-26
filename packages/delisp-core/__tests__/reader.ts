@@ -117,5 +117,6 @@ describe("Reader", () => {
     expect(failedRead(")")).toMatchSnapshot();
     expect(failedRead('"foo')).toMatchSnapshot();
     expect(failedRead('"ab\\xyz"')).toMatchSnapshot();
+    expect(failedRead('"abc\\')).toMatchSnapshot();
   });
 });

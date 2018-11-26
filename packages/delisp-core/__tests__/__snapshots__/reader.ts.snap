@@ -23,3 +23,9 @@ exports[`Reader should generate user-friendly errors 4`] = `
 \\"ab\\\\xyz\\"
 ---^"
 `;
+
+exports[`Reader should generate user-friendly errors 5`] = `
+"file:1:4: Expected double quote
+\\"abc\\\\
+----^"
+`;

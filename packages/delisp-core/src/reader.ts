@@ -8,29 +8,56 @@
 
 import {
   Parser,
-  regex,
+  character,
   alternatives,
   many,
+  atLeastOne,
   delimited,
   getParserError
 } from "./parser-combinators";
 
 import { ASExpr } from "./syntax";
 
-const spaces = regex(/^\s*/);
+const spaces = many(
+  alternatives(character(" "), character("\t"), character("\n"))
+);
 
 function spaced<A>(x: Parser<A>) {
   return delimited(spaces, x, spaces);
 }
 
+const alphanumeric = character().chain(char => {
+  if (/[a-zA-Z0-1]/.test(char)) {
+    return Parser.of(char);
+  } else {
+    return Parser.fail("Expected an alphanumeric character");
+  }
+});
+
+const digit = character().chain(char => {
+  if (/[0-9]/.test(char)) {
+    return Parser.of(char);
+  } else {
+    return Parser.fail("Expected a digit");
+  }
+});
+
 //
 // Number
 //
-const number: Parser<ASExpr> = regex(/-?[0-9]+/)
+
+const unsignedInteger: Parser<number> = atLeastOne(digit).map(digits =>
+  parseInt(digits.join(""), 10)
+);
+const negativeInteger: Parser<number> = character("-")
+  .chain(_ => unsignedInteger)
+  .map(num => -num);
+
+const number: Parser<ASExpr> = alternatives(negativeInteger, unsignedInteger)
   .map(
-    (string, location): ASExpr => ({
+    (val, location): ASExpr => ({
       type: "number",
-      value: parseInt(string, 10),
+      value: val,
       location
     })
   )
@@ -39,27 +66,21 @@ const number: Parser<ASExpr> = regex(/-?[0-9]+/)
 //
 // String
 //
-const doubleQuote = regex(/"/).description("double quote");
+const doubleQuote = character('"').description("double quote");
 
-const stringChar = regex(/[^"\\]/).description("non-escaped string character");
-
-const stringEscapedChar = regex(/\\[n\\]/)
-  .map(escaped => {
-    const ch = escaped[1];
-    switch (ch) {
-      case "n":
-        return "\n";
-      case "\\":
-        return "\\";
-      default:
-        return ch;
+const stringChar = character()
+  .chain(char => {
+    if (char === '"') {
+      return Parser.fail("Not inside string");
     }
+    if (char === "\\") {
+      return alternatives(character("n").map(_ => "\n"), character("\\"));
+    }
+    return Parser.of(char);
   })
   .description("escaped string character");
 
-const stringConstituent = alternatives(stringChar, stringEscapedChar);
-
-const string = delimited(doubleQuote, many(stringConstituent), doubleQuote)
+const string = delimited(doubleQuote, many(stringChar), doubleQuote)
   .map(
     (chars, location): ASExpr => ({
       type: "string",
@@ -73,11 +94,30 @@ const string = delimited(doubleQuote, many(stringConstituent), doubleQuote)
 // Symbol
 //
 
-const symbol: Parser<ASExpr> = regex(/[a-zA-Z+<>!@$%^*/-]+/)
+const symbol: Parser<ASExpr> = atLeastOne(
+  alternatives(
+    alphanumeric,
+    character("!"),
+    character("@"),
+    character("#"),
+    character("$"),
+    character("%"),
+    character("^"),
+    character("&"),
+    character("*"),
+    character("<"),
+    character(">"),
+    character("+"),
+    character("-"),
+    character("/"),
+    character("~"),
+    character("?")
+  )
+)
   .map(
-    (name, location): ASExpr => ({
+    (chars, location): ASExpr => ({
       type: "symbol",
-      name,
+      name: chars.join(""),
       location
     })
   )
@@ -91,8 +131,8 @@ const atom: Parser<ASExpr> = alternatives(number, string, symbol).description(
   "atom"
 );
 
-const leftParen = regex(/\(/).description("open parenthesis");
-const rightParen = regex(/\)/).description("close parenthesis");
+const leftParen = character("(").description("open parenthesis");
+const rightParen = character(")").description("close parenthesis");
 
 function list(x: Parser<ASExpr>): Parser<ASExpr> {
   return delimited(leftParen, many(x), spaces.then(rightParen))

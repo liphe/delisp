@@ -192,25 +192,19 @@ export function many<A>(parser: Parser<A>): Parser<A[]> {
     .or(() => Parser.of([]));
 }
 
+export function atLeastOne<A>(parser: Parser<A>): Parser<A[]> {
+  return parser.chain(first => many(parser).map(rest => [first, ...rest]));
+}
+
 //
 // Primitive parsers
 //
 
-function flags(re: RegExp) {
-  var s = "" + re;
-  return s.slice(s.lastIndexOf("/") + 1);
-}
-
-function anchoredRegexp(re: RegExp) {
-  return RegExp("^(?:" + re.source + ")", flags(re));
-}
-
-export const regex = (regex: RegExp) => {
-  const anchored = anchoredRegexp(regex);
+export const character = (expected?: String) => {
   return new Parser<string>(input => {
-    const match = anchored.exec(input.toString());
+    const [char, moreInput] = input.readChars(1);
 
-    if (match === null) {
+    if (char === "") {
       return {
         status: "error",
         reasons: [],
@@ -218,11 +212,18 @@ export const regex = (regex: RegExp) => {
       };
     }
 
-    const value = match[0];
-    const [, moreInput] = input.readChars(value.length);
+    if (typeof expected !== "undefined" && char !== expected) {
+      return {
+        status: "error",
+        reasons: [],
+        offset: input.offset
+      };
+    }
+
     return {
       status: "success",
-      value,
+      value: char,
+      reasons: [],
       moreInput
     };
   });
