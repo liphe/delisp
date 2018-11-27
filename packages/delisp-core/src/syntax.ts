@@ -1,29 +1,29 @@
 import { Location } from "./input";
 
-export type ASExprNumber = {
+export interface ASExprNumber {
   type: "number";
   value: number;
   location: Location;
-};
+}
 
-export type ASExprSymbol = {
+export interface ASExprSymbol {
   type: "symbol";
   name: string;
   location: Location;
-};
+}
 
-export type ASExprString = {
+export interface ASExprString {
   type: "string";
   value: string;
   location: Location;
-};
+}
 
 export interface SExprArray extends Array<ASExpr> {}
 
-export type ASExprList = {
+export interface ASExprList {
   type: "list";
   elements: SExprArray;
   location: Location;
-};
+}
 
 export type ASExpr = ASExprNumber | ASExprSymbol | ASExprString | ASExprList;
