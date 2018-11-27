@@ -3,17 +3,17 @@ import { readFromString } from "../src/reader";
 
 describe("Reader", () => {
   it("should read numbers", () => {
-    expect(readFromString("12")).toEqual({
+    expect(readFromString("12")).toMatchObject({
       type: "number",
       value: 12,
       location: { start: 0, end: 2 }
     });
-    expect(readFromString("  12  ")).toEqual({
+    expect(readFromString("  12  ")).toMatchObject({
       type: "number",
       value: 12,
       location: { start: 2, end: 4 }
     });
-    expect(readFromString("  -12  ")).toEqual({
+    expect(readFromString("  -12  ")).toMatchObject({
       type: "number",
       value: -12,
       location: { start: 2, end: 5 }
@@ -21,13 +21,13 @@ describe("Reader", () => {
   });
 
   it("should read strings", () => {
-    expect(readFromString('  "xyz"  ')).toEqual({
+    expect(readFromString('  "xyz"  ')).toMatchObject({
       type: "string",
       value: "xyz",
       location: { start: 2, end: 7 }
     });
 
-    expect(readFromString('  "a\\nb"  ')).toEqual({
+    expect(readFromString('  "a\\nb"  ')).toMatchObject({
       type: "string",
       value: "a\nb",
       location: { start: 2, end: 8 }
@@ -35,7 +35,7 @@ describe("Reader", () => {
   });
 
   it("should read symbols", () => {
-    expect(readFromString("  xyz  ")).toEqual({
+    expect(readFromString("  xyz  ")).toMatchObject({
       type: "symbol",
       name: "xyz",
       location: { start: 2, end: 5 }
@@ -43,17 +43,17 @@ describe("Reader", () => {
   });
 
   it("should read lists", () => {
-    expect(readFromString("()")).toEqual({
+    expect(readFromString("()")).toMatchObject({
       type: "list",
       elements: [],
       location: { start: 0, end: 2 }
     });
-    expect(readFromString("(  )")).toEqual({
+    expect(readFromString("(  )")).toMatchObject({
       type: "list",
       elements: [],
       location: { start: 0, end: 4 }
     });
-    expect(readFromString("(1 2 3)")).toEqual({
+    expect(readFromString("(1 2 3)")).toMatchObject({
       type: "list",
       elements: [
         {
@@ -75,7 +75,7 @@ describe("Reader", () => {
       location: { start: 0, end: 7 }
     });
 
-    expect(readFromString(" (1 ( 2 ) 3) ")).toEqual({
+    expect(readFromString(" (1 ( 2 ) 3) ")).toMatchObject({
       type: "list",
       elements: [
         {
