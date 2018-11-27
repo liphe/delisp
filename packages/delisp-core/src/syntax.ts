@@ -1,4 +1,4 @@
-import { Location } from "./parser-combinators";
+import { Location } from "./input";
 
 export type ASExprNumber = {
   type: "number";

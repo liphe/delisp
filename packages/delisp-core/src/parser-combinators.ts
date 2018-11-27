@@ -6,37 +6,7 @@
  */
 
 import { printHighlightedSource } from "./error-report";
-
-type Offset = number;
-
-/** Start and end offset in the original input of a parsed value. */
-export interface Location {
-  start: Offset;
-  end: Offset;
-}
-
-// Input for the parsers. It keeps track of the current offset, so we
-// can build `Location` objects out of it.
-class Input {
-  private input: string;
-  readonly offset: Offset;
-
-  constructor(input: string, offset: Offset = 0) {
-    this.input = input;
-    this.offset = offset;
-  }
-
-  readChars(n: number): [string, Input] {
-    return [
-      this.input.slice(this.offset, this.offset + n),
-      new Input(this.input, this.offset + n)
-    ];
-  }
-
-  toString() {
-    return this.input.slice(this.offset);
-  }
-}
+import { Input, Offset, Location } from "./input";
 
 export type ParserResult<A> = ParserSuccess<A> | ParserError;
 
@@ -115,6 +85,7 @@ export class Parser<A> {
       const { value, moreInput } = result;
 
       const location: Location = {
+        input,
         start: input.offset,
         end: moreInput.offset
       };
