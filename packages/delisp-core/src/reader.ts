@@ -75,7 +75,10 @@ const stringChar = character()
       return Parser.fail("Not inside string");
     }
     if (char === "\\") {
-      return alternatives(character("n").map(_ => "\n"), character("\\"));
+      return alternatives(
+        character("n").map(_ => "\n"),
+        character("\\")
+      ).description("escaped string character");
     }
     return Parser.of(char);
   })
