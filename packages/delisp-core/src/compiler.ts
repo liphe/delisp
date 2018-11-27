@@ -1,4 +1,6 @@
 import { ASExpr, ASExprSymbol, ASExprList } from "./syntax";
+import { printHighlightedExpr } from "./error-report";
+
 import * as recast from "recast";
 
 const debug = require("debug")("delisp:compiler");
@@ -8,18 +10,43 @@ interface Environment {
   [symbol: string]: { symbol: ASExprSymbol; jsVar: string };
 }
 
-function parseLambdaList(x: ASExpr): ASExprSymbol[] {
-  if (x.type !== "list")
-    throw new Error("First argument of lambda should be a list");
+/** Return the last element of a list, or undefined if it is empty */
+function last<A>(x: A[]): A | undefined {
+  return x[x.length - 1];
+}
 
-  if (!x.elements.every(param => param.type === "symbol"))
-    throw new Error("First argument of lambda should be a list of symbols");
+function parseLambdaList(x: ASExpr): ASExprSymbol[] {
+  if (x.type !== "list") {
+    throw new Error(printHighlightedExpr("Expected a list of arguments", x));
+  }
+  x.elements.forEach(arg => {
+    if (arg.type !== "symbol") {
+      throw new Error(
+        printHighlightedExpr(
+          "A list of arguments should be made of symbols",
+          arg
+        )
+      );
+    }
+  });
 
   return x.elements as ASExprSymbol[];
 }
 
-function compileLambda(args: ASExpr[], env: Environment): JSAST {
-  if (args.length !== 2) throw new Error("Lambda needs exactly 2 arguments");
+function compileLambda(
+  lambda: ASExpr,
+  args: ASExpr[],
+  env: Environment
+): JSAST {
+  if (args.length !== 2) {
+    throw new Error(
+      printHighlightedExpr(
+        `'lambda' needs exactly 2 arguments, got ${args.length}`,
+        last([lambda, ...args]) as ASExpr, // we know it is not empty!
+        true
+      )
+    );
+  }
 
   const params = parseLambdaList(args[0]);
 
@@ -41,12 +68,27 @@ function compileLambda(args: ASExpr[], env: Environment): JSAST {
   };
 }
 
-function compileDefinition(args: ASExpr[], env: Environment): JSAST {
-  if (args.length !== 2) throw new Error("Define needs exactly 2 arguments");
+function compileDefinition(
+  define: ASExpr,
+  args: ASExpr[],
+  env: Environment
+): JSAST {
+  if (args.length !== 2) {
+    throw new Error(
+      printHighlightedExpr(
+        `'define' needs exactly 2 arguments, got ${args.length}`,
+        last([define, ...args]) as ASExpr,
+        true
+      )
+    );
+  }
+  const [variable, value] = args;
 
-  const variable = args[0];
-  if (variable.type !== "symbol")
-    throw new Error("First argument of define should be a symbol");
+  if (variable.type !== "symbol") {
+    throw new Error(
+      printHighlightedExpr("'define' expected a symbol", variable)
+    );
+  }
 
   return {
     type: "AssignmentExpression",
@@ -63,7 +105,7 @@ function compileDefinition(args: ASExpr[], env: Environment): JSAST {
         value: variable.name
       }
     },
-    right: compile(args[1], env)
+    right: compile(value, env)
   };
 }
 
@@ -71,7 +113,7 @@ function compileList(fn: ASExpr, args: ASExpr[], env: Environment): JSAST {
   if (fn.type === "symbol") {
     switch (fn.name) {
       case "lambda":
-        return compileLambda(args, env);
+        return compileLambda(fn, args, env);
     }
   }
 
@@ -135,7 +177,8 @@ function isSpecialForm(syntax: ASExprList, name: string) {
 
 function compileTopLevel(syntax: ASExpr, env: Environment): JSAST {
   if (syntax.type === "list" && isSpecialForm(syntax, "define")) {
-    return compileDefinition(syntax.elements.slice(1), env);
+    const [define, ...args] = syntax.elements;
+    return compileDefinition(define, args, env);
   } else {
     return compile(syntax, env);
   }

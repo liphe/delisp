@@ -1,0 +1,55 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Compiler Error messages generate nice error message for invalid definitions 1`] = `
+"file:1:7: 'define' needs exactly 2 arguments, got 0
+(define)
+-------^"
+`;
+
+exports[`Compiler Error messages generate nice error message for invalid definitions 2`] = `
+"file:1:9: 'define' needs exactly 2 arguments, got 1
+(define 5)
+---------^"
+`;
+
+exports[`Compiler Error messages generate nice error message for invalid definitions 3`] = `
+"file:1:9: 'define' needs exactly 2 arguments, got 1
+(define x)
+---------^"
+`;
+
+exports[`Compiler Error messages generate nice error message for invalid definitions 4`] = `
+"file:1:8: 'define' expected a symbol
+(define 4 2)
+--------^"
+`;
+
+exports[`Compiler Error messages generate nice error message for invalid lambda expressions 1`] = `
+"file:1:7: 'lambda' needs exactly 2 arguments, got 0
+(lambda)
+-------^"
+`;
+
+exports[`Compiler Error messages generate nice error message for invalid lambda expressions 2`] = `
+"file:1:9: 'lambda' needs exactly 2 arguments, got 1
+(lambda 7)
+---------^"
+`;
+
+exports[`Compiler Error messages generate nice error message for invalid lambda expressions 3`] = `
+"file:1:8: Expected a list of arguments
+(lambda 7 5)
+--------^"
+`;
+
+exports[`Compiler Error messages generate nice error message for invalid lambda expressions 4`] = `
+"file:1:9: A list of arguments should be made of symbols
+(lambda (7) x)
+---------^"
+`;
+
+exports[`Compiler Error messages generate nice error message for invalid lambda expressions 5`] = `
+"file:1:11: A list of arguments should be made of symbols
+(lambda (x 7) x)
+-----------^"
+`;
