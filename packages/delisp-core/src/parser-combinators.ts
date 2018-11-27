@@ -369,9 +369,14 @@ export function getParserError(source: string, error: ParserError): string {
     );
   });
 
-  const expected = errors
-    .map((err, i) =>
-      i > 0 && i === errors.length - 1 ? `or ${err.expected}` : err.expected
+  const uniqueErrors = [...new Set(errors)];
+
+  const expected = uniqueErrors
+    .map(
+      (err, i) =>
+        i > 0 && i === uniqueErrors.length - 1
+          ? `or ${err.expected}`
+          : err.expected
     )
     .join(", ");
 
