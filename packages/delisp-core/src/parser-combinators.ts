@@ -5,7 +5,7 @@
  * expected to parse to facilitate generating friendly error messages.
  */
 
-import { inspect } from "util";
+import { printHighlightedSource } from "./error-report";
 
 type Offset = number;
 
@@ -257,36 +257,6 @@ export const character = (expected?: String) => {
 //
 // Error reporting
 //
-
-function repeatChar(ch: string, n: number): string {
-  return Array(n)
-    .fill(ch)
-    .join("");
-}
-
-function printHighlightedSource(
-  message: string,
-  source: string,
-  offset: Offset
-) {
-  const lines = source.split("\n");
-
-  // Calculate the `line` and `column` (0 based) for this offset in
-  // source.
-  let line = 0;
-  let remainingOffset = offset;
-  while (lines.length > line && remainingOffset >= lines[line].length + 1) {
-    remainingOffset -= lines[line].length;
-    line++;
-  }
-  const column = remainingOffset;
-
-  return [
-    `file:${line + 1}:${column}: ${message}`,
-    lines[line],
-    repeatChar("-", column) + "^"
-  ].join("\n");
-}
 
 /** Get a user-friendly error message for a parser error */
 export function getParserError(source: string, error: ParserError): string {
