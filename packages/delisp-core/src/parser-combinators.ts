@@ -131,7 +131,7 @@ export class Parser<A> {
     return this.chain(x => p.map(_ignored => x));
   }
 
-  or(makeAlternative: () => Parser<A>) {
+  or(makeAlternative: (err: ParserError) => Parser<A>) {
     return new Parser((input: Input) => {
       // Try the current parser
       const result = this.run(input);
@@ -139,7 +139,7 @@ export class Parser<A> {
         return result;
       }
       // Try the alternative parser
-      const alternativeResult = makeAlternative().run(input);
+      const alternativeResult = makeAlternative(result).run(input);
       if (alternativeResult.status === "success") {
         return alternativeResult;
       }
