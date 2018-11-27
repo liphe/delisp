@@ -230,7 +230,7 @@ export const character = (expected?: string) => {
 //
 
 /** Get a user-friendly error message for a parser error */
-export function getParserError(source: string, error: ParserError): string {
+export function getParserError(source: string, rootError: ParserError): string {
   //
   // A ParseError contains a tree of errors as returned by a parser
   // and its dependencies. Leaves in this tree are where the errors
@@ -293,8 +293,8 @@ export function getParserError(source: string, error: ParserError): string {
   }
 
   // Process the error tree
-  const offset = maxOffset(error);
-  const prunedTree = pruneErrorTree(error, offset);
+  const offset = maxOffset(rootError);
+  const prunedTree = pruneErrorTree(rootError, offset);
   if (prunedTree === null) {
     throw new Error(
       `Assertion failed. A tree pruned to its maximum offset should not be empty.`
