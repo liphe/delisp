@@ -179,6 +179,25 @@ export function delimited<A>(
   return left.then(p).skip(right);
 }
 
+export function until<A>(
+  delimiter: Parser<unknown>,
+  parser: Parser<A>
+): Parser<A[]> {
+  return delimiter.map(_ => [] as A[]).or(err => {
+    return parser.chain(first => {
+      return until(delimiter, parser).map(rest => [first, ...rest]);
+    });
+  });
+}
+
+export function delimitedMany<A>(
+  left: Parser<unknown>,
+  p: Parser<A>,
+  right: Parser<unknown>
+): Parser<A[]> {
+  return left.then(until(right, p));
+}
+
 export function many<A>(parser: Parser<A>): Parser<A[]> {
   // NOTE: many(x) parser will always succeed, although possibly with
   // an empty array as a result. This is not great for error
