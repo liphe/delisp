@@ -194,7 +194,7 @@ export function atLeastOne<A>(parser: Parser<A>): Parser<A[]> {
 // Primitive parsers
 //
 
-export const character = (expected?: String) => {
+export const character = (expected?: string) => {
   return new Parser<string>(input => {
     const [char, moreInput] = input.readChars(1);
 
