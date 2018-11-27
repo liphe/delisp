@@ -1,0 +1,15 @@
+{
+  "defaultSeverity": "error",
+  "extends": [
+    "tslint:recommended"
+  ],
+  "rules": {
+    "trailing-comma": false,
+    "object-literal-sort-keys": false,
+    "member-access": [true, "no-public"],
+    "interface-name": [true, "never-prefix"],
+    "arrow-parens": false,
+    "member-ordering": false
+  },
+  "rulesDirectory": []
+}

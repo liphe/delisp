@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "tsc --build",
+    "lint": "tslint --project tsconfig.json",
     "test": "true"
   },
   "dependencies": {

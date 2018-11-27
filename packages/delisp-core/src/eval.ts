@@ -4,14 +4,14 @@
 
 import * as vm from "vm";
 
-import { ASExpr } from "./syntax";
-import { readFromString } from "./reader";
 import { compileToString } from "./compiler";
+import { readFromString } from "./reader";
+import { ASExpr } from "./syntax";
 
 const sandbox = {
   env: {
-    foo: 42,
-    log: (...args: any) => console.log(...args),
+    "foo": 42,
+    "log": (...args: any) => console.log(...args),
     "+": (a: number, b: number) => a + b,
     "*": (a: number, b: number) => a * b
   }
