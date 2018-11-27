@@ -104,7 +104,7 @@ describe("Reader", () => {
     });
   });
 
-  it("should generate user-friendly errors", () => {
+  describe("Error messages", () => {
     const failedRead = (x: string) => {
       try {
         readFromString(x);
@@ -113,11 +113,26 @@ describe("Reader", () => {
         return err.message;
       }
     };
-    expect(failedRead("(1 2 3")).toMatchSnapshot();
-    expect(failedRead(")")).toMatchSnapshot();
-    expect(failedRead('"foo')).toMatchSnapshot();
-    expect(failedRead('"ab\\xyz"')).toMatchSnapshot();
-    expect(failedRead('"abc\\')).toMatchSnapshot();
+
+    it("generate user-friendly error for an incomplete list", () => {
+      expect(failedRead("(1 2 3")).toMatchSnapshot();
+    });
+
+    it("generate user-friendly error for a closing parenthesis", () => {
+      expect(failedRead(")")).toMatchSnapshot();
+    });
+
+    it("generate user-friendly error for an incomplete string", () => {
+      expect(failedRead('"foo')).toMatchSnapshot();
+    });
+
+    it("generate user-friendly error for badly escaped string", () => {
+      expect(failedRead('"ab\\xyz"')).toMatchSnapshot();
+    });
+
+    it("generate a user-friendly error for incomplete escaped string", () => {
+      expect(failedRead('"abc\\')).toMatchSnapshot();
+    });
   });
 
   it("should detect incomplete inputs", () => {
@@ -129,6 +144,7 @@ describe("Reader", () => {
         return err.incomplete;
       }
     };
+
     expect(read("(1 2 3")).toBe(true);
     expect(read(")")).toBe(false);
     expect(read('"foo')).toBe(true);
