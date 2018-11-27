@@ -13,6 +13,7 @@ import {
   many,
   atLeastOne,
   delimited,
+  delimitedMany,
   getParserError
 } from "./parser-combinators";
 
@@ -78,9 +79,9 @@ const stringChar = character()
     }
     return Parser.of(char);
   })
-  .description("escaped string character");
+  .description("string character");
 
-const string = delimited(doubleQuote, many(stringChar), doubleQuote)
+const string = delimitedMany(doubleQuote, stringChar, doubleQuote)
   .map(
     (chars, location): ASExpr => ({
       type: "string",
@@ -135,7 +136,7 @@ const leftParen = character("(").description("open parenthesis");
 const rightParen = character(")").description("close parenthesis");
 
 function list(x: Parser<ASExpr>): Parser<ASExpr> {
-  return delimited(leftParen, many(x), spaces.then(rightParen))
+  return delimitedMany(leftParen, x, spaces.then(rightParen))
     .map(
       (elements, location): ASExpr => ({
         type: "list",
