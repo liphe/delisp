@@ -31,7 +31,7 @@ const alphanumeric = character().chain(char => {
   if (/[a-zA-Z0-1]/.test(char)) {
     return Parser.of(char);
   } else {
-    return Parser.fail("Expected an alphanumeric character");
+    return Parser.fail("an alphanumeric character");
   }
 });
 
@@ -39,7 +39,7 @@ const digit = character().chain(char => {
   if (/[0-9]/.test(char)) {
     return Parser.of(char);
   } else {
-    return Parser.fail("Expected a digit");
+    return Parser.fail("a digit");
   }
 });
 
