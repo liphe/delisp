@@ -133,10 +133,6 @@ describe("Reader", () => {
     expect(read(")")).toBe(false);
     expect(read('"foo')).toBe(true);
     expect(read('"ab\\xyz"')).toBe(false);
-    //
-    // TODO: This is not detected because many() will return
-    // successfully and not compute the rest of the string.
-    //
-    // expect(read('"abc\\')).toBe(true);
+    expect(read('"abc\\')).toBe(true);
   });
 });
