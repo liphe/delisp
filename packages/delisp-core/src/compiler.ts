@@ -19,7 +19,7 @@ function parseLambdaList(x: ASExpr): ASExprSymbol[] {
   if (x.type !== "list") {
     throw new Error(printHighlightedExpr("Expected a list of arguments", x));
   }
-  x.elements.forEach((arg) => {
+  x.elements.forEach(arg => {
     if (arg.type !== "symbol") {
       throw new Error(
         printHighlightedExpr(
@@ -60,7 +60,7 @@ function compileLambda(
 
   return {
     type: "ArrowFunctionExpression",
-    params: params.map((symbol) => ({
+    params: params.map(symbol => ({
       type: "Identifier",
       name: newEnv[symbol.name].jsVar
     })),
@@ -120,7 +120,7 @@ function compileList(fn: ASExpr, args: ASExpr[], env: Environment): JSAST {
   return {
     type: "CallExpression",
     callee: compile(fn, env),
-    arguments: args.map((arg) => compile(arg, env))
+    arguments: args.map(arg => compile(arg, env))
   };
 }
 

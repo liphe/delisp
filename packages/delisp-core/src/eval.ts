@@ -10,8 +10,8 @@ import { ASExpr } from "./syntax";
 
 const sandbox = {
   env: {
-    "foo": 42,
-    "log": (...args: any) => console.log(...args),
+    foo: 42,
+    log: (...args: any) => console.log(...args),
     "+": (a: number, b: number) => a + b,
     "*": (a: number, b: number) => a * b
   }

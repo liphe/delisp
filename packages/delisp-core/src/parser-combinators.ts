@@ -154,11 +154,13 @@ export function until<A>(
   delimiter: Parser<unknown>,
   parser: Parser<A>
 ): Parser<A[]> {
-  return delimiter.map(_ => [] as A[]).or(err => {
-    return parser.chain(first => {
-      return until(delimiter, parser).map(rest => [first, ...rest]);
+  return delimiter
+    .map(_ => [] as A[])
+    .or(err => {
+      return parser.chain(first => {
+        return until(delimiter, parser).map(rest => [first, ...rest]);
+      });
     });
-  });
 }
 
 export function delimitedMany<A>(
@@ -313,11 +315,10 @@ export function getParserError(source: string, rootError: ParserError): string {
   const uniqueErrors = [...new Set(errors)];
 
   const expected = uniqueErrors
-    .map(
-      (err, i) =>
-        i > 0 && i === uniqueErrors.length - 1
-          ? `or ${err.expected}`
-          : err.expected
+    .map((err, i) =>
+      i > 0 && i === uniqueErrors.length - 1
+        ? `or ${err.expected}`
+        : err.expected
     )
     .join(", ");
 
