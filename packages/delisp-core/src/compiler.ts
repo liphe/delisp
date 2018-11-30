@@ -1,5 +1,5 @@
 import { printHighlightedExpr } from "./error-report";
-import { ASExpr, ASExprList, ASExprSymbol } from "./syntax";
+import { ASExpr, ASExprList, ASExprSymbol } from "./sexpr";
 
 import * as recast from "recast";
 

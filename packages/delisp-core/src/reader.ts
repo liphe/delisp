@@ -17,7 +17,7 @@ import {
   getParserError
 } from "./parser-combinators";
 
-import { ASExpr } from "./syntax";
+import { ASExpr } from "./sexpr";
 
 const spaces = many(
   alternatives(character(" "), character("\t"), character("\n"))

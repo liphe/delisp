@@ -6,7 +6,7 @@ import * as vm from "vm";
 
 import { compileToString } from "./compiler";
 import { readFromString } from "./reader";
-import { ASExpr } from "./syntax";
+import { ASExpr } from "./sexpr";
 
 const sandbox = {
   env: {

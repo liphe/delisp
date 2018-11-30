@@ -2,7 +2,7 @@
  * Report errors in a user-friendly way
  */
 
-import { ASExpr } from "./syntax";
+import { ASExpr } from "./sexpr";
 
 function repeatChar(ch: string, n: number): string {
   return Array(n)
