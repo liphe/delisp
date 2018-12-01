@@ -1,11 +1,11 @@
 import { printHighlightedExpr } from "./error-report";
 import {
   Expression,
-  SVariableReference,
-  SVar,
+  SDefinition,
   SFunction,
   SFunctionCall,
-  SDefinition,
+  SVar,
+  SVariableReference,
   Syntax
 } from "./syntax";
 

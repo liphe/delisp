@@ -1,6 +1,6 @@
-import { ASExpr, ASExprSymbol, ASExprList } from "./sexpr";
-import { LambdaList, Expression, Declaration, Syntax } from "./syntax";
 import { printHighlightedExpr } from "./error-report";
+import { ASExpr, ASExprList, ASExprSymbol } from "./sexpr";
+import { Declaration, Expression, LambdaList, Syntax } from "./syntax";
 
 /** Return the last element of a list, or undefined if it is empty */
 function last<A>(x: A[]): A | undefined {

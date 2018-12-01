@@ -7,14 +7,14 @@
 //
 
 import {
-  Parser,
-  character,
   alternatives,
-  many,
   atLeastOne,
+  character,
   delimited,
   delimitedMany,
-  getParserError
+  getParserError,
+  many,
+  Parser
 } from "./parser-combinators";
 
 import { ASExpr } from "./sexpr";

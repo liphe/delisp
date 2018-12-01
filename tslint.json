@@ -9,7 +9,8 @@
     "member-access": [true, "no-public"],
     "interface-name": [true, "never-prefix"],
     "arrow-parens": false,
-    "member-ordering": false
+    "member-ordering": false,
+    "object-literal-key-quotes": false
   },
   "rulesDirectory": []
 }

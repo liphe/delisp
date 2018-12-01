@@ -4,8 +4,8 @@
 
 import * as vm from "vm";
 
-import { convert } from "./convert";
 import { compileToString } from "./compiler";
+import { convert } from "./convert";
 import { readFromString } from "./reader";
 import { ASExpr } from "./sexpr";
 

@@ -30,10 +30,10 @@ export interface SFunctionCall {
   location: Location;
 }
 
-export type LambdaList = {
+export type LambdaList = Array<{
   variable: SVar;
   location: Location;
-}[];
+}>;
 
 export interface SFunction {
   type: "function";

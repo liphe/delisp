@@ -1,4 +1,4 @@
-import { SVar, Expression } from "./syntax";
+import { Expression, SVar } from "./syntax";
 
 //
 // Types
@@ -114,6 +114,7 @@ function printType(type: Type): string {
   }
 }
 
+/* tslint:disable:no-console */
 function debugInfer(expr: Expression) {
   const result = infer(expr);
   console.log("Type: ", printType(result.type));
@@ -126,6 +127,7 @@ function debugInfer(expr: Expression) {
     console.log(" " + v + " === " + printType(t));
   });
 }
+/* tslint:enable:no-console */
 
 // function solve(contraints: TConstraint[]): Substitution | TError {
 //   return [];

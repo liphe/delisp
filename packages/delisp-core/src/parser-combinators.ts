@@ -6,7 +6,7 @@
  */
 
 import { printHighlightedSource } from "./error-report";
-import { Input, Offset, Location } from "./input";
+import { Input, Location, Offset } from "./input";
 
 export type ParserResult<A> = ParserSuccess<A> | ParserError;
 
@@ -138,7 +138,7 @@ export class Parser<A> {
   }
 }
 
-export function alternatives<A>(...alternatives: Parser<A>[]) {
+export function alternatives<A>(...alternatives: Array<Parser<A>>) {
   return alternatives.reduce((p1, p2) => p1.or(() => p2));
 }
 
