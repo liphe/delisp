@@ -54,7 +54,7 @@ const negativeInteger: Parser<number> = character("-")
   .chain(_ => unsignedInteger)
   .map(num => -num);
 
-const number: Parser<ASExpr> = alternatives(negativeInteger, unsignedInteger)
+const numberP: Parser<ASExpr> = alternatives(negativeInteger, unsignedInteger)
   .map(
     (val, location): ASExpr => ({
       type: "number",
@@ -84,7 +84,7 @@ const stringChar = character()
   })
   .description("string character");
 
-const string = delimitedMany(doubleQuote, stringChar, doubleQuote)
+const stringP = delimitedMany(doubleQuote, stringChar, doubleQuote)
   .map(
     (chars, location): ASExpr => ({
       type: "string",
@@ -131,7 +131,7 @@ const symbol: Parser<ASExpr> = atLeastOne(
 // Lists & S-Expressions
 //
 
-const atom: Parser<ASExpr> = alternatives(number, string, symbol).description(
+const atom: Parser<ASExpr> = alternatives(numberP, stringP, symbol).description(
   "atom"
 );
 

@@ -11,5 +11,6 @@ before_install:
 
 script:
   - yarn prettier --list-different
+  - yarn lint
   - yarn build
   - yarn test

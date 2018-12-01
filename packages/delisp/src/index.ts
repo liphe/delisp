@@ -1,11 +1,11 @@
+import { evaluate, readFromString } from "@delisp/core";
 import repl from "repl";
-import { readFromString, evaluate } from "@delisp/core";
 
 const delispEval = (
   cmd: string,
   _context: object,
   _filename: string,
-  callback: Function
+  callback: (err: Error | null, result?: unknown) => void
 ) => {
   let syntax;
   try {
@@ -24,6 +24,8 @@ const delispEval = (
 const replServer = repl.start({ prompt: "λ ", eval: delispEval });
 
 replServer.on("exit", () => {
+  // tslint:disable no-console
   console.log("\n; bye!");
+  // tslint:enable no-console
   process.exit(0);
 });

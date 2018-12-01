@@ -99,7 +99,7 @@ export class Parser<A> {
   }
 
   skip(p: Parser<unknown>): Parser<A> {
-    return this.chain(x => p.map(_ignored => x));
+    return this.chain(x => p.map(_ => x));
   }
 
   or(makeAlternative: (err: ParserError) => Parser<A>) {
@@ -138,8 +138,8 @@ export class Parser<A> {
   }
 }
 
-export function alternatives<A>(...alternatives: Array<Parser<A>>) {
-  return alternatives.reduce((p1, p2) => p1.or(() => p2));
+export function alternatives<A>(...alts: Array<Parser<A>>) {
+  return alts.reduce((p1, p2) => p1.or(() => p2));
 }
 
 export function delimited<A>(
@@ -230,70 +230,68 @@ export const character = (expected?: string) => {
 //
 // Error reporting
 //
+// A ParseError contains a tree of errors as returned by a parser
+// and its dependencies. Leaves in this tree are where the errors
+// were triggered.
+//
+// Of course, we don't know what the user intended to write, but we
+// can think of one each of the paths (or leaves) in this tree as
+// candidates.
+//
+// We'll use the heuristic of picking the leave with the highest
+// offset. This works under the assumption that errors happen late
+// in the input. For example, if we find
+//
+//    (1 2 3 4"
+//
+// We'll identify this as a incomplete list, instead of a string
+// with a mistyped string "1 2 3 4". In case of tie, we'll include
+// the different alternatives in the error message.
+//
+// We'll see how this works in practice.
+//
+
+// Calculate the maximum offset within the descendants of ParserError
+function maxOffset(error: ParserError): Offset {
+  return Math.max(error.offset, ...error.reasons.map(maxOffset));
+}
+
+// Remove subtrees with a maximum offset smaller than offset.
+function pruneErrorTree(
+  error: ParserError,
+  offset: Offset
+): ParserError | null {
+  if (maxOffset(error) < offset) {
+    return null;
+  } else {
+    return {
+      ...error,
+      reasons: error.reasons
+        .map(subtree => pruneErrorTree(subtree, offset))
+        .filter((x: ParserError | null): x is ParserError => x !== null)
+    };
+  }
+}
+
+// Map leaves of the tree to an array of errors. The function to map
+// will receive the leave node and the list of ascendant nodes as
+// well.
+function mapLeaves<A>(
+  error: ParserError,
+  fn: (error: ParserError, parents: ParserError[]) => A,
+  parents: ParserError[] = []
+): A[] {
+  if (error.reasons.length === 0) {
+    return [fn(error, parents)];
+  } else {
+    return error.reasons
+      .map(e => mapLeaves(e, fn, [e, ...parents]))
+      .reduce((x, y) => [...x, ...y], []);
+  }
+}
 
 /** Get a user-friendly error message for a parser error */
 export function getParserError(source: string, rootError: ParserError): string {
-  //
-  // A ParseError contains a tree of errors as returned by a parser
-  // and its dependencies. Leaves in this tree are where the errors
-  // were triggered.
-  //
-  // Of course, we don't know what the user intended to write, but we
-  // can think of one each of the paths (or leaves) in this tree as
-  // candidates.
-  //
-  // We'll use the heuristic of picking the leave with the highest
-  // offset. This works under the assumption that errors happen late
-  // in the input. For example, if we find
-  //
-  //    (1 2 3 4"
-  //
-  // We'll identify this as a incomplete list, instead of a string
-  // with a mistyped string "1 2 3 4". In case of tie, we'll include
-  // the different alternatives in the error message.
-  //
-  // We'll see how this works in practice.
-  //
-
-  // Calculate the maximum offset within the descendants of ParserError
-  function maxOffset(error: ParserError): Offset {
-    return Math.max(error.offset, ...error.reasons.map(maxOffset));
-  }
-
-  // Remove subtrees with a maximum offset smaller than offset.
-  function pruneErrorTree(
-    error: ParserError,
-    offset: Offset
-  ): ParserError | null {
-    if (maxOffset(error) < offset) {
-      return null;
-    } else {
-      return {
-        ...error,
-        reasons: error.reasons
-          .map(subtree => pruneErrorTree(subtree, offset))
-          .filter((x: ParserError | null): x is ParserError => x !== null)
-      };
-    }
-  }
-
-  // Map leaves of the tree to an array of errors. The function to map
-  // will receive the leave node and the list of ascendant nodes as
-  // well.
-  function mapLeaves<A>(
-    error: ParserError,
-    fn: (error: ParserError, parents: ParserError[]) => A,
-    parents: ParserError[] = []
-  ): A[] {
-    if (error.reasons.length === 0) {
-      return [fn(error, parents)];
-    } else {
-      return error.reasons
-        .map(e => mapLeaves(e, fn, [e, ...parents]))
-        .reduce((x, y) => [...x, ...y], []);
-    }
-  }
-
   // Process the error tree
   const offset = maxOffset(rootError);
   const prunedTree = pruneErrorTree(rootError, offset);

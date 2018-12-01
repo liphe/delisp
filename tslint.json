@@ -1,8 +1,6 @@
 {
   "defaultSeverity": "error",
-  "extends": [
-    "tslint:recommended"
-  ],
+  "extends": ["tslint:recommended"],
   "rules": {
     "trailing-comma": false,
     "object-literal-sort-keys": false,
@@ -10,7 +8,15 @@
     "interface-name": [true, "never-prefix"],
     "arrow-parens": false,
     "member-ordering": false,
-    "object-literal-key-quotes": false
+    "object-literal-key-quotes": false,
+    "variable-name": {
+      "options": [
+        "ban-keywords",
+        "check-format",
+        "allow-leading-underscore",
+        "allow-pascal-case"
+      ]
+    }
   },
   "rulesDirectory": []
 }

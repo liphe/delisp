@@ -11,7 +11,8 @@ import {
 
 import * as recast from "recast";
 
-const debug = require("debug")("delisp:compiler");
+import createDebug from "debug";
+const debug = createDebug("delisp:compiler");
 
 type JSAST = object;
 interface Environment {
