@@ -1,12 +1,14 @@
 import { readFromString } from "../src/reader";
+import { convert } from "../src/convert";
 import { compileToString } from "../src/compiler";
 
 describe("Compiler", () => {
   describe("Error messages", () => {
     function compileError(str: string): string {
       try {
-        const ast = readFromString(str);
-        compileToString(ast);
+        const sexpr = readFromString(str);
+        const syntax = convert(sexpr);
+        compileToString(syntax);
         throw new Error(`FATAL: EXPRESSION DID NOT FAIL TO COMPILE.`);
       } catch (err) {
         return err.message;

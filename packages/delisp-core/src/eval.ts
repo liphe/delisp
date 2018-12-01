@@ -4,6 +4,7 @@
 
 import * as vm from "vm";
 
+import { convert } from "./convert";
 import { compileToString } from "./compiler";
 import { readFromString } from "./reader";
 import { ASExpr } from "./sexpr";
@@ -18,7 +19,8 @@ const sandbox = {
 };
 vm.createContext(sandbox);
 
-export function evaluate(syntax: ASExpr): unknown {
+export function evaluate(sexpr: ASExpr): unknown {
+  const syntax = convert(sexpr);
   const code = compileToString(syntax);
   const result = vm.runInContext(code, sandbox);
   return result;

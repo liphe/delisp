@@ -1,41 +1,4 @@
-//
-// Syntax
-//
-
-type SVar = string;
-
-interface SNumber {
-  type: "number";
-  value: number;
-}
-
-interface SString {
-  type: "string";
-  value: string;
-}
-
-interface SVarriableReference {
-  type: "variable-reference";
-  variable: SVar;
-}
-interface SFunctionCall {
-  type: "function-call";
-  fn: Syntax;
-  args: Syntax[];
-}
-
-interface SFunction {
-  type: "function";
-  args: SVar[];
-  body: Syntax;
-}
-
-type Syntax =
-  | SNumber
-  | SString
-  | SVarriableReference
-  | SFunctionCall
-  | SFunction;
+import { SVar, Expression } from "./syntax";
 
 //
 // Types
@@ -72,7 +35,7 @@ const generateUniqueTVar = (): TVar => ({
 });
 
 function infer(
-  syntax: Syntax
+  syntax: Expression
 ): { type: Type; constraints: TConstraint[]; assumptions: TAssumption[] } {
   switch (syntax.type) {
     case "number":
@@ -90,12 +53,14 @@ function infer(
     case "function": {
       const { type, constraints, assumptions } = infer(syntax.body);
 
-      const argtypes = syntax.args.map(_ => generateUniqueTVar());
+      const argtypes = syntax.lambdaList.map(_ => generateUniqueTVar());
       const newConstraints: TConstraint[] = [
         ...assumptions
-          .filter(([v, _]) => syntax.args.includes(v))
+          .filter(([v, _]) =>
+            syntax.lambdaList.map(a => a.variable).includes(v)
+          )
           .map(([v, t]) => {
-            const varIndex = syntax.args.indexOf(v);
+            const varIndex = syntax.lambdaList.map(a => a.variable).indexOf(v);
             const constraint: TConstraint = [t, argtypes[varIndex]];
             return constraint;
           })
@@ -107,7 +72,9 @@ function infer(
           to: type
         },
         constraints: constraints.concat(newConstraints),
-        assumptions: assumptions.filter(([v, _]) => !syntax.args.includes(v))
+        assumptions: assumptions.filter(
+          ([v, _]) => !syntax.lambdaList.map(a => a.variable).includes(v)
+        )
       };
     }
     case "function-call": {
@@ -147,8 +114,8 @@ function printType(type: Type): string {
   }
 }
 
-function debugInfer(syntax: Syntax) {
-  const result = infer(syntax);
+function debugInfer(expr: Expression) {
+  const result = infer(expr);
   console.log("Type: ", printType(result.type));
   console.log("Constraints: ");
   result.constraints.forEach(c => {
@@ -172,12 +139,12 @@ function debugInfer(syntax: Syntax) {
 //   return applySubst(result.type, solution);
 // }
 
-debugInfer({
-  type: "function",
-  args: ["x"],
-  body: {
-    type: "function-call",
-    fn: { type: "variable-reference", variable: "f" },
-    args: [{ type: "variable-reference", variable: "x" }]
-  }
-});
+// debugInfer({
+//   type: "function",
+//   args: ["x"],
+//   body: {
+//     type: "function-call",
+//     fn: { type: "variable-reference", variable: "f" },
+//     args: [{ type: "variable-reference", variable: "x" }]
+//   }
+// });
