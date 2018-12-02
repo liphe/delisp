@@ -42,6 +42,10 @@ export interface SFunction {
   location: Location;
 }
 
+export function functionArgs(fn: SFunction): SVar[] {
+  return fn.lambdaList.map(a => a.variable);
+}
+
 export type Expression =
   | SNumber
   | SString

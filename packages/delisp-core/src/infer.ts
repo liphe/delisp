@@ -1,4 +1,4 @@
-import { Expression, SVar } from "./syntax";
+import { Expression, functionArgs, SVar } from "./syntax";
 
 //
 // Types
@@ -52,18 +52,14 @@ function infer(
     }
     case "function": {
       const { type, constraints, assumptions } = infer(syntax.body);
-
-      const argtypes = syntax.lambdaList.map(_ => generateUniqueTVar());
+      const fnargs = functionArgs(syntax);
+      const argtypes = fnargs.map(_ => generateUniqueTVar());
       const newConstraints: TConstraint[] = [
-        ...assumptions
-          .filter(([v, _]) =>
-            syntax.lambdaList.map(a => a.variable).includes(v)
-          )
-          .map(([v, t]) => {
-            const varIndex = syntax.lambdaList.map(a => a.variable).indexOf(v);
-            const constraint: TConstraint = [t, argtypes[varIndex]];
-            return constraint;
-          })
+        ...assumptions.filter(([v, _]) => fnargs.includes(v)).map(([v, t]) => {
+          const varIndex = fnargs.indexOf(v);
+          const constraint: TConstraint = [t, argtypes[varIndex]];
+          return constraint;
+        })
       ];
       return {
         type: {
@@ -72,9 +68,7 @@ function infer(
           to: type
         },
         constraints: constraints.concat(newConstraints),
-        assumptions: assumptions.filter(
-          ([v, _]) => !syntax.lambdaList.map(a => a.variable).includes(v)
-        )
+        assumptions: assumptions.filter(([v, _]) => !fnargs.includes(v))
       };
     }
     case "function-call": {
