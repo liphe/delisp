@@ -1,3 +1,14 @@
+//
+// This module implements type inference
+//
+// It is based on the paper "Generalizing Hindley-Milner Type Inference
+// Algorithms", by Bastiaan Heeren, Jurriaan Hage and Doaitse Swierstra.
+//
+// You can find it online at
+//
+//   https://pdfs.semanticscholar.org/8983/233b3dff2c5b94efb31235f62bddc22dc899.pdf
+//
+
 import { Expression, functionArgs, SVar } from "./syntax";
 
 //
