@@ -11,38 +11,15 @@
 
 import { Expression, functionArgs, SVar } from "./syntax";
 
-//
-// Types
-//
-
-interface TNumber {
-  type: "number";
-}
-
-interface TString {
-  type: "string";
-}
-
-interface TFunction {
-  type: "function";
-  from: Type[];
-  to: Type;
-}
-
-interface TVar {
-  type: "type-variable";
-  name: string;
-}
-
-type Type = TNumber | TString | TFunction | TVar;
+import { TFunction, TNumber, TString, TVar, Type, printType } from "./types";
 
 type TConstraint = [Type, Type];
 type TAssumption = [SVar, Type];
 
-let x = 0;
+let generateUniqueTVarIdx = 0;
 const generateUniqueTVar = (): TVar => ({
   type: "type-variable",
-  name: `t${++x}`
+  name: `t${++generateUniqueTVarIdx}`
 });
 
 function infer(
@@ -104,21 +81,6 @@ function infer(
   }
 }
 
-function printType(type: Type): string {
-  switch (type.type) {
-    case "function":
-      return `(-> (${type.from.map(printType).join(" ")}) ${printType(
-        type.to
-      )})`;
-    case "number":
-      return "number";
-    case "string":
-      return "string";
-    case "type-variable":
-      return type.name;
-  }
-}
-
 /* tslint:disable:no-console */
 function debugInfer(expr: Expression) {
   const result = infer(expr);
@@ -148,5 +110,4 @@ function debugInfer(expr: Expression) {
 
 // import { readFromString } from "./reader";
 // import { convertExpr } from "./convert";
-
-// debugInfer(convertExpr(readFromString("(lambda (f x) (f x))")));
+// debugInfer(convertExpr(readFromString("(lambda (f x) y)")));
