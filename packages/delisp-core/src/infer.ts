@@ -66,13 +66,11 @@ function infer(
       const fnargs = functionArgs(syntax);
       const argtypes = fnargs.map(_ => generateUniqueTVar());
       const newConstraints: TConstraint[] = [
-        ...assumptions
-          .filter(([v, _]) => fnargs.includes(v))
-          .map(([v, t]) => {
-            const varIndex = fnargs.indexOf(v);
-            const constraint: TConstraint = [t, argtypes[varIndex]];
-            return constraint;
-          })
+        ...assumptions.filter(([v, _]) => fnargs.includes(v)).map(([v, t]) => {
+          const varIndex = fnargs.indexOf(v);
+          const constraint: TConstraint = [t, argtypes[varIndex]];
+          return constraint;
+        })
       ];
       return {
         type: {
@@ -148,12 +146,7 @@ function debugInfer(expr: Expression) {
 //   return applySubst(result.type, solution);
 // }
 
-// debugInfer({
-//   type: "function",
-//   args: ["x"],
-//   body: {
-//     type: "function-call",
-//     fn: { type: "variable-reference", variable: "f" },
-//     args: [{ type: "variable-reference", variable: "x" }]
-//   }
-// });
+// import { readFromString } from "./reader";
+// import { convertExpr } from "./convert";
+
+// debugInfer(convertExpr(readFromString("(lambda (f x) (f x))")));

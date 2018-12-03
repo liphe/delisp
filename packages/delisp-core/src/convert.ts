@@ -140,7 +140,7 @@ function convertList(list: ASExprList): Expression {
   }
 }
 
-function convertExpr(expr: ASExpr): Expression {
+export function convertExpr(expr: ASExpr): Expression {
   switch (expr.type) {
     case "number":
       return expr;
