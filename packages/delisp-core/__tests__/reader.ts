@@ -40,6 +40,18 @@ describe("Reader", () => {
       name: "xyz",
       location: { start: 2, end: 5 }
     });
+
+    expect(readFromString("  a2  ")).toMatchObject({
+      type: "symbol",
+      name: "a2",
+      location: { start: 2, end: 4 }
+    });
+
+    expect(readFromString("  $bc  ")).toMatchObject({
+      type: "symbol",
+      name: "$bc",
+      location: { start: 2, end: 5 }
+    });
   });
 
   it("should read lists", () => {
