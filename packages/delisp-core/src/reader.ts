@@ -167,7 +167,7 @@ const sexpr: Parser<ASExpr> = spaced(
 //
 // Parser a Delisp expression from a string
 //
-export function readFromString(str: string) {
+export function readFromString(str: string): ASExpr {
   const result = sexpr.parse(str);
   if (result.status === "success") {
     return result.value;
