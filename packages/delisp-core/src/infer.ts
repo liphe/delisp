@@ -11,7 +11,7 @@
 
 import { Expression, functionArgs, SVar } from "./syntax";
 
-import { printType, TFunction, TNumber, TString, TVar, Type } from "./types";
+import { printType, TApplication, TNumber, TString, TVar, Type } from "./types";
 
 type TConstraint = [Type, Type];
 type TAssumption = [SVar, Type];
@@ -53,9 +53,9 @@ function infer(
       ];
       return {
         type: {
-          type: "function",
-          from: argtypes,
-          to: type
+          type: "application",
+          op: "->",
+          args: [...argtypes, type]
         },
         constraints: constraints.concat(newConstraints),
         assumptions: assumptions.filter(([v, _]) => !fnargs.includes(v))

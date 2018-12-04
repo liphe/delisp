@@ -1,4 +1,4 @@
-import { printType, TFunction, TNumber, TString, TVar, Type } from "./types";
+import { printType, TApplication, TNumber, TString, TVar, Type } from "./types";
 
 interface Substitution {
   [t: string]: Type;
@@ -9,11 +9,11 @@ function applySubstitution(t: Type, env: Substitution): Type {
     case "number":
     case "string":
       return t;
-    case "function":
+    case "application":
       return {
-        type: "function",
-        from: t.from.map(t1 => applySubstitution(t1, env)),
-        to: applySubstitution(t.to, env)
+        type: "application",
+        op: t.op,
+        args: t.args.map(t1 => applySubstitution(t1, env))
       };
     case "type-variable": {
       if (t.name in env) {
@@ -33,9 +33,8 @@ function occurCheck(v: TVar, rootT: Type) {
         `The variable '${v.name}' cannot be part of ${printType(rootT)}`
       );
     }
-    if (t.type === "function") {
-      t.from.forEach(check);
-      [t.to].forEach(check);
+    if (t.type === "application") {
+      t.args.forEach(check);
     }
     return;
   }
@@ -78,8 +77,8 @@ function unify(t1: Type, t2: Type, env: Substitution = {}): Substitution {
     return env;
   } else if (t1.type === "number" && t2.type === "number") {
     return env;
-  } else if (t1.type === "function" && t2.type === "function") {
-    return unifyArray([...t1.from, t1.to], [...t2.from, t2.to], env);
+  } else if (t1.type === "application" && t2.type === "application") {
+    return unifyArray(t1.args, t2.args, env);
   } else if (t1.type === "type-variable") {
     return unifyVariable(t1, t2, env);
   } else if (t2.type === "type-variable") {

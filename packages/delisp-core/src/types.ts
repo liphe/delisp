@@ -10,10 +10,10 @@ export interface TString {
   type: "string";
 }
 
-export interface TFunction {
-  type: "function";
-  from: Type[];
-  to: Type;
+export interface TApplication {
+  type: "application";
+  op: string;
+  args: Type[];
 }
 
 export interface TVar {
@@ -21,14 +21,12 @@ export interface TVar {
   name: string;
 }
 
-export type Type = TNumber | TString | TFunction | TVar;
+export type Type = TNumber | TString | TApplication | TVar;
 
 export function printType(type: Type): string {
   switch (type.type) {
-    case "function":
-      return `(-> (${type.from.map(printType).join(" ")}) ${printType(
-        type.to
-      )})`;
+    case "application":
+      return `(${type.op} ${type.args.map(printType).join(" ")})`;
     case "number":
       return "number";
     case "string":
