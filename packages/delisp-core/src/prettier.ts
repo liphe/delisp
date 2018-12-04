@@ -5,8 +5,6 @@
 // https://homepages.inf.ed.ac.uk/wadler/papers/prettier/prettier.pdf
 //
 
-const INDENT_SPACES = 2;
-
 interface DocNil {
   type: "nil";
 }
@@ -89,7 +87,7 @@ export function nest(level: number, doc: Doc): Doc {
       return {
         type: "line",
         level: doc.level + level,
-        doc: doc
+        doc: nest(level, doc.doc)
       };
     case "union":
       return {
@@ -124,7 +122,7 @@ function flatten(doc: Doc): Doc {
       return {
         type: "text",
         content: " ",
-        doc: doc.doc
+        doc: flatten(doc.doc)
       };
     case "union":
       // All layouts in the set should flatten to the same document.
@@ -152,7 +150,7 @@ export function group(doc: Doc): Doc {
         doc
       );
     case "union":
-      return union(group(doc.x), group(doc.y));
+      return union(group(doc.x), doc.y);
   }
 }
 
@@ -177,6 +175,8 @@ function better(x: Doc, y: Doc, w: number, k: number): Doc {
 }
 
 function best(doc: Doc, w: number, k: number): Doc {
+  // console.log("best ", w, k);
+  // console.dir({ doc }, { depth: null });
   switch (doc.type) {
     case "nil":
       return nil;
@@ -190,10 +190,10 @@ function best(doc: Doc, w: number, k: number): Doc {
       return {
         type: "line",
         level: doc.level,
-        doc: best(doc.doc, w, k + doc.level * INDENT_SPACES)
+        doc: best(doc.doc, w, k + doc.level)
       };
     case "union":
-      return better(doc.x, doc.y, w, k);
+      return better(best(doc.x, w, k), best(doc.y, w, k), w, k);
   }
 }
 
