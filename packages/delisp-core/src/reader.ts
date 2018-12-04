@@ -28,7 +28,7 @@ function spaced<A>(x: Parser<A>) {
 }
 
 const alphanumeric = character().chain(char => {
-  if (/[a-zA-Z0-1]/.test(char)) {
+  if (/[a-zA-Z0-9]/.test(char)) {
     return Parser.of(char);
   } else {
     return Parser.fail("an alphanumeric character");
