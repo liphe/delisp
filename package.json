@@ -8,11 +8,13 @@
     "build": "tsc --build packages/",
     "lint": "yarn workspaces run lint",
     "prettier": "prettier --write '**/*.ts'",
-    "test": "yarn workspaces run test"
+    "test": "yarn workspaces run test",
+    "coveralls": "yarn test --coverage --coverageReporters=text-lcov | coveralls"
   },
   "devDependencies": {
     "@types/jest": "^23.3.9",
     "@types/node": "^10.12.5",
+    "coveralls": "^3.0.2",
     "jest": "^23.6.0",
     "prettier": "^1.15.2",
     "ts-jest": "^23.10.4",
