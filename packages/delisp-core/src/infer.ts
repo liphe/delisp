@@ -14,6 +14,9 @@ import { Expression, functionArgs, SVar } from "./syntax";
 import { printType, TApplication, TNumber, TString, TVar, Type } from "./types";
 
 import { unify, applySubstitution } from "./unify";
+
+import { flatten, unique } from "./utils";
+
 type TConstraint = [Type, Type];
 type TAssumption = [SVar, Type];
 
@@ -102,7 +105,6 @@ function debugInfer(expr: Expression) {
 
 import { readFromString } from "./reader";
 import { convertExpr } from "./convert";
-debugInfer(convertExpr(readFromString("(lambda (f x) (f x))")));
 
 const { type, constraints, assumptions } = infer(
   convertExpr(readFromString("(lambda (f x) (f x))"))
@@ -112,3 +114,37 @@ const s = constraints.reduce((env, [t1, t2]) => unify(t1, t2, env), {});
 
 const result = applySubstitution(type, s);
 
+// Return the list of type variables in the order they show up
+function listTypeVariables(t: Type): string[] {
+  switch (t.type) {
+    case "string":
+      return [];
+    case "number":
+      return [];
+    case "application":
+      return unique(flatten(t.args.map(listTypeVariables)));
+    case "type-variable":
+      return [t.name];
+  }
+}
+
+function typeIndexName(index: number): string {
+  const alphabet = "αβγδεζηθικμνξοπρστυφχψ";
+  return index < alphabet.length
+    ? alphabet[index]
+    : `ω${index - alphabet.length + 1}`;
+}
+
+function normalizeType(t: Type): Type {
+  const vars = listTypeVariables(t);
+  const substitution = vars.reduce((s, v, i) => {
+    return {
+      ...s,
+      [v]: {
+        type: "type-variable",
+        name: typeIndexName(i)
+      }
+    };
+  }, {});
+  return applySubstitution(t, substitution);
+}
