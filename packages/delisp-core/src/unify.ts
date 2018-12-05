@@ -1,10 +1,10 @@
 import { printType, TApplication, TNumber, TString, TVar, Type } from "./types";
 
-interface Substitution {
+export interface Substitution {
   [t: string]: Type;
 }
 
-function applySubstitution(t: Type, env: Substitution): Type {
+export function applySubstitution(t: Type, env: Substitution): Type {
   switch (t.type) {
     case "number":
     case "string":
@@ -72,7 +72,11 @@ function unifyArray(t1s: Type[], t2s: Type[], env: Substitution): Substitution {
   }
 }
 
-function unify(t1: Type, t2: Type, env: Substitution = {}): Substitution {
+export function unify(
+  t1: Type,
+  t2: Type,
+  env: Substitution = {}
+): Substitution {
   if (t1.type === "string" && t2.type === "string") {
     return env;
   } else if (t1.type === "number" && t2.type === "number") {

@@ -13,6 +13,7 @@ import { Expression, functionArgs, SVar } from "./syntax";
 
 import { printType, TApplication, TNumber, TString, TVar, Type } from "./types";
 
+import { unify, applySubstitution } from "./unify";
 type TConstraint = [Type, Type];
 type TAssumption = [SVar, Type];
 
@@ -102,3 +103,12 @@ function debugInfer(expr: Expression) {
 import { readFromString } from "./reader";
 import { convertExpr } from "./convert";
 debugInfer(convertExpr(readFromString("(lambda (f x) (f x))")));
+
+const { type, constraints, assumptions } = infer(
+  convertExpr(readFromString("(lambda (f x) (f x))"))
+);
+
+const s = constraints.reduce((env, [t1, t2]) => unify(t1, t2, env), {});
+
+const result = applySubstitution(type, s);
+
