@@ -35,8 +35,12 @@ describe("Type inference", () => {
   // });
 
   describe("Lambda abstractions", () => {
-    it("identity function should", () => {
+    it("should infer the right type", () => {
       expect(typeOf("(lambda (x) x)")).toBe("(-> α α)");
+      expect(typeOf("(lambda (x y) y)")).toBe("(-> α β β)");
+      expect(typeOf("(lambda (f x) (f x))")).toBe("(-> (-> α β) α β)");
+      expect(typeOf("(lambda (f x) (f x))")).toBe("(-> (-> α β) α β)");
+      expect(typeOf("(lambda (x) (lambda (y) x))")).toBe("(-> α (-> β α))");
     });
   });
 });
