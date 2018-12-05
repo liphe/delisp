@@ -1,6 +1,6 @@
-import { applySubstitution, Substitution } from "./unify";
-import { unique, flatten } from "./utils";
 import { Type } from "./types";
+import { applySubstitution, Substitution } from "./unify";
+import { flatten, unique } from "./utils";
 
 // Return the list of type variables in the order they show up
 function listTypeVariables(t: Type): string[] {

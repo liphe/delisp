@@ -1,9 +1,9 @@
 import {
   evaluate,
   inferType,
-  readSyntax,
+  isDeclaration,
   printType,
-  isDeclaration
+  readSyntax
 } from "@delisp/core";
 import repl from "repl";
 

@@ -13,7 +13,7 @@ import { Expression, functionArgs, SVar } from "./syntax";
 
 import { TApplication, TNumber, TString, TVar, Type } from "./types";
 
-import { unify, applySubstitution } from "./unify";
+import { applySubstitution, unify } from "./unify";
 
 import { flatten, unique } from "./utils";
 
@@ -47,11 +47,13 @@ function infer(
       const fnargs = functionArgs(syntax);
       const argtypes = fnargs.map(_ => generateUniqueTVar());
       const newConstraints: TConstraint[] = [
-        ...assumptions.filter(([v, _]) => fnargs.includes(v)).map(([v, t]) => {
-          const varIndex = fnargs.indexOf(v);
-          const constraint: TConstraint = [t, argtypes[varIndex]];
-          return constraint;
-        })
+        ...assumptions
+          .filter(([v, _]) => fnargs.includes(v))
+          .map(([v, t]) => {
+            const varIndex = fnargs.indexOf(v);
+            const constraint: TConstraint = [t, argtypes[varIndex]];
+            return constraint;
+          })
       ];
       return {
         type: {
