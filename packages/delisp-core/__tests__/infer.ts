@@ -1,13 +1,13 @@
-import { readSyntax, isDeclaration } from "../src/index";
-import { inferType } from "../src/infer";
+import { readType, readSyntax, isDeclaration } from "../src/index";
+import { inferType, TypeEnvironment } from "../src/infer";
 import { printType } from "../src/type-utils";
 
-function typeOf(str: string): any {
+function typeOf(str: string, env: TypeEnvironment = {}): any {
   const syntax = readSyntax(str);
   if (isDeclaration(syntax)) {
     throw new Error(`Not an expression!`);
   }
-  return printType(inferType(syntax));
+  return printType(inferType(syntax, env));
 }
 
 describe("Type inference", () => {
@@ -27,12 +27,16 @@ describe("Type inference", () => {
     });
   });
 
-  // describe("Function calls", () => {
-  //   it("should evaluate to the right value", () => {
-  //     expect(typeOf("(+ 1 2)")).toBe(3);
-  //     expect(typeOf("(+ (+ 1 1) 2)")).toBe(4);
-  //   });
-  // });
+  describe("Function calls", () => {
+    it("should have the right type", () => {
+      const env = {
+        "+": readType("(-> number number number)")
+      };
+      expect(typeOf("(+ 1 2)", env)).toBe("number");
+      expect(typeOf("(+ (+ 1 1) 2)", env)).toBe("number");
+      expect(typeOf("(lambda (x) (+ x 1))", env)).toBe("(-> number number)");
+    });
+  });
 
   describe("Lambda abstractions", () => {
     it("should infer the right type", () => {

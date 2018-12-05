@@ -88,8 +88,38 @@ function infer(
   }
 }
 
-export function inferType(expr: Expression): Type {
+export interface TypeEnvironment {
+  [v: string]: Type;
+}
+
+function assumptionsToConstraints(
+  assumptions: TAssumption[],
+  typeEnvironment: TypeEnvironment
+): TConstraint[] {
+  return flatten(
+    Object.keys(typeEnvironment).map(v =>
+      assumptions
+        .filter(([aVar, aType]) => aVar === v)
+        .map(([_, aType]): TConstraint => [aType, typeEnvironment[v]])
+    )
+  );
+}
+
+export function inferType(
+  expr: Expression,
+  typeEnvironment: TypeEnvironment = {}
+): Type {
   const { type, constraints, assumptions } = infer(expr);
-  const s = constraints.reduce((env, [t1, t2]) => unify(t1, t2, env), {});
+
+  const effectiveConstraints = [
+    ...constraints,
+    ...assumptionsToConstraints(assumptions, typeEnvironment)
+  ];
+
+  const s = effectiveConstraints.reduce(
+    (env, [t1, t2]) => unify(t1, t2, env),
+    {}
+  );
+
   return applySubstitution(type, s);
 }

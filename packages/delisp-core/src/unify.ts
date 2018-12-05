@@ -44,21 +44,20 @@ function occurCheck(v: TVar, rootT: Type) {
 }
 
 function unifyVariable(v: TVar, t: Type, env: Substitution): Substitution {
-  if (t.type !== "type-variable") {
-    occurCheck(v, t);
-    return { ...env, [v.name]: t };
-  } else {
+  if (v.name in env) {
+    return unify(env[v.name], t, env);
+  }
+  if (t.type === "type-variable") {
     if (v.name === t.name) {
       return env;
+    } else if (t.name in env) {
+      return unifyVariable(v, env[t.name], env);
     } else {
-      if (v.name in env) {
-        return unifyVariable(t, env[v.name], env);
-      }
-      if (t.name in env) {
-        return unifyVariable(v, env[t.name], env);
-      }
       return { ...env, [v.name]: t };
     }
+  } else {
+    occurCheck(v, t);
+    return { ...env, [v.name]: t };
   }
 }
 
