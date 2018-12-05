@@ -13,3 +13,8 @@ export function unique<A>(array: A[]): A[] {
   }
   return result;
 }
+
+/** Return the last element of a list, or undefined if it is empty */
+export function last<A>(x: A[]): A | undefined {
+  return x[x.length - 1];
+}
