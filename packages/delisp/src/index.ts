@@ -1,4 +1,10 @@
-import { evaluate, readFromString } from "@delisp/core";
+import {
+  evaluate,
+  inferType,
+  readSyntax,
+  printType,
+  isDeclaration
+} from "@delisp/core";
 import repl from "repl";
 
 const delispEval = (
@@ -9,7 +15,7 @@ const delispEval = (
 ) => {
   let syntax;
   try {
-    syntax = readFromString(cmd);
+    syntax = readSyntax(cmd);
   } catch (err) {
     if (err.incomplete) {
       return callback(new repl.Recoverable(err));
@@ -17,8 +23,16 @@ const delispEval = (
       throw err;
     }
   }
-  const result = evaluate(syntax);
-  callback(null, result);
+
+  // NOTE: evaluate doesn't really make sense for declarations. Let's rethink this
+  const value = evaluate(syntax);
+
+  if (isDeclaration(syntax)) {
+    callback(null, {});
+  } else {
+    const type = inferType(syntax);
+    callback(null, { value, type: printType(type) });
+  }
 };
 
 const replServer = repl.start({ prompt: "λ ", eval: delispEval });

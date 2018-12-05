@@ -67,3 +67,7 @@ export interface SDefinition {
 export type Declaration = SDefinition;
 
 export type Syntax = Expression | Declaration;
+
+export function isDeclaration(syntax: Syntax): syntax is Declaration {
+  return syntax.type === "definition";
+}

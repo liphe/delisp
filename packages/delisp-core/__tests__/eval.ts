@@ -1,8 +1,8 @@
-import { readFromString } from "../src/reader";
+import { readSyntax } from "../src/index";
 import { evaluate } from "../src/eval";
 
 function evaluateString(str: string): any {
-  return evaluate(readFromString(str));
+  return evaluate(readSyntax(str));
 }
 
 describe("Evaluation", () => {
