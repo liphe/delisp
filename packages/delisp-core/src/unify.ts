@@ -1,4 +1,5 @@
-import { printType, TApplication, TNumber, TString, TVar, Type } from "./types";
+import { TApplication, TNumber, TString, TVar, Type } from "./types";
+import { printType } from "./type-utils";
 
 export interface Substitution {
   [t: string]: Type;

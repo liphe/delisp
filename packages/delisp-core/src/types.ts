@@ -22,16 +22,3 @@ export interface TVar {
 }
 
 export type Type = TNumber | TString | TApplication | TVar;
-
-export function printType(type: Type): string {
-  switch (type.type) {
-    case "application":
-      return `(${type.op} ${type.args.map(printType).join(" ")})`;
-    case "number":
-      return "number";
-    case "string":
-      return "string";
-    case "type-variable":
-      return type.name;
-  }
-}

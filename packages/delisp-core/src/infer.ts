@@ -11,7 +11,7 @@
 
 import { Expression, functionArgs, SVar } from "./syntax";
 
-import { printType, TApplication, TNumber, TString, TVar, Type } from "./types";
+import { TApplication, TNumber, TString, TVar, Type } from "./types";
 
 import { unify, applySubstitution } from "./unify";
 
@@ -88,63 +88,8 @@ function infer(
   }
 }
 
-/* tslint:disable:no-console */
-function debugInfer(expr: Expression) {
-  const result = infer(expr);
-  console.log("Type: ", printType(result.type));
-  console.log("Constraints: ");
-  result.constraints.forEach(c => {
-    console.log("  " + printType(c[0]) + "  ===  " + printType(c[1]));
-  });
-  console.log("Assumptions: ");
-  result.assumptions.forEach(([v, t]) => {
-    console.log(" " + v + " === " + printType(t));
-  });
-}
-/* tslint:enable:no-console */
-
-import { readFromString } from "./reader";
-import { convertExpr } from "./convert";
-
-const { type, constraints, assumptions } = infer(
-  convertExpr(readFromString("(lambda (f x) (f x))"))
-);
-
-const s = constraints.reduce((env, [t1, t2]) => unify(t1, t2, env), {});
-
-const result = applySubstitution(type, s);
-
-// Return the list of type variables in the order they show up
-function listTypeVariables(t: Type): string[] {
-  switch (t.type) {
-    case "string":
-      return [];
-    case "number":
-      return [];
-    case "application":
-      return unique(flatten(t.args.map(listTypeVariables)));
-    case "type-variable":
-      return [t.name];
-  }
-}
-
-function typeIndexName(index: number): string {
-  const alphabet = "αβγδεζηθικμνξοπρστυφχψ";
-  return index < alphabet.length
-    ? alphabet[index]
-    : `ω${index - alphabet.length + 1}`;
-}
-
-function normalizeType(t: Type): Type {
-  const vars = listTypeVariables(t);
-  const substitution = vars.reduce((s, v, i) => {
-    return {
-      ...s,
-      [v]: {
-        type: "type-variable",
-        name: typeIndexName(i)
-      }
-    };
-  }, {});
-  return applySubstitution(t, substitution);
+export function inferType(expr: Expression): Type {
+  const { type, constraints, assumptions } = infer(expr);
+  const s = constraints.reduce((env, [t1, t2]) => unify(t1, t2, env), {});
+  return applySubstitution(type, s);
 }
