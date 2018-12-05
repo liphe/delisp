@@ -1,11 +1,7 @@
 import { printHighlightedExpr } from "./error-report";
 import { ASExpr, ASExprList, ASExprSymbol } from "./sexpr";
 import { Declaration, Expression, LambdaList, Syntax } from "./syntax";
-
-/** Return the last element of a list, or undefined if it is empty */
-function last<A>(x: A[]): A | undefined {
-  return x[x.length - 1];
-}
+import { last } from "./utils";
 
 const conversions: Map<string, (expr: ASExprList) => Expression> = new Map();
 const toplevelConversions: Map<
