@@ -14,26 +14,22 @@ function convertSymbol(expr: ASExprSymbol): Type {
 }
 
 function convertList(expr: ASExprList): Type {
-  const [first, from, to] = expr.elements;
+  const [op, ...args] = expr.elements;
 
-  if (first.type !== "symbol" || first.name !== "->") {
-    throw new Error(printHighlightedExpr("Expected -> as first symbol", expr));
+  if (op.type !== "symbol") {
+    throw new Error(printHighlightedExpr("Expected symbol as operator", expr));
   }
 
-  if (expr.elements.length !== 3) {
-    throw new Error(printHighlightedExpr("Expected 3 elements", expr));
-  }
-
-  if (from.type !== "list") {
+  if (args.length < 2) {
     throw new Error(
-      printHighlightedExpr("Expected second element to be a list", expr)
+      printHighlightedExpr("Expected at least 2 arguments", expr)
     );
   }
 
   return {
-    type: "function",
-    from: from.elements.map(convert),
-    to: convert(to)
+    type: "application",
+    op: op.name,
+    args: args.map(convert)
   };
 }
 
