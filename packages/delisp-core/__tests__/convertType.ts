@@ -1,5 +1,5 @@
-import { readFromString } from "../src/reader";
 import { convert } from "../src/convertType";
+import { readFromString } from "../src/reader";
 
 describe("ConvertType", () => {
   it("should convert to numbers", () => {
@@ -28,26 +28,26 @@ describe("ConvertType", () => {
   });
 
   it("should convert to functions", () => {
-    expect(convert(readFromString("  (-> ( string ) number)  "))).toMatchObject(
-      {
-        type: "function",
-        from: [{ type: "string" }],
-        to: { type: "number" }
-      }
-    );
+    expect(convert(readFromString("  (->  string  number)  "))).toMatchObject({
+      type: "application",
+      op: "->",
+      args: [{ type: "string" }, { type: "number" }]
+    });
+
     expect(
-      convert(readFromString("(-> (string (-> (string) c)) c)"))
+      convert(readFromString("(-> string (-> string c) c)"))
     ).toMatchObject({
-      type: "function",
-      from: [
+      type: "application",
+      op: "->",
+      args: [
         { type: "string" },
         {
-          type: "function",
-          from: [{ type: "string" }],
-          to: { type: "type-variable", name: "c" }
-        }
-      ],
-      to: { type: "type-variable", name: "c" }
+          type: "application",
+          op: "->",
+          args: [{ type: "string" }, { type: "type-variable", name: "c" }]
+        },
+        { type: "type-variable", name: "c" }
+      ]
     });
   });
 });
