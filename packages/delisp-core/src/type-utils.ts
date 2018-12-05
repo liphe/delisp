@@ -26,22 +26,24 @@ function typeIndexName(index: number): string {
 function normalizeType(t: Type): Type {
   const vars = listTypeVariables(t);
   const substitution = vars.reduce((s, v, i) => {
-    return {
-      ...s,
-      [v]: {
-        type: "type-variable",
-        name: typeIndexName(i)
-      }
-    };
+    const normalizedName = typeIndexName(i);
+    return v === normalizedName
+      ? s
+      : {
+          ...s,
+          [v]: {
+            type: "type-variable",
+            name: normalizedName
+          }
+        };
   }, {});
   return applySubstitution(t, substitution);
 }
 
-export function printType(rawType: Type): string {
-  const type = normalizeType(rawType);
+function _printType(type: Type): string {
   switch (type.type) {
     case "application":
-      return `(${type.op} ${type.args.map(printType).join(" ")})`;
+      return `(${type.op} ${type.args.map(_printType).join(" ")})`;
     case "number":
       return "number";
     case "string":
@@ -49,4 +51,9 @@ export function printType(rawType: Type): string {
     case "type-variable":
       return type.name;
   }
+}
+
+export function printType(rawType: Type) {
+  const type = normalizeType(rawType);
+  return _printType(type);
 }
