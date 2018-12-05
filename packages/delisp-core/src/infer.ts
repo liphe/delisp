@@ -64,15 +64,16 @@ function infer(
     case "function-call": {
       const ifn = infer(syntax.fn);
       const iargs = syntax.args.map(arg => infer(arg));
+      const tTo = generateUniqueTVar();
 
-      const tfn = {
-        type: "function",
-        from: iargs.map(a => a.type),
-        to: generateUniqueTVar()
+      const tfn: Type = {
+        type: "application",
+        op: "->",
+        args: [...iargs.map(a => a.type), tTo]
       };
 
       return {
-        type: tfn.to,
+        type: tTo,
         constraints: ([[ifn.type, tfn]] as TConstraint[]).concat(
           ...ifn.constraints,
           ...iargs.map(a => a.constraints)
@@ -98,18 +99,6 @@ function debugInfer(expr: Expression) {
 }
 /* tslint:enable:no-console */
 
-// function solve(contraints: TConstraint[]): Substitution | TError {
-//   return [];
-// }
-
-// function applySubst(type: Type, subs: Substitution): Type {}
-
-// function inferType(syntax: Syntax, env: TEnv): Type {
-//   const result = infer(syntax);
-//   const solution = solve(result.constraints);
-//   return applySubst(result.type, solution);
-// }
-
-// import { readFromString } from "./reader";
-// import { convertExpr } from "./convert";
-// debugInfer(convertExpr(readFromString("(lambda (f x) y)")));
+import { readFromString } from "./reader";
+import { convertExpr } from "./convert";
+debugInfer(convertExpr(readFromString("(lambda (f x) (f x))")));
