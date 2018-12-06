@@ -1,8 +1,6 @@
 import { concat, Doc, group, line, nest, pretty, text } from "./prettier";
 import { Expression, Syntax } from "./syntax";
 
-const LINE_WIDTH = 80;
-
 function printString(str: string): Doc {
   const escaped = str.replace(/\n/g, "\\n").replace(/"/g, '\\"');
   return text(`"${escaped}"`);
@@ -28,6 +26,7 @@ function print(sexpr: Syntax): Doc {
       return group(
         concat(
           text("(lambda"),
+          text(" "),
           text("("),
           group(
             join(
@@ -40,20 +39,11 @@ function print(sexpr: Syntax): Doc {
           text(")")
         )
       );
+    default:
+      throw new Error(`Unsupported`);
   }
 }
 
-export function pprint(sexpr: Syntax): string {
-  return pretty(print(sexpr), LINE_WIDTH);
+export function pprint(sexpr: Syntax, lineWidth: number): string {
+  return pretty(print(sexpr), lineWidth);
 }
-
-import { readFromString } from "./reader";
-import { convert } from "./convert";
-const syntax = convert(
-  readFromString(
-    "(lambda (aaa bbb ccc ddd eee fff ggg hhh iii jjj kkk lll mmm nnn ooo ppp qqq) xxx)"
-  )
-);
-
-// console.dir(print(syntax), { depth: null });
-console.log(pprint(syntax));

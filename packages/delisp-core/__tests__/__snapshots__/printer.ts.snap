@@ -1,0 +1,36 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Pretty Printer should print lambda abstractions beautifully 1`] = `"(lambda (aaa bbb ccc) xxx)"`;
+
+exports[`Pretty Printer should print lambda abstractions beautifully 2`] = `
+"(lambda (aaa bbb ccc ddd eee fff ggg hhh iii jjj kkk lll mmm nnn ooo ppp qqq)
+  xxx)"
+`;
+
+exports[`Pretty Printer should print lambda abstractions beautifully 3`] = `
+"(lambda (aaa
+         bbb
+         ccc
+         ddd
+         eee
+         fff
+         ggg
+         hhh
+         iii
+         jjj
+         kkk
+         lll
+         mmm
+         nnn
+         ooo
+         ppp
+         qqq
+         rrr
+         sss
+         ttt
+         uuu
+         vvv
+         www
+         xx)
+  xxx)"
+`;
