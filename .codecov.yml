@@ -3,8 +3,5 @@ coverage:
     project:
       default:
         target: 70%
-        threshold: null
-    patch:
-      default:
-        target: null
-        threshold: null
+        threshold: 10%
+    patch: off
