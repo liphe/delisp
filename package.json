@@ -8,8 +8,7 @@
     "build": "tsc --build packages/",
     "lint": "yarn workspaces run lint",
     "prettier": "prettier --write '**/*.ts'",
-    "test": "yarn workspaces run test",
-    "coveralls": "yarn test --coverage && coveralls -v < packages/delisp-core/coverage/lcov.info"
+    "test": "yarn workspaces run test"
   },
   "devDependencies": {
     "@types/jest": "^23.3.9",

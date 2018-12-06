@@ -9,8 +9,12 @@ before_install:
   - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.12.3
   - export PATH="$HOME/.yarn/bin:$PATH"
 
+before_script:
+  - yarn global add codecov
+
 script:
   - yarn prettier --list-different
   - yarn lint
   - yarn build
-  - yarn coveralls
+  - yarn test --coverage
+  - codecov
