@@ -20,4 +20,13 @@ describe("Pretty Printer", () => {
       )
     ).toMatchSnapshot();
   });
+
+  it("shold print definitions beautifully", () => {
+    expect(pprintString("(define x 10)")).toMatchSnapshot();
+    expect(
+      pprintString(
+        "(define x (lambda (aaa bbb ccc ddd eee fff ggg hhh iii jjj kkk lll mmm nnn ooo ppp qqq rrr sss ttt uuu vvv www xx) xxx))"
+      )
+    ).toMatchSnapshot();
+  });
 });

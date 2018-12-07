@@ -1,5 +1,37 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Pretty Printer shold print definitions beautifully 1`] = `"(define x 10)"`;
+
+exports[`Pretty Printer shold print definitions beautifully 2`] = `
+"
+(define x
+  (lambda (aaa
+           bbb
+           ccc
+           ddd
+           eee
+           fff
+           ggg
+           hhh
+           iii
+           jjj
+           kkk
+           lll
+           mmm
+           nnn
+           ooo
+           ppp
+           qqq
+           rrr
+           sss
+           ttt
+           uuu
+           vvv
+           www
+           xx)
+    xxx))"
+`;
+
 exports[`Pretty Printer should print lambda abstractions beautifully 1`] = `"(lambda (aaa bbb ccc) xxx)"`;
 
 exports[`Pretty Printer should print lambda abstractions beautifully 2`] = `

@@ -39,6 +39,16 @@ function print(sexpr: Syntax): Doc {
           text(")")
         )
       );
+    case "definition":
+      return group(
+        concat(
+          text("(define"),
+          text(" "),
+          printVariable(sexpr.variable),
+          nest(2, concat(line, print(sexpr.value))),
+          text(")")
+        )
+      );
     default:
       throw new Error(`Unsupported`);
   }
