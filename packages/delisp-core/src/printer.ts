@@ -39,6 +39,12 @@ function print(sexpr: Syntax): Doc {
           text(")")
         )
       );
+    case "function-call":
+      const fn = print(sexpr.fn);
+      const args = sexpr.args.map(print);
+      return group(
+        concat(text("("), fn, line, join(args, text(" ")), text(")"))
+      );
     case "definition":
       return group(
         concat(
@@ -49,11 +55,19 @@ function print(sexpr: Syntax): Doc {
           text(")")
         )
       );
-    default:
-      throw new Error(`Unsupported`);
   }
 }
 
 export function pprint(sexpr: Syntax, lineWidth: number): string {
   return pretty(print(sexpr), lineWidth);
 }
+
+import { readSyntax } from "./index";
+console.log(
+  pprint(
+    readSyntax(
+      "(funcall aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa)"
+    ),
+    80
+  )
+);
