@@ -175,8 +175,6 @@ function better(x: Doc, y: Doc, w: number, k: number): Doc {
 }
 
 function best(doc: Doc, w: number, k: number): Doc {
-  // console.log("best ", w, k);
-  // console.dir({ doc }, { depth: null });
   switch (doc.type) {
     case "nil":
       return nil;
