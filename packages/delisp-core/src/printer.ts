@@ -1,11 +1,11 @@
 import {
+  align,
   concat,
   Doc,
   group,
-  align,
+  indent,
   join,
   line,
-  nest,
   pretty,
   text
 } from "./prettier";
@@ -35,13 +35,10 @@ function print(sexpr: Syntax): Doc {
           text(" "),
           text("("),
           group(
-            join(
-              sexpr.lambdaList.map(x => x.variable).map(printVariable),
-              nest(9, line)
-            )
+            align(...sexpr.lambdaList.map(x => x.variable).map(printVariable))
           ),
           text(")"),
-          nest(2, concat(line, print(sexpr.body))),
+          indent(concat(line, print(sexpr.body))),
           text(")")
         )
       );
@@ -62,7 +59,7 @@ function print(sexpr: Syntax): Doc {
           text("(define"),
           text(" "),
           printVariable(sexpr.variable),
-          nest(2, concat(line, print(sexpr.value))),
+          indent(concat(line, print(sexpr.value))),
           text(")")
         )
       );

@@ -88,27 +88,27 @@ exports[`Pretty Printer should align nested function calls 3`] = `
 exports[`Pretty Printer should pretty print a combination of lambda and function call 1`] = `
 "
 (foo (lambda (x y z)
-  (funcall aaaaa
-           aaaaa
-           aaaaa
-           (fxyz 0
-                 111
-                 222
-                 333
-                 444
-                 555
-                 666
-                 777
-                 888
-                 999
-                 aaa
-                 bbb
-                 xxx
-                 yyy
-                 zzz
-                 www
-                 uuu
-                 ttt))))"
+       (funcall aaaaa
+                aaaaa
+                aaaaa
+                (fxyz 0
+                      111
+                      222
+                      333
+                      444
+                      555
+                      666
+                      777
+                      888
+                      999
+                      aaa
+                      bbb
+                      xxx
+                      yyy
+                      zzz
+                      www
+                      uuu
+                      ttt))))"
 `;
 
 exports[`Pretty Printer should print lambda abstractions beautifully 1`] = `

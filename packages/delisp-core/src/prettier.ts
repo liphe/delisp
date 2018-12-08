@@ -7,6 +7,8 @@
 
 import { last } from "./utils";
 
+const INDENT_WIDTH = 2;
+
 interface DocNil {
   type: "nil";
 }
@@ -19,7 +21,6 @@ interface DocText {
 
 interface DocLine {
   type: "line";
-  level: number;
   doc: Doc;
 }
 
@@ -33,9 +34,16 @@ interface DocAlign {
   type: "align";
   root: Doc;
   docs: Doc[];
+  next: Doc;
 }
 
-export type Doc = DocNil | DocText | DocLine | DocUnion | DocAlign;
+interface DocIndent {
+  type: "indent";
+  doc: Doc;
+  next: Doc;
+}
+
+export type Doc = DocNil | DocText | DocLine | DocUnion | DocAlign | DocIndent;
 
 export const nil: Doc = { type: "nil" };
 
@@ -48,7 +56,6 @@ export function text(content: string): Doc {
 
 export const line: Doc = {
   type: "line",
-  level: 0,
   doc: nil
 };
 
@@ -65,7 +72,6 @@ function concat2(x: Doc, y: Doc): Doc {
     case "line":
       return {
         type: "line",
-        level: x.level,
         doc: concat2(x.doc, y)
       };
     case "union":
@@ -75,17 +81,18 @@ function concat2(x: Doc, y: Doc): Doc {
         y: concat2(x.y, y)
       };
     case "align":
-      if (x.docs.length === 0) {
-        return concat2(x.root, y);
-      } else {
-        const middle = x.docs.slice(0, -1);
-        const lastdoc = last(x.docs)!;
-        return {
-          type: "align",
-          root: x.root,
-          docs: [...middle, concat2(lastdoc, y)]
-        };
-      }
+      return {
+        type: "align",
+        root: x.root,
+        docs: x.docs,
+        next: concat2(x.next, y)
+      };
+    case "indent":
+      return {
+        type: "indent",
+        doc: x.doc,
+        next: concat2(x.next, y)
+      };
   }
 }
 
@@ -97,35 +104,8 @@ export function join(docs: Doc[], sep: Doc) {
   return docs.reduce((a, d) => concat(a, sep, d));
 }
 
-export function nest(level: number, doc: Doc): Doc {
-  switch (doc.type) {
-    case "nil":
-      return nil;
-    case "text":
-      return {
-        type: "text",
-        content: doc.content,
-        doc: nest(level, doc.doc)
-      };
-    case "line":
-      return {
-        type: "line",
-        level: doc.level + level,
-        doc: nest(level, doc.doc)
-      };
-    case "union":
-      return {
-        type: "union",
-        x: nest(level, doc.x),
-        y: nest(level, doc.y)
-      };
-    case "align":
-      return {
-        type: "align",
-        root: nest(level, doc.root),
-        docs: doc.docs
-      };
-  }
+export function indent(doc: Doc): Doc {
+  return { type: "indent", doc, next: nil };
 }
 
 function union(x: Doc, y: Doc): Doc {
@@ -158,7 +138,12 @@ function flatten(doc: Doc): Doc {
       // All layouts in the set should flatten to the same document.
       return flatten(doc.x);
     case "align":
-      return flatten(join([doc.root, ...doc.docs], text(" ")));
+      return concat(
+        flatten(join([doc.root, ...doc.docs], text(" "))),
+        flatten(doc.next)
+      );
+    case "indent":
+      return { type: "indent", doc: flatten(doc.doc), next: flatten(doc.next) };
   }
 }
 
@@ -178,16 +163,23 @@ export function group(doc: Doc): Doc {
       return union(group(doc.x), doc.y);
     case "align":
       return union(flatten(doc), doc);
+    case "indent":
+      return { type: "indent", doc: group(doc.doc), next: doc.next };
   }
 }
 
 export function align(...all: Doc[]): Doc {
-  const [root, ...docs] = all;
-  return {
-    type: "align",
-    root,
-    docs
-  };
+  if (all.length === 0) {
+    return nil;
+  } else {
+    const [root, ...docs] = all;
+    return {
+      type: "align",
+      root,
+      docs,
+      next: nil
+    };
+  }
 }
 
 function fits(doc: Doc, w: number): boolean {
@@ -205,6 +197,8 @@ function fits(doc: Doc, w: number): boolean {
       throw new Error(`Unsupported`);
     case "align":
       return fits(doc.root, w) && doc.docs.every(d => fits(d, w));
+    case "indent":
+      return fits(doc.doc, w - INDENT_WIDTH);
   }
 }
 
@@ -225,8 +219,7 @@ function best(doc: Doc, w: number, k: number): Doc {
     case "line":
       return {
         type: "line",
-        level: doc.level,
-        doc: best(doc.doc, w, doc.level)
+        doc: best(doc.doc, w, k)
       };
     case "union":
       return better(best(doc.x, w, k), best(doc.y, w, k), w, k);
@@ -234,7 +227,14 @@ function best(doc: Doc, w: number, k: number): Doc {
       return {
         type: "align",
         root: best(doc.root, w, k),
-        docs: doc.docs.map(d => best(d, w, k))
+        docs: doc.docs.map(d => best(d, w, k)),
+        next: best(doc.next, w, k)
+      };
+    case "indent":
+      return {
+        type: "indent",
+        doc: best(doc.doc, w - INDENT_WIDTH, k),
+        next: best(doc.next, w, k)
       };
   }
 }
@@ -245,25 +245,41 @@ function repeatChar(ch: string, n: number): string {
     .join("");
 }
 
-function layout(doc: Doc, k: number): string {
+function layout(doc: Doc, indentation: number, alignment: number): string {
   switch (doc.type) {
     case "nil":
       return "";
     case "text":
-      return doc.content + layout(doc.doc, k + doc.content.length);
+      return (
+        doc.content +
+        layout(doc.doc, indentation, alignment + doc.content.length)
+      );
     case "line":
-      return "\n" + repeatChar(" ", doc.level) + layout(doc.doc, doc.level);
+      return (
+        "\n" + repeatChar(" ", indentation) + layout(doc.doc, indentation, 0)
+      );
     case "union":
       throw new Error(`No unions for layout!`);
     case "align":
-      return [
-        layout(doc.root, k),
-        ...doc.docs.map(d => repeatChar(" ", k) + layout(d, k))
-      ].join("\n");
+      return (
+        [
+          layout(doc.root, indentation + alignment, 0),
+          ...doc.docs.map(
+            d =>
+              repeatChar(" ", indentation + alignment) +
+              layout(d, indentation + alignment, 0)
+          )
+        ].join("\n") + layout(doc.next, indentation, alignment)
+      );
+    case "indent":
+      return (
+        layout(doc.doc, indentation + INDENT_WIDTH, alignment) +
+        layout(doc.next, indentation, alignment)
+      );
   }
 }
 
 export function pretty(doc: Doc, w: number): string {
   const d = best(doc, w, 0);
-  return layout(d, 0);
+  return layout(d, 0, 0);
 }
