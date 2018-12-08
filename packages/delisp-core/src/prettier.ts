@@ -5,6 +5,8 @@
 // https://homepages.inf.ed.ac.uk/wadler/papers/prettier/prettier.pdf
 //
 
+import { last } from "./utils";
+
 interface DocNil {
   type: "nil";
 }
@@ -27,7 +29,13 @@ interface DocUnion {
   y: Doc;
 }
 
-export type Doc = DocNil | DocText | DocLine | DocUnion;
+interface DocAlign {
+  type: "align";
+  root: Doc;
+  docs: Doc[];
+}
+
+export type Doc = DocNil | DocText | DocLine | DocUnion | DocAlign;
 
 export const nil: Doc = { type: "nil" };
 
@@ -66,11 +74,27 @@ function concat2(x: Doc, y: Doc): Doc {
         x: concat2(x.x, y),
         y: concat2(x.y, y)
       };
+    case "align":
+      if (x.docs.length === 0) {
+        return concat2(x.root, y);
+      } else {
+        const middle = x.docs.slice(0, -1);
+        const lastdoc = last(x.docs)!;
+        return {
+          type: "align",
+          root: x.root,
+          docs: [...middle, concat2(lastdoc, y)]
+        };
+      }
   }
 }
 
 export function concat(...docs: Doc[]): Doc {
   return docs.reduce(concat2, nil);
+}
+
+export function join(docs: Doc[], sep: Doc) {
+  return docs.reduce((a, d) => concat(a, sep, d));
 }
 
 export function nest(level: number, doc: Doc): Doc {
@@ -94,6 +118,12 @@ export function nest(level: number, doc: Doc): Doc {
         type: "union",
         x: nest(level, doc.x),
         y: nest(level, doc.y)
+      };
+    case "align":
+      return {
+        type: "align",
+        root: nest(level, doc.root),
+        docs: doc.docs
       };
   }
 }
@@ -127,6 +157,8 @@ function flatten(doc: Doc): Doc {
     case "union":
       // All layouts in the set should flatten to the same document.
       return flatten(doc.x);
+    case "align":
+      return flatten(join([doc.root, ...doc.docs], text(" ")));
   }
 }
 
@@ -141,17 +173,21 @@ export function group(doc: Doc): Doc {
         doc: group(doc.doc)
       };
     case "line":
-      return union(
-        {
-          type: "text",
-          content: " ",
-          doc: flatten(doc.doc)
-        },
-        doc
-      );
+      return union(flatten(doc), doc);
     case "union":
       return union(group(doc.x), doc.y);
+    case "align":
+      return union(flatten(doc), doc);
   }
+}
+
+export function align(...all: Doc[]): Doc {
+  const [root, ...docs] = all;
+  return {
+    type: "align",
+    root,
+    docs
+  };
 }
 
 function fits(doc: Doc, w: number): boolean {
@@ -167,6 +203,8 @@ function fits(doc: Doc, w: number): boolean {
       return fits(doc.doc, w - doc.content.length);
     case "union":
       throw new Error(`Unsupported`);
+    case "align":
+      return fits(doc.root, w) && doc.docs.every(d => fits(d, w));
   }
 }
 
@@ -188,10 +226,16 @@ function best(doc: Doc, w: number, k: number): Doc {
       return {
         type: "line",
         level: doc.level,
-        doc: best(doc.doc, w, k + doc.level)
+        doc: best(doc.doc, w, doc.level)
       };
     case "union":
       return better(best(doc.x, w, k), best(doc.y, w, k), w, k);
+    case "align":
+      return {
+        type: "align",
+        root: best(doc.root, w, k),
+        docs: doc.docs.map(d => best(d, w, k))
+      };
   }
 }
 
@@ -201,19 +245,25 @@ function repeatChar(ch: string, n: number): string {
     .join("");
 }
 
-function layout(doc: Doc): string {
+function layout(doc: Doc, k: number): string {
   switch (doc.type) {
     case "nil":
       return "";
     case "text":
-      return doc.content + layout(doc.doc);
+      return doc.content + layout(doc.doc, k + doc.content.length);
     case "line":
-      return "\n" + repeatChar(" ", doc.level) + layout(doc.doc);
+      return "\n" + repeatChar(" ", doc.level) + layout(doc.doc, doc.level);
     case "union":
       throw new Error(`No unions for layout!`);
+    case "align":
+      return [
+        layout(doc.root, k),
+        ...doc.docs.map(d => repeatChar(" ", k) + layout(d, k))
+      ].join("\n");
   }
 }
 
 export function pretty(doc: Doc, w: number): string {
-  return layout(best(doc, w, 0));
+  const d = best(doc, w, 0);
+  return layout(d, 0);
 }

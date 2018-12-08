@@ -1,6 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Pretty Printer shold print definitions beautifully 1`] = `"(define x 10)"`;
+exports[`Pretty Printer shold print definitions beautifully 1`] = `
+"
+(define x 10)"
+`;
 
 exports[`Pretty Printer shold print definitions beautifully 2`] = `
 "
@@ -32,15 +35,96 @@ exports[`Pretty Printer shold print definitions beautifully 2`] = `
     xxx))"
 `;
 
-exports[`Pretty Printer should print lambda abstractions beautifully 1`] = `"(lambda (aaa bbb ccc) xxx)"`;
+exports[`Pretty Printer should align nested function calls 1`] = `
+"
+(funcall aaaaa
+         aaaaa
+         aaaaa
+         aaaaa
+         aaaaa
+         aaaaa
+         aaaaa
+         aaaaa
+         (fxyz 0 111 222)
+         aaaaa
+         aaaaa
+         aaaaa
+         aaaaa
+         aaaaa
+         aaaaa
+         aaaaa)"
+`;
+
+exports[`Pretty Printer should align nested function calls 2`] = `
+"
+(funcall aaaaa aaaaa aaaaa (fxyz 0 111 222))"
+`;
+
+exports[`Pretty Printer should align nested function calls 3`] = `
+"
+(funcall aaaaa
+         aaaaa
+         aaaaa
+         (fxyz 0
+               111
+               222
+               333
+               444
+               555
+               666
+               777
+               888
+               999
+               aaa
+               bbb
+               xxx
+               yyy
+               zzz
+               www
+               uuu
+               ttt))"
+`;
+
+exports[`Pretty Printer should pretty print a combination of lambda and function call 1`] = `
+"
+(foo (lambda (x y z)
+  (funcall aaaaa
+           aaaaa
+           aaaaa
+           (fxyz 0
+                 111
+                 222
+                 333
+                 444
+                 555
+                 666
+                 777
+                 888
+                 999
+                 aaa
+                 bbb
+                 xxx
+                 yyy
+                 zzz
+                 www
+                 uuu
+                 ttt))))"
+`;
+
+exports[`Pretty Printer should print lambda abstractions beautifully 1`] = `
+"
+(lambda (aaa bbb ccc) xxx)"
+`;
 
 exports[`Pretty Printer should print lambda abstractions beautifully 2`] = `
-"(lambda (aaa bbb ccc ddd eee fff ggg hhh iii jjj kkk lll mmm nnn ooo ppp qqq)
+"
+(lambda (aaa bbb ccc ddd eee fff ggg hhh iii jjj kkk lll mmm nnn ooo ppp qqq)
   xxx)"
 `;
 
 exports[`Pretty Printer should print lambda abstractions beautifully 3`] = `
-"(lambda (aaa
+"
+(lambda (aaa
          bbb
          ccc
          ddd

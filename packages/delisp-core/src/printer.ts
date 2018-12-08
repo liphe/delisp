@@ -1,4 +1,14 @@
-import { concat, Doc, group, line, nest, pretty, text } from "./prettier";
+import {
+  concat,
+  Doc,
+  group,
+  align,
+  join,
+  line,
+  nest,
+  pretty,
+  text
+} from "./prettier";
 import { Expression, Syntax } from "./syntax";
 
 function printString(str: string): Doc {
@@ -8,10 +18,6 @@ function printString(str: string): Doc {
 
 function printVariable(name: string): Doc {
   return text(name);
-}
-
-function join(docs: Doc[], sep: Doc) {
-  return docs.reduce((a, d) => concat(a, sep, d));
 }
 
 function print(sexpr: Syntax): Doc {
@@ -41,9 +47,14 @@ function print(sexpr: Syntax): Doc {
       );
     case "function-call":
       const fn = print(sexpr.fn);
-      const args = sexpr.args.map(print);
       return group(
-        concat(text("("), fn, line, join(args, text(" ")), text(")"))
+        concat(
+          text("("),
+          fn,
+          text(" "),
+          align(...sexpr.args.map(print)),
+          text(")")
+        )
       );
     case "definition":
       return group(
@@ -61,13 +72,3 @@ function print(sexpr: Syntax): Doc {
 export function pprint(sexpr: Syntax, lineWidth: number): string {
   return pretty(print(sexpr), lineWidth);
 }
-
-import { readSyntax } from "./index";
-console.log(
-  pprint(
-    readSyntax(
-      "(funcall aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa)"
-    ),
-    80
-  )
-);
