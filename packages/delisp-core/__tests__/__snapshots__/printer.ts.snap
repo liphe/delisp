@@ -111,6 +111,15 @@ exports[`Pretty Printer should pretty print a combination of lambda and function
                       ttt))))"
 `;
 
+exports[`Pretty Printer should print amll real code beautifully 1`] = `
+"
+(define bq-frob
+  (lambda (x)
+    (and (consp x)
+         (or (eq (car x) *comma*)
+             (eq (car x) *comma-atsign*)))))"
+`;
+
 exports[`Pretty Printer should print lambda abstractions beautifully 1`] = `
 "
 (lambda (aaa bbb ccc) xxx)"

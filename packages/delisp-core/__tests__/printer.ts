@@ -55,4 +55,16 @@ describe("Pretty Printer", () => {
       )
     ).toMatchSnapshot();
   });
+
+  it("should print amll real code beautifully", () => {
+    expect(
+      pprintString(
+        `
+(define bq-frob 
+  (lambda (x)
+    (and (consp x) (or (eq (car x) *comma*) (eq (car x) *comma-atsign*)))))
+`
+      )
+    ).toMatchSnapshot();
+  });
 });
