@@ -130,6 +130,13 @@ exports[`Pretty Printer should print amll real code beautifully 1`] = `
              (eq (car x) *comma-atsign*)))))"
 `;
 
+exports[`Pretty Printer should print deeply nested function calls nicely 1`] = `
+"
+(function-call-1 (function-call-2 (function-call-3 (function-call-4
+                                                    (function-call-5 3 4 5 6 7))))
+                 30)"
+`;
+
 exports[`Pretty Printer should print lambda abstractions beautifully 1`] = `
 "
 (lambda (aaa bbb ccc) xxx)"

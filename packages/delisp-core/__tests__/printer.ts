@@ -83,4 +83,16 @@ describe("Pretty Printer", () => {
       )
     ).toMatchSnapshot();
   });
+
+  it("should print deeply nested function calls nicely", () => {
+    expect(
+      pprintString(`
+(function-call-1 (function-call-2 (function-call-3 (function-call-4 (function-call-5 3
+                                                                                     4
+                                                                                     5
+                                                                                     6
+                                                                                     7))))
+                 30)`)
+    ).toMatchSnapshot();
+  });
 });
