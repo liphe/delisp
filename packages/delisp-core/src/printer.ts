@@ -8,6 +8,7 @@ import {
   join,
   line,
   pretty,
+  space,
   text
 } from "./prettier";
 import { Expression, Syntax } from "./syntax";
@@ -25,9 +26,9 @@ function printVariable(name: string): Doc {
   return text(name);
 }
 
-const lparen = text("(");
-const rparen = text(")");
-const space = text(" ");
+function list(...docs: Doc[]): Doc {
+  return group(concat(text("("), ...docs, text(")")));
+}
 
 function print(sexpr: Syntax): Doc {
   switch (sexpr.type) {
@@ -38,37 +39,24 @@ function print(sexpr: Syntax): Doc {
     case "variable-reference":
       return printVariable(sexpr.variable);
     case "function":
-      return group(
-        concat(
-          lparen,
-          text("lambda"),
-          space,
-          lparen,
-          group(
-            align(...sexpr.lambdaList.map(x => x.variable).map(printVariable))
-          ),
-          rparen,
-          indent(concat(line, print(sexpr.body))),
-          rparen
-        )
+      const argNames = sexpr.lambdaList.map(x => x.variable);
+      return list(
+        text("lambda"),
+        space,
+        list(align(...argNames.map(printVariable))),
+        indent(concat(line, print(sexpr.body)))
       );
     case "function-call":
       const fn = print(sexpr.fn);
       const args = sexpr.args.map(print);
-      return group(
-        concat(text("("), groupalign(fn, align(...args)), text(")"))
-      );
+      return list(groupalign(fn, align(...args)));
 
     case "definition":
-      return group(
-        concat(
-          lparen,
-          text("define"),
-          space,
-          printVariable(sexpr.variable),
-          indent(concat(line, print(sexpr.value))),
-          rparen
-        )
+      return list(
+        text("define"),
+        space,
+        printVariable(sexpr.variable),
+        indent(concat(line, print(sexpr.value)))
       );
   }
 }

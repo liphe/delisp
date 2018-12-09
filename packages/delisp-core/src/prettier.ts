@@ -4,7 +4,7 @@
 // at
 // https://homepages.inf.ed.ac.uk/wadler/papers/prettier/prettier.pdf
 //
-// The paper is a great starting point, but I start to extend this
+// The paper is a great starting point, but I had to extend this
 // with some extra operations, as the expressive power of the original
 // operators is not enough.
 //
@@ -14,42 +14,42 @@ import { last } from "./utils";
 interface DocNil {
   type: "nil";
 }
-
 interface DocText {
   type: "text";
   content: string;
   next: Doc;
 }
-
 interface DocLine {
   type: "line";
   next: Doc;
 }
-
 interface DocUnion {
   type: "union";
   x: Doc;
   y: Doc;
 }
-
 interface DocAlign {
   type: "align";
   root: Doc;
   docs: Doc[];
   next: Doc;
 }
-
 interface DocIndent {
   type: "indent";
   doc: Doc;
   level: number;
   next: Doc;
 }
-
+/** A document with potentially multiple layouts. */
 export type Doc = DocNil | DocText | DocLine | DocUnion | DocAlign | DocIndent;
 
+/** Empty document. */
 export const nil: Doc = { type: "nil" };
 
+// Primitive document builders
+//
+
+/** A document consisting of a literal string. */
 export function text(content: string): Doc {
   if (content.includes("\n")) {
     throw new Error(`Newline is not allowed in a call to 'text'`);
@@ -57,10 +57,52 @@ export function text(content: string): Doc {
   return { type: "text", content, next: nil };
 }
 
+/** A new line.
+ * @description
+ * A new line. The rest of the document will be indented to the
+ * current indentation level.
+ */
 export const line: Doc = {
   type: "line",
   next: nil
 };
+
+/** Indent a document by a number of levels. */
+export function indent(doc: Doc, level: number): Doc {
+  return { type: "indent", doc, next: nil, level };
+}
+
+function union(x: Doc, y: Doc): Doc {
+  // invariant: every first line of x must be longer than than first
+  // line of y
+  return {
+    type: "union",
+    x,
+    y
+  };
+}
+
+/** Pretty print docs vertically aligned with the first one. */
+export function align(...docs: Doc[]): Doc {
+  if (docs.length === 0) {
+    return nil;
+  }
+  const [root, ...rest] = docs;
+  return {
+    type: "align",
+    root,
+    docs: rest,
+    next: nil
+  };
+}
+
+/**
+ * Concatenate two documents, or break them apart in an aligned way
+ * if they do not fit.
+ */
+export function groupalign(x: Doc, y: Doc): Doc {
+  return union(join([x, y], space), align(x, y));
+}
 
 function concat2(x: Doc, y: Doc): Doc {
   switch (x.type) {
@@ -100,26 +142,9 @@ function concat2(x: Doc, y: Doc): Doc {
   }
 }
 
+/** Concatenate a sequence of documents. */
 export function concat(...docs: Doc[]): Doc {
   return docs.reduce(concat2, nil);
-}
-
-export function join(docs: Doc[], sep: Doc) {
-  return docs.reduce((a, d) => concat(a, sep, d));
-}
-
-export function indent(doc: Doc, level: number): Doc {
-  return { type: "indent", doc, next: nil, level };
-}
-
-function union(x: Doc, y: Doc): Doc {
-  // invariant: every first line of x must be longer than than first
-  // line of y
-  return {
-    type: "union",
-    x,
-    y
-  };
 }
 
 function flatten(doc: Doc): Doc {
@@ -139,11 +164,13 @@ function flatten(doc: Doc): Doc {
         next: flatten(doc.next)
       };
     case "union":
-      // All layouts in the set should flatten to the same document.
+      // Note that we can just flatten one of the layouts,
+      // as a union should represent different layouts, they should
+      // all flatten to the same document.
       return flatten(doc.x);
     case "align":
       return concat(
-        flatten(join([doc.root, ...doc.docs], text(" "))),
+        flatten(join([doc.root, ...doc.docs], space)),
         flatten(doc.next)
       );
     case "indent":
@@ -156,6 +183,14 @@ function flatten(doc: Doc): Doc {
   }
 }
 
+/** Mark a document as potentially collapsable in a single line.
+ * @description
+ * A group tells the pretty printer that it should try to collapse into
+ * a single line if it fits.
+ *
+ * If it does not fit, the group will printed as it is, trying to collapse
+ * nested groups.
+ */
 export function group(doc: Doc): Doc {
   switch (doc.type) {
     case "nil":
@@ -177,30 +212,27 @@ export function group(doc: Doc): Doc {
         type: "indent",
         level: doc.level,
         doc: group(doc.doc),
-        next: doc.next
+        next: group(doc.next)
       };
   }
 }
 
-export function align(...all: Doc[]): Doc {
-  if (all.length === 0) {
-    return nil;
-  } else {
-    const [root, ...docs] = all;
-    return {
-      type: "align",
-      root,
-      docs,
-      next: nil
-    };
-  }
+// Utilities
+//
+
+/** A space. */
+export const space = text(" ");
+
+/** Concatenate a sequence of documents with a separator.
+ * @description
+ * Insert `sep` in between each of the documents.
+ */
+export function join(docs: Doc[], sep: Doc) {
+  return docs.reduce((a, d) => concat(a, sep, d));
 }
 
-/** Concatenate two documents, or break them apart in an aligned way
- * if they do not fit.  */
-export function groupalign(x: Doc, y: Doc): Doc {
-  return union(join([x, y], text(" ")), align(x, y));
-}
+// Pretty printing documents
+//
 
 function fits(doc: Doc, w: number): boolean {
   if (w < 0) {
@@ -300,6 +332,10 @@ function layout(doc: Doc, indentation: number, alignment: number): string {
   }
 }
 
+/** Pretty print a document
+ * @param doc The document to pretty print
+ * @param w The width of the line we want to adjust it to
+ */
 export function pretty(doc: Doc, w: number): string {
   const d = best(doc, w, 0);
   return layout(d, 0, 0);
