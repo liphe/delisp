@@ -67,4 +67,20 @@ describe("Pretty Printer", () => {
       )
     ).toMatchSnapshot();
   });
+
+  it("should place all arguments of a function call in the next line if necessary", () => {
+    expect(
+      pprintString(
+        `
+(this-is-a-very-long-and-ugly-function-name
+ (axbxcxd (a b c d)
+          (a b c d)
+          (a b c d)
+          (a b c d)
+          (a b c d)))
+`,
+        40
+      )
+    ).toMatchSnapshot();
+  });
 });
