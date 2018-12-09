@@ -182,6 +182,12 @@ export function align(...all: Doc[]): Doc {
   }
 }
 
+/** Concatenate two documents, or break them apart in an aligned way
+ * if they do not fit.  */
+export function groupalign(x: Doc, y: Doc): Doc {
+  return union(join([x, y], text(" ")), align(x, y));
+}
+
 function fits(doc: Doc, w: number): boolean {
   if (w < 0) {
     return false;

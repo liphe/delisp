@@ -3,6 +3,7 @@ import {
   concat,
   Doc,
   group,
+  groupalign,
   indent,
   join,
   line,
@@ -20,6 +21,10 @@ function printVariable(name: string): Doc {
   return text(name);
 }
 
+const lparen = text("(");
+const rparen = text(")");
+const space = text(" ");
+
 function print(sexpr: Syntax): Doc {
   switch (sexpr.type) {
     case "string":
@@ -31,36 +36,34 @@ function print(sexpr: Syntax): Doc {
     case "function":
       return group(
         concat(
-          text("(lambda"),
-          text(" "),
-          text("("),
+          lparen,
+          text("lambda"),
+          space,
+          lparen,
           group(
             align(...sexpr.lambdaList.map(x => x.variable).map(printVariable))
           ),
-          text(")"),
+          rparen,
           indent(concat(line, print(sexpr.body))),
-          text(")")
+          rparen
         )
       );
     case "function-call":
       const fn = print(sexpr.fn);
+      const args = sexpr.args.map(print);
       return group(
-        concat(
-          text("("),
-          fn,
-          text(" "),
-          align(...sexpr.args.map(print)),
-          text(")")
-        )
+        concat(text("("), groupalign(fn, align(...args)), text(")"))
       );
+
     case "definition":
       return group(
         concat(
-          text("(define"),
-          text(" "),
+          lparen,
+          text("define"),
+          space,
           printVariable(sexpr.variable),
           indent(concat(line, print(sexpr.value))),
-          text(")")
+          rparen
         )
       );
   }

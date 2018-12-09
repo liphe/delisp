@@ -85,6 +85,16 @@ exports[`Pretty Printer should align nested function calls 3`] = `
                ttt))"
 `;
 
+exports[`Pretty Printer should place all arguments of a function call in the next line if necessary 1`] = `
+"
+(this-is-a-very-long-and-ugly-function-name
+ (axbxcxd (a b c d)
+          (a b c d)
+          (a b c d)
+          (a b c d)
+          (a b c d)))"
+`;
+
 exports[`Pretty Printer should pretty print a combination of lambda and function call 1`] = `
 "
 (foo (lambda (x y z)
