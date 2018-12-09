@@ -50,4 +50,28 @@ describe("ConvertType", () => {
       ]
     });
   });
+
+  it("should detect incorrect types", () => {
+    expect(() => convert(readFromString("1"))).toThrowError("Not a valid type");
+
+    expect(() => convert(readFromString(`"hello"`))).toThrowError(
+      "Not a valid type"
+    );
+
+    expect(() => convert(readFromString(`(fn)`))).toThrowError(
+      "Expected at least 2 arguments"
+    );
+
+    expect(() => convert(readFromString(`(fn a)`))).toThrowError(
+      "Expected at least 2 arguments"
+    );
+
+    expect(() => convert(readFromString("(1 2 3)"))).toThrowError(
+      "Expected symbol as operator"
+    );
+
+    expect(() => convert(readFromString(`("hello" "world")`))).toThrowError(
+      "Expected symbol as operator"
+    );
+  });
 });
