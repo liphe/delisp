@@ -132,9 +132,17 @@ export class Parser<A> {
   //
   // Run a parser against a string
   //
-  parse(x: string) {
+  parse(x: string): A {
     const input = new Input(x);
-    return this.run(input);
+    const result = this.run(input);
+    if (result.status === "success") {
+      return result.value;
+    } else {
+      const message = getParserError(x, result);
+      const err = new Error(message);
+      (err as any).incomplete = result.incomplete;
+      throw err;
+    }
   }
 }
 
