@@ -1,5 +1,4 @@
-import { getParserError } from "../src/parser-combinators";
-import { readFromString } from "../src/reader";
+import { readAllFromString, readFromString } from "../src/reader";
 
 describe("Reader", () => {
   it("should read numbers", () => {
@@ -116,6 +115,25 @@ describe("Reader", () => {
     });
   });
 
+  it("should read multiple S-expressions", () => {
+    expect(readAllFromString("(x 1 2)(y 3)")).toMatchObject([
+      { type: "list" },
+      { type: "list" }
+    ]);
+
+    expect(readAllFromString(" (x 1 2) (y 3) ")).toMatchObject([
+      { type: "list" },
+      { type: "list" }
+    ]);
+
+    expect(
+      readAllFromString(`
+      (x 1 2)
+      (y 3)
+    `)
+    ).toMatchObject([{ type: "list" }, { type: "list" }]);
+  });
+
   describe("Error messages", () => {
     const failedRead = (x: string) => {
       try {
@@ -157,10 +175,24 @@ describe("Reader", () => {
       }
     };
 
+    const readAll = (x: string) => {
+      try {
+        readAllFromString(x);
+        return undefined;
+      } catch (err) {
+        return err.incomplete;
+      }
+    };
+
     expect(read("(1 2 3")).toBe(true);
     expect(read(")")).toBe(false);
     expect(read('"foo')).toBe(true);
     expect(read('"ab\\xyz"')).toBe(false);
     expect(read('"abc\\')).toBe(true);
+
+    expect(readAll("(1 2 3)(4 5")).toBe(true);
+    expect(readAll("(1 2 3)4 5)")).toBe(false);
+    expect(readAll("((1 2 3)")).toBe(true);
+    expect(readAll("(1 2 3))")).toBe(false);
   });
 });

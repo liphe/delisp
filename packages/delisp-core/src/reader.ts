@@ -12,9 +12,11 @@ import {
   character,
   delimited,
   delimitedMany,
+  endOfInput,
   getParserError,
   many,
-  Parser
+  Parser,
+  until
 } from "./parser-combinators";
 
 import { ASExpr } from "./sexpr";
@@ -163,6 +165,20 @@ const reportUnmatched: Parser<{}> = Parser.lookahead(rightParen).chain(
 const sexpr: Parser<ASExpr> = spaced(
   reportUnmatched.then(atom.or(() => list(sexpr)))
 );
+
+const sexprs: Parser<ASExpr[]> = until(endOfInput, sexpr);
+
+export function readAllFromString(str: string): ASExpr[] {
+  const result = sexprs.parse(str);
+  if (result.status === "success") {
+    return result.value;
+  } else {
+    const message = getParserError(str, result);
+    const err = new Error(message);
+    (err as any).incomplete = result.incomplete;
+    throw err;
+  }
+}
 
 //
 // Parser a Delisp expression from a string
