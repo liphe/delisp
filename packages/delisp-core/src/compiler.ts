@@ -1,6 +1,6 @@
-import { printHighlightedExpr } from "./error-report";
 import {
   Expression,
+  Module,
   SDefinition,
   SFunction,
   SFunctionCall,
@@ -116,24 +116,28 @@ function compileTopLevel(syntax: Syntax, env: Environment): JSAST {
   }
 }
 
-export function compileModule(syntax: Syntax): JSAST {
+function compileModule(module: Module): JSAST {
   return {
     type: "File",
     program: {
       type: "Program",
       sourceType: "module",
-      body: [
-        {
-          type: "ExpressionStatement",
-          expression: compileTopLevel(syntax, {})
-        }
-      ]
+      body: module.body.map((syntax: Syntax) => ({
+        type: "ExpressionStatement",
+        expression: compileTopLevel(syntax, {})
+      }))
     }
   };
 }
 
 export function compileToString(syntax: Syntax): string {
-  const ast = compileModule(syntax);
+  const ast = compileModule({ type: "module", body: [syntax] });
+  debug("jsast:", ast);
+  return recast.print(ast).code;
+}
+
+export function compileModuleToString(module: Module): string {
+  const ast = compileModule(module);
   debug("jsast:", ast);
   return recast.print(ast).code;
 }
