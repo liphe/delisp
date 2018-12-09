@@ -13,7 +13,6 @@ import {
   delimited,
   delimitedMany,
   endOfInput,
-  getParserError,
   many,
   Parser,
   until
@@ -169,28 +168,12 @@ const sexpr: Parser<ASExpr> = spaced(
 const sexprs: Parser<ASExpr[]> = until(endOfInput, sexpr);
 
 export function readAllFromString(str: string): ASExpr[] {
-  const result = sexprs.parse(str);
-  if (result.status === "success") {
-    return result.value;
-  } else {
-    const message = getParserError(str, result);
-    const err = new Error(message);
-    (err as any).incomplete = result.incomplete;
-    throw err;
-  }
+  return sexprs.parse(str);
 }
 
 //
 // Parser a Delisp expression from a string
 //
 export function readFromString(str: string): ASExpr {
-  const result = sexpr.parse(str);
-  if (result.status === "success") {
-    return result.value;
-  } else {
-    const message = getParserError(str, result);
-    const err = new Error(message);
-    (err as any).incomplete = result.incomplete;
-    throw err;
-  }
+  return sexpr.parse(str);
 }
