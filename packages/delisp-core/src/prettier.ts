@@ -4,10 +4,12 @@
 // at
 // https://homepages.inf.ed.ac.uk/wadler/papers/prettier/prettier.pdf
 //
+// The paper is a great starting point, but I start to extend this
+// with some extra operations, as the expressive power of the original
+// operators is not enough.
+//
 
 import { last } from "./utils";
-
-const INDENT_WIDTH = 2;
 
 interface DocNil {
   type: "nil";
@@ -40,6 +42,7 @@ interface DocAlign {
 interface DocIndent {
   type: "indent";
   doc: Doc;
+  level: number;
   next: Doc;
 }
 
@@ -91,7 +94,8 @@ function concat2(x: Doc, y: Doc): Doc {
       return {
         type: "indent",
         doc: x.doc,
-        next: concat2(x.next, y)
+        next: concat2(x.next, y),
+        level: x.level
       };
   }
 }
@@ -104,8 +108,8 @@ export function join(docs: Doc[], sep: Doc) {
   return docs.reduce((a, d) => concat(a, sep, d));
 }
 
-export function indent(doc: Doc): Doc {
-  return { type: "indent", doc, next: nil };
+export function indent(doc: Doc, level: number): Doc {
+  return { type: "indent", doc, next: nil, level };
 }
 
 function union(x: Doc, y: Doc): Doc {
@@ -143,7 +147,12 @@ function flatten(doc: Doc): Doc {
         flatten(doc.next)
       );
     case "indent":
-      return { type: "indent", doc: flatten(doc.doc), next: flatten(doc.next) };
+      return {
+        type: "indent",
+        level: doc.level,
+        doc: flatten(doc.doc),
+        next: flatten(doc.next)
+      };
   }
 }
 
@@ -164,7 +173,12 @@ export function group(doc: Doc): Doc {
     case "align":
       return union(flatten(doc), doc);
     case "indent":
-      return { type: "indent", doc: group(doc.doc), next: doc.next };
+      return {
+        type: "indent",
+        level: doc.level,
+        doc: group(doc.doc),
+        next: doc.next
+      };
   }
 }
 
@@ -204,7 +218,7 @@ function fits(doc: Doc, w: number): boolean {
     case "align":
       return fits(doc.root, w) && doc.docs.every(d => fits(d, w));
     case "indent":
-      return fits(doc.doc, w - INDENT_WIDTH);
+      return fits(doc.doc, w - doc.level);
   }
 }
 
@@ -239,7 +253,8 @@ function best(doc: Doc, w: number, k: number): Doc {
     case "indent":
       return {
         type: "indent",
-        doc: best(doc.doc, w - INDENT_WIDTH, k),
+        doc: best(doc.doc, w - doc.level, k),
+        level: doc.level,
         next: best(doc.next, w, k)
       };
   }
@@ -279,7 +294,7 @@ function layout(doc: Doc, indentation: number, alignment: number): string {
       );
     case "indent":
       return (
-        layout(doc.doc, indentation + INDENT_WIDTH, alignment) +
+        layout(doc.doc, indentation + doc.level, alignment) +
         layout(doc.next, indentation, alignment)
       );
   }

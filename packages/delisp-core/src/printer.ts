@@ -4,13 +4,17 @@ import {
   Doc,
   group,
   groupalign,
-  indent,
+  indent as indent_,
   join,
   line,
   pretty,
   text
 } from "./prettier";
 import { Expression, Syntax } from "./syntax";
+
+function indent(x: Doc, level = 2): Doc {
+  return indent_(x, level);
+}
 
 function printString(str: string): Doc {
   const escaped = str.replace(/\n/g, "\\n").replace(/"/g, '\\"');
