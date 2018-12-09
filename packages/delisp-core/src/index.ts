@@ -1,7 +1,7 @@
 import { convert as convertSyntax } from "./convert";
 import { convert as convertType } from "./convertType";
-import { readFromString } from "./reader";
-import { Syntax } from "./syntax";
+import { readAllFromString, readFromString } from "./reader";
+import { Module, Syntax } from "./syntax";
 import { Type } from "./types";
 
 export { compileToString } from "./compiler";
@@ -13,6 +13,13 @@ export { isDeclaration } from "./syntax";
 
 export function readSyntax(source: string): Syntax {
   return convertSyntax(readFromString(source));
+}
+
+export function readModule(str: string): Module {
+  return {
+    type: "module",
+    body: readAllFromString(str).map(convertSyntax)
+  };
 }
 
 export function readType(source: string): Type {

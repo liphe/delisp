@@ -71,3 +71,8 @@ export type Syntax = Expression | Declaration;
 export function isDeclaration(syntax: Syntax): syntax is Declaration {
   return syntax.type === "definition";
 }
+
+export interface Module {
+  type: "module";
+  body: Syntax[];
+}
