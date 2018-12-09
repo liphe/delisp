@@ -227,6 +227,22 @@ export const character = (expected?: string) => {
   });
 };
 
+export const endOfInput = new Parser<void>(input => {
+  const [char] = input.readChars(1);
+  return char === ""
+    ? {
+        status: "success",
+        value: undefined,
+        moreInput: input
+      }
+    : {
+        status: "error",
+        reasons: [],
+        incomplete: false,
+        offset: input.offset
+      };
+});
+
 //
 // Error reporting
 //
