@@ -18,12 +18,12 @@ interface DocNil {
 interface DocText {
   type: "text";
   content: string;
-  doc: Doc;
+  next: Doc;
 }
 
 interface DocLine {
   type: "line";
-  doc: Doc;
+  next: Doc;
 }
 
 interface DocUnion {
@@ -54,12 +54,12 @@ export function text(content: string): Doc {
   if (content.includes("\n")) {
     throw new Error(`Newline is not allowed in a call to 'text'`);
   }
-  return { type: "text", content, doc: nil };
+  return { type: "text", content, next: nil };
 }
 
 export const line: Doc = {
   type: "line",
-  doc: nil
+  next: nil
 };
 
 function concat2(x: Doc, y: Doc): Doc {
@@ -70,12 +70,12 @@ function concat2(x: Doc, y: Doc): Doc {
       return {
         type: "text",
         content: x.content,
-        doc: concat2(x.doc, y)
+        next: concat2(x.next, y)
       };
     case "line":
       return {
         type: "line",
-        doc: concat2(x.doc, y)
+        next: concat2(x.next, y)
       };
     case "union":
       return {
@@ -130,13 +130,13 @@ function flatten(doc: Doc): Doc {
       return {
         type: "text",
         content: doc.content,
-        doc: flatten(doc.doc)
+        next: flatten(doc.next)
       };
     case "line":
       return {
         type: "text",
         content: " ",
-        doc: flatten(doc.doc)
+        next: flatten(doc.next)
       };
     case "union":
       // All layouts in the set should flatten to the same document.
@@ -164,7 +164,7 @@ export function group(doc: Doc): Doc {
       return {
         type: "text",
         content: doc.content,
-        doc: group(doc.doc)
+        next: group(doc.next)
       };
     case "line":
       return union(flatten(doc), doc);
@@ -212,7 +212,7 @@ function fits(doc: Doc, w: number): boolean {
     case "line":
       return true;
     case "text":
-      return fits(doc.doc, w - doc.content.length);
+      return fits(doc.next, w - doc.content.length);
     case "union":
       throw new Error(`Unsupported`);
     case "align":
@@ -234,12 +234,12 @@ function best(doc: Doc, w: number, k: number): Doc {
       return {
         type: "text",
         content: doc.content,
-        doc: best(doc.doc, w, k + doc.content.length)
+        next: best(doc.next, w, k + doc.content.length)
       };
     case "line":
       return {
         type: "line",
-        doc: best(doc.doc, w, k)
+        next: best(doc.next, w, k)
       };
     case "union":
       return better(best(doc.x, w, k), best(doc.y, w, k), w, k);
@@ -273,11 +273,11 @@ function layout(doc: Doc, indentation: number, alignment: number): string {
     case "text":
       return (
         doc.content +
-        layout(doc.doc, indentation, alignment + doc.content.length)
+        layout(doc.next, indentation, alignment + doc.content.length)
       );
     case "line":
       return (
-        "\n" + repeatChar(" ", indentation) + layout(doc.doc, indentation, 0)
+        "\n" + repeatChar(" ", indentation) + layout(doc.next, indentation, 0)
       );
     case "union":
       throw new Error(`No unions for layout!`);
