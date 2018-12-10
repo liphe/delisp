@@ -58,6 +58,9 @@ function print(sexpr: Syntax): Doc {
         printVariable(sexpr.variable),
         indent(concat(line, print(sexpr.value)))
       );
+
+    case "let-bindings":
+      throw new Error(`not supported yet`);
   }
 }
 

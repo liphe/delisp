@@ -83,6 +83,9 @@ function infer(
         assumptions: ifn.assumptions.concat(...iargs.map(a => a.assumptions))
       };
     }
+
+    case "let-bindings":
+      throw new Error(`not supported yet`);
   }
 }
 

@@ -1,6 +1,12 @@
 import { printHighlightedExpr } from "./error-report";
 import { ASExpr, ASExprList, ASExprSymbol } from "./sexpr";
-import { Declaration, Expression, LambdaList, Syntax } from "./syntax";
+import {
+  Declaration,
+  Expression,
+  LambdaList,
+  SLetBinding,
+  Syntax
+} from "./syntax";
 import { last } from "./utils";
 
 const conversions: Map<string, (expr: ASExprList) => Expression> = new Map();
@@ -75,6 +81,60 @@ defineConversion("lambda", expr => {
     lambdaList: parseLambdaList(args[0]),
     body: convertExpr(args[1]),
     location: expr.location
+  };
+});
+
+function parseLetBindings(bindings: ASExpr): SLetBinding[] {
+  if (bindings.type !== "list") {
+    throw new Error(
+      printHighlightedExpr(`'let' bindings should be a list`, bindings)
+    );
+  }
+
+  let output: SLetBinding[] = [];
+
+  bindings.elements.forEach(binding => {
+    if (binding.type !== "list") {
+      throw new Error(
+        printHighlightedExpr(`'let' binding should be a list`, binding)
+      );
+    }
+    if (binding.elements.length !== 2) {
+      throw new Error(printHighlightedExpr(`ill-formed let binding`, binding));
+    }
+
+    const [name, value] = binding.elements;
+
+    if (name.type !== "symbol") {
+      throw new Error(printHighlightedExpr(`expected a symbol`, name));
+    }
+
+    output.push({
+      var: name.name,
+      value: convertExpr(value)
+    });
+  });
+
+  return output;
+}
+
+defineConversion("let", expr => {
+  const [_let, ...args] = expr.elements;
+
+  if (args.length !== 2) {
+    throw new Error(
+      printHighlightedExpr(
+        `'let' needs exactly 2 arguments, got ${args.length}`,
+        last([_let, ...args]) as ASExpr, // we know it is not empty!
+        true
+      )
+    );
+  }
+  const [rawBindings, body] = args;
+  return {
+    type: "let-bindings",
+    bindings: parseLetBindings(rawBindings),
+    body: convertExpr(body)
   };
 });
 

@@ -30,8 +30,8 @@ const delispEval = (
   if (isDeclaration(syntax)) {
     callback(null, {});
   } else {
-    const type = inferType(syntax);
-    callback(null, { value, type: printType(type) });
+    // const type = inferType(syntax);
+    callback(null, { value });
   }
 };
 
