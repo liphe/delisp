@@ -23,6 +23,14 @@ describe("Compiler", () => {
       expect(compileError("(lambda (x 7) x)")).toMatchSnapshot();
     });
 
+    it("generate nice error message for invalid let expressions", () => {
+      expect(compileError("(let)")).toMatchSnapshot();
+      expect(compileError("(let x 5)")).toMatchSnapshot();
+      expect(compileError("(let (x) x)")).toMatchSnapshot();
+      expect(compileError("(let ((5 5)) x)")).toMatchSnapshot();
+      expect(compileError("(let ((x)) x)")).toMatchSnapshot();
+    });
+
     it("generate nice error message for invalid definitions", () => {
       expect(compileError("(define)")).toMatchSnapshot();
       expect(compileError("(define 5)")).toMatchSnapshot();
