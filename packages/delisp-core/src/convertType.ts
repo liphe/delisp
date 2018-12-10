@@ -1,8 +1,8 @@
 import { printHighlightedExpr } from "./error-report";
 import { ASExpr, ASExprList, ASExprSymbol } from "./sexpr";
-import { Type } from "./types";
+import { Monotype } from "./types";
 
-function convertSymbol(expr: ASExprSymbol): Type {
+function convertSymbol(expr: ASExprSymbol): Monotype {
   switch (expr.name) {
     case "number":
       return { type: "number" };
@@ -13,7 +13,7 @@ function convertSymbol(expr: ASExprSymbol): Type {
   }
 }
 
-function convertList(expr: ASExprList): Type {
+function convertList(expr: ASExprList): Monotype {
   const [op, ...args] = expr.elements;
 
   if (op.type !== "symbol") {
@@ -33,7 +33,7 @@ function convertList(expr: ASExprList): Type {
   };
 }
 
-export function convert(expr: ASExpr): Type {
+export function convert(expr: ASExpr): Monotype {
   switch (expr.type) {
     case "list":
       return convertList(expr);

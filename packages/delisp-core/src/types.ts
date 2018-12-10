@@ -13,7 +13,7 @@ export interface TString {
 export interface TApplication {
   type: "application";
   op: string;
-  args: Type[];
+  args: Monotype[];
 }
 
 export interface TVar {
@@ -21,4 +21,4 @@ export interface TVar {
   name: string;
 }
 
-export type Type = TNumber | TString | TApplication | TVar;
+export type Monotype = TNumber | TString | TApplication | TVar;

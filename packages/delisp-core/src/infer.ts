@@ -11,14 +11,14 @@
 
 import { Expression, functionArgs, SVar } from "./syntax";
 
-import { TApplication, TNumber, TString, TVar, Type } from "./types";
+import { TApplication, TNumber, TString, TVar, Monotype } from "./types";
 
 import { applySubstitution, unify } from "./unify";
 
 import { flatten, unique } from "./utils";
 
-type TConstraint = [Type, Type];
-type TAssumption = [SVar, Type];
+type TConstraint = [Monotype, Monotype];
+type TAssumption = [SVar, Monotype];
 
 let generateUniqueTVarIdx = 0;
 const generateUniqueTVar = (): TVar => ({
@@ -28,7 +28,7 @@ const generateUniqueTVar = (): TVar => ({
 
 function infer(
   syntax: Expression
-): { type: Type; constraints: TConstraint[]; assumptions: TAssumption[] } {
+): { type: Monotype; constraints: TConstraint[]; assumptions: TAssumption[] } {
   switch (syntax.type) {
     case "number":
       return { type: { type: "number" }, constraints: [], assumptions: [] };
@@ -47,13 +47,11 @@ function infer(
       const fnargs = functionArgs(syntax);
       const argtypes = fnargs.map(_ => generateUniqueTVar());
       const newConstraints: TConstraint[] = [
-        ...assumptions
-          .filter(([v, _]) => fnargs.includes(v))
-          .map(([v, t]) => {
-            const varIndex = fnargs.indexOf(v);
-            const constraint: TConstraint = [t, argtypes[varIndex]];
-            return constraint;
-          })
+        ...assumptions.filter(([v, _]) => fnargs.includes(v)).map(([v, t]) => {
+          const varIndex = fnargs.indexOf(v);
+          const constraint: TConstraint = [t, argtypes[varIndex]];
+          return constraint;
+        })
       ];
       return {
         type: {
@@ -70,7 +68,7 @@ function infer(
       const iargs = syntax.args.map(arg => infer(arg));
       const tTo = generateUniqueTVar();
 
-      const tfn: Type = {
+      const tfn: Monotype = {
         type: "application",
         op: "->",
         args: [...iargs.map(a => a.type), tTo]
@@ -89,7 +87,7 @@ function infer(
 }
 
 export interface TypeEnvironment {
-  [v: string]: Type;
+  [v: string]: Monotype;
 }
 
 function assumptionsToConstraints(
@@ -108,7 +106,7 @@ function assumptionsToConstraints(
 export function inferType(
   expr: Expression,
   typeEnvironment: TypeEnvironment = {}
-): Type {
+): Monotype {
   const { type, constraints, assumptions } = infer(expr);
 
   const effectiveConstraints = [

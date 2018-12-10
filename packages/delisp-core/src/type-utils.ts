@@ -1,9 +1,9 @@
-import { Type } from "./types";
+import { Monotype } from "./types";
 import { applySubstitution, Substitution } from "./unify";
 import { flatten, unique } from "./utils";
 
 // Return the list of type variables in the order they show up
-function listTypeVariables(t: Type): string[] {
+function listTypeVariables(t: Monotype): string[] {
   switch (t.type) {
     case "string":
       return [];
@@ -23,7 +23,7 @@ function typeIndexName(index: number): string {
     : `ω${index - alphabet.length + 1}`;
 }
 
-function normalizeType(t: Type): Type {
+function normalizeType(t: Monotype): Monotype {
   const vars = listTypeVariables(t);
   const substitution = vars.reduce((s, v, i) => {
     const normalizedName = typeIndexName(i);
@@ -40,7 +40,7 @@ function normalizeType(t: Type): Type {
   return applySubstitution(t, substitution);
 }
 
-function _printType(type: Type): string {
+function _printType(type: Monotype): string {
   switch (type.type) {
     case "application":
       return `(${type.op} ${type.args.map(_printType).join(" ")})`;
@@ -53,7 +53,7 @@ function _printType(type: Type): string {
   }
 }
 
-export function printType(rawType: Type) {
+export function printType(rawType: Monotype) {
   const type = normalizeType(rawType);
   return _printType(type);
 }
