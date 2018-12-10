@@ -22,3 +22,9 @@ export interface TVar {
 }
 
 export type Monotype = TNumber | TString | TApplication | TVar;
+
+export interface Type {
+  type: "type";
+  tvars: string[];
+  mono: Monotype;
+}

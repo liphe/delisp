@@ -2,6 +2,18 @@ export function flatten<A>(x: A[][]): A[] {
   return ([] as A[]).concat(...x);
 }
 
+export function union<A>(xs: A[], ys: A[]): A[] {
+  return unique([...xs, ...ys]);
+}
+
+export function intersection<A>(xs: A[], ys: A[]): A[] {
+  return xs.filter(x => ys.includes(x));
+}
+
+export function difference<A>(xs: A[], ys: A[]): A[] {
+  return xs.filter(x => !ys.includes(x));
+}
+
 export function unique<A>(array: A[]): A[] {
   const seen: Set<A> = new Set();
   const result = [];

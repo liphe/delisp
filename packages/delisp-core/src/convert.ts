@@ -91,7 +91,7 @@ function parseLetBindings(bindings: ASExpr): SLetBinding[] {
     );
   }
 
-  let output: SLetBinding[] = [];
+  const output: SLetBinding[] = [];
 
   bindings.elements.forEach(binding => {
     if (binding.type !== "list") {

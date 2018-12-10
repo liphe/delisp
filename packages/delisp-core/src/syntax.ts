@@ -53,7 +53,7 @@ export interface SLetBinding {
 
 export interface SLet {
   type: "let-bindings";
-  bindings: Array<SLetBinding>;
+  bindings: SLetBinding[];
   body: Expression;
 }
 

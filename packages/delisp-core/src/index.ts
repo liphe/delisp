@@ -2,7 +2,8 @@ import { convert as convertSyntax } from "./convert";
 import { convert as convertType } from "./convertType";
 import { readAllFromString, readFromString } from "./reader";
 import { Module, Syntax } from "./syntax";
-import { Monotype } from "./types";
+import { generalize } from "./type-utils";
+import { Type } from "./types";
 
 export { compileToString } from "./compiler";
 export { evaluate } from "./eval";
@@ -22,6 +23,6 @@ export function readModule(str: string): Module {
   };
 }
 
-export function readType(source: string): Monotype {
-  return convertType(readFromString(source));
+export function readType(source: string): Type {
+  return generalize(convertType(readFromString(source)), []);
 }

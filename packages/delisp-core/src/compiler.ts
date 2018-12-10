@@ -2,9 +2,9 @@ import {
   Expression,
   Module,
   SDefinition,
-  SLet,
   SFunction,
   SFunctionCall,
+  SLet,
   SVar,
   SVariableReference,
   Syntax
