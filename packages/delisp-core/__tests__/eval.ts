@@ -34,4 +34,16 @@ describe("Evaluation", () => {
       expect(evaluateString("((lambda (x y) y) 4 5)")).toBe(5);
     });
   });
+
+  describe("Let bindings", () => {
+    it("should evaluate to the right value", () => {
+      expect(evaluateString("(let () 5)")).toBe(5);
+      expect(evaluateString("(let ((x 5)) x)")).toBe(5);
+      expect(evaluateString("(let ((x 5) (y 5)) (+ x y))")).toBe(10);
+    });
+
+    it("inner lets should shadow outer ones", () => {
+      expect(evaluateString("(let ((x 5)) (let ((x 1)) x))")).toBe(1);
+    });
+  });
 });
