@@ -95,4 +95,8 @@ describe("Pretty Printer", () => {
                  30)`)
     ).toMatchSnapshot();
   });
+
+  it("should print let expressions nicely", () => {
+    expect(pprintString(`(let ((x 10) (y 20)) (+ x y))`)).toMatchSnapshot();
+  });
 });
