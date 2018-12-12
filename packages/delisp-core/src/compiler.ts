@@ -20,11 +20,19 @@ interface Environment {
   [symbol: string]: string;
 }
 
+// Convert a Delisp variable name to Javascript. This function should
+// be injective so there is no collisions and the output should be a
+// valid variable name.
+function varnameToJS(x: string): string {
+  // TODO: make it always a valid JS name!
+  return x;
+}
+
 function compileLambda(fn: SFunction, env: Environment): JSAST {
   const newEnv = fn.lambdaList.reduce(
     (e, param, ix) => ({
       ...e,
-      [param.variable]: `p${ix}`
+      [param.variable]: varnameToJS(param.variable)
     }),
     env
   );
