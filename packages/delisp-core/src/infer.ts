@@ -18,7 +18,16 @@ import {
 } from "./type-utils";
 import { Monotype, TApplication, TNumber, TString, TVar, Type } from "./types";
 import { applySubstitution, Substitution, unify } from "./unify";
-import { difference, flatten, intersection, union, unique } from "./utils";
+import {
+  difference,
+  flatten,
+  intersection,
+  mapObject,
+  union,
+  unique
+} from "./utils";
+
+import primitives from "./primitives";
 
 // The type inference process is split in two stages. Firstly, `infer`
 // will run through the syntax it will generate dummy type variables,
@@ -406,9 +415,11 @@ function solve(
   }
 }
 
+const defaultTypeEnvironment = mapObject(primitives, prim => prim.type);
+
 export function inferType(
   expr: Expression,
-  typeEnvironment: TypeEnvironment = {}
+  typeEnvironment: TypeEnvironment = defaultTypeEnvironment
 ): Monotype {
   const { type, constraints, assumptions } = infer(expr, []);
   const s = solve([

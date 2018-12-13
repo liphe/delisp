@@ -1,6 +1,6 @@
-import { readType, readSyntax, isDeclaration } from "../src/index";
+import { readSyntax, isDeclaration } from "../src/index";
 import { inferType, TypeEnvironment } from "../src/infer";
-import { printType } from "../src/type-utils";
+import { readType, printType } from "../src/type-utils";
 
 function typeOf(str: string, env: TypeEnvironment = {}): string {
   const syntax = readSyntax(str);
