@@ -27,7 +27,7 @@ function printVariable(name: string): Doc {
 }
 
 function list(...docs: Doc[]): Doc {
-  return group(concat(text("("), ...docs, text(")")));
+  return concat(text("("), ...docs, text(")"));
 }
 
 function print(sexpr: Syntax): Doc {
@@ -40,23 +40,39 @@ function print(sexpr: Syntax): Doc {
       return printVariable(sexpr.variable);
     case "function":
       const argNames = sexpr.lambdaList.map(x => x.variable);
-      return list(
-        text("lambda"),
-        space,
-        list(align(...argNames.map(printVariable))),
-        indent(concat(line, print(sexpr.body)))
+      return group(
+        list(
+          text("lambda"),
+          space,
+          group(list(align(...argNames.map(printVariable)))),
+          indent(concat(line, print(sexpr.body)))
+        )
       );
     case "function-call":
       const fn = print(sexpr.fn);
       const args = sexpr.args.map(print);
-      return list(groupalign(fn, align(...args)));
+      return group(list(groupalign(fn, align(...args))));
 
     case "definition":
+      return group(
+        list(
+          text("define"),
+          space,
+          printVariable(sexpr.variable),
+          indent(concat(line, print(sexpr.value)))
+        )
+      );
+
+    case "let-bindings":
       return list(
-        text("define"),
+        text("let"),
         space,
-        printVariable(sexpr.variable),
-        indent(concat(line, print(sexpr.value)))
+        list(
+          align(
+            ...sexpr.bindings.map(b => list(text(b.var), space, print(b.value)))
+          )
+        ),
+        indent(concat(line, print(sexpr.body)))
       );
   }
 }

@@ -1,11 +1,11 @@
 import { printType } from "./type-utils";
-import { TApplication, TNumber, TString, TVar, Type } from "./types";
+import { Monotype, TApplication, TNumber, TString, TVar } from "./types";
 
 export interface Substitution {
-  [t: string]: Type;
+  [t: string]: Monotype;
 }
 
-export function applySubstitution(t: Type, env: Substitution): Type {
+export function applySubstitution(t: Monotype, env: Substitution): Monotype {
   switch (t.type) {
     case "number":
     case "string":
@@ -27,8 +27,8 @@ export function applySubstitution(t: Type, env: Substitution): Type {
   }
 }
 
-function occurCheck(v: TVar, rootT: Type) {
-  function check(t: Type) {
+function occurCheck(v: TVar, rootT: Monotype) {
+  function check(t: Monotype) {
     if (t.type === "type-variable" && t.name === v.name) {
       throw new Error(
         `The variable '${v.name}' cannot be part of ${printType(rootT)}`
@@ -43,7 +43,7 @@ function occurCheck(v: TVar, rootT: Type) {
   return check(rootT);
 }
 
-function unifyVariable(v: TVar, t: Type, env: Substitution): Substitution {
+function unifyVariable(v: TVar, t: Monotype, env: Substitution): Substitution {
   if (v.name in env) {
     return unify(env[v.name], t, env);
   }
@@ -61,7 +61,11 @@ function unifyVariable(v: TVar, t: Type, env: Substitution): Substitution {
   }
 }
 
-function unifyArray(t1s: Type[], t2s: Type[], env: Substitution): Substitution {
+function unifyArray(
+  t1s: Monotype[],
+  t2s: Monotype[],
+  env: Substitution
+): Substitution {
   if (t1s.length === 0 && t2s.length === 0) {
     return env;
   } else {
@@ -73,8 +77,8 @@ function unifyArray(t1s: Type[], t2s: Type[], env: Substitution): Substitution {
 }
 
 export function unify(
-  t1: Type,
-  t2: Type,
+  t1: Monotype,
+  t2: Monotype,
   env: Substitution = {}
 ): Substitution {
   if (t1.type === "string" && t2.type === "string") {

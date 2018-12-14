@@ -176,3 +176,10 @@ exports[`Pretty Printer should print lambda abstractions beautifully 3`] = `
          xx)
   xxx)"
 `;
+
+exports[`Pretty Printer should print let expressions nicely 1`] = `
+"
+(let ((x 10)
+      (y 20))
+  (+ x y))"
+`;

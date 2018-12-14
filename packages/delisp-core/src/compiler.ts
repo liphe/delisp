@@ -4,6 +4,7 @@ import {
   SDefinition,
   SFunction,
   SFunctionCall,
+  SLet,
   SVar,
   SVariableReference,
   Syntax
@@ -87,6 +88,40 @@ function compileVariable(ref: SVariableReference, env: Environment): JSAST {
   }
 }
 
+function compileLetBindings(expr: SLet, env: Environment): JSAST {
+  const newenv = expr.bindings.reduce(
+    (acc, binding) => ({
+      ...acc,
+      [binding.var]: binding.var
+    }),
+    env
+  );
+
+  return {
+    type: "ExpressionStatement",
+    expression: {
+      type: "CallExpression",
+      callee: {
+        type: "FunctionExpression",
+        params: expr.bindings.map(b => ({
+          type: "Identifier",
+          name: newenv[b.var]
+        })),
+        body: {
+          type: "BlockStatement",
+          body: [
+            {
+              type: "ReturnStatement",
+              argument: compile(expr.body, newenv)
+            }
+          ]
+        }
+      },
+      arguments: expr.bindings.map(b => compile(b.value, env))
+    }
+  };
+}
+
 export function compile(expr: Expression, env: Environment): JSAST {
   switch (expr.type) {
     case "number":
@@ -105,6 +140,8 @@ export function compile(expr: Expression, env: Environment): JSAST {
       return compileLambda(expr, env);
     case "function-call":
       return compileFunctionCall(expr, env);
+    case "let-bindings":
+      return compileLetBindings(expr, env);
   }
 }
 

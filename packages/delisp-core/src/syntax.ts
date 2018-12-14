@@ -46,12 +46,24 @@ export function functionArgs(fn: SFunction): SVar[] {
   return fn.lambdaList.map(a => a.variable);
 }
 
+export interface SLetBinding {
+  var: SVar;
+  value: Expression;
+}
+
+export interface SLet {
+  type: "let-bindings";
+  bindings: SLetBinding[];
+  body: Expression;
+}
+
 export type Expression =
   | SNumber
   | SString
   | SVariableReference
   | SFunctionCall
-  | SFunction;
+  | SFunction
+  | SLet;
 
 //
 // Declarations

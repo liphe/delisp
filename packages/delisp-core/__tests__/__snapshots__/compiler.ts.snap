@@ -53,3 +53,33 @@ exports[`Compiler Error messages generate nice error message for invalid lambda 
 (lambda (x 7) x)
 -----------^"
 `;
+
+exports[`Compiler Error messages generate nice error message for invalid let expressions 1`] = `
+"file:1:4: 'let' needs exactly 2 arguments, got 0
+(let)
+----^"
+`;
+
+exports[`Compiler Error messages generate nice error message for invalid let expressions 2`] = `
+"file:1:5: 'let' bindings should be a list
+(let x 5)
+-----^"
+`;
+
+exports[`Compiler Error messages generate nice error message for invalid let expressions 3`] = `
+"file:1:6: 'let' binding should be a list
+(let (x) x)
+------^"
+`;
+
+exports[`Compiler Error messages generate nice error message for invalid let expressions 4`] = `
+"file:1:7: expected a symbol
+(let ((5 5)) x)
+-------^"
+`;
+
+exports[`Compiler Error messages generate nice error message for invalid let expressions 5`] = `
+"file:1:6: ill-formed let binding
+(let ((x)) x)
+------^"
+`;

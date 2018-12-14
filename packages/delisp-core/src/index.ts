@@ -2,6 +2,7 @@ import { convert as convertSyntax } from "./convert";
 import { convert as convertType } from "./convertType";
 import { readAllFromString, readFromString } from "./reader";
 import { Module, Syntax } from "./syntax";
+import { generalize } from "./type-utils";
 import { Type } from "./types";
 
 export { compileToString } from "./compiler";
@@ -23,5 +24,5 @@ export function readModule(str: string): Module {
 }
 
 export function readType(source: string): Type {
-  return convertType(readFromString(source));
+  return generalize(convertType(readFromString(source)), []);
 }
