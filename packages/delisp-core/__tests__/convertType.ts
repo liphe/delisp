@@ -1,4 +1,4 @@
-import { convert } from "../src/convertType";
+import { convert } from "../src/convert-type";
 import { readFromString } from "../src/reader";
 
 describe("ConvertType", () => {

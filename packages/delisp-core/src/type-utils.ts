@@ -1,4 +1,4 @@
-import { convert as convertType } from "./convertType";
+import { convert as convertType } from "./convert-type";
 import { readFromString } from "./reader";
 import { Monotype, TVar, Type } from "./types";
 import { applySubstitution } from "./unify";
