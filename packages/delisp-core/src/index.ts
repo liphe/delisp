@@ -2,8 +2,6 @@ import { convert as convertSyntax } from "./convert";
 
 import { readAllFromString, readFromString } from "./reader";
 import { Module, Syntax } from "./syntax";
-import { generalize } from "./type-utils";
-import { Type } from "./types";
 
 export { compileToString } from "./compiler";
 export { evaluate } from "./eval";

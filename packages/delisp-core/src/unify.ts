@@ -1,5 +1,5 @@
 import { printType } from "./type-utils";
-import { Monotype, TApplication, TNumber, TString, TVar } from "./types";
+import { Monotype, TVar } from "./types";
 
 export interface Substitution {
   [t: string]: Monotype;

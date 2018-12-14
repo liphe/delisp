@@ -164,7 +164,7 @@ export function until<A>(
 ): Parser<A[]> {
   return delimiter
     .map(_ => [] as A[])
-    .or(err => {
+    .or(_err => {
       return parser.chain(first => {
         return until(delimiter, parser).map(rest => [first, ...rest]);
       });

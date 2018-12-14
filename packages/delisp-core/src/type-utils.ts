@@ -1,7 +1,7 @@
 import { convert as convertType } from "./convertType";
 import { readFromString } from "./reader";
 import { Monotype, TVar, Type } from "./types";
-import { applySubstitution, Substitution } from "./unify";
+import { applySubstitution } from "./unify";
 import { flatten, unique } from "./utils";
 
 // Return the list of type variables in the order they show up

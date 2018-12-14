@@ -5,7 +5,6 @@ import {
   SFunction,
   SFunctionCall,
   SLet,
-  SVar,
   SVariableReference,
   Syntax
 } from "./syntax";
@@ -28,7 +27,7 @@ interface Environment {
 
 function compileLambda(fn: SFunction, env: Environment): JSAST {
   const newEnv = fn.lambdaList.reduce(
-    (e, param, ix) => ({
+    (e, param) => ({
       ...e,
       [param.variable]: varnameToJS(param.variable)
     }),

@@ -10,10 +10,13 @@ interface Primitive {
 }
 
 function primitives(prims: { [name: string]: { type: string; fn: FN } }) {
-  return mapObject(prims, (spec, name) => ({
-    type: readType(spec.type),
-    fn: spec.fn
-  }));
+  return mapObject(
+    prims,
+    (spec): Primitive => ({
+      type: readType(spec.type),
+      fn: spec.fn
+    })
+  );
 }
 
 export default primitives({

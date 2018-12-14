@@ -16,16 +16,9 @@ import {
   instantiate,
   listTypeVariables
 } from "./type-utils";
-import { Monotype, TApplication, TNumber, TString, TVar, Type } from "./types";
+import { Monotype, TVar, Type } from "./types";
 import { applySubstitution, Substitution, unify } from "./unify";
-import {
-  difference,
-  flatten,
-  intersection,
-  mapObject,
-  union,
-  unique
-} from "./utils";
+import { difference, flatten, intersection, mapObject, union } from "./utils";
 
 import primitives from "./primitives";
 
@@ -265,7 +258,7 @@ function assumptionsToConstraints(
   return flatten(
     Object.keys(typeEnvironment).map(v =>
       assumptions
-        .filter(([aVar, aType]) => aVar === v)
+        .filter(([aVar, _]) => aVar === v)
         .map(([_, aType]) => constExplicitInstance(aType, typeEnvironment[v]))
     )
   );
@@ -297,7 +290,7 @@ function activevars(constraints: TConstraint[]): string[] {
 }
 
 function substituteVar(tvarname: string, s: Substitution): string[] {
-  const tv: TVar = { type: "type-variable", name };
+  const tv: TVar = { type: "type-variable", name: tvarname };
   return listTypeVariables(applySubstitution(tv, s));
 }
 

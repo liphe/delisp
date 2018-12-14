@@ -9,8 +9,6 @@
 // operators is not enough.
 //
 
-import { last } from "./utils";
-
 interface DocNil {
   type: "nil";
 }
