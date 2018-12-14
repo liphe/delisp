@@ -33,6 +33,17 @@ describe("Evaluation", () => {
     it("should be able to be called", () => {
       expect(evaluateString("((lambda (x y) y) 4 5)")).toBe(5);
     });
+
+    // Regression
+    it("different argument names should not shadow", () => {
+      expect(
+        evaluateString(`
+((lambda (x)
+  ((lambda (y) x) 11))
+ 33)
+`)
+      ).toBe(33);
+    });
   });
 
   describe("Let bindings", () => {

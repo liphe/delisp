@@ -102,6 +102,11 @@ const stringP = delimitedMany(doubleQuote, stringChar, doubleQuote)
 const symbol: Parser<ASExpr> = atLeastOne(
   alternatives(
     alphanumeric,
+    // Those special characters are valid in Delisp symbols.
+    //
+    // If you want to change this list, please remmeber checking the
+    // compiler and ensuring that it is able to generate JS variables
+    // for those names.
     character("!"),
     character("@"),
     character("#"),
@@ -116,7 +121,8 @@ const symbol: Parser<ASExpr> = atLeastOne(
     character("-"),
     character("/"),
     character("~"),
-    character("?")
+    character("?"),
+    character("=")
   )
 )
   .map(
