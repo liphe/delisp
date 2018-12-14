@@ -137,10 +137,12 @@ function infer(
       // argument, stating that they are equal to the argument types
       // the new function type we have created.
       const newConstraints: TConstraint[] = [
-        ...assumptions.filter(([v, _]) => fnargs.includes(v)).map(([v, t]) => {
-          const varIndex = fnargs.indexOf(v);
-          return constEqual(t, argtypes[varIndex]);
-        })
+        ...assumptions
+          .filter(([v, _]) => fnargs.includes(v))
+          .map(([v, t]) => {
+            const varIndex = fnargs.indexOf(v);
+            return constEqual(t, argtypes[varIndex]);
+          })
       ];
       return {
         type: {
