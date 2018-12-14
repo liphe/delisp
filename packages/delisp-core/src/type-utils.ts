@@ -1,5 +1,7 @@
+import { convert as convertType } from "./convertType";
+import { readFromString } from "./reader";
 import { Monotype, TVar, Type } from "./types";
-import { applySubstitution, Substitution } from "./unify";
+import { applySubstitution } from "./unify";
 import { flatten, unique } from "./utils";
 
 // Return the list of type variables in the order they show up
@@ -84,4 +86,8 @@ function _printType(type: Monotype): string {
 export function printType(rawType: Monotype) {
   const type = normalizeType(rawType);
   return _printType(type);
+}
+
+export function readType(source: string): Type {
+  return generalize(convertType(readFromString(source)), []);
 }

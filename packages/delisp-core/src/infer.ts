@@ -16,9 +16,11 @@ import {
   instantiate,
   listTypeVariables
 } from "./type-utils";
-import { Monotype, TApplication, TNumber, TString, TVar, Type } from "./types";
+import { Monotype, TVar, Type } from "./types";
 import { applySubstitution, Substitution, unify } from "./unify";
-import { difference, flatten, intersection, union, unique } from "./utils";
+import { difference, flatten, intersection, mapObject, union } from "./utils";
+
+import primitives from "./primitives";
 
 // The type inference process is split in two stages. Firstly, `infer`
 // will run through the syntax it will generate dummy type variables,
@@ -256,7 +258,7 @@ function assumptionsToConstraints(
   return flatten(
     Object.keys(typeEnvironment).map(v =>
       assumptions
-        .filter(([aVar, aType]) => aVar === v)
+        .filter(([aVar, _]) => aVar === v)
         .map(([_, aType]) => constExplicitInstance(aType, typeEnvironment[v]))
     )
   );
@@ -288,7 +290,7 @@ function activevars(constraints: TConstraint[]): string[] {
 }
 
 function substituteVar(tvarname: string, s: Substitution): string[] {
-  const tv: TVar = { type: "type-variable", name };
+  const tv: TVar = { type: "type-variable", name: tvarname };
   return listTypeVariables(applySubstitution(tv, s));
 }
 
@@ -406,9 +408,11 @@ function solve(
   }
 }
 
+const defaultTypeEnvironment = mapObject(primitives, prim => prim.type);
+
 export function inferType(
   expr: Expression,
-  typeEnvironment: TypeEnvironment = {}
+  typeEnvironment: TypeEnvironment = defaultTypeEnvironment
 ): Monotype {
   const { type, constraints, assumptions } = infer(expr, []);
   const s = solve([

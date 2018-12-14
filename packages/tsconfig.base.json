@@ -2,12 +2,10 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "commonjs",
-
     "strict": true,
-    // "noUnusedLocals": true,
-    // "noUnusedParameters": true,
-    // "noImplicitReturns": true,
-
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
     "esModuleInterop": true,
     "composite": true
   }

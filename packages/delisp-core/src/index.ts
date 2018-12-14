@@ -1,9 +1,7 @@
 import { convert as convertSyntax } from "./convert";
-import { convert as convertType } from "./convertType";
+
 import { readAllFromString, readFromString } from "./reader";
 import { Module, Syntax } from "./syntax";
-import { generalize } from "./type-utils";
-import { Type } from "./types";
 
 export { compileToString } from "./compiler";
 export { evaluate } from "./eval";
@@ -21,8 +19,4 @@ export function readModule(str: string): Module {
     type: "module",
     body: readAllFromString(str).map(convertSyntax)
   };
-}
-
-export function readType(source: string): Type {
-  return generalize(convertType(readFromString(source)), []);
 }

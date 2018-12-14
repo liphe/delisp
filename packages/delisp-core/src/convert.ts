@@ -167,10 +167,6 @@ defineToplevel("define", expr => {
   };
 });
 
-function specialForm(x: ASExpr) {
-  return;
-}
-
 function convertList(list: ASExprList): Expression {
   if (list.elements.length === 0) {
     throw new Error(

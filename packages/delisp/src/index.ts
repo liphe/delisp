@@ -31,7 +31,7 @@ const delispEval = (
     callback(null, {});
   } else {
     const type = inferType(syntax);
-    callback(null, { value });
+    callback(null, { value, type: printType(type) });
   }
 };
 

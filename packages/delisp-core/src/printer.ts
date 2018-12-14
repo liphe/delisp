@@ -5,13 +5,12 @@ import {
   group,
   groupalign,
   indent as indent_,
-  join,
   line,
   pretty,
   space,
   text
 } from "./prettier";
-import { Expression, Syntax } from "./syntax";
+import { Syntax } from "./syntax";
 
 function indent(x: Doc, level = 2): Doc {
   return indent_(x, level);

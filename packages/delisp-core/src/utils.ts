@@ -30,3 +30,24 @@ export function unique<A>(array: A[]): A[] {
 export function last<A>(x: A[]): A | undefined {
   return x[x.length - 1];
 }
+
+/** Map over the values of an object
+ *
+ * @description
+ * Call `fn` for each entry of `obj` with the _value_ as the first
+ * argument and the _key_ as the second one.
+ *
+ * @return an object with the same keys, where the values are the
+ * returned values of `fn` for the corresponding keys.
+ *
+ */
+export function mapObject<A, B>(
+  obj: { [key: string]: A },
+  fn: (value: A, key: string) => B
+): { [key: string]: B } {
+  const out: { [key: string]: B } = {};
+  for (const k of Object.keys(obj)) {
+    out[k] = fn(obj[k], k);
+  }
+  return out;
+}

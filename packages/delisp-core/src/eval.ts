@@ -3,21 +3,13 @@
 //
 
 import * as vm from "vm";
-
 import { compileToString } from "./compiler";
+import primitives from "./primitives";
 import { Syntax } from "./syntax";
+import { mapObject } from "./utils";
 
 const sandbox = {
-  env: {
-    foo: 42,
-    log: (...args: any) => {
-      /* tslint:disable:no-console */
-      console.log(...args);
-      /* tslint:enable:no-console */
-    },
-    "+": (a: number, b: number) => a + b,
-    "*": (a: number, b: number) => a * b
-  }
+  env: mapObject(primitives, p => p.fn)
 };
 vm.createContext(sandbox);
 
