@@ -2,19 +2,19 @@ import { readType } from "./type-utils";
 import { Type } from "./types";
 import { mapObject } from "./utils";
 
-type FN = (...args: any[]) => any;
-
 interface Primitive {
   type: Type;
-  fn: FN;
+  value: unknown;
 }
 
-function primitives(prims: { [name: string]: { type: string; fn: FN } }) {
+function primitives(prims: {
+  [name: string]: { type: string; value: unknown };
+}) {
   return mapObject(
     prims,
     (spec): Primitive => ({
       type: readType(spec.type),
-      fn: spec.fn
+      value: spec.value
     })
   );
 }
@@ -32,11 +32,11 @@ export default primitives({
 
   "+": {
     type: "(-> number number number)",
-    fn: (a: number, b: number) => a + b
+    value: (a: number, b: number) => a + b
   },
 
   "*": {
     type: "(-> number number number)",
-    fn: (a: number, b: number) => a * b
+    value: (a: number, b: number) => a * b
   }
 });
