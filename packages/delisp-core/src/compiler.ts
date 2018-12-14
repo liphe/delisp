@@ -10,6 +10,8 @@ import {
   Syntax
 } from "./syntax";
 
+import { varnameToJS } from "./compiler/jsvariable";
+
 import * as recast from "recast";
 
 import createDebug from "debug";
@@ -23,10 +25,6 @@ interface Environment {
 // Convert a Delisp variable name to Javascript. This function should
 // be injective so there is no collisions and the output should be a
 // valid variable name.
-function varnameToJS(x: string): string {
-  // TODO: make it always a valid JS name!
-  return x;
-}
 
 function compileLambda(fn: SFunction, env: Environment): JSAST {
   const newEnv = fn.lambdaList.reduce(

@@ -1,0 +1,50 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Variable name translation should escape delisp variable characters not allowed in Javascript 1`] = `
+Array [
+  Object {
+    "delisp": "$",
+    "js": "$dollar$",
+  },
+  Object {
+    "delisp": "+",
+    "js": "$plus$",
+  },
+  Object {
+    "delisp": "-",
+    "js": "$minus$",
+  },
+  Object {
+    "delisp": "*",
+    "js": "$star$",
+  },
+  Object {
+    "delisp": "/",
+    "js": "$div$",
+  },
+  Object {
+    "delisp": "int?",
+    "js": "int$q$",
+  },
+  Object {
+    "delisp": "a->b",
+    "js": "a$minus$$gt$b",
+  },
+  Object {
+    "delisp": "<=",
+    "js": "$lt$$eq$",
+  },
+  Object {
+    "delisp": "%compile",
+    "js": "$percent$compile",
+  },
+  Object {
+    "delisp": "!foo",
+    "js": "$bang$foo",
+  },
+  Object {
+    "delisp": "&foo",
+    "js": "$amp$foo",
+  },
+]
+`;
