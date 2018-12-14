@@ -10,6 +10,7 @@
 //
 
 import { Expression, functionArgs, SVar } from "./syntax";
+import { applySubstitution, Substitution } from "./type-substitution";
 import {
   generalize,
   generateUniqueTVar,
@@ -17,7 +18,7 @@ import {
   listTypeVariables
 } from "./type-utils";
 import { Monotype, TVar, Type } from "./types";
-import { applySubstitution, Substitution, unify } from "./unify";
+import { unify } from "./unify";
 import { difference, flatten, intersection, mapObject, union } from "./utils";
 
 import primitives from "./primitives";
@@ -136,12 +137,10 @@ function infer(
       // argument, stating that they are equal to the argument types
       // the new function type we have created.
       const newConstraints: TConstraint[] = [
-        ...assumptions
-          .filter(([v, _]) => fnargs.includes(v))
-          .map(([v, t]) => {
-            const varIndex = fnargs.indexOf(v);
-            return constEqual(t, argtypes[varIndex]);
-          })
+        ...assumptions.filter(([v, _]) => fnargs.includes(v)).map(([v, t]) => {
+          const varIndex = fnargs.indexOf(v);
+          return constEqual(t, argtypes[varIndex]);
+        })
       ];
       return {
         type: {
