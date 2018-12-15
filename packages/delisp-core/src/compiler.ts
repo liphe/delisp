@@ -9,6 +9,7 @@ import {
   Syntax
 } from "./syntax";
 
+import { pprint } from "./printer";
 import { varnameToJS } from "./compiler/jsvariable";
 
 import * as recast from "recast";
@@ -151,11 +152,23 @@ export function compile(expr: Expression, env: Environment): JSAST {
 }
 
 function compileTopLevel(syntax: Syntax, env: Environment): JSAST {
-  if (syntax.type === "definition") {
-    return compileDefinition(syntax, env);
-  } else {
-    return compile(syntax, env);
-  }
+  const js =
+    syntax.type === "definition"
+      ? compileDefinition(syntax, env)
+      : compile(syntax, env);
+  return {
+    ...js,
+    // Include a comment with the original source code immediately
+    // before each toplevel compilation.
+    comments: [
+      {
+        type: "Block",
+        value: `
+${pprint(syntax, 60)}
+`
+      }
+    ]
+  };
 }
 
 function compileModule(module: Module): JSAST {
