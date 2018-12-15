@@ -12,7 +12,11 @@ const files = process.argv.slice(2);
 async function compileFile(file: string): Promise<void> {
   const cwd = process.cwd();
   const OUTPUT_DIR = path.join(cwd, ".delisp", "build");
-  const outfile = path.resolve(OUTPUT_DIR, path.relative(cwd, file));
+  const basename = path.basename(file, path.extname(file));
+  const outfile = path.resolve(
+    OUTPUT_DIR,
+    path.relative(cwd, basename + ".js")
+  );
 
   const content = await fs.readFile(file, "utf8");
   const module = readModule(content);
