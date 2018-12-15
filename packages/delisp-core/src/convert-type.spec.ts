@@ -1,7 +1,7 @@
-import { convert } from "../src/convert-type";
 import { readFromString } from "../src/reader";
+import { convert } from "./convert-type";
 
-describe("ConvertType", () => {
+describe("convertType", () => {
   it("should convert to numbers", () => {
     expect(convert(readFromString("number"))).toMatchObject({ type: "number" });
     expect(convert(readFromString("  number  "))).toMatchObject({
