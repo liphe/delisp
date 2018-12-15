@@ -51,6 +51,14 @@ describe("Evaluation", () => {
       expect(evaluateString("(let () 5)")).toBe(5);
       expect(evaluateString("(let ((x 5)) x)")).toBe(5);
       expect(evaluateString("(let ((x 5) (y 5)) (+ x y))")).toBe(10);
+      expect(
+        evaluateString(`
+(let ((const (lambda (x)
+               (lambda (y) x))))
+  (+ ((const 10) "foo")
+     ((const 20) 42)))
+`)
+      ).toBe(30);
     });
 
     it("inner lets should shadow outer ones", () => {
