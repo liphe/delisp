@@ -9,8 +9,8 @@ import {
   Syntax
 } from "./syntax";
 
-import { pprint } from "./printer";
 import { varnameToJS } from "./compiler/jsvariable";
+import { pprint } from "./printer";
 
 import * as recast from "recast";
 

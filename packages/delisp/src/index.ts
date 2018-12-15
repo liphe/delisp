@@ -1,9 +1,9 @@
+import { compileModuleToString, readModule } from "@delisp/core";
 import { promises as fs } from "fs";
+import _mkdirp from "mkdirp";
 import path from "path";
 import { promisify } from "util";
 import { startREPL } from "./repl";
-import { readModule, compileModuleToString } from "@delisp/core";
-import _mkdirp from "mkdirp";
 
 const mkdirp = promisify(_mkdirp);
 
@@ -31,7 +31,9 @@ if (files.length === 0) {
   startREPL();
 } else {
   Promise.all(files.map(compileFile)).catch(err => {
+    /* tslint:disable:no-console */
     console.error(err);
+    /* tslint:enable:no-console */
     process.exit(-1);
   });
 }
