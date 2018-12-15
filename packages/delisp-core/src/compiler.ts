@@ -97,7 +97,7 @@ function compileLetBindings(expr: SLet, env: Environment): JSAST {
   const newenv = expr.bindings.reduce(
     (acc, binding) => ({
       ...acc,
-      [binding.var]: binding.var
+      [binding.var]: varnameToJS(binding.var)
     }),
     env
   );
