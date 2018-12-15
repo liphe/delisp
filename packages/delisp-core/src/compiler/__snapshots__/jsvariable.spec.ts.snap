@@ -4,47 +4,47 @@ exports[`Variable name translation should escape delisp variable characters not 
 Array [
   Object {
     "delisp": "$",
-    "js": "$dollar$",
+    "js": "$$dollar$",
   },
   Object {
     "delisp": "+",
-    "js": "$plus$",
+    "js": "$$plus$",
   },
   Object {
     "delisp": "-",
-    "js": "$minus$",
+    "js": "$$minus$",
   },
   Object {
     "delisp": "*",
-    "js": "$star$",
+    "js": "$$star$",
   },
   Object {
     "delisp": "/",
-    "js": "$div$",
+    "js": "$$div$",
   },
   Object {
     "delisp": "int?",
-    "js": "int$q$",
+    "js": "$int$q$",
   },
   Object {
     "delisp": "a->b",
-    "js": "a$minus$$gt$b",
+    "js": "$a$minus$$gt$b",
   },
   Object {
     "delisp": "<=",
-    "js": "$lt$$eq$",
+    "js": "$$lt$$eq$",
   },
   Object {
     "delisp": "%compile",
-    "js": "$percent$compile",
+    "js": "$$percent$compile",
   },
   Object {
     "delisp": "!foo",
-    "js": "$bang$foo",
+    "js": "$$bang$foo",
   },
   Object {
     "delisp": "&foo",
-    "js": "$amp$foo",
+    "js": "$$amp$foo",
   },
 ]
 `;
