@@ -26,15 +26,19 @@ function convertList(expr: ASExprList): Monotype {
     case "->":
       if (args.length < 1) {
         throw new Error(
-          printHighlightedExpr("Expected at least 1 argument", expr)
+          printHighlightedExpr("Expected at least 1 argument", op, true)
         );
       }
+      break;
     case "list":
       if (args.length !== 1) {
         throw new Error(
-          printHighlightedExpr("Expected exactly 1 argument", expr)
+          printHighlightedExpr("Expected exactly 1 argument", op)
         );
       }
+      break;
+    default:
+      throw new Error(printHighlightedExpr("Unknown type constructor", op));
   }
 
   return {

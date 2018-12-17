@@ -52,26 +52,25 @@ describe("convertType", () => {
   });
 
   it("should detect incorrect types", () => {
-    expect(() => convert(readFromString("1"))).toThrowError("Not a valid type");
+    function failedType(x: string) {
+      let result: string | undefined;
+      try {
+        convert(readFromString(x));
+      } catch (err) {
+        result = `\n${err.message}`;
+      }
+      if (result) {
+        return result;
+      } else {
+        throw new Error(`The type is expected to fail`);
+      }
+    }
 
-    expect(() => convert(readFromString(`"hello"`))).toThrowError(
-      "Not a valid type"
-    );
-
-    expect(() => convert(readFromString(`(fn)`))).toThrowError(
-      "Expected at least 2 arguments"
-    );
-
-    expect(() => convert(readFromString(`(fn a)`))).toThrowError(
-      "Expected at least 2 arguments"
-    );
-
-    expect(() => convert(readFromString("(1 2 3)"))).toThrowError(
-      "Expected symbol as operator"
-    );
-
-    expect(() => convert(readFromString(`("hello" "world")`))).toThrowError(
-      "Expected symbol as operator"
-    );
+    expect(failedType("1")).toMatchSnapshot();
+    expect(failedType(`"hello"`)).toMatchSnapshot();
+    expect(failedType(`(fn)`)).toMatchSnapshot();
+    expect(failedType(`(fn a)`)).toMatchSnapshot();
+    expect(failedType("(1 2 3)")).toMatchSnapshot();
+    expect(failedType(`("hello" "world")`)).toMatchSnapshot();
   });
 });
