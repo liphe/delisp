@@ -60,6 +60,8 @@ export function unify(
     return env;
   } else if (t1.type === "number" && t2.type === "number") {
     return env;
+  } else if (t1.type === "boolean" && t2.type === "boolean") {
+    return env;
   } else if (t1.type === "application" && t2.type === "application") {
     return unifyArray(t1.args, t2.args, env);
   } else if (t1.type === "type-variable") {

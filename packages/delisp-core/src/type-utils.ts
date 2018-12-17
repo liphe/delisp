@@ -7,8 +7,8 @@ import { flatten, unique } from "./utils";
 // Return the list of type variables in the order they show up
 export function listTypeVariables(t: Monotype): string[] {
   switch (t.type) {
+    case "boolean":
     case "string":
-      return [];
     case "number":
       return [];
     case "application":
@@ -74,6 +74,8 @@ function _printType(type: Monotype): string {
   switch (type.type) {
     case "application":
       return `(${type.op} ${type.args.map(_printType).join(" ")})`;
+    case "boolean":
+      return "boolean";
     case "number":
       return "number";
     case "string":

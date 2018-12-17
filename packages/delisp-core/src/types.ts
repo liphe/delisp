@@ -1,7 +1,9 @@
 //
 // Types
 //
-
+export interface TBoolean {
+  type: "boolean";
+}
 export interface TNumber {
   type: "number";
 }
@@ -21,7 +23,7 @@ export interface TVar {
   name: string;
 }
 
-export type Monotype = TNumber | TString | TApplication | TVar;
+export type Monotype = TBoolean | TNumber | TString | TApplication | TVar;
 
 export interface Type {
   type: "type";

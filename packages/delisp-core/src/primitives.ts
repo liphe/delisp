@@ -30,6 +30,36 @@ export default primitives({
   //   }
   // },
 
+  true: {
+    type: "boolean",
+    value: true
+  },
+
+  false: {
+    type: "boolean",
+    value: false
+  },
+
+  not: {
+    type: "(-> boolean boolean)",
+    value: (a: boolean) => !a
+  },
+
+  and: {
+    type: "(-> boolean boolean boolean)",
+    value: (a: boolean, b: boolean) => a && b
+  },
+
+  or: {
+    type: "(-> boolean boolean boolean)",
+    value: (a: boolean, b: boolean) => a || b
+  },
+
+  "<": {
+    type: "(-> number number boolean)",
+    value: (a: number, b: number) => a < b
+  },
+
   "+": {
     type: "(-> number number number)",
     value: (a: number, b: number) => a + b
