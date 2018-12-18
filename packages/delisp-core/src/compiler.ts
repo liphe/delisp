@@ -171,28 +171,48 @@ ${pprint(syntax, 60)}
   };
 }
 
-function compileModule(module: Module): JSAST {
+function compileRuntime(): JSAST {
+  return {
+    type: "VariableDeclaration",
+    kind: "const",
+    declarations: [
+      {
+        type: "VariableDeclarator",
+        id: { type: "Identifier", name: "env" },
+        init: {
+          type: "CallExpression",
+          callee: { type: "Identifier", name: "require" },
+          arguments: [{ type: "Literal", value: "@delisp/runtime" }]
+        }
+      }
+    ]
+  };
+}
+
+function compileModule(module: Module, includeRuntime: boolean): JSAST {
   return {
     type: "File",
     program: {
       type: "Program",
       sourceType: "module",
-      body: module.body.map((syntax: Syntax) => ({
-        type: "ExpressionStatement",
-        expression: compileTopLevel(syntax, {})
-      }))
+      body: (includeRuntime ? [compileRuntime()] : []).concat(
+        module.body.map((syntax: Syntax) => ({
+          type: "ExpressionStatement",
+          expression: compileTopLevel(syntax, {})
+        }))
+      )
     }
   };
 }
 
 export function compileToString(syntax: Syntax): string {
-  const ast = compileModule({ type: "module", body: [syntax] });
+  const ast = compileModule({ type: "module", body: [syntax] }, false);
   debug("jsast:", ast);
   return recast.print(ast).code;
 }
 
 export function compileModuleToString(module: Module): string {
-  const ast = compileModule(module);
+  const ast = compileModule(module, true);
   debug("jsast:", ast);
   return recast.print(ast).code;
 }
