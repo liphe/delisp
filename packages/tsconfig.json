@@ -3,6 +3,7 @@
   "include": [],
   "references": [
     { "path": "delisp/" },
-    { "path": "delisp-core/" }
+    { "path": "delisp-core/" },
+    { "path": "delisp-runtime/" }
   ]
 }
