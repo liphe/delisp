@@ -22,10 +22,23 @@ function convertList(expr: ASExprList): Monotype {
     throw new Error(printHighlightedExpr("Expected symbol as operator", expr));
   }
 
-  if (args.length < 2) {
-    throw new Error(
-      printHighlightedExpr("Expected at least 2 arguments", expr)
-    );
+  switch (op.name) {
+    case "->":
+      if (args.length < 1) {
+        throw new Error(
+          printHighlightedExpr("Expected at least 1 argument", op, true)
+        );
+      }
+      break;
+    case "list":
+      if (args.length !== 1) {
+        throw new Error(
+          printHighlightedExpr("Expected exactly 1 argument", op)
+        );
+      }
+      break;
+    default:
+      throw new Error(printHighlightedExpr("Unknown type constructor", op));
   }
 
   return {
