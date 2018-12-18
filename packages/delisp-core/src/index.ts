@@ -10,6 +10,8 @@ export { inferType } from "./infer";
 export { printType } from "./type-utils";
 export { isDeclaration } from "./syntax";
 
+export { default as primitives } from "./primitives";
+
 export function readSyntax(source: string): Syntax {
   return convertSyntax(readFromString(source));
 }

@@ -1,0 +1,14 @@
+{
+  "name": "@delisp/runtime",
+  "version": "0.1.0",
+  "main": "dist/src/index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "lint": "tslint --project tsconfig.json",
+    "test": "exit 0"
+  },
+  "dependencies": {
+    "@delisp/core": "0.1.0"
+  }
+}
