@@ -5,13 +5,18 @@ import { compileToString } from "../src/compiler";
 describe("Compiler", () => {
   describe("Error messages", () => {
     function compileError(str: string): string {
+      let result: string | undefined;
       try {
         const sexpr = readFromString(str);
         const syntax = convert(sexpr);
         compileToString(syntax);
-        throw new Error(`FATAL: EXPRESSION DID NOT FAIL TO COMPILE.`);
       } catch (err) {
-        return err.message;
+        result = err.message;
+      }
+      if (result) {
+        return result;
+      } else {
+        throw new Error(`FATAL: EXPRESSION DID NOT FAIL TO COMPILE.`);
       }
     }
 
