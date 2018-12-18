@@ -6,6 +6,7 @@ export interface Substitution {
 
 export function applySubstitution(t: Monotype, env: Substitution): Monotype {
   switch (t.type) {
+    case "boolean":
     case "number":
     case "string":
       return t;

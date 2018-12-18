@@ -4,6 +4,8 @@ import { Monotype } from "./types";
 
 function convertSymbol(expr: ASExprSymbol): Monotype {
   switch (expr.name) {
+    case "boolean":
+      return { type: "boolean" };
     case "number":
       return { type: "number" };
     case "string":
