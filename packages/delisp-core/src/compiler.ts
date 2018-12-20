@@ -229,12 +229,14 @@ function compileModule(module: Module, includeRuntime: boolean): JS.Program {
 
 export function compileToString(syntax: Syntax): string {
   const ast = compileModule({ type: "module", body: [syntax] }, false);
-  debug("jsast:", ast);
-  return recast.print(ast).code;
+  const code = recast.print(ast).code;
+  debug("jscode:", code);
+  return code;
 }
 
 export function compileModuleToString(module: Module): string {
   const ast = compileModule(module, true);
-  debug("jsast:", ast);
+  const code = recast.print(ast).code;
+  debug("jscode:", code);
   return recast.print(ast).code;
 }
