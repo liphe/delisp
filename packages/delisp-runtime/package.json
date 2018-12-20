@@ -7,8 +7,5 @@
     "build": "tsc",
     "lint": "tslint --project tsconfig.json",
     "test": "exit 0"
-  },
-  "dependencies": {
-    "@delisp/core": "0.1.0"
   }
 }
