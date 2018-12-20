@@ -4,5 +4,6 @@
     "outDir": "dist",
     "declaration": true
   },
-  "include": ["./src/"]
+  "include": ["./src/"],
+  "references": [{ "path": "../delisp-runtime" }]
 }
