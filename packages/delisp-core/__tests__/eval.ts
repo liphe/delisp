@@ -70,6 +70,6 @@ describe("Evaluation", () => {
     expect(evaluateString("(empty? nil)")).toBe(true);
     expect(evaluateString("(not (empty? (cons 1 nil)))")).toBe(true);
     expect(evaluateString("(first (cons 1 nil))")).toBe(1);
-    expect(evaluateString("(rest (cons 1 nil))")).toBe([]);
+    expect(evaluateString("(rest (cons 1 nil))")).toEqual([]);
   });
 });
