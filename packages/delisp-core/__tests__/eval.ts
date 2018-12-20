@@ -65,4 +65,11 @@ describe("Evaluation", () => {
       expect(evaluateString("(let ((x 5)) (let ((x 1)) x))")).toBe(1);
     });
   });
+
+  describe("lists", () => {
+    expect(evaluateString("(empty? nil)")).toBe(true);
+    expect(evaluateString("(not (empty? (cons 1 nil)))")).toBe(true);
+    expect(evaluateString("(first (cons 1 nil))")).toBe(1);
+    expect(evaluateString("(rest (cons 1 nil))")).toBe([]);
+  });
 });
