@@ -12,12 +12,12 @@ import {
 import { varnameToJS } from "./compiler/jsvariable";
 import { pprint } from "./printer";
 
+import * as JS from "estree";
 import * as recast from "recast";
 
 import createDebug from "debug";
 const debug = createDebug("delisp:compiler");
 
-type JSAST = object;
 interface Environment {
   [symbol: string]: string;
 }
@@ -26,7 +26,7 @@ interface Environment {
 // be injective so there is no collisions and the output should be a
 // valid variable name.
 
-function compileLambda(fn: SFunction, env: Environment): JSAST {
+function compileLambda(fn: SFunction, env: Environment): JS.Expression {
   const newEnv = fn.lambdaList.reduce(
     (e, param) => ({
       ...e,
@@ -36,15 +36,18 @@ function compileLambda(fn: SFunction, env: Environment): JSAST {
   );
   return {
     type: "ArrowFunctionExpression",
-    params: fn.lambdaList.map(param => ({
-      type: "Identifier",
-      name: newEnv[param.variable]
-    })),
-    body: compile(fn.body, newEnv)
+    params: fn.lambdaList.map(
+      (param): JS.Pattern => ({
+        type: "Identifier",
+        name: newEnv[param.variable]
+      })
+    ),
+    body: compile(fn.body, newEnv),
+    expression: false
   };
 }
 
-function compileDefinition(def: SDefinition, env: Environment): JSAST {
+function compileDefinition(def: SDefinition, env: Environment): JS.Expression {
   return {
     type: "AssignmentExpression",
     operator: "=",
@@ -64,7 +67,10 @@ function compileDefinition(def: SDefinition, env: Environment): JSAST {
   };
 }
 
-function compileFunctionCall(funcall: SFunctionCall, env: Environment): JSAST {
+function compileFunctionCall(
+  funcall: SFunctionCall,
+  env: Environment
+): JS.Expression {
   return {
     type: "CallExpression",
     callee: compile(funcall.fn, env),
@@ -72,7 +78,10 @@ function compileFunctionCall(funcall: SFunctionCall, env: Environment): JSAST {
   };
 }
 
-function compileVariable(ref: SVariableReference, env: Environment): JSAST {
+function compileVariable(
+  ref: SVariableReference,
+  env: Environment
+): JS.Expression {
   if (ref.variable in env) {
     return {
       type: "Identifier",
@@ -94,7 +103,7 @@ function compileVariable(ref: SVariableReference, env: Environment): JSAST {
   }
 }
 
-function compileLetBindings(expr: SLet, env: Environment): JSAST {
+function compileLetBindings(expr: SLet, env: Environment): JS.Expression {
   const newenv = expr.bindings.reduce(
     (acc, binding) => ({
       ...acc,
@@ -104,35 +113,34 @@ function compileLetBindings(expr: SLet, env: Environment): JSAST {
   );
 
   return {
-    type: "ExpressionStatement",
-    expression: {
-      type: "CallExpression",
-      callee: {
-        type: "FunctionExpression",
-        params: expr.bindings.map(b => ({
+    type: "CallExpression",
+    callee: {
+      type: "FunctionExpression",
+      params: expr.bindings.map(
+        (b): JS.Pattern => ({
           type: "Identifier",
           name: newenv[b.var]
-        })),
-        body: {
-          type: "BlockStatement",
-          body: [
-            {
-              type: "ReturnStatement",
-              argument: compile(expr.body, newenv)
-            }
-          ]
-        }
-      },
-      arguments: expr.bindings.map(b => compile(b.value, env))
-    }
+        })
+      ),
+      body: {
+        type: "BlockStatement",
+        body: [
+          {
+            type: "ReturnStatement",
+            argument: compile(expr.body, newenv)
+          }
+        ]
+      }
+    },
+    arguments: expr.bindings.map(b => compile(b.value, env))
   };
 }
 
-export function compile(expr: Expression, env: Environment): JSAST {
+export function compile(expr: Expression, env: Environment): JS.Expression {
   switch (expr.type) {
     case "number":
       return {
-        type: "NumericLiteral",
+        type: "Literal",
         value: expr.value
       };
     case "string":
@@ -151,7 +159,7 @@ export function compile(expr: Expression, env: Environment): JSAST {
   }
 }
 
-function compileTopLevel(syntax: Syntax, env: Environment): JSAST {
+function compileTopLevel(syntax: Syntax, env: Environment): JS.Expression {
   const js =
     syntax.type === "definition"
       ? compileDefinition(syntax, env)
@@ -160,7 +168,7 @@ function compileTopLevel(syntax: Syntax, env: Environment): JSAST {
     ...js,
     // Include a comment with the original source code immediately
     // before each toplevel compilation.
-    comments: [
+    leadingComments: [
       {
         type: "Block",
         value: `
@@ -171,7 +179,7 @@ ${pprint(syntax, 60)}
   };
 }
 
-function compileRuntime(): JSAST {
+function compileRuntime(): JS.VariableDeclaration {
   return {
     type: "VariableDeclaration",
     kind: "const",
@@ -189,19 +197,19 @@ function compileRuntime(): JSAST {
   };
 }
 
-function compileModule(module: Module, includeRuntime: boolean): JSAST {
+function compileModule(module: Module, includeRuntime: boolean): JS.Program {
   return {
-    type: "File",
-    program: {
-      type: "Program",
-      sourceType: "module",
-      body: (includeRuntime ? [compileRuntime()] : []).concat(
-        module.body.map((syntax: Syntax) => ({
+    type: "Program",
+    sourceType: "module",
+    body: [
+      ...(includeRuntime ? [compileRuntime()] : []),
+      ...module.body.map(
+        (syntax: Syntax): JS.ExpressionStatement => ({
           type: "ExpressionStatement",
           expression: compileTopLevel(syntax, {})
-        }))
+        })
       )
-    }
+    ]
   };
 }
 
