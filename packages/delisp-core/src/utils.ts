@@ -51,3 +51,8 @@ export function mapObject<A, B>(
   }
   return out;
 }
+
+/** Return an array with elements from 0 up to n (not included). */
+export function range(n: number) {
+  return new Array(n).fill(0).map((_, i) => i);
+}

@@ -21,6 +21,8 @@ import { Monotype, TVar, Type } from "./types";
 import { unify } from "./unify";
 import { difference, flatten, intersection, mapObject, union } from "./utils";
 
+import { getInlinePrimitiveTypes } from "./compiler/inline-primitives";
+
 import primitives from "./primitives";
 
 // The type inference process is split in two stages. Firstly, `infer`
@@ -409,7 +411,10 @@ function solve(
   }
 }
 
-const defaultTypeEnvironment = mapObject(primitives, prim => prim.type);
+const defaultTypeEnvironment: TypeEnvironment = {
+  ...getInlinePrimitiveTypes(),
+  ...mapObject(primitives, prim => prim.type)
+};
 
 export function inferType(
   expr: Expression,

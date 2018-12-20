@@ -9,6 +9,10 @@ import {
   Syntax
 } from "./syntax";
 
+import {
+  compileInlinePrimitive,
+  isInlinePrimitive
+} from "./compiler/inline-primitives";
 import { varnameToJS } from "./compiler/jsvariable";
 import { pprint } from "./printer";
 
@@ -71,18 +75,28 @@ function compileFunctionCall(
   funcall: SFunctionCall,
   env: Environment
 ): JS.Expression {
-  return {
-    type: "CallExpression",
-    callee: compile(funcall.fn, env),
-    arguments: funcall.args.map(arg => compile(arg, env))
-  };
+  const compiledArgs = funcall.args.map(arg => compile(arg, env));
+  if (
+    funcall.fn.type === "variable-reference" &&
+    isInlinePrimitive(funcall.fn.variable)
+  ) {
+    return compileInlinePrimitive(funcall.fn.variable, compiledArgs, "funcall");
+  } else {
+    return {
+      type: "CallExpression",
+      callee: compile(funcall.fn, env),
+      arguments: compiledArgs
+    };
+  }
 }
 
 function compileVariable(
   ref: SVariableReference,
   env: Environment
 ): JS.Expression {
-  if (ref.variable in env) {
+  if (isInlinePrimitive(ref.variable)) {
+    return compileInlinePrimitive(ref.variable, [], "value");
+  } else if (ref.variable in env) {
     return {
       type: "Identifier",
       name: env[ref.variable]
