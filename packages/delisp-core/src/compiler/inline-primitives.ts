@@ -1,21 +1,31 @@
 import * as JS from "estree";
+import { readType } from "../type-utils";
+import { Type } from "../types";
 import { range } from "../utils";
 
 type InlineHandler = (args: JS.Expression[]) => JS.Expression;
 
 interface InlinePrim {
-  nargs: number;
+  type: Type;
   handle: InlineHandler;
 }
 
 const inlinefuncs = new Map<string, InlinePrim>();
 
+export function getInlinePrimitiveTypes(): { [name: string]: Type } {
+  return Array.from(inlinefuncs.entries()).reduce(
+    (obj, [name, prim]) => ({ ...obj, [name]: prim.type }),
+    {}
+  );
+}
+
 function defineInlinePrimitive(
   name: string,
-  nargs: number,
+  typespec: string,
   handle: InlineHandler
 ) {
-  return inlinefuncs.set(name, { nargs, handle });
+  const type = readType(typespec);
+  return inlinefuncs.set(name, { type, handle });
 }
 
 export function isInlinePrimitive(name: string) {
@@ -28,6 +38,15 @@ export function findInlinePrimitive(name: string): InlinePrim {
     throw new Error(`${name} is not an primitive inline function call`);
   }
   return prim;
+}
+
+function primitiveArity(prim: InlinePrim): number {
+  const type = prim.type.mono;
+  if (type.type === "application" && type.op === "->") {
+    return type.args.length - 1;
+  } else {
+    return 0;
+  }
 }
 
 /** Compile a inline primitive with a set of parameters.
@@ -43,10 +62,12 @@ export function compileInlinePrimitive(
   position: "funcall" | "value"
 ): JS.Expression {
   const prim = findInlinePrimitive(name);
-  if (position === "funcall" || prim.nargs === 0) {
+  const arity = primitiveArity(prim);
+
+  if (position === "funcall" || arity === 0) {
     return prim.handle(args);
   } else {
-    const identifiers = range(prim.nargs).map(
+    const identifiers = range(arity).map(
       (i): JS.Identifier => ({
         type: "Identifier",
         name: `x${i}`
@@ -61,21 +82,21 @@ export function compileInlinePrimitive(
   }
 }
 
-defineInlinePrimitive("true", 0, () => {
+defineInlinePrimitive("true", "boolean", () => {
   return {
     type: "Literal",
     value: true
   };
 });
 
-defineInlinePrimitive("false", 0, () => {
+defineInlinePrimitive("false", "boolean", () => {
   return {
     type: "Literal",
     value: false
   };
 });
 
-defineInlinePrimitive("+", 2, args => {
+defineInlinePrimitive("+", "(-> number number number)", args => {
   return {
     type: "BinaryExpression",
     operator: "+",
@@ -84,7 +105,7 @@ defineInlinePrimitive("+", 2, args => {
   };
 });
 
-defineInlinePrimitive("*", 2, args => {
+defineInlinePrimitive("*", "(-> number number number)", args => {
   return {
     type: "BinaryExpression",
     operator: "*",
