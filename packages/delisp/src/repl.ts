@@ -3,9 +3,12 @@ import {
   inferType,
   isDeclaration,
   printType,
-  readSyntax
+  readSyntax,
+  createContext
 } from "@delisp/core";
 import repl from "repl";
+
+const context = createContext();
 
 const delispEval = (
   cmd: string,
@@ -25,7 +28,7 @@ const delispEval = (
   }
 
   // NOTE: evaluate doesn't really make sense for declarations. Let's rethink this
-  const value = evaluate(syntax);
+  const value = evaluate(syntax, context);
 
   if (isDeclaration(syntax)) {
     callback(null, {});

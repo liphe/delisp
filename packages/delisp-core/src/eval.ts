@@ -8,13 +8,16 @@ import primitives from "./primitives";
 import { Syntax } from "./syntax";
 import { mapObject } from "./utils";
 
-const sandbox = {
-  env: mapObject(primitives, p => p.value)
-};
-vm.createContext(sandbox);
+export function createContext() {
+  const sandbox = {
+    env: mapObject(primitives, p => p.value)
+  };
+  vm.createContext(sandbox);
+  return sandbox;
+}
 
-export function evaluate(syntax: Syntax): unknown {
+export function evaluate(syntax: Syntax, context = createContext()): unknown {
   const code = compileToString(syntax);
-  const result = vm.runInContext(code, sandbox);
+  const result = vm.runInContext(code, context);
   return result;
 }
