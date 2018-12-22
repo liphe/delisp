@@ -1,10 +1,10 @@
 import {
+  createContext,
   evaluate,
   inferType,
   isDeclaration,
   printType,
-  readSyntax,
-  createContext
+  readSyntax
 } from "@delisp/core";
 import repl from "repl";
 

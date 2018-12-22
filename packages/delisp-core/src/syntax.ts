@@ -29,7 +29,7 @@ export interface SVariableReference<I = {}> extends Node<I> {
 export interface SFunctionCall<I = {}> extends Node<I> {
   type: "function-call";
   fn: Expression<I>;
-  args: Expression<I>[];
+  args: Array<Expression<I>>;
 }
 
 export type LambdaList = Array<{
@@ -55,7 +55,7 @@ export interface SLetBinding<I = {}> {
 
 export interface SLet<I = {}> extends Node<I> {
   type: "let-bindings";
-  bindings: SLetBinding<I>[];
+  bindings: Array<SLetBinding<I>>;
   body: Expression<I>;
 }
 
@@ -86,5 +86,5 @@ export function isDeclaration(syntax: Syntax): syntax is Declaration {
 
 export interface Module<I = {}> {
   type: "module";
-  body: Syntax<I>[];
+  body: Array<Syntax<I>>;
 }
