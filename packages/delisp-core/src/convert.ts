@@ -111,7 +111,8 @@ function parseLetBindings(bindings: ASExpr): SLetBinding[] {
 
     output.push({
       var: name.name,
-      value: convertExpr(value)
+      value: convertExpr(value),
+      location: binding.location
     });
   });
 
@@ -134,7 +135,8 @@ defineConversion("let", expr => {
   return {
     type: "let-bindings",
     bindings: parseLetBindings(rawBindings),
-    body: convertExpr(body)
+    body: convertExpr(body),
+    location: expr.location
   };
 });
 
