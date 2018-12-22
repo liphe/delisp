@@ -47,9 +47,10 @@ export function functionArgs(fn: SFunction): SVar[] {
   return fn.lambdaList.map(a => a.variable);
 }
 
-export interface SLetBinding<I = {}> extends Node<I> {
+export interface SLetBinding<I = {}> {
   var: SVar;
   value: Expression<I>;
+  location: Location;
 }
 
 export interface SLet<I = {}> extends Node<I> {

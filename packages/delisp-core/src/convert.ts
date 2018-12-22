@@ -113,8 +113,7 @@ function parseLetBindings(bindings: ASExpr): SLetBinding[] {
     output.push({
       var: name.name,
       value: convertExpr(value),
-      location: binding.location,
-      info: {}
+      location: binding.location
     });
   });
 
