@@ -8,7 +8,7 @@ export type SVar = string;
 
 interface Node<I> {
   location: Location;
-  info?: I;
+  info: I;
 }
 
 export interface SNumber<I = {}> extends Node<I> {
