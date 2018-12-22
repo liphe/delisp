@@ -7,7 +7,8 @@ function typeOf(str: string, env: TypeEnvironment = {}): string {
   if (isDeclaration(syntax)) {
     throw new Error(`Not an expression!`);
   }
-  return printType(inferType(syntax, env));
+  const typedExpr = inferType(syntax, env);
+  return printType(typedExpr.info.type);
 }
 
 describe("Type inference", () => {
