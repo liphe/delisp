@@ -1,6 +1,7 @@
 import {
   Expression,
   Module,
+  SConditional,
   SDefinition,
   SFunction,
   SFunctionCall,
@@ -117,6 +118,18 @@ function compileVariable(
   }
 }
 
+function compileConditional(
+  expr: SConditional,
+  env: Environment
+): JS.Expression {
+  return {
+    type: "ConditionalExpression",
+    test: compile(expr.condition, env),
+    consequent: compile(expr.consequent, env),
+    alternate: compile(expr.alternative, env)
+  };
+}
+
 function compileLetBindings(expr: SLet, env: Environment): JS.Expression {
   const newenv = expr.bindings.reduce(
     (acc, binding) => ({
@@ -164,6 +177,8 @@ export function compile(expr: Expression, env: Environment): JS.Expression {
       };
     case "variable-reference":
       return compileVariable(expr, env);
+    case "conditional":
+      return compileConditional(expr, env);
     case "function":
       return compileLambda(expr, env);
     case "function-call":

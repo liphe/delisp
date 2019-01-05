@@ -64,6 +64,27 @@ function parseLambdaList(x: ASExpr): LambdaList {
   }));
 }
 
+defineConversion("if", expr => {
+  if (expr.elements.length !== 4) {
+    throw new Error(
+      printHighlightedExpr(
+        `'if' needs exactly 3 arguments, got ${expr.elements.length}`,
+        last(expr.elements) as ASExpr, // we know it is not empty!
+        true
+      )
+    );
+  }
+  const [, conditionForm, consequentForm, alternativeForm] = expr.elements;
+  return {
+    type: "conditional",
+    condition: convertExpr(conditionForm),
+    consequent: convertExpr(consequentForm),
+    alternative: convertExpr(alternativeForm),
+    location: expr.location,
+    info: {}
+  };
+});
+
 defineConversion("lambda", expr => {
   const [lambda, ...args] = expr.elements;
 

@@ -26,6 +26,13 @@ export interface SVariableReference<I = {}> extends Node<I> {
   variable: SVar;
 }
 
+export interface SConditional<I = {}> extends Node<I> {
+  type: "conditional";
+  condition: Expression<I>;
+  consequent: Expression<I>;
+  alternative: Expression<I>;
+}
+
 export interface SFunctionCall<I = {}> extends Node<I> {
   type: "function-call";
   fn: Expression<I>;
@@ -63,6 +70,7 @@ export type Expression<I = {}> =
   | SNumber<I>
   | SString<I>
   | SVariableReference<I>
+  | SConditional<I>
   | SFunctionCall<I>
   | SFunction<I>
   | SLet<I>;
