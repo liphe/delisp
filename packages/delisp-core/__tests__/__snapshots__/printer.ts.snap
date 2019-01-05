@@ -130,6 +130,18 @@ exports[`Pretty Printer should print amll real code beautifully 1`] = `
              (eq (car x) *comma-atsign*)))))"
 `;
 
+exports[`Pretty Printer should print conditional expressions nicely 1`] = `
+"
+(if true 1 2)"
+`;
+
+exports[`Pretty Printer should print conditional expressions nicely 2`] = `
+"
+(if aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  1
+  2)"
+`;
+
 exports[`Pretty Printer should print deeply nested function calls nicely 1`] = `
 "
 (function-call-1 (function-call-2 (function-call-3 (function-call-4
