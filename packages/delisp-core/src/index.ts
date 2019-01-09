@@ -4,7 +4,7 @@ import { readAllFromString, readFromString } from "./reader";
 import { Module, Syntax } from "./syntax";
 
 export { compileToString, compileModuleToString } from "./compiler";
-export { evaluate } from "./eval";
+export { evaluate, createContext } from "./eval";
 export { inferType } from "./infer";
 // TODO: replace with the pretty printer
 export { printType } from "./type-utils";

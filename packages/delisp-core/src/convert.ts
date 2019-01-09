@@ -80,7 +80,8 @@ defineConversion("lambda", expr => {
     type: "function",
     lambdaList: parseLambdaList(args[0]),
     body: convertExpr(args[1]),
-    location: expr.location
+    location: expr.location,
+    info: {}
   };
 });
 
@@ -111,7 +112,8 @@ function parseLetBindings(bindings: ASExpr): SLetBinding[] {
 
     output.push({
       var: name.name,
-      value: convertExpr(value)
+      value: convertExpr(value),
+      location: binding.location
     });
   });
 
@@ -134,7 +136,9 @@ defineConversion("let", expr => {
   return {
     type: "let-bindings",
     bindings: parseLetBindings(rawBindings),
-    body: convertExpr(body)
+    body: convertExpr(body),
+    location: expr.location,
+    info: {}
   };
 });
 
@@ -187,7 +191,8 @@ function convertList(list: ASExprList): Expression {
       type: "function-call",
       fn: convertExpr(fn),
       args: args.map(convertExpr),
-      location: list.location
+      location: list.location,
+      info: {}
     };
   }
 }
@@ -195,14 +200,15 @@ function convertList(list: ASExprList): Expression {
 export function convertExpr(expr: ASExpr): Expression {
   switch (expr.type) {
     case "number":
-      return expr;
+      return { ...expr, info: {} };
     case "string":
-      return expr;
+      return { ...expr, info: {} };
     case "symbol":
       return {
         type: "variable-reference",
         variable: expr.name,
-        location: expr.location
+        location: expr.location,
+        info: {}
       };
     case "list":
       return convertList(expr);

@@ -6,28 +6,30 @@ import { Location } from "./input";
 
 export type SVar = string;
 
-export interface SNumber {
+interface Node<I> {
+  location: Location;
+  info: I;
+}
+
+export interface SNumber<I = {}> extends Node<I> {
   type: "number";
   value: number;
-  location: Location;
 }
 
-export interface SString {
+export interface SString<I = {}> extends Node<I> {
   type: "string";
   value: string;
-  location: Location;
 }
 
-export interface SVariableReference {
+export interface SVariableReference<I = {}> extends Node<I> {
   type: "variable-reference";
   variable: SVar;
-  location: Location;
 }
-export interface SFunctionCall {
+
+export interface SFunctionCall<I = {}> extends Node<I> {
   type: "function-call";
-  fn: Expression;
-  args: Expression[];
-  location: Location;
+  fn: Expression<I>;
+  args: Array<Expression<I>>;
 }
 
 export type LambdaList = Array<{
@@ -35,56 +37,54 @@ export type LambdaList = Array<{
   location: Location;
 }>;
 
-export interface SFunction {
+export interface SFunction<I = {}> extends Node<I> {
   type: "function";
   lambdaList: LambdaList;
-  body: Expression;
-  location: Location;
+  body: Expression<I>;
 }
 
 export function functionArgs(fn: SFunction): SVar[] {
   return fn.lambdaList.map(a => a.variable);
 }
 
-export interface SLetBinding {
+export interface SLetBinding<I = {}> {
   var: SVar;
-  value: Expression;
+  value: Expression<I>;
+  location: Location;
 }
 
-export interface SLet {
+export interface SLet<I = {}> extends Node<I> {
   type: "let-bindings";
-  bindings: SLetBinding[];
-  body: Expression;
+  bindings: Array<SLetBinding<I>>;
+  body: Expression<I>;
 }
 
-export type Expression =
-  | SNumber
-  | SString
-  | SVariableReference
-  | SFunctionCall
-  | SFunction
-  | SLet;
+export type Expression<I = {}> =
+  | SNumber<I>
+  | SString<I>
+  | SVariableReference<I>
+  | SFunctionCall<I>
+  | SFunction<I>
+  | SLet<I>;
 
 //
 // Declarations
 //
 
-export interface SDefinition {
+export interface SDefinition<I = {}> {
   type: "definition";
   variable: SVar;
-  value: Expression;
+  value: Expression<I>;
   location: Location;
 }
-
-export type Declaration = SDefinition;
-
-export type Syntax = Expression | Declaration;
+export type Declaration<I = {}> = SDefinition<I>;
+export type Syntax<I = {}> = Expression<I> | Declaration<I>;
 
 export function isDeclaration(syntax: Syntax): syntax is Declaration {
   return syntax.type === "definition";
 }
 
-export interface Module {
+export interface Module<I = {}> {
   type: "module";
-  body: Syntax[];
+  body: Array<Syntax<I>>;
 }

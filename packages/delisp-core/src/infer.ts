@@ -101,36 +101,57 @@ function constImplicitInstance(
   return { type: "implicit-instance-constraint", t1, monovars, t2 };
 }
 
+interface Typed {
+  type: Monotype;
+}
+
 // Generate new types for an expression an all its subexpressions,
 // returning and a set of constraints and assumptions between them.
 function infer(
-  syntax: Expression,
+  expr: Expression,
   // A set of type variables names whose type is monomorphic. That is
   // to say, all instances should have the same type. That is the set
   // of type variables introduced by lambda.
   monovars: string[]
-): { type: Monotype; constraints: TConstraint[]; assumptions: TAssumption[] } {
-  switch (syntax.type) {
+): {
+  expr: Expression<Typed>;
+  constraints: TConstraint[];
+  assumptions: TAssumption[];
+} {
+  switch (expr.type) {
     case "number":
-      return { type: { type: "number" }, constraints: [], assumptions: [] };
+      return {
+        expr: { ...expr, info: { type: { type: "number" } } },
+        constraints: [],
+        assumptions: []
+      };
     case "string":
-      return { type: { type: "string" }, constraints: [], assumptions: [] };
+      return {
+        expr: { ...expr, info: { type: { type: "string" } } },
+        constraints: [],
+        assumptions: []
+      };
     case "variable-reference": {
       // as we found a variable, and because we lack an
       // 'environment/context', we generate a new type and add an
       // assumption for this variable.
       const t = generateUniqueTVar();
       return {
-        type: t,
+        expr: {
+          ...expr,
+          info: {
+            type: t
+          }
+        },
         constraints: [],
-        assumptions: [[syntax.variable, t]]
+        assumptions: [[expr.variable, t]]
       };
     }
     case "function": {
-      const fnargs = functionArgs(syntax);
+      const fnargs = functionArgs(expr);
       const argtypes = fnargs.map(_ => generateUniqueTVar());
 
-      const { type, constraints, assumptions } = infer(syntax.body, [
+      const { expr: typedBody, constraints, assumptions } = infer(expr.body, [
         ...monovars,
         ...argtypes.map(v => v.name)
       ]);
@@ -147,10 +168,16 @@ function infer(
           })
       ];
       return {
-        type: {
-          type: "application",
-          op: "->",
-          args: [...argtypes, type]
+        expr: {
+          ...expr,
+          body: typedBody,
+          info: {
+            type: {
+              type: "application",
+              op: "->",
+              args: [...argtypes, typedBody.info.type]
+            }
+          }
         },
         constraints: constraints.concat(newConstraints),
         // assumptions have already been used, so they can be deleted.
@@ -158,20 +185,25 @@ function infer(
       };
     }
     case "function-call": {
-      const ifn = infer(syntax.fn, monovars);
-      const iargs = syntax.args.map(arg => infer(arg, monovars));
+      const ifn = infer(expr.fn, monovars);
+      const iargs = expr.args.map(arg => infer(arg, monovars));
       const tTo = generateUniqueTVar();
 
       const tfn: Monotype = {
         type: "application",
         op: "->",
-        args: [...iargs.map(a => a.type), tTo]
+        args: [...iargs.map(a => a.expr.info.type), tTo]
       };
 
       return {
-        type: tTo,
+        expr: {
+          ...expr,
+          fn: ifn.expr,
+          args: iargs.map(a => a.expr),
+          info: { type: tTo }
+        },
         constraints: ([
-          { type: "equal-constraint", t1: ifn.type, t2: tfn }
+          { type: "equal-constraint", t1: ifn.expr.info.type, t2: tfn }
         ] as TConstraint[]).concat(
           ...ifn.constraints,
           ...iargs.map(a => a.constraints)
@@ -198,18 +230,28 @@ function infer(
       //
 
       // Variables showing up in the bindings
-      const vars = new Set(syntax.bindings.map(b => b.var));
+      const vars = new Set(expr.bindings.map(b => b.var));
       const toBeBound = (vname: string) => vars.has(vname);
 
-      const bindingsInfo = syntax.bindings.map(b => {
+      const bindingsInfo = expr.bindings.map(b => {
         return {
-          ...b,
+          binding: b,
           inference: infer(b.value, monovars)
         };
       });
-      const bodyInference = infer(syntax.body, monovars);
+      const bodyInference = infer(expr.body, monovars);
       return {
-        type: bodyInference.type,
+        expr: {
+          ...expr,
+          bindings: bindingsInfo.map(b => ({
+            ...b.binding,
+            value: b.inference.expr
+          })),
+          body: bodyInference.expr,
+          info: {
+            type: bodyInference.expr.info.type
+          }
+        },
         constraints: [
           ...bodyInference.constraints,
           ...flatten(bindingsInfo.map(i => i.inference.constraints)),
@@ -223,8 +265,12 @@ function infer(
             .map(([v, t]) => {
               // We just filter the assumptions to the variables
               // that are bound, so we know it must is defined.
-              const bInfo = bindingsInfo.find(bi => bi.var === v)!;
-              return constImplicitInstance(t, monovars, bInfo.inference.type);
+              const bInfo = bindingsInfo.find(bi => bi.binding.var === v)!;
+              return constImplicitInstance(
+                t,
+                monovars,
+                bInfo.inference.expr.info.type
+              );
             })
         ],
         assumptions: [
@@ -345,6 +391,56 @@ function applySubstitutionToConstraint(
   }
 }
 
+function applySubstitutionToSyntax(
+  s: Expression<Typed>,
+  env: Substitution
+): Expression<Typed> {
+  switch (s.type) {
+    case "string":
+    case "number":
+    case "variable-reference":
+      return {
+        ...s,
+        info: {
+          ...s.info,
+          type: applySubstitution(s.info.type, env)
+        }
+      };
+    case "function-call":
+      return {
+        ...s,
+        fn: applySubstitutionToSyntax(s.fn, env),
+        args: s.args.map(a => applySubstitutionToSyntax(a, env)),
+        info: {
+          ...s.info,
+          type: applySubstitution(s.info.type, env)
+        }
+      };
+    case "function":
+      return {
+        ...s,
+        body: applySubstitutionToSyntax(s.body, env),
+        info: {
+          ...s.info,
+          type: applySubstitution(s.info.type, env)
+        }
+      };
+    case "let-bindings":
+      return {
+        ...s,
+        bindings: s.bindings.map(b => ({
+          ...b,
+          value: applySubstitutionToSyntax(b.value, env)
+        })),
+        body: applySubstitutionToSyntax(s.body, env),
+        info: {
+          ...s.info,
+          type: applySubstitution(s.info.type, env)
+        }
+      };
+  }
+}
+
 // Solve the set of constraints generated by `infer`, returning a substitution that
 // can be applied to the temporary types to get the principal type of the expression.
 function solve(
@@ -419,11 +515,13 @@ const defaultTypeEnvironment: TypeEnvironment = {
 export function inferType(
   expr: Expression,
   typeEnvironment: TypeEnvironment = defaultTypeEnvironment
-): Monotype {
-  const { type, constraints, assumptions } = infer(expr, []);
+): Expression<Typed> {
+  const { expr: tmpExpr, constraints, assumptions } = infer(expr, []);
+
   const s = solve([
     ...constraints,
     ...assumptionsToConstraints(assumptions, typeEnvironment)
   ]);
-  return applySubstitution(type, s);
+
+  return applySubstitutionToSyntax(tmpExpr, s);
 }
