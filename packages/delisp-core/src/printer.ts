@@ -37,6 +37,22 @@ function print(sexpr: Syntax): Doc {
       return text(String(sexpr.value));
     case "variable-reference":
       return printVariable(sexpr.variable);
+    case "conditional":
+      return group(
+        list(
+          text("if"),
+          space,
+          print(sexpr.condition),
+          indent(
+            concat(
+              line,
+              print(sexpr.consequent),
+              line,
+              print(sexpr.alternative)
+            )
+          )
+        )
+      );
     case "function":
       const argNames = sexpr.lambdaList.map(x => x.variable);
       return group(

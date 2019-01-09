@@ -72,4 +72,9 @@ describe("Evaluation", () => {
     expect(evaluateString("(first (cons 1 nil))")).toBe(1);
     expect(evaluateString("(rest (cons 1 nil))")).toEqual([]);
   });
+
+  describe("conditionals", () => {
+    expect(evaluateString("(if true 1 2)")).toBe(1);
+    expect(evaluateString("(if false 1 2)")).toBe(2);
+  });
 });

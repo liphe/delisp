@@ -99,4 +99,13 @@ describe("Pretty Printer", () => {
   it("should print let expressions nicely", () => {
     expect(pprintString(`(let ((x 10) (y 20)) (+ x y))`)).toMatchSnapshot();
   });
+
+  it("should print conditional expressions nicely", () => {
+    expect(pprintString(`(if true 1 2)`)).toMatchSnapshot();
+    expect(
+      pprintString(
+        `(if aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 1 2)`
+      )
+    ).toMatchSnapshot();
+  });
 });

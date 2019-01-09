@@ -42,5 +42,12 @@ describe("Compiler", () => {
       expect(compileError("(define x)")).toMatchSnapshot();
       expect(compileError("(define 4 2)")).toMatchSnapshot();
     });
+
+    it("generate nice error message for conditionals", () => {
+      expect(compileError("(if)")).toMatchSnapshot();
+      expect(compileError("(if 5)")).toMatchSnapshot();
+      expect(compileError("(if x 2)")).toMatchSnapshot();
+      expect(compileError("(if x 2 3 0)")).toMatchSnapshot();
+    });
   });
 });

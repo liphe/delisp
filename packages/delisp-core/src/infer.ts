@@ -147,6 +147,37 @@ function infer(
         assumptions: [[expr.variable, t]]
       };
     }
+    case "conditional": {
+      const condition = infer(expr.condition, monovars);
+      const consequent = infer(expr.consequent, monovars);
+      const alternative = infer(expr.alternative, monovars);
+      const t = generateUniqueTVar();
+
+      return {
+        expr: {
+          ...expr,
+          condition: condition.expr,
+          consequent: consequent.expr,
+          alternative: alternative.expr,
+          info: {
+            type: t
+          }
+        },
+        assumptions: [
+          ...condition.assumptions,
+          ...consequent.assumptions,
+          ...alternative.assumptions
+        ],
+        constraints: [
+          ...condition.constraints,
+          ...consequent.constraints,
+          ...alternative.constraints,
+          constEqual(condition.expr.info.type, { type: "boolean" }),
+          constEqual(consequent.expr.info.type, t),
+          constEqual(alternative.expr.info.type, t)
+        ]
+      };
+    }
     case "function": {
       const fnargs = functionArgs(expr);
       const argtypes = fnargs.map(_ => generateUniqueTVar());
@@ -160,12 +191,10 @@ function infer(
       // argument, stating that they are equal to the argument types
       // the new function type we have created.
       const newConstraints: TConstraint[] = [
-        ...assumptions
-          .filter(([v, _]) => fnargs.includes(v))
-          .map(([v, t]) => {
-            const varIndex = fnargs.indexOf(v);
-            return constEqual(t, argtypes[varIndex]);
-          })
+        ...assumptions.filter(([v, _]) => fnargs.includes(v)).map(([v, t]) => {
+          const varIndex = fnargs.indexOf(v);
+          return constEqual(t, argtypes[varIndex]);
+        })
       ];
       return {
         expr: {
@@ -411,6 +440,17 @@ function applySubstitutionToSyntax(
         ...s,
         fn: applySubstitutionToSyntax(s.fn, env),
         args: s.args.map(a => applySubstitutionToSyntax(a, env)),
+        info: {
+          ...s.info,
+          type: applySubstitution(s.info.type, env)
+        }
+      };
+    case "conditional":
+      return {
+        ...s,
+        condition: applySubstitutionToSyntax(s.condition, env),
+        consequent: applySubstitutionToSyntax(s.consequent, env),
+        alternative: applySubstitutionToSyntax(s.alternative, env),
         info: {
           ...s.info,
           type: applySubstitution(s.info.type, env)
