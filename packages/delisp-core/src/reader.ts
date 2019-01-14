@@ -109,7 +109,6 @@ const symbol: Parser<ASExpr> = atLeastOne(
     // for those names.
     character("!"),
     character("@"),
-    character("#"),
     character("$"),
     character("%"),
     character("^"),
@@ -157,6 +156,25 @@ function list(x: Parser<ASExpr>): Parser<ASExpr> {
     .description("list");
 }
 
+function sharpList(x: Parser<ASExpr>): Parser<ASExpr> {
+  return character("#").chain((_, location) =>
+    list(x).map(
+      (expression): ASExpr => ({
+        type: "list",
+        elements: [
+          {
+            type: "symbol",
+            name: "sharp",
+            location
+          },
+          expression
+        ],
+        location
+      })
+    )
+  );
+}
+
 const reportUnmatched: Parser<{}> = Parser.lookahead(rightParen).chain(
   closed => {
     if (closed) {
@@ -168,7 +186,7 @@ const reportUnmatched: Parser<{}> = Parser.lookahead(rightParen).chain(
 );
 
 const sexpr: Parser<ASExpr> = spaced(
-  reportUnmatched.then(atom.or(() => list(sexpr)))
+  reportUnmatched.then(atom.or(() => list(sexpr).or(() => sharpList(sexpr))))
 );
 
 const sexprs: Parser<ASExpr[]> = until(endOfInput, sexpr);
