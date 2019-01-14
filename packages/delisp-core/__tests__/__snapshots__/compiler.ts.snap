@@ -1,45 +1,45 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Compiler Error messages generate nice error message for conditionals 1`] = `
-"file:1:3: 'if' needs exactly 3 arguments, got 1
+"file:1:2: 'if' needs exactly 3 arguments, got 1
 (if)
----^"
+--^"
 `;
 
 exports[`Compiler Error messages generate nice error message for conditionals 2`] = `
-"file:1:5: 'if' needs exactly 3 arguments, got 2
+"file:1:4: 'if' needs exactly 3 arguments, got 2
 (if 5)
------^"
+----^"
 `;
 
 exports[`Compiler Error messages generate nice error message for conditionals 3`] = `
-"file:1:7: 'if' needs exactly 3 arguments, got 3
+"file:1:6: 'if' needs exactly 3 arguments, got 3
 (if x 2)
--------^"
+------^"
 `;
 
 exports[`Compiler Error messages generate nice error message for conditionals 4`] = `
-"file:1:11: 'if' needs exactly 3 arguments, got 5
+"file:1:10: 'if' needs exactly 3 arguments, got 5
 (if x 2 3 0)
------------^"
+----------^"
 `;
 
 exports[`Compiler Error messages generate nice error message for invalid definitions 1`] = `
-"file:1:7: 'define' needs exactly 2 arguments, got 0
+"file:1:6: 'define' needs exactly 2 arguments, got 0
 (define)
--------^"
+------^"
 `;
 
 exports[`Compiler Error messages generate nice error message for invalid definitions 2`] = `
-"file:1:9: 'define' needs exactly 2 arguments, got 1
+"file:1:8: 'define' needs exactly 2 arguments, got 1
 (define 5)
----------^"
+--------^"
 `;
 
 exports[`Compiler Error messages generate nice error message for invalid definitions 3`] = `
-"file:1:9: 'define' needs exactly 2 arguments, got 1
+"file:1:8: 'define' needs exactly 2 arguments, got 1
 (define x)
----------^"
+--------^"
 `;
 
 exports[`Compiler Error messages generate nice error message for invalid definitions 4`] = `
@@ -49,15 +49,15 @@ exports[`Compiler Error messages generate nice error message for invalid definit
 `;
 
 exports[`Compiler Error messages generate nice error message for invalid lambda expressions 1`] = `
-"file:1:7: 'lambda' needs exactly 2 arguments, got 0
+"file:1:6: 'lambda' needs exactly 2 arguments, got 0
 (lambda)
--------^"
+------^"
 `;
 
 exports[`Compiler Error messages generate nice error message for invalid lambda expressions 2`] = `
-"file:1:9: 'lambda' needs exactly 2 arguments, got 1
+"file:1:8: 'lambda' needs exactly 2 arguments, got 1
 (lambda 7)
----------^"
+--------^"
 `;
 
 exports[`Compiler Error messages generate nice error message for invalid lambda expressions 3`] = `
@@ -79,9 +79,9 @@ exports[`Compiler Error messages generate nice error message for invalid lambda 
 `;
 
 exports[`Compiler Error messages generate nice error message for invalid let expressions 1`] = `
-"file:1:4: 'let' needs exactly 2 arguments, got 0
+"file:1:3: 'let' needs exactly 2 arguments, got 0
 (let)
-----^"
+---^"
 `;
 
 exports[`Compiler Error messages generate nice error message for invalid let expressions 2`] = `
