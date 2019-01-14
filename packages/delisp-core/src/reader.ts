@@ -157,22 +157,24 @@ function list(x: Parser<ASExpr>): Parser<ASExpr> {
 }
 
 function sharpList(x: Parser<ASExpr>): Parser<ASExpr> {
-  return character("#").chain((_, location) =>
-    list(x).map(
-      (expression): ASExpr => ({
-        type: "list",
-        elements: [
-          {
-            type: "symbol",
-            name: "sharp",
-            location
-          },
-          expression
-        ],
-        location
-      })
-    )
-  );
+  return character("#")
+    .description("'#'")
+    .chain((_, location) =>
+      list(x).map(
+        (expression): ASExpr => ({
+          type: "list",
+          elements: [
+            {
+              type: "symbol",
+              name: "sharp",
+              location
+            },
+            expression
+          ],
+          location
+        })
+      )
+    );
 }
 
 const reportUnmatched: Parser<{}> = Parser.lookahead(rightParen).chain(
