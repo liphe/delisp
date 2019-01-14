@@ -107,17 +107,19 @@ defineConversion("lambda", expr => {
 });
 
 defineConversion("sharp", expr => {
-  const [, body] = expr.elements;
+  const [, ...args] = expr.elements;
 
-  if (expr.elements.length !== 2) {
+  if (args.length !== 1) {
     throw new Error(
       printHighlightedExpr(
-        `'sharp' needs exactly 2 arguments, got ${expr.elements.length}`,
+        `'sharp' needs exactly 1 argument, got ${args.length}`,
         last(expr.elements) as ASExpr, // we know it is not empty!
         true
       )
     );
   }
+
+  const [body] = args;
   return {
     type: "function",
     lambdaList: [{ variable: "%", location: expr.location }],
