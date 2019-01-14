@@ -42,6 +42,6 @@ export function printHighlightedExpr(
   end = false
 ) {
   const source = expr.location.input.toString();
-  const offset = end ? expr.location.end : expr.location.start;
+  const offset = end ? expr.location.end - 1 : expr.location.start;
   return printHighlightedSource(message, source, offset);
 }
