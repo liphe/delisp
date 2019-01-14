@@ -106,6 +106,27 @@ defineConversion("lambda", expr => {
   };
 });
 
+defineConversion("sharp", expr => {
+  const [, body] = expr.elements;
+
+  if (expr.elements.length !== 2) {
+    throw new Error(
+      printHighlightedExpr(
+        `'sharp' needs exactly 2 arguments, got ${expr.elements.length}`,
+        last(expr.elements) as ASExpr, // we know it is not empty!
+        true
+      )
+    );
+  }
+  return {
+    type: "function",
+    lambdaList: [{ variable: "%", location: expr.location }],
+    body: convertExpr(body),
+    location: expr.location,
+    info: {}
+  };
+});
+
 function parseLetBindings(bindings: ASExpr): SLetBinding[] {
   if (bindings.type !== "list") {
     throw new Error(
