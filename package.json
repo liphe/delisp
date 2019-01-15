@@ -8,6 +8,7 @@
     "build": "tsc --build packages/",
     "lint": "yarn workspaces run lint",
     "prettier": "prettier --write '**/*.ts'",
+    "prettier:check": "prettier --list-different '**/*.ts'",
     "test": "yarn workspaces run test"
   },
   "devDependencies": {
