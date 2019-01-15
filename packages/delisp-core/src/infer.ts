@@ -9,7 +9,14 @@
 //   https://pdfs.semanticscholar.org/8983/233b3dff2c5b94efb31235f62bddc22dc899.pdf
 //
 
-import { Expression, functionArgs, SVar } from "./syntax";
+import {
+  Expression,
+  functionArgs,
+  isDeclaration,
+  Module,
+  SVar,
+  Syntax
+} from "./syntax";
 import { applySubstitution, Substitution } from "./type-substitution";
 import {
   generalize,
@@ -313,6 +320,33 @@ function infer(
   }
 }
 
+function inferSyntax(
+  syntax: Syntax
+): {
+  syntax: Syntax<Typed>;
+  constraints: TConstraint[];
+  assumptions: TAssumption[];
+} {
+  if (isDeclaration(syntax)) {
+    const { expr, assumptions, constraints } = infer(syntax.value, []);
+    return {
+      syntax: {
+        ...syntax,
+        value: expr
+      },
+      assumptions,
+      constraints
+    };
+  } else {
+    const { expr, assumptions, constraints } = infer(syntax, []);
+    return {
+      syntax: expr,
+      assumptions,
+      constraints
+    };
+  }
+}
+
 // Constraint solver
 //
 // Resolving a set of constraints means finding a Substitution that
@@ -422,7 +456,7 @@ function applySubstitutionToConstraint(
   }
 }
 
-function applySubstitutionToSyntax(
+function applySubstitutionToExpr(
   s: Expression<Typed>,
   env: Substitution
 ): Expression<Typed> {
@@ -440,8 +474,8 @@ function applySubstitutionToSyntax(
     case "function-call":
       return {
         ...s,
-        fn: applySubstitutionToSyntax(s.fn, env),
-        args: s.args.map(a => applySubstitutionToSyntax(a, env)),
+        fn: applySubstitutionToExpr(s.fn, env),
+        args: s.args.map(a => applySubstitutionToExpr(a, env)),
         info: {
           ...s.info,
           type: applySubstitution(s.info.type, env)
@@ -450,9 +484,9 @@ function applySubstitutionToSyntax(
     case "conditional":
       return {
         ...s,
-        condition: applySubstitutionToSyntax(s.condition, env),
-        consequent: applySubstitutionToSyntax(s.consequent, env),
-        alternative: applySubstitutionToSyntax(s.alternative, env),
+        condition: applySubstitutionToExpr(s.condition, env),
+        consequent: applySubstitutionToExpr(s.consequent, env),
+        alternative: applySubstitutionToExpr(s.alternative, env),
         info: {
           ...s.info,
           type: applySubstitution(s.info.type, env)
@@ -461,7 +495,7 @@ function applySubstitutionToSyntax(
     case "function":
       return {
         ...s,
-        body: applySubstitutionToSyntax(s.body, env),
+        body: applySubstitutionToExpr(s.body, env),
         info: {
           ...s.info,
           type: applySubstitution(s.info.type, env)
@@ -472,14 +506,28 @@ function applySubstitutionToSyntax(
         ...s,
         bindings: s.bindings.map(b => ({
           ...b,
-          value: applySubstitutionToSyntax(b.value, env)
+          value: applySubstitutionToExpr(b.value, env)
         })),
-        body: applySubstitutionToSyntax(s.body, env),
+        body: applySubstitutionToExpr(s.body, env),
         info: {
           ...s.info,
           type: applySubstitution(s.info.type, env)
         }
       };
+  }
+}
+
+function applySubstitutionToSyntax(
+  s: Syntax<Typed>,
+  env: Substitution
+): Syntax<Typed> {
+  if (isDeclaration(s)) {
+    return {
+      ...s,
+      value: applySubstitutionToExpr(s.value, env)
+    };
+  } else {
+    return applySubstitutionToExpr(s, env);
   }
 }
 
@@ -565,5 +613,42 @@ export function inferType(
     ...assumptionsToConstraints(assumptions, typeEnvironment)
   ]);
 
-  return applySubstitutionToSyntax(tmpExpr, s);
+  return applySubstitutionToExpr(tmpExpr, s);
+}
+
+export function inferModule(
+  m: Module,
+  externalEnv: TypeEnvironment = defaultTypeEnvironment
+): Module<Typed> {
+  const bodyInferences = m.body.map(inferSyntax);
+  const body = bodyInferences.map(i => i.syntax);
+
+  const assumptions = flatten(bodyInferences.map(i => i.assumptions));
+
+  const internalEnv: {
+    [v: string]: Monotype;
+  } = body.reduce((env, s) => {
+    if (isDeclaration(s)) {
+      return { ...env, [s.variable]: s.value.info.type };
+    } else {
+      return env;
+    }
+  }, {});
+
+  const constraints: TConstraint[] = [
+    ...flatten(bodyInferences.map(i => i.constraints)),
+
+    ...assumptionsToConstraints(assumptions, externalEnv),
+
+    ...assumptions
+      .filter(([v, _]) => v in internalEnv)
+      .map(([v, t]) => constImplicitInstance(t, [], internalEnv[v]))
+  ];
+
+  const solution = solve(constraints);
+
+  return {
+    ...m,
+    body: body.map(s => applySubstitutionToSyntax(s, solution))
+  };
 }

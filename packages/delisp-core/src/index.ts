@@ -5,7 +5,7 @@ import { Module, Syntax } from "./syntax";
 
 export { compileToString, compileModuleToString } from "./compiler";
 export { evaluate, createContext } from "./eval";
-export { inferType } from "./infer";
+export { inferType, inferModule } from "./infer";
 // TODO: replace with the pretty printer
 export { printType } from "./type-utils";
 export { isDeclaration } from "./syntax";

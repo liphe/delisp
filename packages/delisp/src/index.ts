@@ -1,4 +1,4 @@
-import { compileModuleToString, readModule } from "@delisp/core";
+import { compileModuleToString, inferModule, readModule } from "@delisp/core";
 import { promises as fs } from "fs";
 import _mkdirp from "mkdirp";
 import path from "path";
@@ -19,7 +19,12 @@ async function compileFile(file: string): Promise<void> {
   );
 
   const content = await fs.readFile(file, "utf8");
+
   const module = readModule(content);
+
+  // Type check module
+  inferModule(module);
+
   const code = compileModuleToString(module);
 
   await mkdirp(path.dirname(outfile));
