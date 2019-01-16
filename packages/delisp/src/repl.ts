@@ -1,14 +1,22 @@
 import {
+  addToModule,
   createContext,
+  createModule,
   evaluate,
-  inferType,
+  evaluateModule,
+  inferModule,
   isDeclaration,
   printType,
-  readSyntax
+  readSyntax,
+  removeModuleDefinition
 } from "@delisp/core";
+
+import { Typed } from "@delisp/core/src/infer";
+import { Module, Syntax } from "@delisp/core/src/syntax";
+
 import repl from "repl";
 
-const context = createContext();
+let previousModule = createModule();
 
 const delispEval = (
   cmd: string,
@@ -27,14 +35,61 @@ const delispEval = (
     }
   }
 
-  // NOTE: evaluate doesn't really make sense for declarations. Let's rethink this
+  //
+  // Type checking
+  //
+
+  // The current module, extended with the current form
+  let m;
+
+  if (isDeclaration(syntax)) {
+    previousModule = removeModuleDefinition(previousModule, syntax.variable);
+    previousModule = addToModule(previousModule, syntax);
+    m = previousModule;
+  } else {
+    m = addToModule(previousModule, syntax);
+  }
+
+  let typedModule: Module<Typed> | undefined;
+  try {
+    typedModule = inferModule(m);
+  } catch (err) {
+    // tslint:disable no-console
+    console.log("TYPE WARNING:");
+    console.log(err);
+    // tslint:enable no-console
+  }
+
+  const typedSyntax: Syntax<Typed> | null = typedModule
+    ? typedModule.body.slice(-1)[0]
+    : null;
+
+  //
+  // Evaluation
+  //
+
+  const context = createContext();
+
+  evaluateModule(previousModule, context);
   const value = evaluate(syntax, context);
 
   if (isDeclaration(syntax)) {
-    callback(null, {});
+    const type =
+      typedSyntax && isDeclaration(typedSyntax)
+        ? typedSyntax.value.info.type
+        : null;
+
+    callback(null, {
+      type: type && printType(type)
+    });
   } else {
-    const typedSyntax = inferType(syntax);
-    callback(null, { value, type: printType(typedSyntax.info.type) });
+    const type =
+      typedSyntax && !isDeclaration(typedSyntax) ? typedSyntax.info.type : null;
+
+    callback(null, {
+      value,
+      type: type && printType(type)
+    });
   }
 };
 

@@ -1,10 +1,10 @@
 import { convert as convertSyntax } from "./convert";
 
-import { readAllFromString, readFromString } from "./reader";
-import { Module, Syntax } from "./syntax";
+import { readFromString } from "./reader";
+import { Syntax } from "./syntax";
 
 export { compileToString, compileModuleToString } from "./compiler";
-export { evaluate, createContext } from "./eval";
+export { createContext, evaluate, evaluateModule } from "./eval";
 export { inferType, inferModule } from "./infer";
 // TODO: replace with the pretty printer
 export { printType } from "./type-utils";
@@ -16,9 +16,4 @@ export function readSyntax(source: string): Syntax {
   return convertSyntax(readFromString(source));
 }
 
-export function readModule(str: string): Module {
-  return {
-    type: "module",
-    body: readAllFromString(str).map(convertSyntax)
-  };
-}
+export * from "./module";

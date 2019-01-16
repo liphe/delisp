@@ -108,7 +108,7 @@ function constImplicitInstance(
   return { type: "implicit-instance-constraint", t1, monovars, t2 };
 }
 
-interface Typed {
+export interface Typed {
   type: Monotype;
 }
 
