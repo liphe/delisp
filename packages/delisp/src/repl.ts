@@ -3,7 +3,6 @@ import {
   createContext,
   createModule,
   evaluate,
-  evaluateModule,
   inferModule,
   isDeclaration,
   printType,
@@ -17,6 +16,7 @@ import { Module, Syntax } from "@delisp/core/src/syntax";
 import repl from "repl";
 
 let previousModule = createModule();
+let context = createContext();
 
 const delispEval = (
   cmd: string,
@@ -68,9 +68,6 @@ const delispEval = (
   // Evaluation
   //
 
-  const context = createContext();
-
-  evaluateModule(previousModule, context);
   const value = evaluate(syntax, context);
 
   if (isDeclaration(syntax)) {
