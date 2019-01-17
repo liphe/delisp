@@ -69,6 +69,12 @@ export function unify(
   } else if (t2.type === "type-variable") {
     return unifyVariable(t2, t1, env);
   } else {
-    throw new Error("Couldnt unify");
+    throw new Error(`Couldnt unify
+${printType(t1)}
+
+with
+
+${printType(t2)}
+`);
   }
 }
