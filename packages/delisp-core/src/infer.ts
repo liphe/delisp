@@ -616,14 +616,33 @@ export function inferType(
   return applySubstitutionToExpr(tmpExpr, s);
 }
 
+function groupAssumptions(
+  assumptions: TAssumption[],
+  internalEnv: { [v: string]: Monotype },
+  externalEnv: TypeEnvironment
+): {
+  internals: TAssumption[];
+  externals: TAssumption[];
+  unknowns: TAssumption[];
+} {
+  const internals = assumptions.filter(([v, _]) => v in internalEnv);
+  const externals = assumptions.filter(([v, _]) => v in externalEnv);
+  return {
+    internals,
+    externals,
+    unknowns: difference(assumptions, [...internals, ...externals])
+  };
+}
+
 export function inferModule(
   m: Module,
   externalEnv: TypeEnvironment = defaultTypeEnvironment
-): Module<Typed> {
+): {
+  typedModule: Module<Typed>;
+  unknowns: TAssumption[];
+} {
   const bodyInferences = m.body.map(inferSyntax);
   const body = bodyInferences.map(i => i.syntax);
-
-  const assumptions = flatten(bodyInferences.map(i => i.assumptions));
 
   const internalEnv: {
     [v: string]: Monotype;
@@ -635,20 +654,33 @@ export function inferModule(
     }
   }, {});
 
+  const assumptions = groupAssumptions(
+    flatten(bodyInferences.map(i => i.assumptions)),
+    internalEnv,
+    externalEnv
+  );
+
   const constraints: TConstraint[] = [
     ...flatten(bodyInferences.map(i => i.constraints)),
 
-    ...assumptionsToConstraints(assumptions, externalEnv),
+    ...assumptionsToConstraints(assumptions.externals, externalEnv),
 
-    ...assumptions
-      .filter(([v, _]) => v in internalEnv)
-      .map(([v, t]) => constImplicitInstance(t, [], internalEnv[v]))
+    ...assumptions.internals.map(([v, t]) =>
+      constImplicitInstance(t, [], internalEnv[v])
+    )
   ];
 
   const solution = solve(constraints);
 
   return {
-    ...m,
-    body: body.map(s => applySubstitutionToSyntax(s, solution))
+    typedModule: {
+      ...m,
+      body: body.map(s => applySubstitutionToSyntax(s, solution))
+    },
+    unknowns: assumptions.unknowns.map(
+      ([name, t]): TAssumption => {
+        return [name, applySubstitution(t, solution)];
+      }
+    )
   };
 }

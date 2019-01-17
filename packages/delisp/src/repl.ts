@@ -1,3 +1,5 @@
+// tslint:disable no-console
+
 import {
   addToModule,
   createContext,
@@ -16,7 +18,7 @@ import { Module, Syntax } from "@delisp/core/src/syntax";
 import repl from "repl";
 
 let previousModule = createModule();
-let context = createContext();
+const context = createContext();
 
 const delispEval = (
   cmd: string,
@@ -52,12 +54,16 @@ const delispEval = (
 
   let typedModule: Module<Typed> | undefined;
   try {
-    typedModule = inferModule(m);
+    const result = inferModule(m);
+    typedModule = result.typedModule;
+    result.unknowns.forEach(([name, type]) => {
+      console.warn(
+        `Unknown variable ${name} expected with type ${printType(type)}`
+      );
+    });
   } catch (err) {
-    // tslint:disable no-console
     console.log("TYPE WARNING:");
     console.log(err);
-    // tslint:enable no-console
   }
 
   const typedSyntax: Syntax<Typed> | null = typedModule
@@ -93,9 +99,9 @@ const delispEval = (
 export function startREPL() {
   const replServer = repl.start({ prompt: "λ ", eval: delispEval });
   replServer.on("exit", () => {
-    // tslint:disable no-console
     console.log("\n; bye!");
-    // tslint:enable no-console
     process.exit(0);
   });
 }
+
+// tslint:enable no-console
