@@ -25,7 +25,7 @@ import {
   listTypeVariables
 } from "./type-utils";
 import { Monotype, TVar, Type } from "./types";
-import { unify } from "./unify";
+import { unifyOrError } from "./unify";
 import { difference, flatten, intersection, mapObject, union } from "./utils";
 
 import { getInlinePrimitiveTypes } from "./compiler/inline-primitives";
@@ -578,7 +578,8 @@ function solve(
 
   switch (constraint.type) {
     case "equal-constraint": {
-      const s = unify(constraint.t1, constraint.t2, solution);
+      const result = unifyOrError(constraint.t1, constraint.t2, solution);
+      const s = result.substitution;
       return solve(rest.map(c => applySubstitutionToConstraint(c, s)), s);
     }
     case "explicit-instance-constraint": {
