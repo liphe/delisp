@@ -78,7 +78,7 @@ function constExplicitInstance(
   return { type: "explicit-instance-constraint", t1, t2 };
 }
 
-// A constraint stating that t1 is an instance of a genralization of
+// A constraint stating that t1 is an instance of a generalization of
 // t2. For example, if
 //
 //    t1 :: string -> a0 -> a0
