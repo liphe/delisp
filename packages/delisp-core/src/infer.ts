@@ -17,6 +17,9 @@ import {
   SVariableReference,
   Syntax
 } from "./syntax";
+
+import { printHighlightedExpr } from "./error-report";
+
 import { applySubstitution, Substitution } from "./type-substitution";
 import {
   generalize,
@@ -25,7 +28,7 @@ import {
   listTypeVariables
 } from "./type-utils";
 import { Monotype, TVar, Type } from "./types";
-import { unifyOrError } from "./unify";
+import { unify } from "./unify";
 import { difference, flatten, intersection, mapObject, union } from "./utils";
 
 import { getInlinePrimitiveTypes } from "./compiler/inline-primitives";
@@ -581,13 +584,29 @@ function solve(
 
   switch (constraint.type) {
     case "equal-constraint": {
-      const result = unifyOrError(
-        constraint.expr.info.type,
-        constraint.t,
-        solution
-      );
-      const s = result.substitution;
-      return solve(rest.map(c => applySubstitutionToConstraint(c, s)), s);
+      const result = unify(constraint.expr.info.type, constraint.t, solution);
+
+      switch (result.type) {
+        case "unify-success": {
+          const s = result.substitution;
+          return solve(rest.map(c => applySubstitutionToConstraint(c, s)), s);
+        }
+        case "unify-occur-check-error":
+          throw new Error(
+            printHighlightedExpr(
+              "Expression would have an infinity type",
+              constraint.expr.location
+            )
+          );
+        case "unify-mismatch-error":
+          throw new Error(
+            printHighlightedExpr("Type mismatch", constraint.expr.location)
+          );
+        default:
+          // Adding a default clause here makes Typescript detects
+          // that this case won't fall through to the next one.
+          throw new Error(`can't happen`);
+      }
     }
     case "explicit-instance-constraint": {
       return solve(

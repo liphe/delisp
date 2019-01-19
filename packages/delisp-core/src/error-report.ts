@@ -2,7 +2,7 @@
  * Report errors in a user-friendly way
  */
 
-import { ASExpr } from "./sexpr";
+import { Location } from "./input";
 
 function repeatChar(ch: string, n: number): string {
   return Array(n)
@@ -38,10 +38,10 @@ export function printHighlightedSource(
 /** Print a error message with expr highlighted. */
 export function printHighlightedExpr(
   message: string,
-  expr: ASExpr,
+  location: Location,
   end = false
 ) {
-  const source = expr.location.input.toString();
-  const offset = end ? expr.location.end : expr.location.start;
+  const source = location.input.toString();
+  const offset = end ? location.end : location.start;
   return printHighlightedSource(message, source, offset);
 }
