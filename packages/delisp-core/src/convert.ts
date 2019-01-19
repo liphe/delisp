@@ -227,7 +227,7 @@ export function convertExpr(expr: ASExpr): Expression {
     case "symbol":
       return {
         type: "variable-reference",
-        variable: expr.name,
+        name: expr.name,
         location: expr.location,
         info: {}
       };

@@ -9,7 +9,7 @@ describe("ReadModule", () => {
           type: "function-call",
           fn: {
             type: "variable-reference",
-            variable: "sum"
+            name: "sum"
           },
           args: [
             { type: "number", value: 1 },
@@ -21,7 +21,7 @@ describe("ReadModule", () => {
           type: "function-call",
           fn: {
             type: "variable-reference",
-            variable: "+"
+            name: "+"
           },
           args: [{ type: "number", value: 4 }, { type: "number", value: 5 }]
         },
@@ -29,7 +29,7 @@ describe("ReadModule", () => {
           type: "function-call",
           fn: {
             type: "variable-reference",
-            variable: "inc"
+            name: "inc"
           },
           args: [{ type: "number", value: 6 }]
         }
