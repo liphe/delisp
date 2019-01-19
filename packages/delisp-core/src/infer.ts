@@ -18,6 +18,8 @@ import {
   Syntax
 } from "./syntax";
 
+import { printType } from "./type-utils";
+
 import { printHighlightedExpr } from "./error-report";
 
 import { applySubstitution, Substitution } from "./type-substitution";
@@ -600,7 +602,17 @@ function solve(
           );
         case "unify-mismatch-error":
           throw new Error(
-            printHighlightedExpr("Type mismatch", constraint.expr.location)
+            printHighlightedExpr(
+              `Type mismatch
+
+${printType(applySubstitution(constraint.expr.info.type, solution))}
+
+vs.
+
+${printType(applySubstitution(constraint.t, solution))}
+`,
+              constraint.expr.location
+            )
           );
         default:
           // Adding a default clause here makes Typescript detects
