@@ -63,30 +63,30 @@ function constEqual(expr: Expression<Typed>, t: Monotype): TConstraintEqual {
   return { type: "equal-constraint", expr, t };
 }
 
-// A constriant stating and t1 is an instance of the (poly)type t2.
-// This is generated when we already know somehow the generalized type
-// of an expression. For example if the user has provided some type
-// annotations.
+// A constriant stating that an expression's type is an instance of
+// the (poly)type t.  This is generated when we already know somehow
+// the generalized type of an expression. For example if the user has
+// provided some type annotations.
 interface TConstraintExplicitInstance {
   type: "explicit-instance-constraint";
   expr: Expression<Typed>;
-  t2: Type;
+  t: Type;
 }
 function constExplicitInstance(
   expr: Expression<Typed>,
-  t2: Type
+  t: Type
 ): TConstraintExplicitInstance {
-  return { type: "explicit-instance-constraint", expr, t2 };
+  return { type: "explicit-instance-constraint", expr, t };
 }
 
-// A constraint stating that t1 is an instance of a generalization of
-// t2. For example, if
+// A constraint stating that an expression's type is an instance of a
+// generalization of t. For example, if
 //
-//    t1 :: string -> a0 -> a0
-//    t2 ::     c  -> b0 -> b0
+//    expr :: string -> a0 -> a0
+//    t    =  c  -> b0 -> b0
 //    monovars = [c]
 //
-// means that t2 can be generalized respect to all non-monomorphic
+// means that t can be generalized respect to all non-monomorphic
 // variables. So we'll generalize to a type
 //
 //    forall b.  c -> b -> b
@@ -97,16 +97,16 @@ function constExplicitInstance(
 interface TConstraintImplicitInstance {
   type: "implicit-instance-constraint";
   expr: Expression<Typed>;
-  t2: Monotype;
+  t: Monotype;
   monovars: string[];
 }
 
 function constImplicitInstance(
   expr: Expression<Typed>,
   monovars: string[],
-  t2: Monotype
+  t: Monotype
 ): TConstraintImplicitInstance {
-  return { type: "implicit-instance-constraint", expr, monovars, t2 };
+  return { type: "implicit-instance-constraint", expr, monovars, t };
 }
 
 export interface Typed {
@@ -400,12 +400,12 @@ function activevars(constraints: TConstraint[]): string[] {
         case "implicit-instance-constraint":
           return union(
             listTypeVariables(c.expr.info.type),
-            intersection(listTypeVariables(c.t2), c.monovars)
+            intersection(listTypeVariables(c.t), c.monovars)
           );
         case "explicit-instance-constraint":
           return union(
             listTypeVariables(c.expr.info.type),
-            difference(listTypeVariables(c.t2.mono), c.t2.tvars)
+            difference(listTypeVariables(c.t.mono), c.t.tvars)
           );
       }
     })
@@ -453,14 +453,14 @@ function applySubstitutionToConstraint(
       return {
         type: "implicit-instance-constraint",
         expr: applySubstitutionToExpr(c.expr, s),
-        t2: applySubstitution(c.t2, s),
+        t: applySubstitution(c.t, s),
         monovars: flatten(c.monovars.map(name => substituteVar(name, s)))
       };
     case "explicit-instance-constraint":
       return {
         type: "explicit-instance-constraint",
         expr: applySubstitutionToExpr(c.expr, s),
-        t2: applySubstitutionToPolytype(c.t2, s)
+        t: applySubstitutionToPolytype(c.t, s)
       };
   }
 }
@@ -571,7 +571,7 @@ function solve(
         const others = constraints.filter(c1 => c !== c1);
         return (
           intersection(
-            difference(listTypeVariables(c.t2), c.monovars),
+            difference(listTypeVariables(c.t), c.monovars),
             activevars(others)
           ).length === 0
         );
@@ -597,12 +597,12 @@ function solve(
     }
     case "explicit-instance-constraint": {
       return solve(
-        [constEqual(constraint.expr, instantiate(constraint.t2)), ...rest],
+        [constEqual(constraint.expr, instantiate(constraint.t)), ...rest],
         solution
       );
     }
     case "implicit-instance-constraint": {
-      const t = generalize(constraint.t2, constraint.monovars);
+      const t = generalize(constraint.t, constraint.monovars);
       return solve(
         [constExplicitInstance(constraint.expr, t), ...rest],
         solution
