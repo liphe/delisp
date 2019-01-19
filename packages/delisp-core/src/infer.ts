@@ -56,10 +56,10 @@ type TConstraint =
 interface TConstraintEqual {
   type: "equal-constraint";
   t1: Monotype;
-  t2: Monotype;
+  t: Monotype;
 }
-function constEqual(t1: Monotype, t2: Monotype): TConstraintEqual {
-  return { type: "equal-constraint", t1, t2 };
+function constEqual(t1: Monotype, t: Monotype): TConstraintEqual {
+  return { type: "equal-constraint", t1, t };
 }
 
 // A constriant stating and t1 is an instance of the (poly)type t2.
@@ -241,7 +241,7 @@ function infer(
           info: { type: tTo }
         },
         constraints: ([
-          { type: "equal-constraint", t1: ifn.expr.info.type, t2: tfn }
+          constEqual(ifn.expr.info.type, tfn)
         ] as TConstraint[]).concat(
           ...ifn.constraints,
           ...iargs.map(a => a.constraints)
@@ -387,7 +387,7 @@ function activevars(constraints: TConstraint[]): string[] {
     constraints.map(c => {
       switch (c.type) {
         case "equal-constraint":
-          return union(listTypeVariables(c.t1), listTypeVariables(c.t2));
+          return union(listTypeVariables(c.t1), listTypeVariables(c.t));
         case "implicit-instance-constraint":
           return union(
             listTypeVariables(c.t1),
@@ -438,7 +438,7 @@ function applySubstitutionToConstraint(
       return {
         type: "equal-constraint",
         t1: applySubstitution(c.t1, s),
-        t2: applySubstitution(c.t2, s)
+        t: applySubstitution(c.t, s)
       };
     case "implicit-instance-constraint":
       return {
@@ -578,7 +578,7 @@ function solve(
 
   switch (constraint.type) {
     case "equal-constraint": {
-      const result = unifyOrError(constraint.t1, constraint.t2, solution);
+      const result = unifyOrError(constraint.t1, constraint.t, solution);
       const s = result.substitution;
       return solve(rest.map(c => applySubstitutionToConstraint(c, s)), s);
     }
