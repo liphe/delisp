@@ -106,13 +106,11 @@ export function unify(
   } else if (t2.type === "type-variable") {
     return unifyVariable(t2, t1, ctx);
   } else {
-    throw new Error(`Couldnt unify
-${printType(t1)}
-
-with
-
-${printType(t2)}
-`);
+    return {
+      type: "unify-mismatch-error",
+      t1,
+      t2
+    };
   }
 }
 
