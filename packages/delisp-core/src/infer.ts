@@ -37,13 +37,13 @@ import primitives from "./primitives";
 // together with a set of constraints and assumptions.
 //
 
-// Assumptions are types we have assumed for all the free variables we
-// have found so far. Those variables are to be bound (and assumptions
-// removed) later, either by `let`, `lambda`, or global definitions.
-// Note: it is normal to have multiple assumptions for the same
+// A TAssumption is a variable instance for which we have assumed the
+// type. Those variables are to be bound (and assumption removed)
+// later, either by `let`, `lambda`, or global definitions.  Note: it
+// is normal to have multiple assumptions (instances) for the same
 // variable. Assumptions will be converted to additional constraints
 // at the end of the inference process.
-type TAssumption = [SVariableReference<Typed>, Monotype];
+type TAssumption = SVariableReference<Typed>;
 
 // Constraints impose which types should be equal (unified) and which
 // types are instances of other types.
@@ -153,7 +153,7 @@ function infer(
       return {
         expr: typedVar,
         constraints: [],
-        assumptions: [[typedVar, t]]
+        assumptions: [typedVar]
       };
     }
     case "conditional": {
@@ -201,8 +201,8 @@ function infer(
       // the new function type we have created.
       const newConstraints: TConstraint[] = [
         ...assumptions
-          .filter(([v, _]) => fnargs.includes(v.variable))
-          .map(([v, _]) => {
+          .filter(v => fnargs.includes(v.variable))
+          .map(v => {
             const varIndex = fnargs.indexOf(v.variable);
             return constEqual(v, argtypes[varIndex]);
           })
@@ -221,9 +221,7 @@ function infer(
         },
         constraints: constraints.concat(newConstraints),
         // assumptions have already been used, so they can be deleted.
-        assumptions: assumptions.filter(
-          ([v, _]) => !fnargs.includes(v.variable)
-        )
+        assumptions: assumptions.filter(v => !fnargs.includes(v.variable))
       };
     }
     case "function-call": {
@@ -301,8 +299,8 @@ function infer(
           // the generalized polytype of the value to be bound.
           ...bodyInference.assumptions
             // Consider variables to be bound
-            .filter(([v, _]) => toBeBound(v.variable))
-            .map(([v, _]) => {
+            .filter(v => toBeBound(v.variable))
+            .map(v => {
               // We just filter the assumptions to the variables
               // that are bound, so we know it must is defined.
               const bInfo = bindingsInfo.find(
@@ -316,9 +314,7 @@ function infer(
             })
         ],
         assumptions: [
-          ...bodyInference.assumptions.filter(
-            ([v, _]) => !toBeBound(v.variable)
-          ),
+          ...bodyInference.assumptions.filter(v => !toBeBound(v.variable)),
           ...flatten(bindingsInfo.map(bi => bi.inference.assumptions))
         ]
       };
@@ -378,8 +374,8 @@ function assumptionsToConstraints(
   return flatten(
     Object.keys(typeEnvironment).map(v =>
       assumptions
-        .filter(([aVar, _]) => aVar.variable === v)
-        .map(([aVar, _]) => constExplicitInstance(aVar, typeEnvironment[v]))
+        .filter(aVar => aVar.variable === v)
+        .map(aVar => constExplicitInstance(aVar, typeEnvironment[v]))
     )
   );
 }
@@ -639,8 +635,8 @@ function groupAssumptions(
   externals: TAssumption[];
   unknowns: TAssumption[];
 } {
-  const internals = assumptions.filter(([v, _]) => v.variable in internalEnv);
-  const externals = assumptions.filter(([v, _]) => v.variable in externalEnv);
+  const internals = assumptions.filter(v => v.variable in internalEnv);
+  const externals = assumptions.filter(v => v.variable in externalEnv);
   return {
     internals,
     externals,
@@ -679,7 +675,7 @@ export function inferModule(
 
     ...assumptionsToConstraints(assumptions.externals, externalEnv),
 
-    ...assumptions.internals.map(([v, _]) =>
+    ...assumptions.internals.map(v =>
       constImplicitInstance(v, [], internalEnv[v.variable])
     )
   ];
@@ -692,8 +688,10 @@ export function inferModule(
       body: body.map(s => applySubstitutionToSyntax(s, solution))
     },
     unknowns: assumptions.unknowns.map(
-      ([name, t]): TAssumption => {
-        return [name, applySubstitution(t, solution)];
+      (v): TAssumption => {
+        return applySubstitutionToExpr(v, solution) as SVariableReference<
+          Typed
+        >;
       }
     )
   };
