@@ -1,5 +1,4 @@
 import { Substitution } from "./type-substitution";
-import { printType } from "./type-utils";
 import { Monotype, TVar } from "./types";
 
 interface UnifySuccess {
@@ -111,24 +110,5 @@ export function unify(
       t1,
       t2
     };
-  }
-}
-
-export function unifyOrError(
-  t1: Monotype,
-  t2: Monotype,
-  ctx: Substitution = {}
-): UnifySuccess {
-  const result = unify(t1, t2, ctx);
-  if (result.type === "unify-success") {
-    return result;
-  } else {
-    throw new Error(`Couldnt unify
-${printType(t1)}
-
-with
-
-${printType(t2)}
-`);
   }
 }
