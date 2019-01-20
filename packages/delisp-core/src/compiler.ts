@@ -79,9 +79,9 @@ function compileFunctionCall(
   const compiledArgs = funcall.args.map(arg => compile(arg, env));
   if (
     funcall.fn.type === "variable-reference" &&
-    isInlinePrimitive(funcall.fn.variable)
+    isInlinePrimitive(funcall.fn.name)
   ) {
-    return compileInlinePrimitive(funcall.fn.variable, compiledArgs, "funcall");
+    return compileInlinePrimitive(funcall.fn.name, compiledArgs, "funcall");
   } else {
     return {
       type: "CallExpression",
@@ -95,12 +95,12 @@ function compileVariable(
   ref: SVariableReference,
   env: Environment
 ): JS.Expression {
-  if (isInlinePrimitive(ref.variable)) {
-    return compileInlinePrimitive(ref.variable, [], "value");
-  } else if (ref.variable in env) {
+  if (isInlinePrimitive(ref.name)) {
+    return compileInlinePrimitive(ref.name, [], "value");
+  } else if (ref.name in env) {
     return {
       type: "Identifier",
-      name: env[ref.variable]
+      name: env[ref.name]
     };
   } else {
     return {
@@ -112,7 +112,7 @@ function compileVariable(
       },
       property: {
         type: "Literal",
-        value: ref.variable
+        value: ref.name
       }
     };
   }

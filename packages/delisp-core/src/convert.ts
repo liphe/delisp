@@ -29,7 +29,9 @@ function defineToplevel(name: string, fn: (expr: ASExprList) => Declaration) {
 
 function parseLambdaList(x: ASExpr): LambdaList {
   if (x.type !== "list") {
-    throw new Error(printHighlightedExpr("Expected a list of arguments", x));
+    throw new Error(
+      printHighlightedExpr("Expected a list of arguments", x.location)
+    );
   }
 
   x.elements.forEach(arg => {
@@ -37,7 +39,7 @@ function parseLambdaList(x: ASExpr): LambdaList {
       throw new Error(
         printHighlightedExpr(
           "A list of arguments should be made of symbols",
-          arg
+          arg.location
         )
       );
     }
@@ -52,7 +54,7 @@ function parseLambdaList(x: ASExpr): LambdaList {
       throw new Error(
         printHighlightedExpr(
           "There is another argument with the same name",
-          duplicated
+          duplicated.location
         )
       );
     }
@@ -66,10 +68,11 @@ function parseLambdaList(x: ASExpr): LambdaList {
 
 defineConversion("if", expr => {
   if (expr.elements.length !== 4) {
+    const lastExpr = last(expr.elements) as ASExpr; // we know it is not empty!
     throw new Error(
       printHighlightedExpr(
         `'if' needs exactly 3 arguments, got ${expr.elements.length}`,
-        last(expr.elements) as ASExpr, // we know it is not empty!
+        lastExpr.location,
         true
       )
     );
@@ -89,10 +92,11 @@ defineConversion("lambda", expr => {
   const [lambda, ...args] = expr.elements;
 
   if (args.length !== 2) {
+    const lastExpr = last([lambda, ...args]) as ASExpr; // we know it is not empty!
     throw new Error(
       printHighlightedExpr(
         `'lambda' needs exactly 2 arguments, got ${args.length}`,
-        last([lambda, ...args]) as ASExpr, // we know it is not empty!
+        lastExpr.location,
         true
       )
     );
@@ -109,7 +113,7 @@ defineConversion("lambda", expr => {
 function parseLetBindings(bindings: ASExpr): SLetBinding[] {
   if (bindings.type !== "list") {
     throw new Error(
-      printHighlightedExpr(`'let' bindings should be a list`, bindings)
+      printHighlightedExpr(`'let' bindings should be a list`, bindings.location)
     );
   }
 
@@ -118,17 +122,19 @@ function parseLetBindings(bindings: ASExpr): SLetBinding[] {
   bindings.elements.forEach(binding => {
     if (binding.type !== "list") {
       throw new Error(
-        printHighlightedExpr(`'let' binding should be a list`, binding)
+        printHighlightedExpr(`'let' binding should be a list`, binding.location)
       );
     }
     if (binding.elements.length !== 2) {
-      throw new Error(printHighlightedExpr(`ill-formed let binding`, binding));
+      throw new Error(
+        printHighlightedExpr(`ill-formed let binding`, binding.location)
+      );
     }
 
     const [name, value] = binding.elements;
 
     if (name.type !== "symbol") {
-      throw new Error(printHighlightedExpr(`expected a symbol`, name));
+      throw new Error(printHighlightedExpr(`expected a symbol`, name.location));
     }
 
     output.push({
@@ -145,10 +151,12 @@ defineConversion("let", expr => {
   const [_let, ...args] = expr.elements;
 
   if (args.length !== 2) {
+    const lastExpr = last([_let, ...args]) as ASExpr; // we know it is not empty!
+
     throw new Error(
       printHighlightedExpr(
         `'let' needs exactly 2 arguments, got ${args.length}`,
-        last([_let, ...args]) as ASExpr, // we know it is not empty!
+        lastExpr.location,
         true
       )
     );
@@ -167,10 +175,11 @@ defineToplevel("define", expr => {
   const [define, ...args] = expr.elements;
 
   if (args.length !== 2) {
+    const lastExpr = last([define, ...args]) as ASExpr;
     throw new Error(
       printHighlightedExpr(
         `'define' needs exactly 2 arguments, got ${args.length}`,
-        last([define, ...args]) as ASExpr,
+        lastExpr.location,
         true
       )
     );
@@ -180,7 +189,7 @@ defineToplevel("define", expr => {
 
   if (variable.type !== "symbol") {
     throw new Error(
-      printHighlightedExpr("'define' expected a symbol", variable)
+      printHighlightedExpr("'define' expected a symbol", variable.location)
     );
   }
 
@@ -195,7 +204,7 @@ defineToplevel("define", expr => {
 function convertList(list: ASExprList): Expression {
   if (list.elements.length === 0) {
     throw new Error(
-      printHighlightedExpr("Empty list is not a function call", list)
+      printHighlightedExpr("Empty list is not a function call", list.location)
     );
   }
 
@@ -227,7 +236,7 @@ export function convertExpr(expr: ASExpr): Expression {
     case "symbol":
       return {
         type: "variable-reference",
-        variable: expr.name,
+        name: expr.name,
         location: expr.location,
         info: {}
       };
@@ -240,7 +249,7 @@ export function convert(expr: ASExpr): Syntax {
   if (expr.type === "list") {
     if (expr.elements.length === 0) {
       throw new Error(
-        printHighlightedExpr("Empty list is not a function call", expr)
+        printHighlightedExpr("Empty list is not a function call", expr.location)
       );
     }
 

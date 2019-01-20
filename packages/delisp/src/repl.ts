@@ -56,9 +56,11 @@ const delispEval = (
   try {
     const result = inferModule(m);
     typedModule = result.typedModule;
-    result.unknowns.forEach(([name, type]) => {
+    result.unknowns.forEach(v => {
       console.warn(
-        `Unknown variable ${name} expected with type ${printType(type)}`
+        `Unknown variable ${v.name} expected with type ${printType(
+          v.info.type
+        )}`
       );
     });
   } catch (err) {

@@ -36,7 +36,7 @@ function print(sexpr: Syntax): Doc {
     case "number":
       return text(String(sexpr.value));
     case "variable-reference":
-      return printVariable(sexpr.variable);
+      return printVariable(sexpr.name);
     case "conditional":
       return group(
         list(

@@ -14,9 +14,14 @@ import {
   functionArgs,
   isDeclaration,
   Module,
-  SVar,
+  SVariableReference,
   Syntax
 } from "./syntax";
+
+import { printType } from "./type-utils";
+
+import { printHighlightedExpr } from "./error-report";
+
 import { applySubstitution, Substitution } from "./type-substitution";
 import {
   generalize,
@@ -26,7 +31,7 @@ import {
 } from "./type-utils";
 import { Monotype, TVar, Type } from "./types";
 import { unify } from "./unify";
-import { difference, flatten, intersection, mapObject, union } from "./utils";
+import { difference, flatMap, intersection, mapObject, union } from "./utils";
 
 import { getInlinePrimitiveTypes } from "./compiler/inline-primitives";
 
@@ -37,13 +42,13 @@ import primitives from "./primitives";
 // together with a set of constraints and assumptions.
 //
 
-// Assumptions are types we have assumed for all the free variables we
-// have found so far. Those variables are to be bound (and assumptions
-// removed) later, either by `let`, `lambda`, or global definitions.
-// Note: it is normal to have multiple assumptions for the same
+// A TAssumption is a variable instance for which we have assumed the
+// type. Those variables are to be bound (and assumption removed)
+// later, either by `let`, `lambda`, or global definitions.  Note: it
+// is normal to have multiple assumptions (instances) for the same
 // variable. Assumptions will be converted to additional constraints
 // at the end of the inference process.
-type TAssumption = [SVar, Monotype];
+type TAssumption = SVariableReference<Typed>;
 
 // Constraints impose which types should be equal (unified) and which
 // types are instances of other types.
@@ -52,40 +57,41 @@ type TConstraint =
   | TConstraintImplicitInstance
   | TConstraintExplicitInstance;
 
-// A constraint stating that both types should unify.
+// A constraint stating that an expression's type should be equal to a
+// given type.
 interface TConstraintEqual {
   type: "equal-constraint";
-  t1: Monotype;
-  t2: Monotype;
+  expr: Expression<Typed>;
+  t: Monotype;
 }
-function constEqual(t1: Monotype, t2: Monotype): TConstraintEqual {
-  return { type: "equal-constraint", t1, t2 };
+function constEqual(expr: Expression<Typed>, t: Monotype): TConstraintEqual {
+  return { type: "equal-constraint", expr, t };
 }
 
-// A constriant stating and t1 is an instance of the (poly)type t2.
-// This is generated when we already know somehow the generalized type
-// of an expression. For example if the user has provided some type
-// annotations.
+// A constriant stating that an expression's type is an instance of
+// the (poly)type t.  This is generated when we already know somehow
+// the generalized type of an expression. For example if the user has
+// provided some type annotations.
 interface TConstraintExplicitInstance {
   type: "explicit-instance-constraint";
-  t1: Monotype;
-  t2: Type;
+  expr: Expression<Typed>;
+  t: Type;
 }
 function constExplicitInstance(
-  t1: Monotype,
-  t2: Type
+  expr: Expression<Typed>,
+  t: Type
 ): TConstraintExplicitInstance {
-  return { type: "explicit-instance-constraint", t1, t2 };
+  return { type: "explicit-instance-constraint", expr, t };
 }
 
-// A constraint stating that t1 is an instance of a generalization of
-// t2. For example, if
+// A constraint stating that an expression's type is an instance of a
+// generalization of t. For example, if
 //
-//    t1 :: string -> a0 -> a0
-//    t2 ::     c  -> b0 -> b0
+//    expr :: string -> a0 -> a0
+//    t    =  c  -> b0 -> b0
 //    monovars = [c]
 //
-// means that t2 can be generalized respect to all non-monomorphic
+// means that t can be generalized respect to all non-monomorphic
 // variables. So we'll generalize to a type
 //
 //    forall b.  c -> b -> b
@@ -95,17 +101,17 @@ function constExplicitInstance(
 //
 interface TConstraintImplicitInstance {
   type: "implicit-instance-constraint";
-  t1: Monotype;
-  t2: Monotype;
+  expr: Expression<Typed>;
+  t: Monotype;
   monovars: string[];
 }
 
 function constImplicitInstance(
-  t1: Monotype,
+  expr: Expression<Typed>,
   monovars: string[],
-  t2: Monotype
+  t: Monotype
 ): TConstraintImplicitInstance {
-  return { type: "implicit-instance-constraint", t1, monovars, t2 };
+  return { type: "implicit-instance-constraint", expr, monovars, t };
 }
 
 export interface Typed {
@@ -143,15 +149,16 @@ function infer(
       // 'environment/context', we generate a new type and add an
       // assumption for this variable.
       const t = generateUniqueTVar();
+      const typedVar = {
+        ...expr,
+        info: {
+          type: t
+        }
+      };
       return {
-        expr: {
-          ...expr,
-          info: {
-            type: t
-          }
-        },
+        expr: typedVar,
         constraints: [],
-        assumptions: [[expr.variable, t]]
+        assumptions: [typedVar]
       };
     }
     case "conditional": {
@@ -179,9 +186,9 @@ function infer(
           ...condition.constraints,
           ...consequent.constraints,
           ...alternative.constraints,
-          constEqual(condition.expr.info.type, { type: "boolean" }),
-          constEqual(consequent.expr.info.type, t),
-          constEqual(alternative.expr.info.type, t)
+          constEqual(condition.expr, { type: "boolean" }),
+          constEqual(consequent.expr, t),
+          constEqual(alternative.expr, t)
         ]
       };
     }
@@ -199,10 +206,10 @@ function infer(
       // the new function type we have created.
       const newConstraints: TConstraint[] = [
         ...assumptions
-          .filter(([v, _]) => fnargs.includes(v))
-          .map(([v, t]) => {
-            const varIndex = fnargs.indexOf(v);
-            return constEqual(t, argtypes[varIndex]);
+          .filter(v => fnargs.includes(v.name))
+          .map(v => {
+            const varIndex = fnargs.indexOf(v.name);
+            return constEqual(v, argtypes[varIndex]);
           })
       ];
       return {
@@ -217,9 +224,9 @@ function infer(
             }
           }
         },
-        constraints: constraints.concat(newConstraints),
+        constraints: [...constraints, ...newConstraints],
         // assumptions have already been used, so they can be deleted.
-        assumptions: assumptions.filter(([v, _]) => !fnargs.includes(v))
+        assumptions: assumptions.filter(v => !fnargs.includes(v.name))
       };
     }
     case "function-call": {
@@ -240,13 +247,14 @@ function infer(
           args: iargs.map(a => a.expr),
           info: { type: tTo }
         },
-        constraints: ([
-          { type: "equal-constraint", t1: ifn.expr.info.type, t2: tfn }
-        ] as TConstraint[]).concat(
+
+        constraints: [
+          constEqual(ifn.expr, tfn) as TConstraint,
           ...ifn.constraints,
-          ...iargs.map(a => a.constraints)
-        ),
-        assumptions: ifn.assumptions.concat(...iargs.map(a => a.assumptions))
+          ...flatMap(a => a.constraints, iargs)
+        ],
+
+        assumptions: [...ifn.assumptions, ...flatMap(a => a.assumptions, iargs)]
       };
     }
 
@@ -292,28 +300,28 @@ function infer(
         },
         constraints: [
           ...bodyInference.constraints,
-          ...flatten(bindingsInfo.map(i => i.inference.constraints)),
+          ...flatMap(i => i.inference.constraints, bindingsInfo),
           // For each variable in the binding list, we have to add
           // constraints that state that all the assumed types for the
           // variable until now in the body are actually instances of
           // the generalized polytype of the value to be bound.
           ...bodyInference.assumptions
             // Consider variables to be bound
-            .filter(([v, _]) => toBeBound(v))
-            .map(([v, t]) => {
+            .filter(v => toBeBound(v.name))
+            .map(v => {
               // We just filter the assumptions to the variables
               // that are bound, so we know it must is defined.
-              const bInfo = bindingsInfo.find(bi => bi.binding.var === v)!;
+              const bInfo = bindingsInfo.find(bi => bi.binding.var === v.name)!;
               return constImplicitInstance(
-                t,
+                v,
                 monovars,
                 bInfo.inference.expr.info.type
               );
             })
         ],
         assumptions: [
-          ...bodyInference.assumptions.filter(([v, _]) => !toBeBound(v)),
-          ...flatten(bindingsInfo.map(bi => bi.inference.assumptions))
+          ...bodyInference.assumptions.filter(v => !toBeBound(v.name)),
+          ...flatMap(bi => bi.inference.assumptions, bindingsInfo)
         ]
       };
     }
@@ -369,12 +377,13 @@ function assumptionsToConstraints(
   assumptions: TAssumption[],
   typeEnvironment: TypeEnvironment
 ): TConstraint[] {
-  return flatten(
-    Object.keys(typeEnvironment).map(v =>
+  return flatMap(
+    v =>
       assumptions
-        .filter(([aVar, _]) => aVar === v)
-        .map(([_, aType]) => constExplicitInstance(aType, typeEnvironment[v]))
-    )
+        .filter(aVar => aVar.name === v)
+        .map(aVar => constExplicitInstance(aVar, typeEnvironment[v])),
+
+    Object.keys(typeEnvironment)
   );
 }
 
@@ -383,24 +392,25 @@ function assumptionsToConstraints(
 // scheme. This is used to decide which _instance constraint_ of the
 // set can be solved first. See `solve`/`solvable` for further info.
 function activevars(constraints: TConstraint[]): string[] {
-  return flatten(
-    constraints.map(c => {
-      switch (c.type) {
-        case "equal-constraint":
-          return union(listTypeVariables(c.t1), listTypeVariables(c.t2));
-        case "implicit-instance-constraint":
-          return union(
-            listTypeVariables(c.t1),
-            intersection(listTypeVariables(c.t2), c.monovars)
-          );
-        case "explicit-instance-constraint":
-          return union(
-            listTypeVariables(c.t1),
-            difference(listTypeVariables(c.t2.mono), c.t2.tvars)
-          );
-      }
-    })
-  );
+  return flatMap(c => {
+    switch (c.type) {
+      case "equal-constraint":
+        return union(
+          listTypeVariables(c.expr.info.type),
+          listTypeVariables(c.t)
+        );
+      case "implicit-instance-constraint":
+        return union(
+          listTypeVariables(c.expr.info.type),
+          intersection(listTypeVariables(c.t), c.monovars)
+        );
+      case "explicit-instance-constraint":
+        return union(
+          listTypeVariables(c.expr.info.type),
+          difference(listTypeVariables(c.t.mono), c.t.tvars)
+        );
+    }
+  }, constraints);
 }
 
 function substituteVar(tvarname: string, s: Substitution): string[] {
@@ -437,21 +447,21 @@ function applySubstitutionToConstraint(
     case "equal-constraint":
       return {
         type: "equal-constraint",
-        t1: applySubstitution(c.t1, s),
-        t2: applySubstitution(c.t2, s)
+        expr: applySubstitutionToExpr(c.expr, s),
+        t: applySubstitution(c.t, s)
       };
     case "implicit-instance-constraint":
       return {
         type: "implicit-instance-constraint",
-        t1: applySubstitution(c.t1, s),
-        t2: applySubstitution(c.t2, s),
-        monovars: flatten(c.monovars.map(name => substituteVar(name, s)))
+        expr: applySubstitutionToExpr(c.expr, s),
+        t: applySubstitution(c.t, s),
+        monovars: flatMap(name => substituteVar(name, s), c.monovars)
       };
     case "explicit-instance-constraint":
       return {
         type: "explicit-instance-constraint",
-        t1: applySubstitution(c.t1, s),
-        t2: applySubstitutionToPolytype(c.t2, s)
+        expr: applySubstitutionToExpr(c.expr, s),
+        t: applySubstitutionToPolytype(c.t, s)
       };
   }
 }
@@ -562,7 +572,7 @@ function solve(
         const others = constraints.filter(c1 => c !== c1);
         return (
           intersection(
-            difference(listTypeVariables(c.t2), c.monovars),
+            difference(listTypeVariables(c.t), c.monovars),
             activevars(others)
           ).length === 0
         );
@@ -578,19 +588,50 @@ function solve(
 
   switch (constraint.type) {
     case "equal-constraint": {
-      const s = unify(constraint.t1, constraint.t2, solution);
-      return solve(rest.map(c => applySubstitutionToConstraint(c, s)), s);
+      const result = unify(constraint.expr.info.type, constraint.t, solution);
+
+      switch (result.type) {
+        case "unify-success": {
+          const s = result.substitution;
+          return solve(rest.map(c => applySubstitutionToConstraint(c, s)), s);
+        }
+        case "unify-occur-check-error":
+          throw new Error(
+            printHighlightedExpr(
+              "Expression would have an infinity type",
+              constraint.expr.location
+            )
+          );
+        case "unify-mismatch-error":
+          throw new Error(
+            printHighlightedExpr(
+              `Type mismatch
+
+${printType(applySubstitution(constraint.expr.info.type, solution))}
+
+vs.
+
+${printType(applySubstitution(constraint.t, solution))}
+`,
+              constraint.expr.location
+            )
+          );
+        default:
+          // Adding a default clause here makes Typescript detects
+          // that this case won't fall through to the next one.
+          throw new Error(`can't happen`);
+      }
     }
     case "explicit-instance-constraint": {
       return solve(
-        [constEqual(constraint.t1, instantiate(constraint.t2)), ...rest],
+        [constEqual(constraint.expr, instantiate(constraint.t)), ...rest],
         solution
       );
     }
     case "implicit-instance-constraint": {
-      const t = generalize(constraint.t2, constraint.monovars);
+      const t = generalize(constraint.t, constraint.monovars);
       return solve(
-        [constExplicitInstance(constraint.t1, t), ...rest],
+        [constExplicitInstance(constraint.expr, t), ...rest],
         solution
       );
     }
@@ -625,8 +666,8 @@ function groupAssumptions(
   externals: TAssumption[];
   unknowns: TAssumption[];
 } {
-  const internals = assumptions.filter(([v, _]) => v in internalEnv);
-  const externals = assumptions.filter(([v, _]) => v in externalEnv);
+  const internals = assumptions.filter(v => v.name in internalEnv);
+  const externals = assumptions.filter(v => v.name in externalEnv);
   return {
     internals,
     externals,
@@ -655,18 +696,18 @@ export function inferModule(
   }, {});
 
   const assumptions = groupAssumptions(
-    flatten(bodyInferences.map(i => i.assumptions)),
+    flatMap(i => i.assumptions, bodyInferences),
     internalEnv,
     externalEnv
   );
 
   const constraints: TConstraint[] = [
-    ...flatten(bodyInferences.map(i => i.constraints)),
+    ...flatMap(i => i.constraints, bodyInferences),
 
     ...assumptionsToConstraints(assumptions.externals, externalEnv),
 
-    ...assumptions.internals.map(([v, t]) =>
-      constImplicitInstance(t, [], internalEnv[v])
+    ...assumptions.internals.map(v =>
+      constImplicitInstance(v, [], internalEnv[v.name])
     )
   ];
 
@@ -678,8 +719,10 @@ export function inferModule(
       body: body.map(s => applySubstitutionToSyntax(s, solution))
     },
     unknowns: assumptions.unknowns.map(
-      ([name, t]): TAssumption => {
-        return [name, applySubstitution(t, solution)];
+      (v): TAssumption => {
+        return applySubstitutionToExpr(v, solution) as SVariableReference<
+          Typed
+        >;
       }
     )
   };

@@ -23,7 +23,7 @@ export interface SString<I = {}> extends Node<I> {
 
 export interface SVariableReference<I = {}> extends Node<I> {
   type: "variable-reference";
-  variable: SVar;
+  name: SVar;
 }
 
 export interface SConditional<I = {}> extends Node<I> {
