@@ -31,7 +31,7 @@ import {
 } from "./type-utils";
 import { Monotype, TVar, Type } from "./types";
 import { unify } from "./unify";
-import { difference, flatten, intersection, mapObject, union } from "./utils";
+import { difference, flatMap, intersection, mapObject, union } from "./utils";
 
 import { getInlinePrimitiveTypes } from "./compiler/inline-primitives";
 
@@ -224,7 +224,7 @@ function infer(
             }
           }
         },
-        constraints: constraints.concat(newConstraints),
+        constraints: [...constraints, ...newConstraints],
         // assumptions have already been used, so they can be deleted.
         assumptions: assumptions.filter(v => !fnargs.includes(v.name))
       };
@@ -247,11 +247,14 @@ function infer(
           args: iargs.map(a => a.expr),
           info: { type: tTo }
         },
-        constraints: ([constEqual(ifn.expr, tfn)] as TConstraint[]).concat(
+
+        constraints: [
+          constEqual(ifn.expr, tfn) as TConstraint,
           ...ifn.constraints,
-          ...iargs.map(a => a.constraints)
-        ),
-        assumptions: ifn.assumptions.concat(...iargs.map(a => a.assumptions))
+          ...flatMap(a => a.constraints, iargs)
+        ],
+
+        assumptions: [...ifn.assumptions, ...flatMap(a => a.assumptions, iargs)]
       };
     }
 
@@ -297,7 +300,7 @@ function infer(
         },
         constraints: [
           ...bodyInference.constraints,
-          ...flatten(bindingsInfo.map(i => i.inference.constraints)),
+          ...flatMap(i => i.inference.constraints, bindingsInfo),
           // For each variable in the binding list, we have to add
           // constraints that state that all the assumed types for the
           // variable until now in the body are actually instances of
@@ -318,7 +321,7 @@ function infer(
         ],
         assumptions: [
           ...bodyInference.assumptions.filter(v => !toBeBound(v.name)),
-          ...flatten(bindingsInfo.map(bi => bi.inference.assumptions))
+          ...flatMap(bi => bi.inference.assumptions, bindingsInfo)
         ]
       };
     }
@@ -374,12 +377,13 @@ function assumptionsToConstraints(
   assumptions: TAssumption[],
   typeEnvironment: TypeEnvironment
 ): TConstraint[] {
-  return flatten(
-    Object.keys(typeEnvironment).map(v =>
+  return flatMap(
+    v =>
       assumptions
         .filter(aVar => aVar.name === v)
-        .map(aVar => constExplicitInstance(aVar, typeEnvironment[v]))
-    )
+        .map(aVar => constExplicitInstance(aVar, typeEnvironment[v])),
+
+    Object.keys(typeEnvironment)
   );
 }
 
@@ -388,27 +392,25 @@ function assumptionsToConstraints(
 // scheme. This is used to decide which _instance constraint_ of the
 // set can be solved first. See `solve`/`solvable` for further info.
 function activevars(constraints: TConstraint[]): string[] {
-  return flatten(
-    constraints.map(c => {
-      switch (c.type) {
-        case "equal-constraint":
-          return union(
-            listTypeVariables(c.expr.info.type),
-            listTypeVariables(c.t)
-          );
-        case "implicit-instance-constraint":
-          return union(
-            listTypeVariables(c.expr.info.type),
-            intersection(listTypeVariables(c.t), c.monovars)
-          );
-        case "explicit-instance-constraint":
-          return union(
-            listTypeVariables(c.expr.info.type),
-            difference(listTypeVariables(c.t.mono), c.t.tvars)
-          );
-      }
-    })
-  );
+  return flatMap(c => {
+    switch (c.type) {
+      case "equal-constraint":
+        return union(
+          listTypeVariables(c.expr.info.type),
+          listTypeVariables(c.t)
+        );
+      case "implicit-instance-constraint":
+        return union(
+          listTypeVariables(c.expr.info.type),
+          intersection(listTypeVariables(c.t), c.monovars)
+        );
+      case "explicit-instance-constraint":
+        return union(
+          listTypeVariables(c.expr.info.type),
+          difference(listTypeVariables(c.t.mono), c.t.tvars)
+        );
+    }
+  }, constraints);
 }
 
 function substituteVar(tvarname: string, s: Substitution): string[] {
@@ -453,7 +455,7 @@ function applySubstitutionToConstraint(
         type: "implicit-instance-constraint",
         expr: applySubstitutionToExpr(c.expr, s),
         t: applySubstitution(c.t, s),
-        monovars: flatten(c.monovars.map(name => substituteVar(name, s)))
+        monovars: flatMap(name => substituteVar(name, s), c.monovars)
       };
     case "explicit-instance-constraint":
       return {
@@ -694,13 +696,13 @@ export function inferModule(
   }, {});
 
   const assumptions = groupAssumptions(
-    flatten(bodyInferences.map(i => i.assumptions)),
+    flatMap(i => i.assumptions, bodyInferences),
     internalEnv,
     externalEnv
   );
 
   const constraints: TConstraint[] = [
-    ...flatten(bodyInferences.map(i => i.constraints)),
+    ...flatMap(i => i.constraints, bodyInferences),
 
     ...assumptionsToConstraints(assumptions.externals, externalEnv),
 

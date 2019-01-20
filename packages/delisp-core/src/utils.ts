@@ -1,3 +1,7 @@
+export function flatMap<A, B>(fn: (x: A) => B[], list: A[]): B[] {
+  return flatten(list.map(x => fn(x)));
+}
+
 export function flatten<A>(x: A[][]): A[] {
   return ([] as A[]).concat(...x);
 }
