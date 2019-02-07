@@ -11,7 +11,6 @@
 
 import {
   Expression,
-  functionArgs,
   isDeclaration,
   Module,
   SVariableReference,
@@ -193,7 +192,7 @@ function infer(
       };
     }
     case "function": {
-      const fnargs = functionArgs(expr);
+      const fnargs = expr.lambdaList.positionalArgs.map(a => a.variable);
       const argtypes = fnargs.map(_ => generateUniqueTVar());
 
       const { expr: typedBody, constraints, assumptions } = infer(expr.body, [
@@ -205,12 +204,10 @@ function infer(
       // argument, stating that they are equal to the argument types
       // the new function type we have created.
       const newConstraints: TConstraint[] = [
-        ...assumptions
-          .filter(v => fnargs.includes(v.name))
-          .map(v => {
-            const varIndex = fnargs.indexOf(v.name);
-            return constEqual(v, argtypes[varIndex]);
-          })
+        ...assumptions.filter(v => fnargs.includes(v.name)).map(v => {
+          const varIndex = fnargs.indexOf(v.name);
+          return constEqual(v, argtypes[varIndex]);
+        })
       ];
       return {
         expr: {
