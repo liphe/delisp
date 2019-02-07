@@ -24,17 +24,17 @@ function defineToplevel(name: string, fn: (expr: ASExprList) => Declaration) {
 }
 
 //
-// (lambda (...args) body)
+// The format of lambda lists are (a b c ... &rest z)
 //
 
-function parseLambdaList(x: ASExpr): LambdaList {
-  if (x.type !== "list") {
+function parseLambdaList(ll: ASExpr): LambdaList {
+  if (ll.type !== "list") {
     throw new Error(
-      printHighlightedExpr("Expected a list of arguments", x.location)
+      printHighlightedExpr("Expected a list of arguments", ll.location)
     );
   }
 
-  x.elements.forEach(arg => {
+  ll.elements.forEach(arg => {
     if (arg.type !== "symbol") {
       throw new Error(
         printHighlightedExpr(
@@ -45,11 +45,11 @@ function parseLambdaList(x: ASExpr): LambdaList {
     }
   });
 
-  const args = x.elements as ASExprSymbol[];
+  const symbols = ll.elements as ASExprSymbol[];
 
   // Check for duplicated arguments
-  args.forEach((arg, i) => {
-    const duplicated = args.slice(i + 1).find(a => a.name === arg.name);
+  symbols.forEach((arg, i) => {
+    const duplicated = symbols.slice(i + 1).find(a => a.name === arg.name);
     if (duplicated) {
       throw new Error(
         printHighlightedExpr(
@@ -60,35 +60,31 @@ function parseLambdaList(x: ASExpr): LambdaList {
     }
   });
 
-  return {
-    positionalArgs: args.map(arg => ({
-      variable: arg.name,
-      location: arg.location
-    }))
-  };
-}
-
-defineConversion("if", expr => {
-  if (expr.elements.length !== 4) {
-    const lastExpr = last(expr.elements) as ASExpr; // we know it is not empty!
+  const variableArity = symbols.length > 1 && last(symbols)!.name === "...";
+  if (variableArity && symbols.length === 1) {
     throw new Error(
       printHighlightedExpr(
-        `'if' needs exactly 3 arguments, got ${expr.elements.length}`,
-        lastExpr.location,
-        true
+        "Forgot to provide a name for the variable-arity argument.",
+        last(symbols)!.location
       )
     );
   }
-  const [, conditionForm, consequentForm, alternativeForm] = expr.elements;
+
+  const positional = variableArity ? symbols.slice(0, -2) : symbols;
+  const rest = variableArity ? symbols[symbols.length - 2] : undefined;
+
   return {
-    type: "conditional",
-    condition: convertExpr(conditionForm),
-    consequent: convertExpr(consequentForm),
-    alternative: convertExpr(alternativeForm),
-    location: expr.location,
-    info: {}
+    positionalArgs: positional.map(arg => ({
+      variable: arg.name,
+      location: arg.location
+    })),
+    rest: rest && {
+      variable: rest.name,
+      location: rest.location
+    },
+    location: ll.location
   };
-});
+}
 
 defineConversion("lambda", expr => {
   const [lambda, ...args] = expr.elements;
@@ -107,6 +103,28 @@ defineConversion("lambda", expr => {
     type: "function",
     lambdaList: parseLambdaList(args[0]),
     body: convertExpr(args[1]),
+    location: expr.location,
+    info: {}
+  };
+});
+
+defineConversion("if", expr => {
+  if (expr.elements.length !== 4) {
+    const lastExpr = last(expr.elements) as ASExpr; // we know it is not empty!
+    throw new Error(
+      printHighlightedExpr(
+        `'if' needs exactly 3 arguments, got ${expr.elements.length}`,
+        lastExpr.location,
+        true
+      )
+    );
+  }
+  const [, conditionForm, consequentForm, alternativeForm] = expr.elements;
+  return {
+    type: "conditional",
+    condition: convertExpr(conditionForm),
+    consequent: convertExpr(consequentForm),
+    alternative: convertExpr(alternativeForm),
     location: expr.location,
     info: {}
   };

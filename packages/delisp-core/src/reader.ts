@@ -114,6 +114,7 @@ const symbol: Parser<ASExpr> = atLeastOne(
     character("%"),
     character("^"),
     character("&"),
+    character("."),
     character("*"),
     character("<"),
     character(">"),
