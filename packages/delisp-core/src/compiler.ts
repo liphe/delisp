@@ -3,10 +3,10 @@ import {
   Module,
   SConditional,
   SDefinition,
-  SListConstructor,
   SFunction,
   SFunctionCall,
   SLet,
+  SListConstructor,
   SVariableReference,
   Syntax
 } from "./syntax";
