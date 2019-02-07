@@ -32,22 +32,46 @@ interface Environment {
 // be injective so there is no collisions and the output should be a
 // valid variable name.
 
-function compileLambda(fn: SFunction, env: Environment): JS.Expression {
-  const newEnv = fn.lambdaList.positionalArgs.reduce(
-    (e, param) => ({
-      ...e,
-      [param.variable]: varnameToJS(param.variable)
-    }),
-    env
+function compileLambda(
+  fn: SFunction,
+  env: Environment
+): JS.ArrowFunctionExpression {
+  const newEnv = {
+    ...fn.lambdaList.positionalArgs.reduce(
+      (e, param) => ({
+        ...e,
+        [param.variable]: varnameToJS(param.variable)
+      }),
+      env
+    ),
+
+    ...(fn.lambdaList.rest
+      ? {
+          [fn.lambdaList.rest.variable]: varnameToJS(
+            fn.lambdaList.rest.variable
+          )
+        }
+      : {})
+  };
+
+  const jsargs = fn.lambdaList.positionalArgs.map(
+    (param): JS.Pattern => ({
+      type: "Identifier",
+      name: newEnv[param.variable]
+    })
   );
+
+  const jsrest: JS.Pattern | undefined = fn.lambdaList.rest && {
+    type: "RestElement",
+    argument: {
+      type: "Identifier",
+      name: newEnv[fn.lambdaList.rest.variable]
+    }
+  };
+
   return {
     type: "ArrowFunctionExpression",
-    params: fn.lambdaList.positionalArgs.map(
-      (param): JS.Pattern => ({
-        type: "Identifier",
-        name: newEnv[param.variable]
-      })
-    ),
+    params: [...jsargs, ...(jsrest ? [jsrest] : [])],
     body: compile(fn.body, newEnv),
     expression: false
   };
