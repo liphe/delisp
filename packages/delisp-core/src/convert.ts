@@ -60,10 +60,12 @@ function parseLambdaList(x: ASExpr): LambdaList {
     }
   });
 
-  return args.map(arg => ({
-    variable: arg.name,
-    location: arg.location
-  }));
+  return {
+    positionalArgs: args.map(arg => ({
+      variable: arg.name,
+      location: arg.location
+    }))
+  };
 }
 
 defineConversion("if", expr => {

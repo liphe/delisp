@@ -54,7 +54,7 @@ function print(sexpr: Syntax): Doc {
         )
       );
     case "function":
-      const argNames = sexpr.lambdaList.map(x => x.variable);
+      const argNames = sexpr.lambdaList.positionalArgs.map(x => x.variable);
       return group(
         list(
           text("lambda"),

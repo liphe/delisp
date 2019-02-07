@@ -33,7 +33,7 @@ interface Environment {
 // valid variable name.
 
 function compileLambda(fn: SFunction, env: Environment): JS.Expression {
-  const newEnv = fn.lambdaList.reduce(
+  const newEnv = fn.lambdaList.positionalArgs.reduce(
     (e, param) => ({
       ...e,
       [param.variable]: varnameToJS(param.variable)
@@ -42,7 +42,7 @@ function compileLambda(fn: SFunction, env: Environment): JS.Expression {
   );
   return {
     type: "ArrowFunctionExpression",
-    params: fn.lambdaList.map(
+    params: fn.lambdaList.positionalArgs.map(
       (param): JS.Pattern => ({
         type: "Identifier",
         name: newEnv[param.variable]

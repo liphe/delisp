@@ -39,10 +39,9 @@ export interface SFunctionCall<I = {}> extends Node<I> {
   args: Array<Expression<I>>;
 }
 
-export type LambdaList = Array<{
-  variable: SVar;
-  location: Location;
-}>;
+export interface LambdaList {
+  positionalArgs: Array<{ variable: SVar; location: Location }>;
+}
 
 export interface SFunction<I = {}> extends Node<I> {
   type: "function";
@@ -51,7 +50,7 @@ export interface SFunction<I = {}> extends Node<I> {
 }
 
 export function functionArgs(fn: SFunction): SVar[] {
-  return fn.lambdaList.map(a => a.variable);
+  return fn.lambdaList.positionalArgs.map(a => a.variable);
 }
 
 export interface SListConstructor<I = {}> extends Node<I> {
