@@ -1,6 +1,11 @@
 //
 // Types
 //
+
+export interface TVoid {
+  type: "void";
+}
+
 export interface TBoolean {
   type: "boolean";
 }
@@ -23,7 +28,13 @@ export interface TVar {
   name: string;
 }
 
-export type Monotype = TBoolean | TNumber | TString | TApplication | TVar;
+export type Monotype =
+  | TBoolean
+  | TNumber
+  | TString
+  | TApplication
+  | TVar
+  | TVoid;
 
 export interface Type {
   type: "type";
