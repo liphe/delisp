@@ -28,8 +28,8 @@ function success(s: Substitution): UnifyResult {
   };
 }
 
-function occurCheck(v: TVar, rootT: Monotype): UnifyError | null {
-  function check(t: Monotype) {
+function occurCheck(v: TVar, rootT: Monotype): UnifyOccurCheckError | null {
+  function check(t: Monotype): UnifyOccurCheckError | null {
     if (t.type === "type-variable" && t.name === v.name) {
       const err: UnifyOccurCheckError = {
         type: "unify-occur-check-error",
@@ -39,7 +39,8 @@ function occurCheck(v: TVar, rootT: Monotype): UnifyError | null {
       return err;
     }
     if (t.type === "application") {
-      t.args.forEach(check);
+      const errors = t.args.map(check).filter(r => r !== null);
+      return errors.length > 0 ? errors[0] : null;
     }
     return null;
   }
