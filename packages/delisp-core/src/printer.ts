@@ -63,10 +63,18 @@ function print(sexpr: Syntax): Doc {
           indent(concat(line, print(sexpr.body)))
         )
       );
-    case "function-call":
+
+    case "function-call": {
       const fn = print(sexpr.fn);
       const args = sexpr.args.map(print);
       return group(list(groupalign(fn, align(...args))));
+    }
+
+    case "list": {
+      const fn = text("list");
+      const args = sexpr.values.map(print);
+      return group(list(groupalign(fn, align(...args))));
+    }
 
     case "definition":
       return group(

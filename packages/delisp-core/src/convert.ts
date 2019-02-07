@@ -110,6 +110,16 @@ defineConversion("lambda", expr => {
   };
 });
 
+defineConversion("list", expr => {
+  const [, ...args] = expr.elements;
+  return {
+    type: "list",
+    values: args.map(a => convertExpr(a)),
+    location: expr.location,
+    info: {}
+  };
+});
+
 function parseLetBindings(bindings: ASExpr): SLetBinding[] {
   if (bindings.type !== "list") {
     throw new Error(

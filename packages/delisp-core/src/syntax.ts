@@ -54,6 +54,11 @@ export function functionArgs(fn: SFunction): SVar[] {
   return fn.lambdaList.map(a => a.variable);
 }
 
+export interface SListConstructor<I = {}> extends Node<I> {
+  type: "list";
+  values: Array<Expression<I>>;
+}
+
 export interface SLetBinding<I = {}> {
   var: SVar;
   value: Expression<I>;
@@ -73,6 +78,7 @@ export type Expression<I = {}> =
   | SConditional<I>
   | SFunctionCall<I>
   | SFunction<I>
+  | SListConstructor<I>
   | SLet<I>;
 
 //

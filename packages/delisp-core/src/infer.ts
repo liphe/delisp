@@ -229,6 +229,31 @@ function infer(
         assumptions: assumptions.filter(v => !fnargs.includes(v.name))
       };
     }
+
+    case "list": {
+      const inferredValues = expr.values.map(e => infer(e, monovars));
+      const t = generateUniqueTVar();
+
+      return {
+        expr: {
+          ...expr,
+          values: inferredValues.map(i => i.expr),
+          info: {
+            type: {
+              type: "application",
+              op: "list",
+              args: [t]
+            }
+          }
+        },
+        assumptions: flatMap(i => i.assumptions, inferredValues),
+        constraints: [
+          ...flatMap(i => i.constraints, inferredValues),
+          ...inferredValues.map(i => constEqual(i.expr, t))
+        ]
+      };
+    }
+
     case "function-call": {
       const ifn = infer(expr.fn, monovars);
       const iargs = expr.args.map(arg => infer(arg, monovars));
@@ -506,6 +531,15 @@ function applySubstitutionToExpr(
       return {
         ...s,
         body: applySubstitutionToExpr(s.body, env),
+        info: {
+          ...s.info,
+          type: applySubstitution(s.info.type, env)
+        }
+      };
+    case "list":
+      return {
+        ...s,
+        values: s.values.map(s1 => applySubstitutionToExpr(s1, env)),
         info: {
           ...s.info,
           type: applySubstitution(s.info.type, env)

@@ -3,6 +3,7 @@ import {
   Module,
   SConditional,
   SDefinition,
+  SListConstructor,
   SFunction,
   SFunctionCall,
   SLet,
@@ -130,6 +131,13 @@ function compileConditional(
   };
 }
 
+function compileList(expr: SListConstructor, env: Environment): JS.Expression {
+  return {
+    type: "ArrayExpression",
+    elements: expr.values.map(e => compile(e, env))
+  };
+}
+
 function compileLetBindings(expr: SLet, env: Environment): JS.Expression {
   const newenv = expr.bindings.reduce(
     (acc, binding) => ({
@@ -183,6 +191,8 @@ export function compile(expr: Expression, env: Environment): JS.Expression {
       return compileLambda(expr, env);
     case "function-call":
       return compileFunctionCall(expr, env);
+    case "list":
+      return compileList(expr, env);
     case "let-bindings":
       return compileLetBindings(expr, env);
   }
