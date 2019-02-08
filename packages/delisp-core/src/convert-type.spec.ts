@@ -1,54 +1,31 @@
 import { readFromString } from "../src/reader";
 import { convert } from "./convert-type";
+import { tFn, tNumber, tString, tVar } from "./types";
 
 describe("convertType", () => {
   it("should convert to numbers", () => {
-    expect(convert(readFromString("number"))).toMatchObject({ type: "number" });
-    expect(convert(readFromString("  number  "))).toMatchObject({
-      type: "number"
-    });
+    expect(convert(readFromString("number"))).toMatchObject(tNumber);
+    expect(convert(readFromString("  number  "))).toMatchObject(tNumber);
   });
 
   it("should convert to strings", () => {
-    expect(convert(readFromString("string"))).toMatchObject({ type: "string" });
-    expect(convert(readFromString("  string  "))).toMatchObject({
-      type: "string"
-    });
+    expect(convert(readFromString("string"))).toMatchObject(tString);
+    expect(convert(readFromString("  string  "))).toMatchObject(tString);
   });
 
   it("should convert to symbols", () => {
-    expect(convert(readFromString("a"))).toMatchObject({
-      type: "type-variable",
-      name: "a"
-    });
-    expect(convert(readFromString("  b  "))).toMatchObject({
-      type: "type-variable",
-      name: "b"
-    });
+    expect(convert(readFromString("a"))).toMatchObject(tVar("a"));
+    expect(convert(readFromString("  b  "))).toMatchObject(tVar("b"));
   });
 
   it("should convert to functions", () => {
-    expect(convert(readFromString("  (->  string  number)  "))).toMatchObject({
-      type: "application",
-      op: "->",
-      args: [{ type: "string" }, { type: "number" }]
-    });
+    expect(convert(readFromString("  (->  string  number)  "))).toMatchObject(
+      tFn([tString], tNumber)
+    );
 
     expect(
       convert(readFromString("(-> string (-> string c) c)"))
-    ).toMatchObject({
-      type: "application",
-      op: "->",
-      args: [
-        { type: "string" },
-        {
-          type: "application",
-          op: "->",
-          args: [{ type: "string" }, { type: "type-variable", name: "c" }]
-        },
-        { type: "type-variable", name: "c" }
-      ]
-    });
+    ).toMatchObject(tFn([tString, tFn([tString], tVar("c"))], tVar("c")));
   });
 
   it("should detect incorrect types", () => {

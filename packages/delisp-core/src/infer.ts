@@ -28,7 +28,16 @@ import {
   instantiate,
   listTypeVariables
 } from "./type-utils";
-import { Monotype, TVar, Type } from "./types";
+import {
+  Monotype,
+  tBoolean,
+  tFn,
+  tList,
+  tNumber,
+  tString,
+  tVar,
+  Type
+} from "./types";
 import { unify } from "./unify";
 import { difference, flatMap, intersection, mapObject, union } from "./utils";
 
@@ -133,13 +142,13 @@ function infer(
   switch (expr.type) {
     case "number":
       return {
-        expr: { ...expr, info: { type: { type: "number" } } },
+        expr: { ...expr, info: { type: tNumber } },
         constraints: [],
         assumptions: []
       };
     case "string":
       return {
-        expr: { ...expr, info: { type: { type: "string" } } },
+        expr: { ...expr, info: { type: tString } },
         constraints: [],
         assumptions: []
       };
@@ -185,7 +194,7 @@ function infer(
           ...condition.constraints,
           ...consequent.constraints,
           ...alternative.constraints,
-          constEqual(condition.expr, { type: "boolean" }),
+          constEqual(condition.expr, tBoolean),
           constEqual(consequent.expr, t),
           constEqual(alternative.expr, t)
         ]
@@ -204,21 +213,19 @@ function infer(
       // argument, stating that they are equal to the argument types
       // the new function type we have created.
       const newConstraints: TConstraint[] = [
-        ...assumptions.filter(v => fnargs.includes(v.name)).map(v => {
-          const varIndex = fnargs.indexOf(v.name);
-          return constEqual(v, argtypes[varIndex]);
-        })
+        ...assumptions
+          .filter(v => fnargs.includes(v.name))
+          .map(v => {
+            const varIndex = fnargs.indexOf(v.name);
+            return constEqual(v, argtypes[varIndex]);
+          })
       ];
       return {
         expr: {
           ...expr,
           body: typedBody,
           info: {
-            type: {
-              type: "application",
-              op: "->",
-              args: [...argtypes, typedBody.info.type]
-            }
+            type: tFn(argtypes, typedBody.info.type)
           }
         },
         constraints: [...constraints, ...newConstraints],
@@ -235,13 +242,7 @@ function infer(
         expr: {
           ...expr,
           values: inferredValues.map(i => i.expr),
-          info: {
-            type: {
-              type: "application",
-              op: "list",
-              args: [t]
-            }
-          }
+          info: { type: tList(t) }
         },
         assumptions: flatMap(i => i.assumptions, inferredValues),
         constraints: [
@@ -255,13 +256,7 @@ function infer(
       const ifn = infer(expr.fn, monovars);
       const iargs = expr.args.map(arg => infer(arg, monovars));
       const tTo = generateUniqueTVar();
-
-      const tfn: Monotype = {
-        type: "application",
-        op: "->",
-        args: [...iargs.map(a => a.expr.info.type), tTo]
-      };
-
+      const tfn: Monotype = tFn(iargs.map(a => a.expr.info.type), tTo);
       return {
         expr: {
           ...expr,
@@ -436,7 +431,7 @@ function activevars(constraints: TConstraint[]): string[] {
 }
 
 function substituteVar(tvarname: string, s: Substitution): string[] {
-  const tv: TVar = { type: "type-variable", name: tvarname };
+  const tv = tVar(tvarname);
   return listTypeVariables(applySubstitution(tv, s));
 }
 

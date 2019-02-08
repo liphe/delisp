@@ -2,22 +2,22 @@
 // Types
 //
 
-export interface TVoid {
+interface TVoid {
   type: "void";
 }
 
-export interface TBoolean {
+interface TBoolean {
   type: "boolean";
 }
-export interface TNumber {
+interface TNumber {
   type: "number";
 }
 
-export interface TString {
+interface TString {
   type: "string";
 }
 
-export interface TApplication {
+interface TApplication {
   type: "application";
   op: string;
   args: Monotype[];
@@ -40,4 +40,47 @@ export interface Type {
   type: "type";
   tvars: string[];
   mono: Monotype;
+}
+
+//
+// Constructor helpers
+//
+
+export const tVoid: TVoid = {
+  type: "void"
+};
+
+export const tBoolean: TBoolean = {
+  type: "boolean"
+};
+
+export const tNumber: TNumber = {
+  type: "number"
+};
+
+export const tString: TString = {
+  type: "string"
+};
+
+export function tVar(name: string): TVar {
+  return {
+    type: "type-variable",
+    name
+  };
+}
+
+export function tApp(op: string, ...args: Monotype[]): Monotype {
+  return {
+    type: "application",
+    op,
+    args
+  };
+}
+
+export function tList(t: Monotype): Monotype {
+  return tApp("list", t);
+}
+
+export function tFn(args: Monotype[], out: Monotype): Monotype {
+  return tApp("->", ...args, out);
 }

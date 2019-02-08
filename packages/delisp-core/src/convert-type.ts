@@ -1,17 +1,17 @@
 import { printHighlightedExpr } from "./error-report";
 import { ASExpr, ASExprList, ASExprSymbol } from "./sexpr";
-import { Monotype } from "./types";
+import { Monotype, tApp, tBoolean, tNumber, tString, tVar } from "./types";
 
 function convertSymbol(expr: ASExprSymbol): Monotype {
   switch (expr.name) {
     case "boolean":
-      return { type: "boolean" };
+      return tBoolean;
     case "number":
-      return { type: "number" };
+      return tNumber;
     case "string":
-      return { type: "string" };
+      return tString;
     default:
-      return { type: "type-variable", name: expr.name };
+      return tVar(expr.name);
   }
 }
 
@@ -49,11 +49,7 @@ function convertList(expr: ASExprList): Monotype {
       );
   }
 
-  return {
-    type: "application",
-    op: op.name,
-    args: args.map(convert)
-  };
+  return tApp(op.name, ...args.map(convert));
 }
 
 export function convert(expr: ASExpr): Monotype {

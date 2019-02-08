@@ -1,4 +1,4 @@
-import { Monotype } from "./types";
+import { Monotype, tApp } from "./types";
 
 export interface Substitution {
   [t: string]: Monotype;
@@ -12,11 +12,7 @@ export function applySubstitution(t: Monotype, env: Substitution): Monotype {
     case "string":
       return t;
     case "application":
-      return {
-        type: "application",
-        op: t.op,
-        args: t.args.map(t1 => applySubstitution(t1, env))
-      };
+      return tApp(t.op, ...t.args.map(t1 => applySubstitution(t1, env)));
     case "type-variable": {
       if (t.name in env) {
         const tt = env[t.name];

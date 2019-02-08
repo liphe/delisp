@@ -1,7 +1,7 @@
 import { convert as convertType } from "./convert-type";
 import { readFromString } from "./reader";
 import { applySubstitution } from "./type-substitution";
-import { Monotype, TVar, Type } from "./types";
+import { Monotype, tVar, TVar, Type } from "./types";
 import { flatten, unique } from "./utils";
 
 // Return the list of type variables in the order they show up
@@ -20,10 +20,8 @@ export function listTypeVariables(t: Monotype): string[] {
 }
 
 let generateUniqueTVarIdx = 0;
-export const generateUniqueTVar = (): TVar => ({
-  type: "type-variable",
-  name: `t${++generateUniqueTVarIdx}`
-});
+export const generateUniqueTVar = (): TVar =>
+  tVar(`t${++generateUniqueTVarIdx}`);
 
 export function generalize(t: Monotype, monovars: string[]): Type {
   const vars = listTypeVariables(t);
@@ -62,10 +60,7 @@ function normalizeType(t: Monotype): Monotype {
       ? s
       : {
           ...s,
-          [v]: {
-            type: "type-variable",
-            name: normalizedName
-          }
+          [v]: tVar(normalizedName)
         };
   }, {});
   return applySubstitution(t, substitution);
