@@ -22,6 +22,7 @@ export interface SExprArray extends Array<ASExpr> {}
 
 export interface ASExprList {
   type: "list";
+  shape: "round" | "square";
   elements: SExprArray;
   location: Location;
 }

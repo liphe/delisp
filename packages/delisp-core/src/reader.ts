@@ -151,6 +151,7 @@ function list(x: Parser<ASExpr>): Parser<ASExpr> {
     .map(
       (elements, location): ASExpr => ({
         type: "list",
+        shape: "round",
         elements,
         location
       })
