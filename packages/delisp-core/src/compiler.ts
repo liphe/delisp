@@ -36,23 +36,13 @@ function compileLambda(
   fn: SFunction,
   env: Environment
 ): JS.ArrowFunctionExpression {
-  const newEnv = {
-    ...fn.lambdaList.positionalArgs.reduce(
-      (e, param) => ({
-        ...e,
-        [param.variable]: varnameToJS(param.variable)
-      }),
-      env
-    ),
-
-    ...(fn.lambdaList.rest
-      ? {
-          [fn.lambdaList.rest.variable]: varnameToJS(
-            fn.lambdaList.rest.variable
-          )
-        }
-      : {})
-  };
+  const newEnv = fn.lambdaList.positionalArgs.reduce(
+    (e, param) => ({
+      ...e,
+      [param.variable]: varnameToJS(param.variable)
+    }),
+    env
+  );
 
   const jsargs = fn.lambdaList.positionalArgs.map(
     (param): JS.Pattern => ({
@@ -61,17 +51,9 @@ function compileLambda(
     })
   );
 
-  const jsrest: JS.Pattern | undefined = fn.lambdaList.rest && {
-    type: "RestElement",
-    argument: {
-      type: "Identifier",
-      name: newEnv[fn.lambdaList.rest.variable]
-    }
-  };
-
   return {
     type: "ArrowFunctionExpression",
-    params: [...jsargs, ...(jsrest ? [jsrest] : [])],
+    params: [...jsargs],
     body: compile(fn.body, newEnv),
     expression: false
   };

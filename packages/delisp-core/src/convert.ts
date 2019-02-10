@@ -60,28 +60,11 @@ function parseLambdaList(ll: ASExpr): LambdaList {
     }
   });
 
-  const variableArity = symbols.length > 1 && last(symbols)!.name === "...";
-  if (variableArity && symbols.length === 1) {
-    throw new Error(
-      printHighlightedExpr(
-        "Forgot to provide a name for the variable-arity argument.",
-        last(symbols)!.location
-      )
-    );
-  }
-
-  const positional = variableArity ? symbols.slice(0, -2) : symbols;
-  const rest = variableArity ? symbols[symbols.length - 2] : undefined;
-
   return {
-    positionalArgs: positional.map(arg => ({
+    positionalArgs: symbols.map(arg => ({
       variable: arg.name,
       location: arg.location
     })),
-    rest: rest && {
-      variable: rest.name,
-      location: rest.location
-    },
     location: ll.location
   };
 }
