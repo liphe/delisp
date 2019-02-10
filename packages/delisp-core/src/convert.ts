@@ -214,7 +214,7 @@ defineToplevel("define", expr => {
   };
 });
 
-function convertList(list: ASExprList): Expression {
+function convertRoundList(list: ASExprList): Expression {
   if (list.elements.length === 0) {
     throw new Error(
       printHighlightedExpr("Empty list is not a function call", list.location)
@@ -240,6 +240,24 @@ function convertList(list: ASExprList): Expression {
   }
 }
 
+function convertSquareList(list: ASExprList): Expression {
+  return {
+    type: "list",
+    values: list.elements.map(a => convertExpr(a)),
+    location: list.location,
+    info: {}
+  };
+}
+
+function convertList(list: ASExprList): Expression {
+  switch (list.shape) {
+    case "round":
+      return convertRoundList(list);
+    case "square":
+      return convertSquareList(list);
+  }
+}
+
 export function convertExpr(expr: ASExpr): Expression {
   switch (expr.type) {
     case "number":
@@ -259,7 +277,7 @@ export function convertExpr(expr: ASExpr): Expression {
 }
 
 export function convert(expr: ASExpr): Syntax {
-  if (expr.type === "list") {
+  if (expr.type === "list" && expr.shape === "round") {
     if (expr.elements.length === 0) {
       throw new Error(
         printHighlightedExpr("Empty list is not a function call", expr.location)
