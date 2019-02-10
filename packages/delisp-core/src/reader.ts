@@ -145,8 +145,10 @@ const atom: Parser<ASExpr> = alternatives(numberP, stringP, symbol).description(
 
 const leftParen = character("(").description("open parenthesis");
 const rightParen = character(")").description("close parenthesis");
+const leftBracket = character("[").description("open square bracket");
+const rightBracket = character("]").description("close square bracket");
 
-function list(x: Parser<ASExpr>): Parser<ASExpr> {
+function roundList(x: Parser<ASExpr>): Parser<ASExpr> {
   return delimitedMany(leftParen, x, spaces.then(rightParen))
     .map(
       (elements, location): ASExpr => ({
@@ -156,8 +158,24 @@ function list(x: Parser<ASExpr>): Parser<ASExpr> {
         location
       })
     )
-    .description("list");
+    .description("round list");
 }
+
+function squareList(x: Parser<ASExpr>): Parser<ASExpr> {
+  return delimitedMany(leftBracket, x, spaces.then(rightBracket))
+    .map(
+      (elements, location): ASExpr => ({
+        type: "list",
+        shape: "square",
+        elements,
+        location
+      })
+    )
+    .description("square list");
+}
+
+const list = (x: Parser<ASExpr>): Parser<ASExpr> =>
+  roundList(x).or(() => squareList(x));
 
 const reportUnmatched: Parser<{}> = Parser.lookahead(rightParen).chain(
   closed => {
