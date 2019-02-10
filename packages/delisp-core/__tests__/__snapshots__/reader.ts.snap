@@ -13,7 +13,7 @@ exports[`Reader Error messages generate user-friendly error for a closing parent
 `;
 
 exports[`Reader Error messages generate user-friendly error for an incomplete list 1`] = `
-"file:1:6: Expected close parenthesis, number, double quote, symbol, or open parenthesis
+"file:1:6: Expected close parenthesis, number, double quote, symbol, open parenthesis, or open square bracket
 (1 2 3
 ------^"
 `;

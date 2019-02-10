@@ -56,16 +56,19 @@ describe("Reader", () => {
   it("should read lists", () => {
     expect(readFromString("()")).toMatchObject({
       type: "list",
+      shape: "round",
       elements: [],
       location: { start: 0, end: 2 }
     });
     expect(readFromString("(  )")).toMatchObject({
       type: "list",
+      shape: "round",
       elements: [],
       location: { start: 0, end: 4 }
     });
     expect(readFromString("(1 2 3)")).toMatchObject({
       type: "list",
+      shape: "round",
       elements: [
         {
           type: "number",
@@ -88,6 +91,73 @@ describe("Reader", () => {
 
     expect(readFromString(" (1 ( 2 ) 3) ")).toMatchObject({
       type: "list",
+      shape: "round",
+      elements: [
+        {
+          type: "number",
+          value: 1,
+          location: { start: 2, end: 3 }
+        },
+        {
+          type: "list",
+          elements: [
+            {
+              type: "number",
+              value: 2,
+              location: { start: 6, end: 7 }
+            }
+          ],
+          location: { start: 4, end: 9 }
+        },
+        {
+          type: "number",
+          value: 3,
+          location: { start: 10, end: 11 }
+        }
+      ],
+      location: { start: 1, end: 12 }
+    });
+  });
+
+  it("should read lists with square bracket notation", () => {
+    expect(readFromString("[]")).toMatchObject({
+      type: "list",
+      shape: "square",
+      elements: [],
+      location: { start: 0, end: 2 }
+    });
+    expect(readFromString("[  ]")).toMatchObject({
+      type: "list",
+      shape: "square",
+      elements: [],
+      location: { start: 0, end: 4 }
+    });
+    expect(readFromString("[1 2 3]")).toMatchObject({
+      type: "list",
+      shape: "square",
+      elements: [
+        {
+          type: "number",
+          value: 1,
+          location: { start: 1, end: 2 }
+        },
+        {
+          type: "number",
+          value: 2,
+          location: { start: 3, end: 4 }
+        },
+        {
+          type: "number",
+          value: 3,
+          location: { start: 5, end: 6 }
+        }
+      ],
+      location: { start: 0, end: 7 }
+    });
+
+    expect(readFromString(" [1 [ 2 ] 3] ")).toMatchObject({
+      type: "list",
+      shape: "square",
       elements: [
         {
           type: "number",
