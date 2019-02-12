@@ -1,5 +1,5 @@
 import { printHighlightedExpr } from "./error-report";
-import { ASExpr, ASExprList, ASExprSymbol } from "./sexpr";
+import { ASExpr, ASExprList, ASExprSymbol, ASExprVector } from "./sexpr";
 import {
   Declaration,
   Expression,
@@ -214,7 +214,7 @@ defineToplevel("define", expr => {
   };
 });
 
-function convertRoundList(list: ASExprList): Expression {
+function convertList(list: ASExprList): Expression {
   if (list.elements.length === 0) {
     throw new Error(
       printHighlightedExpr("Empty list is not a function call", list.location)
@@ -240,22 +240,13 @@ function convertRoundList(list: ASExprList): Expression {
   }
 }
 
-function convertSquareList(list: ASExprList): Expression {
+function convertVector(list: ASExprVector): Expression {
   return {
     type: "list",
     values: list.elements.map(a => convertExpr(a)),
     location: list.location,
     info: {}
   };
-}
-
-function convertList(list: ASExprList): Expression {
-  switch (list.shape) {
-    case "round":
-      return convertRoundList(list);
-    case "square":
-      return convertSquareList(list);
-  }
 }
 
 export function convertExpr(expr: ASExpr): Expression {
@@ -273,11 +264,13 @@ export function convertExpr(expr: ASExpr): Expression {
       };
     case "list":
       return convertList(expr);
+    case "vector":
+      return convertVector(expr);
   }
 }
 
 export function convert(expr: ASExpr): Syntax {
-  if (expr.type === "list" && expr.shape === "round") {
+  if (expr.type === "list") {
     if (expr.elements.length === 0) {
       throw new Error(
         printHighlightedExpr("Empty list is not a function call", expr.location)

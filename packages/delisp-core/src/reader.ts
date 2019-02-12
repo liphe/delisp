@@ -145,37 +145,33 @@ const atom: Parser<ASExpr> = alternatives(numberP, stringP, symbol).description(
 
 const leftParen = character("(").description("open parenthesis");
 const rightParen = character(")").description("close parenthesis");
-const leftBracket = character("[").description("open square bracket");
-const rightBracket = character("]").description("close square bracket");
 
-function roundList(x: Parser<ASExpr>): Parser<ASExpr> {
+function list(x: Parser<ASExpr>): Parser<ASExpr> {
   return delimitedMany(leftParen, x, spaces.then(rightParen))
     .map(
       (elements, location): ASExpr => ({
         type: "list",
-        shape: "round",
         elements,
         location
       })
     )
-    .description("round list");
+    .description("list");
 }
 
-function squareList(x: Parser<ASExpr>): Parser<ASExpr> {
+const leftBracket = character("[").description("open square bracket");
+const rightBracket = character("]").description("close square bracket");
+
+function vector(x: Parser<ASExpr>): Parser<ASExpr> {
   return delimitedMany(leftBracket, x, spaces.then(rightBracket))
     .map(
       (elements, location): ASExpr => ({
-        type: "list",
-        shape: "square",
+        type: "vector",
         elements,
         location
       })
     )
-    .description("square list");
+    .description("vector");
 }
-
-const list = (x: Parser<ASExpr>): Parser<ASExpr> =>
-  roundList(x).or(() => squareList(x));
 
 const reportUnmatched: Parser<{}> = Parser.lookahead(rightParen).chain(
   closed => {
@@ -188,7 +184,7 @@ const reportUnmatched: Parser<{}> = Parser.lookahead(rightParen).chain(
 );
 
 const sexpr: Parser<ASExpr> = spaced(
-  reportUnmatched.then(atom.or(() => list(sexpr)))
+  reportUnmatched.then(atom.or(() => list(sexpr)).or(() => vector(sexpr)))
 );
 
 const sexprs: Parser<ASExpr[]> = until(endOfInput, sexpr);
