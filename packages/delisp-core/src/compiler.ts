@@ -43,7 +43,6 @@ interface Environment {
   bindings: {
     [symbol: string]: EnvironmentBinding;
   };
-  usedPrimitives: Set<string>;
 }
 
 function addBinding(varName: string, env: Environment): Environment {
@@ -301,8 +300,7 @@ function compileModule(
       ? dynamicDefinition(definitionContainer)
       : staticDefinition,
 
-    bindings: { ...primitiveBindings, ...moduleBindings },
-    usedPrimitives: new Set()
+    bindings: { ...primitiveBindings, ...moduleBindings }
   };
   return {
     type: "Program",
