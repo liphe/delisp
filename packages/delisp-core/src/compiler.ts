@@ -15,6 +15,12 @@ import {
 import { mapObject } from "./utils";
 
 import {
+  DefinitionBackend,
+  dynamicDefinition,
+  staticDefinition
+} from "./compiler/definitions";
+
+import {
   compileInlinePrimitive,
   isInlinePrimitive
 } from "./compiler/inline-primitives";
@@ -33,7 +39,7 @@ interface EnvironmentBinding {
 }
 
 interface Environment {
-  definitionContainer?: string;
+  defs: DefinitionBackend;
   bindings: {
     [symbol: string]: EnvironmentBinding;
   };
@@ -84,44 +90,7 @@ function compileLambda(
 
 function compileDefinition(def: SDefinition, env: Environment): JS.Statement {
   const value = compile(def.value, env);
-
-  if (env.definitionContainer) {
-    return {
-      type: "ExpressionStatement",
-      expression: {
-        type: "AssignmentExpression",
-        operator: "=",
-        left: {
-          type: "MemberExpression",
-          computed: true,
-          object: {
-            type: "Identifier",
-            name: "env"
-          },
-          property: {
-            type: "Literal",
-            value: def.variable
-          }
-        },
-        right: value
-      }
-    };
-  } else {
-    return {
-      type: "VariableDeclaration",
-      kind: "const",
-      declarations: [
-        {
-          type: "VariableDeclarator",
-          id: {
-            type: "Identifier",
-            name: def.variable
-          },
-          init: value
-        }
-      ]
-    };
-  }
+  return env.defs.define(def.variable, value);
 }
 
 function compileFunctionCall(
@@ -153,23 +122,7 @@ function compileVariable(
     const binding = lookupBinding(ref.name, env);
 
     if (!binding) {
-      if (!env.definitionContainer) {
-        throw new Error(
-          `Unknown reference ${ref.name} (this should never happen)`
-        );
-      }
-      return {
-        type: "MemberExpression",
-        computed: true,
-        object: {
-          type: "Identifier",
-          name: "env"
-        },
-        property: {
-          type: "Literal",
-          value: ref.name
-        }
-      };
+      return env.defs.access(ref.name);
     }
 
     switch (binding.source) {
@@ -187,25 +140,7 @@ function compileVariable(
           }
         };
       case "module":
-        if (env.definitionContainer) {
-          return {
-            type: "MemberExpression",
-            computed: true,
-            object: {
-              type: "Identifier",
-              name: "env"
-            },
-            property: {
-              type: "Literal",
-              value: binding.jsname
-            }
-          };
-        } else {
-          return {
-            type: "Identifier",
-            name: binding.jsname
-          };
-        }
+        return env.defs.access(binding.jsname);
       case "lexical":
         return {
           type: "Identifier",
@@ -362,7 +297,10 @@ function compileModule(
   );
 
   const initialEnv = {
-    definitionContainer,
+    defs: definitionContainer
+      ? dynamicDefinition(definitionContainer)
+      : staticDefinition,
+
     bindings: { ...primitiveBindings, ...moduleBindings },
     usedPrimitives: new Set()
   };
