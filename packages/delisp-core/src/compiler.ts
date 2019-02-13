@@ -151,10 +151,25 @@ function compileVariable(
     return compileInlinePrimitive(ref.name, [], "value");
   } else {
     const binding = lookupBinding(ref.name, env);
+
     if (!binding) {
-      throw new Error(
-        `Unknown reference ${ref.name} (this should never happen)`
-      );
+      if (!env.definitionContainer) {
+        throw new Error(
+          `Unknown reference ${ref.name} (this should never happen)`
+        );
+      }
+      return {
+        type: "MemberExpression",
+        computed: true,
+        object: {
+          type: "Identifier",
+          name: "env"
+        },
+        property: {
+          type: "Literal",
+          value: ref.name
+        }
+      };
     }
 
     switch (binding.source) {
@@ -172,10 +187,25 @@ function compileVariable(
           }
         };
       case "module":
-        return {
-          type: "Identifier",
-          name: binding.jsname
-        };
+        if (env.definitionContainer) {
+          return {
+            type: "MemberExpression",
+            computed: true,
+            object: {
+              type: "Identifier",
+              name: "env"
+            },
+            property: {
+              type: "Literal",
+              value: binding.jsname
+            }
+          };
+        } else {
+          return {
+            type: "Identifier",
+            name: binding.jsname
+          };
+        }
       case "lexical":
         return {
           type: "Identifier",
@@ -308,7 +338,11 @@ function compileRuntime(): JS.VariableDeclaration {
   };
 }
 
-function compileModule(module: Module, includeRuntime: boolean): JS.Program {
+function compileModule(
+  module: Module,
+  includeRuntime: boolean,
+  definitionContainer?: string
+): JS.Program {
   const moduleDeclarations = module.body
     .filter(isDeclaration)
     .map(decl => decl.variable);
@@ -328,6 +362,7 @@ function compileModule(module: Module, includeRuntime: boolean): JS.Program {
   );
 
   const initialEnv = {
+    definitionContainer,
     bindings: { ...primitiveBindings, ...moduleBindings },
     usedPrimitives: new Set()
   };
@@ -343,8 +378,15 @@ function compileModule(module: Module, includeRuntime: boolean): JS.Program {
   };
 }
 
-export function compileToString(syntax: Syntax): string {
-  const ast = compileModule({ type: "module", body: [syntax] }, false);
+export function compileToString(
+  syntax: Syntax,
+  definitionContainer?: string
+): string {
+  const ast = compileModule(
+    { type: "module", body: [syntax] },
+    false,
+    definitionContainer
+  );
   const code = recast.print(ast).code;
   debug("jscode:", code);
   return code;
