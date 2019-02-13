@@ -1,5 +1,7 @@
+import runtime from "@delisp/runtime";
 import {
   Expression,
+  isDeclaration,
   Module,
   SConditional,
   SDefinition,
@@ -10,6 +12,7 @@ import {
   SVectorConstructor,
   Syntax
 } from "./syntax";
+import { mapObject } from "./utils";
 
 import {
   compileInlinePrimitive,
@@ -24,8 +27,31 @@ import * as recast from "recast";
 import createDebug from "debug";
 const debug = createDebug("delisp:compiler");
 
+interface EnvironmentBinding {
+  jsname: string;
+  source: "lexical" | "module" | "primitive";
+}
+
 interface Environment {
-  [symbol: string]: string;
+  definitionContainer?: string;
+  bindings: {
+    [symbol: string]: EnvironmentBinding;
+  };
+  usedPrimitives: Set<string>;
+}
+
+function addBinding(varName: string, env: Environment): Environment {
+  return {
+    ...env,
+    bindings: {
+      ...env.bindings,
+      [varName]: { jsname: varnameToJS(varName), source: "lexical" }
+    }
+  };
+}
+
+function lookupBinding(varName: string, env: Environment) {
+  return env.bindings[varName];
 }
 
 // Convert a Delisp variable name to Javascript. This function should
@@ -37,17 +63,14 @@ function compileLambda(
   env: Environment
 ): JS.ArrowFunctionExpression {
   const newEnv = fn.lambdaList.positionalArgs.reduce(
-    (e, param) => ({
-      ...e,
-      [param.variable]: varnameToJS(param.variable)
-    }),
+    (e, param) => addBinding(param.variable, e),
     env
   );
 
   const jsargs = fn.lambdaList.positionalArgs.map(
     (param): JS.Pattern => ({
       type: "Identifier",
-      name: newEnv[param.variable]
+      name: lookupBinding(param.variable, newEnv).jsname
     })
   );
 
@@ -104,24 +127,41 @@ function compileVariable(
 ): JS.Expression {
   if (isInlinePrimitive(ref.name)) {
     return compileInlinePrimitive(ref.name, [], "value");
-  } else if (ref.name in env) {
-    return {
-      type: "Identifier",
-      name: env[ref.name]
-    };
   } else {
-    return {
-      type: "MemberExpression",
-      computed: true,
-      object: {
-        type: "Identifier",
-        name: "env"
-      },
-      property: {
-        type: "Literal",
-        value: ref.name
-      }
-    };
+    const binding = lookupBinding(ref.name, env);
+    if (!binding) {
+      throw new Error(
+        `Unknown reference ${ref.name} (this should never happen)`
+      );
+    }
+
+    switch (binding.source) {
+      case "primitive":
+        return {
+          type: "MemberExpression",
+          computed: true,
+          object: {
+            type: "Identifier",
+            name: "env"
+          },
+          property: {
+            type: "Literal",
+            value: binding.jsname
+          }
+        };
+      case "module":
+        return {
+          type: "Identifier",
+          name: binding.jsname
+        };
+      case "lexical":
+        return {
+          type: "Identifier",
+          name: binding.jsname
+        };
+      default:
+        throw new Error("Stupid TS");
+    }
   }
 }
 
@@ -149,10 +189,7 @@ function compileList(
 
 function compileLetBindings(expr: SLet, env: Environment): JS.Expression {
   const newenv = expr.bindings.reduce(
-    (acc, binding) => ({
-      ...acc,
-      [binding.var]: varnameToJS(binding.var)
-    }),
+    (e, binding) => addBinding(binding.var, e),
     env
   );
 
@@ -163,7 +200,7 @@ function compileLetBindings(expr: SLet, env: Environment): JS.Expression {
       params: expr.bindings.map(
         (b): JS.Pattern => ({
           type: "Identifier",
-          name: newenv[b.var]
+          name: lookupBinding(b.var, newenv).jsname
         })
       ),
       body: {
@@ -246,6 +283,28 @@ function compileRuntime(): JS.VariableDeclaration {
 }
 
 function compileModule(module: Module, includeRuntime: boolean): JS.Program {
+  const moduleDeclarations = module.body
+    .filter(isDeclaration)
+    .map(decl => decl.variable);
+  const moduleBindings = moduleDeclarations.reduce(
+    (d, decl) => ({
+      ...d,
+      [decl]: { jsname: varnameToJS(decl), source: "module" }
+    }),
+    {}
+  );
+  const primitiveBindings = mapObject(
+    runtime,
+    (_, key: string): EnvironmentBinding => ({
+      jsname: key,
+      source: "primitive"
+    })
+  );
+
+  const initialEnv = {
+    bindings: { ...primitiveBindings, ...moduleBindings },
+    usedPrimitives: new Set()
+  };
   return {
     type: "Program",
     sourceType: "module",
@@ -254,7 +313,7 @@ function compileModule(module: Module, includeRuntime: boolean): JS.Program {
       ...module.body.map(
         (syntax: Syntax): JS.ExpressionStatement => ({
           type: "ExpressionStatement",
-          expression: compileTopLevel(syntax, {})
+          expression: compileTopLevel(syntax, initialEnv)
         })
       )
     ]
