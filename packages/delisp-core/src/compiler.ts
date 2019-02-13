@@ -82,24 +82,46 @@ function compileLambda(
   };
 }
 
-function compileDefinition(def: SDefinition, env: Environment): JS.Expression {
-  return {
-    type: "AssignmentExpression",
-    operator: "=",
-    left: {
-      type: "MemberExpression",
-      computed: true,
-      object: {
-        type: "Identifier",
-        name: "env"
-      },
-      property: {
-        type: "Literal",
-        value: def.variable
+function compileDefinition(def: SDefinition, env: Environment): JS.Statement {
+  const value = compile(def.value, env);
+
+  if (env.definitionContainer) {
+    return {
+      type: "ExpressionStatement",
+      expression: {
+        type: "AssignmentExpression",
+        operator: "=",
+        left: {
+          type: "MemberExpression",
+          computed: true,
+          object: {
+            type: "Identifier",
+            name: "env"
+          },
+          property: {
+            type: "Literal",
+            value: def.variable
+          }
+        },
+        right: value
       }
-    },
-    right: compile(def.value, env)
-  };
+    };
+  } else {
+    return {
+      type: "VariableDeclaration",
+      kind: "const",
+      declarations: [
+        {
+          type: "VariableDeclarator",
+          id: {
+            type: "Identifier",
+            name: def.variable
+          },
+          init: value
+        }
+      ]
+    };
+  }
 }
 
 function compileFunctionCall(
@@ -244,11 +266,15 @@ export function compile(expr: Expression, env: Environment): JS.Expression {
   }
 }
 
-function compileTopLevel(syntax: Syntax, env: Environment): JS.Expression {
-  const js =
+function compileTopLevel(syntax: Syntax, env: Environment): JS.Statement {
+  const js: JS.Statement =
     syntax.type === "definition"
       ? compileDefinition(syntax, env)
-      : compile(syntax, env);
+      : {
+          type: "ExpressionStatement",
+          expression: compile(syntax, env)
+        };
+
   return {
     ...js,
     // Include a comment with the original source code immediately
@@ -257,8 +283,8 @@ function compileTopLevel(syntax: Syntax, env: Environment): JS.Expression {
       {
         type: "Block",
         value: `
-${pprint(syntax, 60)}
-`
+    ${pprint(syntax, 60)}
+    `
       }
     ]
   };
@@ -311,10 +337,7 @@ function compileModule(module: Module, includeRuntime: boolean): JS.Program {
     body: [
       ...(includeRuntime ? [compileRuntime()] : []),
       ...module.body.map(
-        (syntax: Syntax): JS.ExpressionStatement => ({
-          type: "ExpressionStatement",
-          expression: compileTopLevel(syntax, initialEnv)
-        })
+        (syntax: Syntax): JS.Statement => compileTopLevel(syntax, initialEnv)
       )
     ]
   };
