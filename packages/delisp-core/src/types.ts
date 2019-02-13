@@ -77,8 +77,8 @@ export function tApp(op: string, ...args: Monotype[]): Monotype {
   };
 }
 
-export function tList(t: Monotype): Monotype {
-  return tApp("list", t);
+export function tVector(t: Monotype): Monotype {
+  return tApp("vector", t);
 }
 
 export function tFn(args: Monotype[], out: Monotype): Monotype {

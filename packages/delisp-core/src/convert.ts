@@ -113,10 +113,10 @@ defineConversion("if", expr => {
   };
 });
 
-defineConversion("list", expr => {
+defineConversion("vector", expr => {
   const [, ...args] = expr.elements;
   return {
-    type: "list",
+    type: "vector",
     values: args.map(a => convertExpr(a)),
     location: expr.location,
     info: {}
@@ -242,7 +242,7 @@ function convertList(list: ASExprList): Expression {
 
 function convertVector(list: ASExprVector): Expression {
   return {
-    type: "list",
+    type: "vector",
     values: list.elements.map(a => convertExpr(a)),
     location: list.location,
     info: {}

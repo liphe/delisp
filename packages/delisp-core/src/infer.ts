@@ -32,10 +32,10 @@ import {
   Monotype,
   tBoolean,
   tFn,
-  tList,
   tNumber,
   tString,
   tVar,
+  tVector,
   Type
 } from "./types";
 import { unify } from "./unify";
@@ -234,7 +234,7 @@ function infer(
       };
     }
 
-    case "list": {
+    case "vector": {
       const inferredValues = expr.values.map(e => infer(e, monovars));
       const t = generateUniqueTVar();
 
@@ -242,7 +242,7 @@ function infer(
         expr: {
           ...expr,
           values: inferredValues.map(i => i.expr),
-          info: { type: tList(t) }
+          info: { type: tVector(t) }
         },
         assumptions: flatMap(i => i.assumptions, inferredValues),
         constraints: [
@@ -528,7 +528,7 @@ function applySubstitutionToExpr(
           type: applySubstitution(s.info.type, env)
         }
       };
-    case "list":
+    case "vector":
       return {
         ...s,
         values: s.values.map(s1 => applySubstitutionToExpr(s1, env)),

@@ -36,7 +36,7 @@ function convertList(expr: ASExprList): Monotype {
         );
       }
       break;
-    case "list":
+    case "vector":
       if (args.length !== 1) {
         throw new Error(
           printHighlightedExpr("Expected exactly 1 argument", op.location)
