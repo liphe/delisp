@@ -50,8 +50,8 @@ export interface SFunction<I = {}> extends Node<I> {
   body: Expression<I>;
 }
 
-export interface SListConstructor<I = {}> extends Node<I> {
-  type: "list";
+export interface SVectorConstructor<I = {}> extends Node<I> {
+  type: "vector";
   values: Array<Expression<I>>;
 }
 
@@ -74,7 +74,7 @@ export type Expression<I = {}> =
   | SConditional<I>
   | SFunctionCall<I>
   | SFunction<I>
-  | SListConstructor<I>
+  | SVectorConstructor<I>
   | SLet<I>;
 
 //

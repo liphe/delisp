@@ -70,8 +70,8 @@ function print(sexpr: Syntax): Doc {
       return group(list(groupalign(fn, align(...args))));
     }
 
-    case "list": {
-      const fn = text("list");
+    case "vector": {
+      const fn = text("vector");
       const args = sexpr.values.map(print);
       return group(list(groupalign(fn, align(...args))));
     }

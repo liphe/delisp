@@ -6,8 +6,8 @@ import {
   SFunction,
   SFunctionCall,
   SLet,
-  SListConstructor,
   SVariableReference,
+  SVectorConstructor,
   Syntax
 } from "./syntax";
 
@@ -137,7 +137,10 @@ function compileConditional(
   };
 }
 
-function compileList(expr: SListConstructor, env: Environment): JS.Expression {
+function compileList(
+  expr: SVectorConstructor,
+  env: Environment
+): JS.Expression {
   return {
     type: "ArrayExpression",
     elements: expr.values.map(e => compile(e, env))
@@ -197,7 +200,7 @@ export function compile(expr: Expression, env: Environment): JS.Expression {
       return compileLambda(expr, env);
     case "function-call":
       return compileFunctionCall(expr, env);
-    case "list":
+    case "vector":
       return compileList(expr, env);
     case "let-bindings":
       return compileLetBindings(expr, env);
