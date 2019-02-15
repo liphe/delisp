@@ -17,7 +17,7 @@ export function createContext() {
 }
 
 export function evaluate(syntax: Syntax, context = createContext()): unknown {
-  const code = compileToString(syntax);
+  const code = compileToString(syntax, "env");
   const result = vm.runInContext(code, context);
   return result;
 }
