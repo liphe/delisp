@@ -89,7 +89,8 @@ function compileLambda(
 
 function compileDefinition(def: SDefinition, env: Environment): JS.Statement {
   const value = compile(def.value, env);
-  return env.defs.define(def.variable, value);
+  const name = lookupBinding(def.variable, env).jsname;
+  return env.defs.define(name, value);
 }
 
 function compileFunctionCall(
