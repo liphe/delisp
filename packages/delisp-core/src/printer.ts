@@ -10,7 +10,7 @@ import {
   space,
   text
 } from "./prettier";
-import { Syntax } from "./syntax";
+import { Module, Syntax } from "./syntax";
 
 function indent(x: Doc, level = 2): Doc {
   return indent_(x, level);
@@ -102,4 +102,8 @@ function print(sexpr: Syntax): Doc {
 
 export function pprint(sexpr: Syntax, lineWidth: number): string {
   return pretty(print(sexpr), lineWidth);
+}
+
+export function pprintModule(m: Module, lineWidth: number): string {
+  return m.body.map(s => pprint(s, lineWidth)).join("\n\n");
 }
