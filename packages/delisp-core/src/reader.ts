@@ -186,25 +186,30 @@ const reportUnmatched: Parser<{}> = Parser.lookahead(rightParen).chain(
 const leftCurly = character("{").description("open curly brace");
 const rightCurly = character("}").description("close curly brace");
 
-const atExprBodyConstitutent: Parser<string> = character().chain(x => {
-  if (x === "}") {
-    return Parser.fail("} is not a valid character in {...}");
-  }
-  return Parser.of(x);
+const atExprBodyConstitutent: Parser<ASExpr> = lazy(() => {
+  return atExpr.or(
+    many(
+      character().chain(x => {
+        if (x === "}" || x === "@") {
+          return Parser.fail(`${x} is not a valid character in {...}`);
+        }
+        return Parser.of(x);
+      })
+    ).map(
+      (chars, location): ASExpr => ({
+        type: "string",
+        value: chars.join(""),
+        location
+      })
+    )
+  );
 });
 
-const atExprBody: Parser<ASExpr> = leftCurly
-  .then(many(atExprBodyConstitutent))
-  .skip(rightCurly)
-  .map(
-    (content, location): ASExpr => {
-      return {
-        type: "string",
-        value: content.join(""),
-        location
-      };
-    }
-  );
+const atExprBody: Parser<ASExpr[]> = delimitedMany(
+  leftCurly,
+  atExprBodyConstitutent,
+  rightCurly
+);
 
 const atExpr = lazy(() => {
   return character("@").chain((_, location) => {
@@ -212,7 +217,7 @@ const atExpr = lazy(() => {
       return atExprBody.map(
         (bodyValue): ASExpr => ({
           type: "list",
-          elements: [headValue, bodyValue],
+          elements: [headValue, ...bodyValue],
           location
         })
       );

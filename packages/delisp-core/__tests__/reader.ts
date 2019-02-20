@@ -282,5 +282,16 @@ describe("Reader", () => {
     expect(removeLocation(readFromString("@comment{hello world}"))).toEqual(
       removeLocation(readFromString(`(comment "hello world")`))
     );
+    expect(
+      removeLocation(
+        readFromString("@desc{see @ref{note-1} for further information}")
+      )
+    ).toEqual(
+      removeLocation(
+        readFromString(
+          `(desc "see " (ref "note-1") " for further information")`
+        )
+      )
+    );
   });
 });
