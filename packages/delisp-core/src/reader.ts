@@ -109,7 +109,6 @@ const symbol: Parser<ASExpr> = atLeastOne(
     // compiler and ensuring that it is able to generate JS variables
     // for those names.
     character("!"),
-    character("@"),
     character("#"),
     character("$"),
     character("%"),
@@ -184,9 +183,46 @@ const reportUnmatched: Parser<{}> = Parser.lookahead(rightParen).chain(
   }
 );
 
+const leftCurly = character("{").description("open curly brace");
+const rightCurly = character("}").description("close curly brace");
+
+const atExprBodyConstitutent: Parser<string> = character().chain(x => {
+  if (x === "}") {
+    return Parser.fail("} is not a valid character in {...}");
+  }
+  return Parser.of(x);
+});
+
+const atExprBody: Parser<ASExpr> = leftCurly
+  .then(many(atExprBodyConstitutent))
+  .skip(rightCurly)
+  .map(
+    (content, location): ASExpr => {
+      return {
+        type: "string",
+        value: content.join(""),
+        location
+      };
+    }
+  );
+
+const atExpr = lazy(() => {
+  return character("@").chain((_, location) => {
+    return sexpr.chain(headValue => {
+      return atExprBody.map(
+        (bodyValue): ASExpr => ({
+          type: "list",
+          elements: [headValue, bodyValue],
+          location
+        })
+      );
+    });
+  });
+});
+
 const sexpr: Parser<ASExpr> = spaced(
   lazy(() =>
-    reportUnmatched.then(alternatives(atom, list(sexpr), vector(sexpr)))
+    reportUnmatched.then(alternatives(atom, atExpr, list(sexpr), vector(sexpr)))
   )
 );
 

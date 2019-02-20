@@ -1,4 +1,24 @@
 import { readAllFromString, readFromString } from "../src/reader";
+import { ASExpr } from "../src/sexpr";
+
+function removeLocation(x: ASExpr): object {
+  switch (x.type) {
+    case "number":
+    case "symbol":
+    case "string": {
+      const { location, ...props } = x;
+      return props;
+    }
+    case "list":
+    case "vector": {
+      const { location, ...props } = x;
+      return {
+        ...props,
+        elements: x.elements.map(removeLocation)
+      };
+    }
+  }
+}
 
 describe("Reader", () => {
   it("should read numbers", () => {
@@ -256,5 +276,11 @@ describe("Reader", () => {
     expect(readAll("(1 2 3)4 5)")).toBe(false);
     expect(readAll("((1 2 3)")).toBe(true);
     expect(readAll("(1 2 3))")).toBe(false);
+  });
+
+  describe("@-syntax", () => {
+    expect(removeLocation(readFromString("@comment{hello world}"))).toEqual(
+      removeLocation(readFromString(`(comment "hello world")`))
+    );
   });
 });
