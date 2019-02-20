@@ -102,7 +102,7 @@ export class Parser<A> {
     return this.chain(x => p.map(_ => x));
   }
 
-  or(makeAlternative: (err: ParserError) => Parser<A>) {
+  or(alternative: Parser<A>) {
     return new Parser((input: Input) => {
       // Try the current parser
       const result = this.run(input);
@@ -110,7 +110,7 @@ export class Parser<A> {
         return result;
       }
       // Try the alternative parser
-      const alternativeResult = makeAlternative(result).run(input);
+      const alternativeResult = alternative.run(input);
       if (alternativeResult.status === "success") {
         return alternativeResult;
       }
@@ -146,8 +146,15 @@ export class Parser<A> {
   }
 }
 
+export function lazy<A>(makeParser: () => Parser<A>): Parser<A> {
+  return new Parser(input => {
+    const parser = makeParser();
+    return parser.run(input);
+  });
+}
+
 export function alternatives<A>(...alts: Array<Parser<A>>) {
-  return alts.reduce((p1, p2) => p1.or(() => p2));
+  return alts.reduce((p1, p2) => p1.or(p2));
 }
 
 export function delimited<A>(
@@ -164,11 +171,11 @@ export function until<A>(
 ): Parser<A[]> {
   return delimiter
     .map(_ => [] as A[])
-    .or(_err => {
-      return parser.chain(first => {
-        return until(delimiter, parser).map(rest => [first, ...rest]);
-      });
-    });
+    .or(
+      parser.chain(first =>
+        until(delimiter, parser).map(rest => [first, ...rest])
+      )
+    );
 }
 
 export function delimitedMany<A>(
@@ -193,7 +200,7 @@ export function many<A>(parser: Parser<A>): Parser<A[]> {
     .chain(first => {
       return many(parser).map(rest => [first, ...rest]);
     })
-    .or(() => Parser.of([]));
+    .or(Parser.of([]));
 }
 
 export function atLeastOne<A>(parser: Parser<A>): Parser<A[]> {

@@ -13,6 +13,7 @@ import {
   delimited,
   delimitedMany,
   endOfInput,
+  lazy,
   many,
   Parser,
   until
@@ -184,7 +185,9 @@ const reportUnmatched: Parser<{}> = Parser.lookahead(rightParen).chain(
 );
 
 const sexpr: Parser<ASExpr> = spaced(
-  reportUnmatched.then(atom.or(() => list(sexpr)).or(() => vector(sexpr)))
+  lazy(() =>
+    reportUnmatched.then(alternatives(atom, list(sexpr), vector(sexpr)))
+  )
 );
 
 const sexprs: Parser<ASExpr[]> = until(endOfInput, sexpr);
