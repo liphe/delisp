@@ -1,4 +1,5 @@
-import { Monotype, tApp } from "./types";
+import { Monotype, tApp, tRecord } from "./types";
+import { mapObject } from "./utils";
 
 export interface Substitution {
   [t: string]: Monotype;
@@ -21,5 +22,7 @@ export function applySubstitution(t: Monotype, env: Substitution): Monotype {
         return t;
       }
     }
+    case "record":
+      return tRecord(mapObject(t.fields, val => applySubstitution(val, env)));
   }
 }

@@ -19,7 +19,7 @@ import {
   until
 } from "./parser-combinators";
 
-import { ASExpr } from "./sexpr";
+import { ASExpr, ASExprMap, ASExprSymbol } from "./sexpr";
 
 const spaces = many(
   alternatives(character(" "), character("\t"), character("\n"))
@@ -100,7 +100,7 @@ const stringP = delimitedMany(doubleQuote, stringChar, doubleQuote)
 // Symbol
 //
 
-const symbol: Parser<ASExpr> = atLeastOne(
+const symbol: Parser<ASExprSymbol> = atLeastOne(
   alternatives(
     alphanumeric,
     // Those special characters are valid in Delisp symbols.
@@ -127,7 +127,7 @@ const symbol: Parser<ASExpr> = atLeastOne(
   )
 )
   .map(
-    (chars, location): ASExpr => ({
+    (chars, location): ASExprSymbol => ({
       type: "symbol",
       name: chars.join(""),
       location
@@ -225,9 +225,31 @@ const atExpr = lazy(() => {
   });
 });
 
+const mapFields = (x: Parser<ASExpr>): Parser<[string, ASExpr]> =>
+  spaced(symbol).chain(key => {
+    return x.chain(value => {
+      const fieldTuple: [string, ASExpr] = [key.name, value];
+      return Parser.of(fieldTuple);
+    });
+  });
+
+const mapP = (x: Parser<ASExpr>): Parser<ASExpr> =>
+  delimitedMany(leftCurly, mapFields(x), rightCurly).map(
+    (fields, location): ASExprMap => ({
+      type: "map",
+      fields: fields.reduce(
+        (acc, [key, value]) => ({ ...acc, [key]: value }),
+        {}
+      ),
+      location
+    })
+  );
+
 const sexpr: Parser<ASExpr> = spaced(
   lazy(() =>
-    reportUnmatched.then(alternatives(atom, atExpr, list(sexpr), vector(sexpr)))
+    reportUnmatched.then(
+      alternatives(atom, atExpr, list(sexpr), vector(sexpr), mapP(sexpr))
+    )
   )
 );
 

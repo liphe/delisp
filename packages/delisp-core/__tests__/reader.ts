@@ -1,5 +1,6 @@
 import { readAllFromString, readFromString } from "../src/reader";
 import { ASExpr } from "../src/sexpr";
+import { mapObject } from "../src/utils";
 
 function removeLocation(x: ASExpr): object {
   switch (x.type) {
@@ -16,6 +17,10 @@ function removeLocation(x: ASExpr): object {
         ...props,
         elements: x.elements.map(removeLocation)
       };
+    }
+    case "map": {
+      const { location, ...props } = x;
+      return { ...props, fields: mapObject(x.fields, removeLocation) };
     }
   }
 }

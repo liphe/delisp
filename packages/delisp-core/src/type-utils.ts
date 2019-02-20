@@ -2,7 +2,7 @@ import { convert as convertType } from "./convert-type";
 import { readFromString } from "./reader";
 import { applySubstitution } from "./type-substitution";
 import { Monotype, tVar, TVar, Type } from "./types";
-import { flatten, unique } from "./utils";
+import { flatMap, unique } from "./utils";
 
 // Return the list of type variables in the order they show up
 export function listTypeVariables(t: Monotype): string[] {
@@ -13,7 +13,9 @@ export function listTypeVariables(t: Monotype): string[] {
     case "number":
       return [];
     case "application":
-      return unique(flatten(t.args.map(listTypeVariables)));
+      return unique(flatMap(listTypeVariables, t.args));
+    case "record":
+      return unique(flatMap(listTypeVariables, Object.values(t.fields)));
     case "type-variable":
       return [t.name];
   }
@@ -78,6 +80,10 @@ function _printType(type: Monotype): string {
       return "number";
     case "string":
       return "string";
+    case "record":
+      return `{${Object.entries(type.fields)
+        .map(([key, val]) => `${key} ${_printType(val)}`)
+        .join(" ")}}`;
     case "type-variable":
       return type.name;
   }

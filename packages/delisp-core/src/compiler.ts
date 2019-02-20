@@ -8,6 +8,7 @@ import {
   SFunction,
   SFunctionCall,
   SLet,
+  SRecord,
   SVariableReference,
   SVectorConstructor,
   Syntax
@@ -164,16 +165,6 @@ function compileConditional(
   };
 }
 
-function compileList(
-  expr: SVectorConstructor,
-  env: Environment
-): JS.Expression {
-  return {
-    type: "ArrayExpression",
-    elements: expr.values.map(e => compile(e, env))
-  };
-}
-
 function compileLetBindings(expr: SLet, env: Environment): JS.Expression {
   const newenv = expr.bindings.reduce(
     (e, binding) => addBinding(binding.var, e),
@@ -204,18 +195,50 @@ function compileLetBindings(expr: SLet, env: Environment): JS.Expression {
   };
 }
 
+function literal(value: number | string): JS.Literal {
+  return {
+    type: "Literal",
+    value
+  };
+}
+
+function compileVector(
+  expr: SVectorConstructor,
+  env: Environment
+): JS.Expression {
+  return {
+    type: "ArrayExpression",
+    elements: expr.values.map(e => compile(e, env))
+  };
+}
+
+function compileRecord(expr: SRecord, env: Environment): JS.Expression {
+  return {
+    type: "ObjectExpression",
+    properties: Object.entries(expr.fields).map(
+      ([k, v]): JS.Property => ({
+        type: "Property",
+        key: literal(k),
+        value: compile(v, env),
+        kind: "init",
+        method: false,
+        shorthand: false,
+        computed: false
+      })
+    )
+  };
+}
+
 export function compile(expr: Expression, env: Environment): JS.Expression {
   switch (expr.type) {
     case "number":
-      return {
-        type: "Literal",
-        value: expr.value
-      };
+      return literal(expr.value);
     case "string":
-      return {
-        type: "Literal",
-        value: expr.value
-      };
+      return literal(expr.value);
+    case "vector":
+      return compileVector(expr, env);
+    case "record":
+      return compileRecord(expr, env);
     case "variable-reference":
       return compileVariable(expr, env);
     case "conditional":
@@ -224,8 +247,6 @@ export function compile(expr: Expression, env: Environment): JS.Expression {
       return compileLambda(expr, env);
     case "function-call":
       return compileFunctionCall(expr, env);
-    case "vector":
-      return compileList(expr, env);
     case "let-bindings":
       return compileLetBindings(expr, env);
   }

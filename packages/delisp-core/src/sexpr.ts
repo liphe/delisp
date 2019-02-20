@@ -32,9 +32,18 @@ export interface ASExprVector {
   location: Location;
 }
 
+export interface ASExprMap {
+  type: "map";
+  fields: {
+    [key: string]: ASExpr;
+  };
+  location: Location;
+}
+
 export type ASExpr =
   | ASExprNumber
   | ASExprSymbol
   | ASExprString
   | ASExprList
-  | ASExprVector;
+  | ASExprVector
+  | ASExprMap;

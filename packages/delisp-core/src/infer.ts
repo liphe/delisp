@@ -33,6 +33,7 @@ import {
   tBoolean,
   tFn,
   tNumber,
+  tRecord,
   tString,
   tVar,
   tVector,
@@ -152,6 +153,41 @@ function infer(
         constraints: [],
         assumptions: []
       };
+    case "vector": {
+      const inferredValues = expr.values.map(e => infer(e, monovars));
+      const t = generateUniqueTVar();
+
+      return {
+        expr: {
+          ...expr,
+          values: inferredValues.map(i => i.expr),
+          info: { type: tVector(t) }
+        },
+        assumptions: flatMap(i => i.assumptions, inferredValues),
+        constraints: [
+          ...flatMap(i => i.constraints, inferredValues),
+          ...inferredValues.map(i => constEqual(i.expr, t))
+        ]
+      };
+    }
+
+    case "record": {
+      const inferredValues = mapObject(expr.fields, v => infer(v, monovars));
+
+      return {
+        expr: {
+          ...expr,
+          fields: mapObject(inferredValues, i => i.expr),
+          info: {
+            type: tRecord(mapObject(inferredValues, i => i.expr.info.type))
+          }
+        },
+        assumptions: flatMap(i => i.assumptions, Object.values(inferredValues)),
+        constraints: [
+          ...flatMap(i => i.constraints, Object.values(inferredValues))
+        ]
+      };
+    }
     case "variable-reference": {
       // as we found a variable, and because we lack an
       // 'environment/context', we generate a new type and add an
@@ -231,24 +267,6 @@ function infer(
         constraints: [...constraints, ...newConstraints],
         // assumptions have already been used, so they can be deleted.
         assumptions: assumptions.filter(v => !fnargs.includes(v.name))
-      };
-    }
-
-    case "vector": {
-      const inferredValues = expr.values.map(e => infer(e, monovars));
-      const t = generateUniqueTVar();
-
-      return {
-        expr: {
-          ...expr,
-          values: inferredValues.map(i => i.expr),
-          info: { type: tVector(t) }
-        },
-        assumptions: flatMap(i => i.assumptions, inferredValues),
-        constraints: [
-          ...flatMap(i => i.constraints, inferredValues),
-          ...inferredValues.map(i => constEqual(i.expr, t))
-        ]
       };
     }
 
@@ -498,6 +516,24 @@ function applySubstitutionToExpr(
           type: applySubstitution(s.info.type, env)
         }
       };
+    case "vector":
+      return {
+        ...s,
+        values: s.values.map(s1 => applySubstitutionToExpr(s1, env)),
+        info: {
+          ...s.info,
+          type: applySubstitution(s.info.type, env)
+        }
+      };
+    case "record":
+      return {
+        ...s,
+        fields: mapObject(s.fields, v => applySubstitutionToExpr(v, env)),
+        info: {
+          ...s.info,
+          type: applySubstitution(s.info.type, env)
+        }
+      };
     case "function-call":
       return {
         ...s,
@@ -523,15 +559,6 @@ function applySubstitutionToExpr(
       return {
         ...s,
         body: applySubstitutionToExpr(s.body, env),
-        info: {
-          ...s.info,
-          type: applySubstitution(s.info.type, env)
-        }
-      };
-    case "vector":
-      return {
-        ...s,
-        values: s.values.map(s1 => applySubstitutionToExpr(s1, env)),
         info: {
           ...s.info,
           type: applySubstitution(s.info.type, env)

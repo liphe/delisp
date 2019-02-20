@@ -5,6 +5,7 @@ import {
   group,
   groupalign,
   indent as indent_,
+  join,
   line,
   pretty,
   space,
@@ -29,12 +30,35 @@ function list(...docs: Doc[]): Doc {
   return concat(text("("), ...docs, text(")"));
 }
 
+function map(...docs: Doc[]): Doc {
+  return concat(text("{"), ...docs, text("}"));
+}
+
 function print(sexpr: Syntax): Doc {
   switch (sexpr.type) {
     case "string":
       return printString(sexpr.value);
     case "number":
       return text(String(sexpr.value));
+    case "vector": {
+      const fn = text("vector");
+      const args = sexpr.values.map(print);
+      return group(list(groupalign(fn, align(...args))));
+    }
+    case "record": {
+      return group(
+        map(
+          align(
+            join(
+              Object.entries(sexpr.fields).map(([k, v]) =>
+                concat(text(k), space, print(v))
+              ),
+              line
+            )
+          )
+        )
+      );
+    }
     case "variable-reference":
       return printVariable(sexpr.name);
     case "conditional":
@@ -67,12 +91,6 @@ function print(sexpr: Syntax): Doc {
     case "function-call": {
       const fn = print(sexpr.fn);
       const args = sexpr.args.map(print);
-      return group(list(groupalign(fn, align(...args))));
-    }
-
-    case "vector": {
-      const fn = text("vector");
-      const args = sexpr.values.map(print);
       return group(list(groupalign(fn, align(...args))));
     }
 

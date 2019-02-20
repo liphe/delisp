@@ -1,5 +1,11 @@
 import { printHighlightedExpr } from "./error-report";
-import { ASExpr, ASExprList, ASExprSymbol, ASExprVector } from "./sexpr";
+import {
+  ASExpr,
+  ASExprList,
+  ASExprMap,
+  ASExprSymbol,
+  ASExprVector
+} from "./sexpr";
 import {
   Declaration,
   Expression,
@@ -7,7 +13,7 @@ import {
   SLetBinding,
   Syntax
 } from "./syntax";
-import { last } from "./utils";
+import { last, mapObject } from "./utils";
 
 const conversions: Map<string, (expr: ASExprList) => Expression> = new Map();
 const toplevelConversions: Map<
@@ -249,6 +255,15 @@ function convertVector(list: ASExprVector): Expression {
   };
 }
 
+function convertMap(map: ASExprMap): Expression {
+  return {
+    type: "record",
+    fields: mapObject(map.fields, convertExpr),
+    location: map.location,
+    info: {}
+  };
+}
+
 export function convertExpr(expr: ASExpr): Expression {
   switch (expr.type) {
     case "number":
@@ -266,6 +281,8 @@ export function convertExpr(expr: ASExpr): Expression {
       return convertList(expr);
     case "vector":
       return convertVector(expr);
+    case "map":
+      return convertMap(expr);
   }
 }
 

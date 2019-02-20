@@ -67,6 +67,11 @@ export interface SLet<I = {}> extends Node<I> {
   body: Expression<I>;
 }
 
+export interface SRecord<I = {}> extends Node<I> {
+  type: "record";
+  fields: { [key: string]: Expression<I> };
+}
+
 export type Expression<I = {}> =
   | SNumber<I>
   | SString<I>
@@ -75,7 +80,8 @@ export type Expression<I = {}> =
   | SFunctionCall<I>
   | SFunction<I>
   | SVectorConstructor<I>
-  | SLet<I>;
+  | SLet<I>
+  | SRecord<I>;
 
 //
 // Declarations

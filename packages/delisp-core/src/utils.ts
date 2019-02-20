@@ -60,3 +60,16 @@ export function mapObject<A, B>(
 export function range(n: number) {
   return new Array(n).fill(0).map((_, i) => i);
 }
+
+export function equals(arr1: Array<unknown>, arr2: Array<unknown>): boolean {
+  if (arr1.length !== arr2.length) {
+    return false;
+  } else {
+    for (let i = 0; i < arr1.length; i++) {
+      if (arr1[i] !== arr2[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+}

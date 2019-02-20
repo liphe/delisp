@@ -28,12 +28,18 @@ export interface TVar {
   name: string;
 }
 
+export interface TRecord {
+  type: "record";
+  fields: { [key: string]: Monotype };
+}
+
 export type Monotype =
   | TBoolean
   | TNumber
   | TString
   | TApplication
   | TVar
+  | TRecord
   | TVoid;
 
 export interface Type {
@@ -83,4 +89,11 @@ export function tVector(t: Monotype): Monotype {
 
 export function tFn(args: Monotype[], out: Monotype): Monotype {
   return tApp("->", ...args, out);
+}
+
+export function tRecord(fields: { [key: string]: Monotype }): Monotype {
+  return {
+    type: "record",
+    fields
+  };
 }
