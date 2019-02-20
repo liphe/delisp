@@ -96,6 +96,19 @@ defineInlinePrimitive("false", "boolean", () => {
   };
 });
 
+defineInlinePrimitive("print", "(-> string void)", args => {
+  return {
+    type: "CallExpression",
+    callee: {
+      type: "MemberExpression",
+      object: { type: "Identifier", name: "console" },
+      property: { type: "Identifier", name: "log" },
+      computed: false
+    },
+    arguments: args
+  };
+});
+
 defineInlinePrimitive("+", "(-> number number number)", args => {
   return {
     type: "BinaryExpression",

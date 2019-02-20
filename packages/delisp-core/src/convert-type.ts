@@ -1,6 +1,14 @@
 import { printHighlightedExpr } from "./error-report";
 import { ASExpr, ASExprList, ASExprSymbol } from "./sexpr";
-import { Monotype, tApp, tBoolean, tNumber, tString, tVar } from "./types";
+import {
+  Monotype,
+  tApp,
+  tBoolean,
+  tNumber,
+  tString,
+  tVar,
+  tVoid
+} from "./types";
 
 function convertSymbol(expr: ASExprSymbol): Monotype {
   switch (expr.name) {
@@ -10,6 +18,8 @@ function convertSymbol(expr: ASExprSymbol): Monotype {
       return tNumber;
     case "string":
       return tString;
+    case "void":
+      return tVoid;
     default:
       return tVar(expr.name);
   }

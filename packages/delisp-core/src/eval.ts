@@ -10,7 +10,8 @@ import { mapObject } from "./utils";
 
 export function createContext() {
   const sandbox = {
-    env: mapObject(primitives, p => p.value)
+    env: mapObject(primitives, p => p.value),
+    console
   };
   vm.createContext(sandbox);
   return sandbox;
