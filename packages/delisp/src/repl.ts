@@ -7,6 +7,7 @@ import {
   evaluate,
   inferModule,
   isDeclaration,
+  moduleEnvironment,
   printType,
   readSyntax,
   removeModuleDefinition
@@ -76,7 +77,8 @@ const delispEval = (
   // Evaluation
   //
 
-  const value = evaluate(syntax, context);
+  const env = moduleEnvironment(previousModule, "env");
+  const value = evaluate(syntax, env, context);
 
   if (isDeclaration(syntax)) {
     const type =

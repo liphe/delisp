@@ -39,7 +39,7 @@ interface EnvironmentBinding {
   source: "lexical" | "module" | "primitive";
 }
 
-interface Environment {
+export interface Environment {
   defs: DefinitionBackend;
   bindings: {
     [symbol: string]: EnvironmentBinding;
@@ -294,14 +294,14 @@ function compileRuntime(): JS.VariableDeclaration {
   };
 }
 
-function compileModule(
-  module: Module,
-  includeRuntime: boolean,
+export function moduleEnvironment(
+  m: Module,
   definitionContainer?: string
-): JS.Program {
-  const moduleDeclarations = module.body
+): Environment {
+  const moduleDeclarations = m.body
     .filter(isDeclaration)
     .map(decl => decl.variable);
+
   const moduleBindings = moduleDeclarations.reduce(
     (d, decl) => ({
       ...d,
@@ -309,6 +309,7 @@ function compileModule(
     }),
     {}
   );
+
   const primitiveBindings = mapObject(
     runtime,
     (_, key: string): EnvironmentBinding => ({
@@ -324,34 +325,40 @@ function compileModule(
 
     bindings: { ...primitiveBindings, ...moduleBindings }
   };
+
+  return initialEnv;
+}
+
+function compileModule(
+  m: Module,
+  includeRuntime: boolean,
+  env: Environment
+): JS.Program {
   return {
     type: "Program",
     sourceType: "module",
     body: [
       ...(includeRuntime ? [compileRuntime()] : []),
-      ...module.body.map(
-        (syntax: Syntax): JS.Statement => compileTopLevel(syntax, initialEnv)
+      ...m.body.map(
+        (syntax: Syntax): JS.Statement => compileTopLevel(syntax, env)
       )
     ]
   };
 }
 
-export function compileToString(
-  syntax: Syntax,
-  definitionContainer?: string
-): string {
-  const ast = compileModule(
-    { type: "module", body: [syntax] },
-    false,
-    definitionContainer
-  );
+export function compileToString(syntax: Syntax, env: Environment): string {
+  const ast = compileModule({ type: "module", body: [syntax] }, false, env);
   const code = recast.print(ast).code;
   debug("jscode:", code);
   return code;
 }
 
-export function compileModuleToString(module: Module): string {
-  const ast = compileModule(module, true);
+export function compileModuleToString(
+  m: Module,
+  definitionContainer?: string
+): string {
+  const env = moduleEnvironment(m, definitionContainer);
+  const ast = compileModule(m, true, env);
   const code = recast.print(ast).code;
   debug("jscode:", code);
   return recast.print(ast).code;

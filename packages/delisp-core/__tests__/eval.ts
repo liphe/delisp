@@ -1,8 +1,12 @@
 import { readSyntax } from "../src/index";
 import { evaluate } from "../src/eval";
+import { createModule } from "../src/module";
+import { moduleEnvironment } from "../src/compiler";
 
 function evaluateString(str: string): any {
-  return evaluate(readSyntax(str));
+  const env = moduleEnvironment(createModule());
+  const s = readSyntax(str);
+  return evaluate(s, env);
 }
 
 describe("Evaluation", () => {

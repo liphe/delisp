@@ -3,7 +3,11 @@ import { convert as convertSyntax } from "./convert";
 import { readFromString } from "./reader";
 import { Syntax } from "./syntax";
 
-export { compileToString, compileModuleToString } from "./compiler";
+export {
+  compileToString,
+  compileModuleToString,
+  moduleEnvironment
+} from "./compiler";
 export { createContext, evaluate, evaluateModule } from "./eval";
 export { inferType, inferModule } from "./infer";
 // TODO: replace with the pretty printer
