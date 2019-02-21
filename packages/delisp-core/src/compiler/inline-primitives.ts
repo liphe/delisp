@@ -146,3 +146,23 @@ defineInlinePrimitive(
     };
   }
 );
+
+defineInlinePrimitive(
+  "filter",
+  "(-> (-> a boolean) (vector a) (vector a))",
+  ([predicate, vec]) => {
+    return {
+      type: "CallExpression",
+      callee: {
+        type: "MemberExpression",
+        computed: false,
+        object: vec,
+        property: {
+          type: "Identifier",
+          name: "filter"
+        }
+      },
+      arguments: [predicate]
+    };
+  }
+);
