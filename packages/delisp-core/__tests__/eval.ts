@@ -97,5 +97,11 @@ describe("Evaluation", () => {
         evaluateString("(filter (lambda (x) (< 0 x)) [-2 -1 0 1 2])")
       ).toEqual([1, 2]);
     });
+
+    it("fold", () => {
+      expect(
+        evaluateString("(fold + [1 2 3 4] 0)")
+      ).toEqual(10);
+    });
   });
 });

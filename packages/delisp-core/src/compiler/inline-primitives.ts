@@ -166,3 +166,23 @@ defineInlinePrimitive(
     };
   }
 );
+
+defineInlinePrimitive(
+  "fold",
+  "(-> (-> b a b) (vector a) b b)",
+  ([fn, vec, init]) => {
+    return {
+      type: "CallExpression",
+      callee: {
+        type: "MemberExpression",
+        computed: false,
+        object: vec,
+        property: {
+          type: "Identifier",
+          name: "reduce"
+        }
+      },
+      arguments: [fn, init]
+    };
+  }
+);
