@@ -1,0 +1,15 @@
+{
+  "name": "@delisp/loader",
+  "description": "Webpack loader for Delisp",
+  "version": "0.1.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "exit 0",
+    "lint": "exit 0",
+    "test": "exit 0"
+  },
+  "dependencies": {
+    "@delisp/core": "0.1.0"
+  }
+}
