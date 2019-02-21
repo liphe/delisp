@@ -125,9 +125,7 @@ exports[`Pretty Printer should print amll real code beautifully 1`] = `
 "
 (define bq-frob
   (lambda (x)
-    (and (consp x)
-         (or (eq (car x) *comma*)
-             (eq (car x) *comma-atsign*)))))"
+    (and (consp x) (or (eq (car x) *comma*) (eq (car x) *comma-atsign*)))))"
 `;
 
 exports[`Pretty Printer should print conditional expressions nicely 1`] = `
@@ -194,4 +192,10 @@ exports[`Pretty Printer should print let expressions nicely 1`] = `
 (let ((x 10)
       (y 20))
   (+ x y))"
+`;
+
+exports[`Pretty Printer should print records with nested expressions 1`] = `
+"
+{xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 20
+ z (* 10 (+ 1 2))}"
 `;

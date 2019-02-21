@@ -108,4 +108,12 @@ describe("Pretty Printer", () => {
       )
     ).toMatchSnapshot();
   });
+
+  it("should print records with nested expressions", () => {
+    expect(
+      pprintString(
+        `{xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 20 z (* 10 (+ 1 2))}`
+      )
+    ).toMatchSnapshot();
+  });
 });

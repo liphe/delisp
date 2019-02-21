@@ -269,7 +269,7 @@ function best(doc: Doc, w: number, k: number): Doc {
     case "line":
       return {
         type: "line",
-        next: best(doc.next, w, k)
+        next: best(doc.next, w, 0)
       };
     case "union":
       return better(best(doc.x, w, k), best(doc.y, w, k), w, k);
@@ -310,7 +310,7 @@ function layout(doc: Doc, indentation: number, alignment: number): string {
         "\n" + repeatChar(" ", indentation) + layout(doc.next, indentation, 0)
       );
     case "union":
-      throw new Error(`No unions for layout!`);
+      throw new Error(`No layout for unions!`);
     case "align":
       return (
         [
