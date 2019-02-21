@@ -741,7 +741,7 @@ export function inferModule(
   const internalEnv: {
     [v: string]: Monotype;
   } = body.reduce((env, s) => {
-    if (isDeclaration(s)) {
+    if (s.type === "definition") {
       return { ...env, [s.variable]: s.value.info.type };
     } else {
       return env;

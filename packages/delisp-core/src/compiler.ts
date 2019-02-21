@@ -1,10 +1,11 @@
 import runtime from "@delisp/runtime";
 import {
   Expression,
-  isDeclaration,
+  isDefinition,
   Module,
   SConditional,
   SDefinition,
+  SExport,
   SFunction,
   SFunctionCall,
   SLet,
@@ -92,6 +93,28 @@ function compileDefinition(def: SDefinition, env: Environment): JS.Statement {
   const value = compile(def.value, env);
   const name = lookupBinding(def.variable, env).jsname;
   return env.defs.define(name, value);
+}
+
+function compileExport(exp: SExport, env: Environment): JS.Statement {
+  return {
+    type: "ExpressionStatement",
+    expression: {
+      type: "AssignmentExpression",
+      operator: "=",
+      left: {
+        type: "MemberExpression",
+        computed: true,
+        object: {
+          type: "MemberExpression",
+          computed: false,
+          object: { type: "Identifier", name: "module" },
+          property: { type: "Identifier", name: "exports" }
+        },
+        property: { type: "Literal", value: exp.name }
+      },
+      right: compile(exp.value, env)
+    }
+  };
 }
 
 function compileFunctionCall(
@@ -256,6 +279,8 @@ function compileTopLevel(syntax: Syntax, env: Environment): JS.Statement {
   const js: JS.Statement =
     syntax.type === "definition"
       ? compileDefinition(syntax, env)
+      : syntax.type === "export"
+      ? compileExport(syntax, env)
       : {
           type: "ExpressionStatement",
           expression: compile(syntax, env)
@@ -298,11 +323,10 @@ export function moduleEnvironment(
   m: Module,
   definitionContainer?: string
 ): Environment {
-  const moduleDeclarations = m.body
-    .filter(isDeclaration)
+  const moduleDefinitions = m.body
+    .filter(isDefinition)
     .map(decl => decl.variable);
-
-  const moduleBindings = moduleDeclarations.reduce(
+  const moduleBindings = moduleDefinitions.reduce(
     (d, decl) => ({
       ...d,
       [decl]: { jsname: varnameToJS(decl), source: "module" }

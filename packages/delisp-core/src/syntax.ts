@@ -93,10 +93,26 @@ export interface SDefinition<I = {}> {
   value: Expression<I>;
   location: Location;
 }
-export type Declaration<I = {}> = SDefinition<I>;
+
+export interface SExport<I = {}> {
+  type: "export";
+  name: string;
+  value: Expression<I>;
+  location: Location;
+}
+
+export type Declaration<I = {}> = SDefinition<I> | SExport<I>;
 export type Syntax<I = {}> = Expression<I> | Declaration<I>;
 
 export function isDeclaration(syntax: Syntax): syntax is Declaration {
+  return syntax.type === "definition" || syntax.type === "export";
+}
+
+export function isExpression(syntax: Syntax): syntax is Expression {
+  return !isDeclaration(syntax);
+}
+
+export function isDefinition(syntax: Syntax): syntax is SDefinition {
   return syntax.type === "definition";
 }
 

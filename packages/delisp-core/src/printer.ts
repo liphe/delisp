@@ -104,6 +104,16 @@ function print(sexpr: Syntax): Doc {
         )
       );
 
+    case "export":
+      return group(
+        list(
+          text("export"),
+          space,
+          text(sexpr.name),
+          indent(concat(line, print(sexpr.value)))
+        )
+      );
+
     case "let-bindings":
       return list(
         text("let"),

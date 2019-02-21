@@ -7,6 +7,8 @@ import {
   evaluate,
   inferModule,
   isDeclaration,
+  isDefinition,
+  isExpression,
   moduleEnvironment,
   printType,
   readSyntax,
@@ -15,7 +17,6 @@ import {
 
 import { Typed } from "@delisp/core/src/infer";
 import { Module, Syntax } from "@delisp/core/src/syntax";
-
 import repl from "repl";
 
 let previousModule = createModule();
@@ -45,12 +46,14 @@ const delispEval = (
   // The current module, extended with the current form
   let m;
 
-  if (isDeclaration(syntax)) {
+  if (isDefinition(syntax)) {
     previousModule = removeModuleDefinition(previousModule, syntax.variable);
     previousModule = addToModule(previousModule, syntax);
     m = previousModule;
-  } else {
+  } else if (isExpression(syntax)) {
     m = addToModule(previousModule, syntax);
+  } else {
+    m = previousModule;
   }
 
   let typedModule: Module<Typed> | undefined;
