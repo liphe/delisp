@@ -123,7 +123,7 @@ function compileVariable(
     const binding = lookupBinding(ref.name, env);
 
     if (!binding) {
-      return env.defs.access(ref.name);
+      return env.defs.access(varnameToJS(ref.name));
     }
 
     switch (binding.source) {
