@@ -1,7 +1,7 @@
 import runtime from "@delisp/runtime";
 import {
   Expression,
-  isDeclaration,
+  isDefinition,
   Module,
   SConditional,
   SDefinition,
@@ -298,11 +298,10 @@ export function moduleEnvironment(
   m: Module,
   definitionContainer?: string
 ): Environment {
-  const moduleDeclarations = m.body
-    .filter(isDeclaration)
+  const moduleDefinitions = m.body
+    .filter(isDefinition)
     .map(decl => decl.variable);
-
-  const moduleBindings = moduleDeclarations.reduce(
+  const moduleBindings = moduleDefinitions.reduce(
     (d, decl) => ({
       ...d,
       [decl]: { jsname: varnameToJS(decl), source: "module" }

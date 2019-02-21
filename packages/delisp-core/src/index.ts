@@ -12,7 +12,7 @@ export { createContext, evaluate, evaluateModule } from "./eval";
 export { inferType, inferModule } from "./infer";
 // TODO: replace with the pretty printer
 export { printType } from "./type-utils";
-export { isDeclaration } from "./syntax";
+export { isDeclaration, isDefinition, isExpression } from "./syntax";
 export { pprintModule } from "./printer";
 
 export { default as primitives } from "./primitives";

@@ -1,6 +1,6 @@
 import { convert } from "./convert";
 import { readAllFromString } from "./reader";
-import { isDeclaration, Module, Syntax } from "./syntax";
+import { Module, Syntax } from "./syntax";
 
 export function createModule(): Module {
   return {
@@ -27,7 +27,7 @@ export function removeModuleDefinition(m: Module, name: string): Module {
   return {
     type: "module",
     body: m.body.filter(d => {
-      return isDeclaration(d) ? d.variable !== name : true;
+      return d.type === "definition" ? d.variable !== name : true;
     })
   };
 }

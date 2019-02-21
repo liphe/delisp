@@ -100,6 +100,14 @@ export function isDeclaration(syntax: Syntax): syntax is Declaration {
   return syntax.type === "definition";
 }
 
+export function isExpression(syntax: Syntax): syntax is Expression {
+  return !isDeclaration(syntax);
+}
+
+export function isDefinition(syntax: Syntax): syntax is SDefinition {
+  return syntax.type === "definition";
+}
+
 export interface Module<I = {}> {
   type: "module";
   body: Array<Syntax<I>>;
