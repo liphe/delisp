@@ -81,4 +81,21 @@ describe("Evaluation", () => {
     expect(evaluateString("(if true 1 2)")).toBe(1);
     expect(evaluateString("(if false 1 2)")).toBe(2);
   });
+
+  describe("Primitives", () => {
+    it("map", () => {
+      expect(evaluateString("(map (lambda (x) (+ x x)) [1 2 3 4])")).toEqual([
+        2,
+        4,
+        6,
+        8
+      ]);
+    });
+
+    it("filter", () => {
+      expect(
+        evaluateString("(filter (lambda (x) (< 0 x)) [-2 -1 0 1 2])")
+      ).toEqual([1, 2]);
+    });
+  });
 });
