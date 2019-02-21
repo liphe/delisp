@@ -99,9 +99,7 @@ describe("Evaluation", () => {
     });
 
     it("fold", () => {
-      expect(
-        evaluateString("(fold + [1 2 3 4] 0)")
-      ).toEqual(10);
+      expect(evaluateString("(fold + [1 2 3 4] 0)")).toEqual(10);
     });
   });
 });
