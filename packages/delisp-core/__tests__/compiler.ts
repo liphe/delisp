@@ -1,6 +1,7 @@
 import { readFromString } from "../src/reader";
 import { convert } from "../src/convert";
-import { compileToString } from "../src/compiler";
+import { createModule } from "../src/module";
+import { compileToString, moduleEnvironment } from "../src/compiler";
 
 describe("Compiler", () => {
   describe("Error messages", () => {
@@ -9,7 +10,8 @@ describe("Compiler", () => {
       try {
         const sexpr = readFromString(str);
         const syntax = convert(sexpr);
-        compileToString(syntax);
+        const env = moduleEnvironment(createModule());
+        compileToString(syntax, env);
       } catch (err) {
         result = err.message;
       }
