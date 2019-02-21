@@ -126,3 +126,23 @@ defineInlinePrimitive("*", "(-> number number number)", args => {
     right: args[1]
   };
 });
+
+defineInlinePrimitive(
+  "map",
+  "(-> (-> a b) (vector a) (vector b))",
+  ([fn, vec]) => {
+    return {
+      type: "CallExpression",
+      callee: {
+        type: "MemberExpression",
+        computed: false,
+        object: vec,
+        property: {
+          type: "Identifier",
+          name: "map"
+        }
+      },
+      arguments: [fn]
+    };
+  }
+);
