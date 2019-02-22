@@ -136,8 +136,8 @@ exports[`Pretty Printer should print conditional expressions nicely 1`] = `
 exports[`Pretty Printer should print conditional expressions nicely 2`] = `
 "
 (if aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-  1
-  2)"
+    1
+    2)"
 `;
 
 exports[`Pretty Printer should print deeply nested function calls nicely 1`] = `
@@ -198,4 +198,15 @@ exports[`Pretty Printer should print records with nested expressions 1`] = `
 "
 {xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 20
  z (* 10 (+ 1 2))}"
+`;
+
+exports[`Pretty Printer should some real code 1`] = `
+"
+(define maptree
+  (lambda (fn x)
+    (if (atom x)
+        (funcall fn x)
+        (let ((a (funcall fn (car x)))
+              (d (maptree fn (cdr x))))
+          (if (and (eql a (car x)) (eql d (cdr x))) x (cons a d))))))"
 `;

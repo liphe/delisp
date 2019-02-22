@@ -61,22 +61,22 @@ function print(sexpr: Syntax): Doc {
     }
     case "variable-reference":
       return printVariable(sexpr.name);
+
     case "conditional":
       return group(
         list(
-          text("if"),
-          space,
-          print(sexpr.condition),
-          indent(
-            concat(
-              line,
+          concat(
+            text("if"),
+            space,
+            align(
+              print(sexpr.condition),
               print(sexpr.consequent),
-              line,
               print(sexpr.alternative)
             )
           )
         )
       );
+
     case "function":
       const argNames = sexpr.lambdaList.positionalArgs.map(x => x.variable);
       return group(
