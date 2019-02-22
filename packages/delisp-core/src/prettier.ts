@@ -11,17 +11,41 @@
 
 import { InvariantViolation } from "./invariant";
 
+interface Lazy<A> {
+  type: "lazy";
+  fn: () => A;
+}
+
+function lazy<A>(fn: () => A): Lazy<A> {
+  let evaluated: A;
+  return {
+    type: "lazy",
+    fn: () => {
+      if (evaluated) {
+        return evaluated;
+      } else {
+        evaluated = fn();
+        return evaluated;
+      }
+    }
+  };
+}
+
+function force<A>(x: Lazy<A>): A {
+  return x.fn();
+}
+
 interface DocNil {
   type: "nil";
 }
 interface DocText {
   type: "text";
   content: string;
-  next: Doc;
+  next: Lazy<Doc>;
 }
 interface DocLine {
   type: "line";
-  next: Doc;
+  next: Lazy<Doc>;
 }
 interface DocUnion {
   type: "union";
@@ -33,13 +57,13 @@ interface DocAlign {
   type: "align";
   root: Doc;
   docs: Doc[];
-  next: Doc;
+  next: Lazy<Doc>;
 }
 interface DocIndent {
   type: "indent";
   doc: Doc;
   level: number;
-  next: Doc;
+  next: Lazy<Doc>;
 }
 /** A document with potentially multiple layouts. */
 export type Doc = DocNil | DocText | DocLine | DocUnion | DocAlign | DocIndent;
@@ -55,7 +79,7 @@ export function text(content: string): Doc {
   if (content.includes("\n")) {
     throw new Error(`Newline is not allowed in a call to 'text'`);
   }
-  return { type: "text", content, next: nil };
+  return { type: "text", content, next: lazy(() => nil) };
 }
 
 /** A new line.
@@ -65,12 +89,12 @@ export function text(content: string): Doc {
  */
 export const line: Doc = {
   type: "line",
-  next: nil
+  next: lazy(() => nil)
 };
 
 /** Indent a document by a number of levels. */
 export function indent(doc: Doc, level: number): Doc {
-  return { type: "indent", doc, next: nil, level };
+  return { type: "indent", doc, next: lazy(() => nil), level };
 }
 
 function union(x: Doc, y: Doc, width?: number): Doc {
@@ -94,7 +118,7 @@ export function align(...docs: Doc[]): Doc {
     type: "align",
     root,
     docs: rest,
-    next: nil
+    next: lazy(() => nil)
   };
 }
 
@@ -106,39 +130,39 @@ export function groupalign(x: Doc, y: Doc): Doc {
   return union(join([x, y], space), align(x, y));
 }
 
-function concat2(x: Doc, y: Doc): Doc {
+function concat2Lazy(x: Doc, y: () => Doc): Doc {
   switch (x.type) {
     case "nil":
-      return y;
+      return y();
     case "text":
       return {
         type: "text",
         content: x.content,
-        next: concat2(x.next, y)
+        next: lazy(() => concat2Lazy(force(x.next), y))
       };
     case "line":
       return {
         type: "line",
-        next: concat2(x.next, y)
+        next: lazy(() => concat2Lazy(force(x.next), y))
       };
     case "union":
       return {
         type: "union",
-        x: concat2(x.x, y),
-        y: concat2(x.y, y)
+        x: concat2Lazy(x.x, y),
+        y: concat2Lazy(x.y, y)
       };
     case "align":
       return {
         type: "align",
         root: x.root,
         docs: x.docs,
-        next: concat2(x.next, y)
+        next: lazy(() => concat2Lazy(force(x.next), y))
       };
     case "indent":
       return {
         type: "indent",
         doc: x.doc,
-        next: concat2(x.next, y),
+        next: lazy(() => concat2Lazy(force(x.next), y)),
         level: x.level
       };
   }
@@ -146,7 +170,7 @@ function concat2(x: Doc, y: Doc): Doc {
 
 /** Concatenate a sequence of documents. */
 export function concat(...docs: Doc[]): Doc {
-  return docs.reduce(concat2, nil);
+  return docs.reduce((x, y) => concat2Lazy(x, () => y), nil);
 }
 
 function flatten(doc: Doc): Doc {
@@ -157,13 +181,13 @@ function flatten(doc: Doc): Doc {
       return {
         type: "text",
         content: doc.content,
-        next: flatten(doc.next)
+        next: lazy(() => flatten(force(doc.next)))
       };
     case "line":
       return {
         type: "text",
         content: " ",
-        next: flatten(doc.next)
+        next: lazy(() => flatten(force(doc.next)))
       };
     case "union":
       // Note that we can just flatten one of the layouts,
@@ -171,16 +195,15 @@ function flatten(doc: Doc): Doc {
       // all flatten to the same document.
       return flatten(doc.x);
     case "align":
-      return concat(
-        flatten(join([doc.root, ...doc.docs], space)),
-        flatten(doc.next)
+      return concat2Lazy(flatten(join([doc.root, ...doc.docs], space)), () =>
+        flatten(force(doc.next))
       );
     case "indent":
       return {
         type: "indent",
         level: doc.level,
         doc: flatten(doc.doc),
-        next: flatten(doc.next)
+        next: lazy(() => flatten(force(doc.next)))
       };
   }
 }
@@ -201,7 +224,7 @@ export function group(doc: Doc, width?: number): Doc {
       return {
         type: "text",
         content: doc.content,
-        next: group(doc.next, width)
+        next: lazy(() => group(force(doc.next), width))
       };
     case "line":
       return union(flatten(doc), doc, width);
@@ -222,7 +245,7 @@ export function group(doc: Doc, width?: number): Doc {
         type: "indent",
         level: doc.level,
         doc: group(doc.doc, width),
-        next: group(doc.next, width)
+        next: lazy(() => group(force(doc.next), width))
       };
   }
 }
@@ -258,7 +281,7 @@ function fits(doc: Doc, w: number): boolean {
     case "line":
       return true;
     case "text":
-      return fits(doc.next, w - doc.content.length);
+      return fits(force(doc.next), w - doc.content.length);
     case "union":
       throw new InvariantViolation(
         `unions should be removed before checking if it fits.`
@@ -282,12 +305,12 @@ function best(doc: Doc, w: number, k: number): Doc {
       return {
         type: "text",
         content: doc.content,
-        next: best(doc.next, w, k + doc.content.length)
+        next: lazy(() => best(force(doc.next), w, k + doc.content.length))
       };
     case "line":
       return {
         type: "line",
-        next: best(doc.next, w, 0)
+        next: lazy(() => best(force(doc.next), w, 0))
       };
     case "union":
       if (doc.width) {
@@ -306,14 +329,14 @@ function best(doc: Doc, w: number, k: number): Doc {
         type: "align",
         root: best(doc.root, w, k),
         docs: doc.docs.map(d => best(d, w, k)),
-        next: best(doc.next, w, k)
+        next: lazy(() => best(force(doc.next), w, k))
       };
     case "indent":
       return {
         type: "indent",
         doc: best(doc.doc, w - doc.level, k),
         level: doc.level,
-        next: best(doc.next, w, k)
+        next: lazy(() => best(force(doc.next), w, k))
       };
   }
 }
@@ -331,11 +354,13 @@ function layout(doc: Doc, indentation: number, alignment: number): string {
     case "text":
       return (
         doc.content +
-        layout(doc.next, indentation, alignment + doc.content.length)
+        layout(force(doc.next), indentation, alignment + doc.content.length)
       );
     case "line":
       return (
-        "\n" + repeatChar(" ", indentation) + layout(doc.next, indentation, 0)
+        "\n" +
+        repeatChar(" ", indentation) +
+        layout(force(doc.next), indentation, 0)
       );
     case "union":
       throw new InvariantViolation(`No layout for unions!`);
@@ -348,12 +373,12 @@ function layout(doc: Doc, indentation: number, alignment: number): string {
               repeatChar(" ", indentation + alignment) +
               layout(d, indentation + alignment, 0)
           )
-        ].join("\n") + layout(doc.next, indentation, alignment)
+        ].join("\n") + layout(force(doc.next), indentation, alignment)
       );
     case "indent":
       return (
         layout(doc.doc, indentation + doc.level, alignment) +
-        layout(doc.next, indentation, alignment)
+        layout(force(doc.next), indentation, alignment)
       );
   }
 }
