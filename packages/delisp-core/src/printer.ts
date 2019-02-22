@@ -74,7 +74,11 @@ function print(sexpr: Syntax): Doc {
               print(sexpr.alternative)
             )
           )
-        )
+        ),
+        // NOTE: We don't want conditionals to be too long. We use a
+        // much lower value here, we'll only group them if they are
+        // realluy short.
+        30
       );
 
     case "function":

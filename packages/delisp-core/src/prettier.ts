@@ -25,6 +25,7 @@ interface DocUnion {
   type: "union";
   x: Doc;
   y: Doc;
+  width?: number;
 }
 interface DocAlign {
   type: "align";
@@ -70,13 +71,14 @@ export function indent(doc: Doc, level: number): Doc {
   return { type: "indent", doc, next: nil, level };
 }
 
-function union(x: Doc, y: Doc): Doc {
+function union(x: Doc, y: Doc, width?: number): Doc {
   // invariant: every first line of x must be longer than than first
   // line of y
   return {
     type: "union",
     x,
-    y
+    y,
+    width
   };
 }
 
@@ -189,7 +191,7 @@ function flatten(doc: Doc): Doc {
  * If it does not fit, the group will printed as it is, trying to collapse
  * nested groups.
  */
-export function group(doc: Doc): Doc {
+export function group(doc: Doc, width?: number): Doc {
   switch (doc.type) {
     case "nil":
       return nil;
@@ -197,20 +199,28 @@ export function group(doc: Doc): Doc {
       return {
         type: "text",
         content: doc.content,
-        next: group(doc.next)
+        next: group(doc.next, width)
       };
     case "line":
-      return union(flatten(doc), doc);
+      return union(flatten(doc), doc, width);
     case "union":
-      return union(group(doc.x), doc.y);
+      if (width) {
+        return union(
+          group(doc.x, width),
+          doc.y,
+          Math.min(doc.width || -Infinity, width)
+        );
+      } else {
+        return union(group(doc.x, width), doc.y, width);
+      }
     case "align":
-      return union(flatten(doc), doc);
+      return union(flatten(doc), doc, width);
     case "indent":
       return {
         type: "indent",
         level: doc.level,
-        doc: group(doc.doc),
-        next: group(doc.next)
+        doc: group(doc.doc, width),
+        next: group(doc.next, width)
       };
   }
 }
@@ -272,7 +282,17 @@ function best(doc: Doc, w: number, k: number): Doc {
         next: best(doc.next, w, 0)
       };
     case "union":
-      return better(best(doc.x, w, k), best(doc.y, w, k), w, k);
+      if (doc.width) {
+        return better(
+          best(doc.x, w, k),
+          best(doc.y, w, k),
+          Math.min(k + doc.width, w),
+          k
+        );
+      } else {
+        return better(best(doc.x, w, k), best(doc.y, w, k), w, k);
+      }
+
     case "align":
       return {
         type: "align",
