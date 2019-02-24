@@ -174,3 +174,7 @@ defineInlinePrimitive(
     return methodCall(vec1, "concat", [vec2]);
   }
 );
+
+defineInlinePrimitive("reverse", "(-> (vector a) (vector a))", ([vec]) => {
+  return methodCall(methodCall(vec, "slice", []), "reverse", []);
+});
