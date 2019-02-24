@@ -178,3 +178,12 @@ defineInlinePrimitive(
 defineInlinePrimitive("reverse", "(-> (vector a) (vector a))", ([vec]) => {
   return methodCall(methodCall(vec, "slice", []), "reverse", []);
 });
+
+defineInlinePrimitive("length", "(-> (vector a) number)", ([vec]) => {
+  return {
+    type: "MemberExpression",
+    computed: false,
+    object: vec,
+    property: { type: "Identifier", name: "length" }
+  };
+});
