@@ -82,6 +82,31 @@ export function compileInlinePrimitive(
   }
 }
 
+//
+// Helpers
+//
+
+function methodCall(
+  e: JS.Expression,
+  method: string,
+  args: JS.Expression[]
+): JS.Expression {
+  return {
+    type: "CallExpression",
+    callee: {
+      type: "MemberExpression",
+      object: e,
+      property: { type: "Identifier", name: method },
+      computed: false
+    },
+    arguments: args
+  };
+}
+
+//
+// Primitives
+//
+
 defineInlinePrimitive("true", "boolean", () => {
   return {
     type: "Literal",
@@ -97,16 +122,7 @@ defineInlinePrimitive("false", "boolean", () => {
 });
 
 defineInlinePrimitive("print", "(-> string void)", args => {
-  return {
-    type: "CallExpression",
-    callee: {
-      type: "MemberExpression",
-      object: { type: "Identifier", name: "console" },
-      property: { type: "Identifier", name: "log" },
-      computed: false
-    },
-    arguments: args
-  };
+  return methodCall({ type: "Identifier", name: "console" }, "log", args);
 });
 
 defineInlinePrimitive("+", "(-> number number number)", args => {
@@ -131,19 +147,7 @@ defineInlinePrimitive(
   "map",
   "(-> (-> a b) (vector a) (vector b))",
   ([fn, vec]) => {
-    return {
-      type: "CallExpression",
-      callee: {
-        type: "MemberExpression",
-        computed: false,
-        object: vec,
-        property: {
-          type: "Identifier",
-          name: "map"
-        }
-      },
-      arguments: [fn]
-    };
+    return methodCall(vec, "map", [fn]);
   }
 );
 
@@ -151,19 +155,7 @@ defineInlinePrimitive(
   "filter",
   "(-> (-> a boolean) (vector a) (vector a))",
   ([predicate, vec]) => {
-    return {
-      type: "CallExpression",
-      callee: {
-        type: "MemberExpression",
-        computed: false,
-        object: vec,
-        property: {
-          type: "Identifier",
-          name: "filter"
-        }
-      },
-      arguments: [predicate]
-    };
+    return methodCall(vec, "filter", [predicate]);
   }
 );
 
@@ -171,19 +163,7 @@ defineInlinePrimitive(
   "fold",
   "(-> (-> b a b) (vector a) b b)",
   ([fn, vec, init]) => {
-    return {
-      type: "CallExpression",
-      callee: {
-        type: "MemberExpression",
-        computed: false,
-        object: vec,
-        property: {
-          type: "Identifier",
-          name: "reduce"
-        }
-      },
-      arguments: [fn, init]
-    };
+    return methodCall(vec, "reduce", [fn, init]);
   }
 );
 
@@ -191,18 +171,6 @@ defineInlinePrimitive(
   "append",
   "(-> (vector a) (vector a) (vector a))",
   ([vec1, vec2]) => {
-    return {
-      type: "CallExpression",
-      callee: {
-        type: "MemberExpression",
-        computed: false,
-        object: vec1,
-        property: {
-          type: "Identifier",
-          name: "concat"
-        }
-      },
-      arguments: [vec2]
-    };
+    return methodCall(vec1, "concat", [vec2]);
   }
 );
