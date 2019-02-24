@@ -22,6 +22,12 @@ import repl from "repl";
 let previousModule = createModule();
 const context = createContext();
 
+function completer(input: string): [string[], string] {
+  const defs = previousModule.body.filter(isDefinition);
+  const completions = defs.map(d => d.variable);
+  return [completions, input];
+}
+
 const delispEval = (
   cmd: string,
   _context: object,
@@ -104,7 +110,7 @@ const delispEval = (
 };
 
 export function startREPL() {
-  const replServer = repl.start({ prompt: "λ ", eval: delispEval });
+  const replServer = repl.start({ prompt: "λ ", eval: delispEval, completer });
   replServer.on("exit", () => {
     console.log("\n; bye!");
     process.exit(0);
