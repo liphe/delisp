@@ -186,3 +186,23 @@ defineInlinePrimitive(
     };
   }
 );
+
+defineInlinePrimitive(
+  "append",
+  "(-> (vector a) (vector a) (vector a))",
+  ([vec1, vec2]) => {
+    return {
+      type: "CallExpression",
+      callee: {
+        type: "MemberExpression",
+        computed: false,
+        object: vec1,
+        property: {
+          type: "Identifier",
+          name: "concat"
+        }
+      },
+      arguments: [vec2]
+    };
+  }
+);
