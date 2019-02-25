@@ -27,6 +27,10 @@
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.dl\\'" . delisp-mode))
 
+;; Add support for dimmed parenthesis
+(when (boundp 'paren-face-modes)
+  (add-to-list 'paren-face-modes 'delisp-mode))
+
 (defvar delisp-font-lock-keywords
   (list
    (list "(\\\(define\\\)\\s-*\\\(\\sw+\\\)"
