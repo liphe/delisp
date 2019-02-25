@@ -24,7 +24,29 @@
 
 ;;; Code:
 
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.dl\\'" . delisp-mode))
 
+(defvar delisp-font-lock-keywords
+  (list
+   (list "(\\\(define\\\)\\s-*\\\(\\sw+\\\)"
+         '(1 font-lock-keyword-face)
+         '(2 font-lock-variable-name-face))
+   (list
+    (concat "(" (regexp-opt '("if" "lambda" "let" "export" "and" "or") t) "\\>")
+    '(1 font-lock-keyword-face))
+   ;; Delisp `:' and `#:' keywords as builtins.
+   ;; '("\\<#?:\\sw+\\>" . font-lock-builtin-face)
+   )
+  "Expressions to highlight in Delisp mode.")
+
+;;;###autoload
+(define-derived-mode delisp-mode prog-mode "Delisp"
+  "Major mode for editing Delisp code.
+
+\\{delisp-mode-map}"
+  :group 'delisp
+  (setq font-lock-defaults '(delisp-font-lock-keywords nil nil nil)))
 
 (provide 'delisp)
 ;;; delisp.el ends here
