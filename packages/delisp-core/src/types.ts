@@ -17,7 +17,7 @@ interface TString {
   type: "string";
 }
 
-interface TApplication {
+export interface TApplication {
   type: "application";
   op: string;
   args: Monotype[];

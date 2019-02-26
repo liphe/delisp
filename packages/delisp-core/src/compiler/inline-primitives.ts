@@ -143,43 +143,31 @@ defineInlinePrimitive("*", "(-> number number number)", args => {
   };
 });
 
-defineInlinePrimitive(
-  "map",
-  "(-> (-> a b) (vector a) (vector b))",
-  ([fn, vec]) => {
-    return methodCall(vec, "map", [fn]);
-  }
-);
+defineInlinePrimitive("map", "(-> (-> a b) [a] [b])", ([fn, vec]) => {
+  return methodCall(vec, "map", [fn]);
+});
 
 defineInlinePrimitive(
   "filter",
-  "(-> (-> a boolean) (vector a) (vector a))",
+  "(-> (-> a boolean) [a] [a])",
   ([predicate, vec]) => {
     return methodCall(vec, "filter", [predicate]);
   }
 );
 
-defineInlinePrimitive(
-  "fold",
-  "(-> (-> b a b) (vector a) b b)",
-  ([fn, vec, init]) => {
-    return methodCall(vec, "reduce", [fn, init]);
-  }
-);
+defineInlinePrimitive("fold", "(-> (-> b a b) [a] b b)", ([fn, vec, init]) => {
+  return methodCall(vec, "reduce", [fn, init]);
+});
 
-defineInlinePrimitive(
-  "append",
-  "(-> (vector a) (vector a) (vector a))",
-  ([vec1, vec2]) => {
-    return methodCall(vec1, "concat", [vec2]);
-  }
-);
+defineInlinePrimitive("append", "(-> [a] [a] [a])", ([vec1, vec2]) => {
+  return methodCall(vec1, "concat", [vec2]);
+});
 
-defineInlinePrimitive("reverse", "(-> (vector a) (vector a))", ([vec]) => {
+defineInlinePrimitive("reverse", "(-> [a] [a])", ([vec]) => {
   return methodCall(methodCall(vec, "slice", []), "reverse", []);
 });
 
-defineInlinePrimitive("length", "(-> (vector a) number)", ([vec]) => {
+defineInlinePrimitive("length", "(-> [a] number)", ([vec]) => {
   return {
     type: "MemberExpression",
     computed: false,

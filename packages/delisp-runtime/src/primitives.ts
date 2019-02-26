@@ -34,17 +34,17 @@ const prims: Primitives = {
   },
 
   nil: {
-    type: "(vector a)",
+    type: "[a]",
     value: []
   },
 
   cons: {
-    type: "(-> a (vector a) (vector a))",
+    type: "(-> a [a] [a])",
     value: <T>(a: T, list: T[]): T[] => [a, ...list]
   },
 
   first: {
-    type: "(-> (vector a) a)",
+    type: "(-> [a] a)",
     value: <T>(list: T[]): T => {
       if (list.length > 0) {
         return list[0];
@@ -55,7 +55,7 @@ const prims: Primitives = {
   },
 
   rest: {
-    type: "(-> (vector a) (vector a))",
+    type: "(-> [a] [a])",
     value: <T>(list: T[]): T[] => {
       if (list.length > 0) {
         const [, ...rest] = list;
@@ -67,7 +67,7 @@ const prims: Primitives = {
   },
 
   "empty?": {
-    type: "(-> (vector a) boolean)",
+    type: "(-> [a] boolean)",
     value: <T>(list: T[]): boolean => list.length === 0
   }
 };
