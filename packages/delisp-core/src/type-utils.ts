@@ -1,7 +1,7 @@
 import { convert as convertType } from "./convert-type";
 import { readFromString } from "./reader";
 import { applySubstitution } from "./type-substitution";
-import { Monotype, tVar, TVar, Type } from "./types";
+import { Monotype, TApplication, tVar, TVar, Type } from "./types";
 import { flatMap, unique } from "./utils";
 
 // Return the list of type variables in the order they show up
@@ -68,10 +68,19 @@ function normalizeType(t: Monotype): Monotype {
   return applySubstitution(t, substitution);
 }
 
+function printApplicationType(type: TApplication) {
+  switch (type.op) {
+    case "vector":
+      return `[${_printType(type.args[0])}]`;
+    default:
+      return `(${type.op} ${type.args.map(_printType).join(" ")})`;
+  }
+}
+
 function _printType(type: Monotype): string {
   switch (type.type) {
     case "application":
-      return `(${type.op} ${type.args.map(_printType).join(" ")})`;
+      return printApplicationType(type);
     case "void":
       return "void";
     case "boolean":
