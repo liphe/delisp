@@ -30,6 +30,10 @@ function list(...docs: Doc[]): Doc {
   return concat(text("("), ...docs, text(")"));
 }
 
+function vector(...docs: Doc[]): Doc {
+  return concat(text("["), ...docs, text("]"));
+}
+
 function map(...docs: Doc[]): Doc {
   return concat(text("{"), ...docs, text("}"));
 }
@@ -41,9 +45,8 @@ function print(sexpr: Syntax): Doc {
     case "number":
       return text(String(sexpr.value));
     case "vector": {
-      const fn = text("vector");
       const args = sexpr.values.map(print);
-      return group(list(groupalign(fn, align(...args))));
+      return group(vector(align(...args)));
     }
     case "record": {
       return group(
