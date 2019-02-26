@@ -23,7 +23,7 @@ export function printHighlightedSource(
   let line = 0;
   let remainingOffset = offset;
   while (lines.length > line && remainingOffset >= lines[line].length + 1) {
-    remainingOffset -= lines[line].length;
+    remainingOffset -= lines[line].length + 1;
     line++;
   }
   const column = remainingOffset;
