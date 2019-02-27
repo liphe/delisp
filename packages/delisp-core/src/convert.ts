@@ -119,16 +119,6 @@ defineConversion("if", expr => {
   };
 });
 
-defineConversion("vector", expr => {
-  const [, ...args] = expr.elements;
-  return {
-    type: "vector",
-    values: args.map(a => convertExpr(a)),
-    location: expr.location,
-    info: {}
-  };
-});
-
 function parseLetBindings(bindings: ASExpr): SLetBinding[] {
   if (bindings.type !== "list") {
     throw new Error(
