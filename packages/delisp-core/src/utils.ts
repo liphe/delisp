@@ -58,7 +58,7 @@ export function mapObject<A, B>(
 
 /** Return an array with elements from 0 up to n (not included). */
 export function range(n: number) {
-  return new Array(n).fill(0).map((_, i) => i);
+  return new Array(Math.max(0, n)).fill(0).map((_, i) => i);
 }
 
 export function equals(arr1: Array<unknown>, arr2: Array<unknown>): boolean {
