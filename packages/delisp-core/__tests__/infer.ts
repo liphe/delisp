@@ -64,5 +64,11 @@ describe("Type inference", () => {
         expect(typeOf("(let ((id (lambda (x) x))) id)")).toBe("(-> α α)");
       });
     });
+
+    describe("Records", () => {
+      it("should infer the type of exact records", () => {
+        expect(typeOf('{x 10 y "hello"}')).toBe("{x number y string}");
+      });
+    });
   });
 });

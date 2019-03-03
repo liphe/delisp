@@ -1,15 +1,23 @@
 import { printHighlightedExpr } from "./error-report";
-import { ASExpr, ASExprList, ASExprSymbol, ASExprVector } from "./sexpr";
+import {
+  ASExpr,
+  ASExprList,
+  ASExprMap,
+  ASExprSymbol,
+  ASExprVector
+} from "./sexpr";
 import {
   Monotype,
   tApp,
   tBoolean,
   tNumber,
+  tRecord,
   tString,
   tVar,
   tVector,
   tVoid
 } from "./types";
+import { mapObject } from "./utils";
 
 function convertSymbol(expr: ASExprSymbol): Monotype {
   switch (expr.name) {
@@ -65,6 +73,10 @@ function convertVector(expr: ASExprVector): Monotype {
   return tVector(convert(expr.elements[0]));
 }
 
+function convertMap(expr: ASExprMap): Monotype {
+  return tRecord(mapObject(expr.fields, convert));
+}
+
 export function convert(expr: ASExpr): Monotype {
   switch (expr.type) {
     case "list":
@@ -73,6 +85,8 @@ export function convert(expr: ASExpr): Monotype {
       return convertSymbol(expr);
     case "vector":
       return convertVector(expr);
+    case "map":
+      return convertMap(expr);
     default:
       throw new Error(printHighlightedExpr("Not a valid type", expr.location));
   }
