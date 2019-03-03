@@ -65,9 +65,30 @@ describe("Type inference", () => {
       });
     });
 
+    describe("Lists", () => {
+      it("should infer the type of empty vector", () => {
+        expect(typeOf("[]")).toBe("[α]");
+      });
+      it("should infer the type of a vector of numbers", () => {
+        expect(typeOf("[1 2 3]")).toBe("[number]");
+      });
+      it("should infer the type of nested vectors", () => {
+        expect(typeOf("[[1] [2] [3]]")).toBe("[[number]]");
+      });
+    });
+
     describe("Records", () => {
       it("should infer the type of exact records", () => {
         expect(typeOf('{x 10 y "hello"}')).toBe("{x number y string}");
+      });
+    });
+
+    describe("Conditionals", () => {
+      it("should infer the right type when both branches return the same type", () => {
+        expect(typeOf("(if true 1 0)")).toBe("number");
+      });
+      it("should ensure both branches' types are instantiated properly", () => {
+        expect(typeOf("(if true [] [1])")).toBe("[number]");
       });
     });
   });
