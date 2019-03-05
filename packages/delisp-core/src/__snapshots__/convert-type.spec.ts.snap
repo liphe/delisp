@@ -48,31 +48,18 @@ Object {
     Object {
       "extends": Object {
         "extends": Object {
-          "extends": Object {
-            "args": Array [
-              Object {
-                "type": "empty-row",
-              },
-            ],
-            "op": "record",
-            "type": "application",
-          },
-          "label": "x",
-          "labelType": Object {
-            "type": "number",
-          },
-          "type": "row-extension",
+          "name": "a",
+          "type": "type-variable",
         },
-        "label": "y",
+        "label": "x",
         "labelType": Object {
           "type": "number",
         },
         "type": "row-extension",
       },
-      "label": "|",
+      "label": "y",
       "labelType": Object {
-        "name": "a",
-        "type": "type-variable",
+        "type": "number",
       },
       "type": "row-extension",
     },
