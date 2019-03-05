@@ -7,6 +7,7 @@ import {
   ASExprVector
 } from "./sexpr";
 import {
+  emptyRow,
   Monotype,
   tApp,
   tBoolean,
@@ -74,7 +75,11 @@ function convertVector(expr: ASExprVector): Monotype {
 }
 
 function convertMap(expr: ASExprMap): Monotype {
-  return tRecord(mapObject(expr.fields, convert));
+  const { "|": extending, ...fields } = expr.fields;
+  return tRecord(
+    mapObject(fields, convert),
+    extending ? convert(extending) : emptyRow
+  );
 }
 
 export function convert(expr: ASExpr): Monotype {

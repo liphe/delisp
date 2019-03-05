@@ -41,3 +41,43 @@ file:1:0: Expected symbol as operator
 (\\"hello\\" \\"world\\")
 ^"
 `;
+
+exports[`convertType should read extensible record 1`] = `
+Object {
+  "args": Array [
+    Object {
+      "extends": Object {
+        "extends": Object {
+          "extends": Object {
+            "args": Array [
+              Object {
+                "type": "empty-row",
+              },
+            ],
+            "op": "record",
+            "type": "application",
+          },
+          "label": "x",
+          "labelType": Object {
+            "type": "number",
+          },
+          "type": "row-extension",
+        },
+        "label": "y",
+        "labelType": Object {
+          "type": "number",
+        },
+        "type": "row-extension",
+      },
+      "label": "|",
+      "labelType": Object {
+        "name": "a",
+        "type": "type-variable",
+      },
+      "type": "row-extension",
+    },
+  ],
+  "op": "record",
+  "type": "application",
+}
+`;

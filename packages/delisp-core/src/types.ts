@@ -100,7 +100,7 @@ export function tFn(args: Monotype[], out: Monotype): Monotype {
   return tApp("->", ...args, out);
 }
 
-const emptyRow: EmptyRow = { type: "empty-row" };
+export const emptyRow: EmptyRow = { type: "empty-row" };
 
 export const tRowExtension = (
   row: Monotype,
@@ -113,13 +113,16 @@ export const tRowExtension = (
   extends: row
 });
 
-export function tRecord(fields: { [key: string]: Monotype }): Monotype {
+export function tRecord(
+  fields: { [key: string]: Monotype },
+  extending: Monotype = emptyRow
+): Monotype {
   return tApp(
     "record",
     Object.keys(fields).reduce(
-      (row: Row, label: string): Row =>
+      (row: Monotype, label: string): Row =>
         tRowExtension(row, label, fields[label]),
-      emptyRow
+      extending
     )
   );
 }

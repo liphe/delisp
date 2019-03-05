@@ -28,6 +28,12 @@ describe("convertType", () => {
     ).toMatchObject(tFn([tString, tFn([tString], tVar("c"))], tVar("c")));
   });
 
+  it("should read extensible record", () => {
+    expect(
+      convert(readFromString("{x number y number | a}"))
+    ).toMatchSnapshot();
+  });
+
   it("should detect incorrect types", () => {
     function failedType(x: string) {
       let result: string | undefined;
