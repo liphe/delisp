@@ -28,10 +28,19 @@ export interface TVar {
   name: string;
 }
 
-export interface TRecord {
-  type: "record";
-  fields: { [key: string]: Monotype };
+interface EmptyRow {
+  type: "empty-row";
 }
+
+interface RowExtension {
+  type: "row-extension";
+  label: string;
+  labelType: Monotype;
+  // TODO: Implement kind system!
+  extends: Monotype;
+}
+
+type Row = EmptyRow | RowExtension;
 
 export type Monotype =
   | TBoolean
@@ -39,7 +48,7 @@ export type Monotype =
   | TString
   | TApplication
   | TVar
-  | TRecord
+  | Row
   | TVoid;
 
 export interface Type {
@@ -91,9 +100,26 @@ export function tFn(args: Monotype[], out: Monotype): Monotype {
   return tApp("->", ...args, out);
 }
 
+const emptyRow: EmptyRow = { type: "empty-row" };
+
+export const tRowExtension = (
+  row: Monotype,
+  label: string,
+  labelType: Monotype
+): Row => ({
+  type: "row-extension",
+  label,
+  labelType,
+  extends: row
+});
+
 export function tRecord(fields: { [key: string]: Monotype }): Monotype {
-  return {
-    type: "record",
-    fields
-  };
+  return tApp(
+    "record",
+    Object.keys(fields).reduce(
+      (row: Row, label: string): Row =>
+        tRowExtension(row, label, fields[label]),
+      emptyRow
+    )
+  );
 }

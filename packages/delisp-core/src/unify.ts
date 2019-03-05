@@ -1,6 +1,5 @@
 import { Substitution } from "./type-substitution";
-import { Monotype, TRecord, TVar } from "./types";
-import { equals } from "./utils";
+import { Monotype, TVar } from "./types";
 
 interface UnifySuccess {
   type: "unify-success";
@@ -89,24 +88,6 @@ function unifyArray(
   }
 }
 
-function unifyRecord(t1: TRecord, t2: TRecord, ctx: Substitution): UnifyResult {
-  const r1Entries = Object.entries(t1).sort(([ka], [kb]) => (ka > kb ? 1 : -1));
-  const r2Entries = Object.entries(t2).sort(([ka], [kb]) => (ka > kb ? 1 : -1));
-  if (equals(r1Entries.map(([k]) => k), r2Entries.map(([k]) => k))) {
-    return unifyArray(
-      r1Entries.map(([, v]) => v),
-      r2Entries.map(([, v]) => v),
-      ctx
-    );
-  } else {
-    return {
-      type: "unify-mismatch-error",
-      t1,
-      t2
-    };
-  }
-}
-
 export function unify(
   t1: Monotype,
   t2: Monotype,
@@ -124,8 +105,6 @@ export function unify(
     return unifyVariable(t1, t2, ctx);
   } else if (t2.type === "type-variable") {
     return unifyVariable(t2, t1, ctx);
-  } else if (t1.type === "record" && t2.type === "record") {
-    return unifyRecord(t1, t2, ctx);
   } else {
     return {
       type: "unify-mismatch-error",

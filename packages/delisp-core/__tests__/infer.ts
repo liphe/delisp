@@ -78,7 +78,7 @@ describe("Type inference", () => {
     });
 
     describe("Records", () => {
-      it("should infer the type of exact records", () => {
+      it.skip("should infer the type of exact records", () => {
         expect(typeOf('{x 10 y "hello"}')).toBe("{x number y string}");
       });
     });

@@ -1,6 +1,4 @@
-import { Monotype, tApp, tRecord } from "./types";
-import { mapObject } from "./utils";
-
+import { Monotype, tApp, tRowExtension } from "./types";
 export interface Substitution {
   [t: string]: Monotype;
 }
@@ -22,7 +20,13 @@ export function applySubstitution(t: Monotype, env: Substitution): Monotype {
         return t;
       }
     }
-    case "record":
-      return tRecord(mapObject(t.fields, val => applySubstitution(val, env)));
+    case "empty-row":
+      return t;
+    case "row-extension":
+      return tRowExtension(
+        applySubstitution(t.extends, env),
+        t.label,
+        applySubstitution(t.labelType, env)
+      );
   }
 }

@@ -11,11 +11,15 @@ export function listTypeVariables(t: Monotype): string[] {
     case "boolean":
     case "string":
     case "number":
+    case "empty-row":
       return [];
     case "application":
       return unique(flatMap(listTypeVariables, t.args));
-    case "record":
-      return unique(flatMap(listTypeVariables, Object.values(t.fields)));
+    case "row-extension":
+      return unique([
+        ...listTypeVariables(t.extends),
+        ...listTypeVariables(t.labelType)
+      ]);
     case "type-variable":
       return [t.name];
   }
@@ -89,10 +93,12 @@ function _printType(type: Monotype): string {
       return "number";
     case "string":
       return "string";
-    case "record":
-      return `{${Object.entries(type.fields)
-        .map(([key, val]) => `${key} ${_printType(val)}`)
-        .join(" ")}}`;
+    case "empty-row":
+      return "{}";
+    case "row-extension":
+      return `{${type.label} ${_printType(type.labelType)} | ${_printType(
+        type.extends
+      )}}`;
     case "type-variable":
       return type.name;
   }
