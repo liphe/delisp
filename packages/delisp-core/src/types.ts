@@ -119,7 +119,7 @@ export function tRecord(
 ): Monotype {
   return tApp(
     "record",
-    Object.keys(fields).reduce(
+    Object.keys(fields).reduceRight(
       (row: Monotype, label: string): Row =>
         tRowExtension(row, label, fields[label]),
       extending

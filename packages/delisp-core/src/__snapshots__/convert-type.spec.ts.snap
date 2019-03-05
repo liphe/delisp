@@ -51,13 +51,13 @@ Object {
           "name": "a",
           "type": "type-variable",
         },
-        "label": "x",
+        "label": "y",
         "labelType": Object {
           "type": "number",
         },
         "type": "row-extension",
       },
-      "label": "y",
+      "label": "x",
       "labelType": Object {
         "type": "number",
       },

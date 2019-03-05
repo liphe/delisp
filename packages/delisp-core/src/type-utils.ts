@@ -17,8 +17,8 @@ export function listTypeVariables(t: Monotype): string[] {
       return unique(flatMap(listTypeVariables, t.args));
     case "row-extension":
       return unique([
-        ...listTypeVariables(t.extends),
-        ...listTypeVariables(t.labelType)
+        ...listTypeVariables(t.labelType),
+        ...listTypeVariables(t.extends)
       ]);
     case "type-variable":
       return [t.name];
