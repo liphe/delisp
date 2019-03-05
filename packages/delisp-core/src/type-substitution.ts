@@ -24,9 +24,9 @@ export function applySubstitution(t: Monotype, env: Substitution): Monotype {
       return t;
     case "row-extension":
       return tRowExtension(
-        applySubstitution(t.extends, env),
         t.label,
-        applySubstitution(t.labelType, env)
+        applySubstitution(t.labelType, env),
+        applySubstitution(t.extends, env)
       );
   }
 }

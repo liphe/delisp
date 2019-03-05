@@ -1,3 +1,17 @@
+/**
+ * Unification
+ *
+ * Basic unification based on Robinson's algorithm extended with
+ * unification of row types as described in
+ *
+ *     Extensible records with scoped labels  (Daan Leijen)
+ *
+ * We use terminology and reference that paper through the
+ * implementation. For example, you can search for "RULE".
+ *
+ * The `unify` function is the main entry-point for this module.
+ */
+
 import { Substitution } from "./type-substitution";
 import { generateUniqueTVar } from "./type-utils";
 import { Monotype, RExtension, tRowExtension, TVar } from "./types";
@@ -89,36 +103,60 @@ function unifyArray(
   }
 }
 
-function unifyRowWithLabel(
+/** Rewrite `row` to be a row staring with `label`.
+ *
+ * @returns an extension row, together with a subsitution that will
+ * partially unify it with `row` (only the head of the extension).
+ */
+function rewriteRowForLabel(
   row: Monotype,
   label: string,
   ctx: Substitution
 ): { row: RExtension; substitution: Substitution } {
   if (row.type === "type-variable") {
+    // RULE (row-var)
+    //
+    // If `row` is a variable. We create a fresh row extension
+    //
+    //    {label: γ | β}
+    //
+    // and map that variable to the row in the substitution.
     const gamma = generateUniqueTVar();
     const beta = generateUniqueTVar();
-    const theta = tRowExtension(beta, label, gamma);
+    const theta = tRowExtension(label, gamma, beta);
     return {
       row: theta,
       substitution: { ...ctx, [row.name]: theta }
     };
   } else if (row.type === "row-extension") {
+    // RULE (row-head)
+    //
+    // If the `row` is already a row extension starting with the same
+    // label, we are done.
+    //
     if (row.label === label) {
       return {
         row,
         substitution: ctx
       };
     } else {
-      const { row: newRow, substitution: subs } = unifyRowWithLabel(
+      // RULE (row-swap)
+      //
+      // Firstly, we recursively rewrite the tail of the row extension
+      // to start with `label.`
+      const { row: newRow, substitution: subs } = rewriteRowForLabel(
         row.extends,
         label,
         ctx
       );
+      //
+      // The resulting row, starts with the intended label, and
+      // continues with the original label that we found.
       return {
         row: tRowExtension(
-          tRowExtension(newRow.extends, row.label, row.labelType),
           label,
-          newRow.labelType
+          newRow.labelType,
+          tRowExtension(row.label, row.labelType, newRow.extends)
         ),
         substitution: subs
       };
@@ -133,7 +171,7 @@ function unifyRow(
   row2: RExtension,
   ctx: Substitution
 ): UnifyResult {
-  const { substitution: subs, row: r3 } = unifyRowWithLabel(
+  const { substitution: subs, row: r3 } = rewriteRowForLabel(
     row2,
     row1.label,
     ctx
@@ -145,11 +183,19 @@ function unifyRow(
   );
 }
 
+/** Compute the the most general unifier that unifies t1 and t2.
+ *
+ * @description The resulting subsitution, applied with
+ * `applySubstitution` to t1 and t2 will make them equal. It is also
+ * the most general one, in the sense that any other substitution can
+ * be obtained as a composition of this one with another one.
+ */
 export function unify(
   t1: Monotype,
   t2: Monotype,
   ctx: Substitution = {}
 ): UnifyResult {
+  // RULE (uni-const)
   if (t1.type === "string" && t2.type === "string") {
     return success(ctx);
   } else if (t1.type === "number" && t2.type === "number") {
@@ -157,14 +203,19 @@ export function unify(
   } else if (t1.type === "boolean" && t2.type === "boolean") {
     return success(ctx);
   } else if (t1.type === "application" && t2.type === "application") {
+    // RULE: (uni-app)
     return unifyArray(t1.args, t2.args, ctx);
   } else if (t1.type === "type-variable") {
+    // RULE: (uni-varl)
     return unifyVariable(t1, t2, ctx);
   } else if (t2.type === "type-variable") {
+    // RULE: (uni-varr)
     return unifyVariable(t2, t1, ctx);
   } else if (t1.type === "empty-row" && t2.type === "empty-row") {
+    // RULE (uni-const)
     return success(ctx);
   } else if (t1.type === "row-extension" && t2.type === "row-extension") {
+    // RULE: (uni-row)
     return unifyRow(t1, t2, ctx);
   } else {
     return {

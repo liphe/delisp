@@ -103,9 +103,9 @@ export function tFn(args: Monotype[], out: Monotype): Monotype {
 export const emptyRow: REmpty = { type: "empty-row" };
 
 export const tRowExtension = (
-  row: Monotype,
   label: string,
-  labelType: Monotype
+  labelType: Monotype,
+  row: Monotype
 ): RExtension => ({
   type: "row-extension",
   label,
@@ -121,7 +121,7 @@ export function tRecord(
     "record",
     Object.keys(fields).reduceRight(
       (row: Monotype, label: string): Row =>
-        tRowExtension(row, label, fields[label]),
+        tRowExtension(label, fields[label], row),
       extending
     )
   );
