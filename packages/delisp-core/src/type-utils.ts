@@ -1,7 +1,7 @@
 import { convert as convertType } from "./convert-type";
 import { readFromString } from "./reader";
 import { applySubstitution } from "./type-substitution";
-import { Monotype, TApplication, tVar, TVar, Type } from "./types";
+import { emptyRow, Monotype, TApplication, tVar, TVar, Type } from "./types";
 import { flatMap, unique } from "./utils";
 
 // Return the list of type variables in the order they show up
@@ -72,10 +72,48 @@ function normalizeType(t: Monotype): Monotype {
   return applySubstitution(t, substitution);
 }
 
-function printApplicationType(type: TApplication) {
+function normalizeRow(
+  type: Monotype
+): {
+  fields: Array<{ label: string; labelType: Monotype }>;
+  extends: Monotype;
+} {
+  if (
+    type.type !== "empty-row" &&
+    type.type !== "row-extension" &&
+    type.type !== "type-variable"
+  ) {
+    throw new Error(`FATAL: Record should be built on top of rows`);
+  }
+
+  switch (type.type) {
+    case "empty-row":
+      return { fields: [], extends: emptyRow };
+    case "type-variable":
+      return { fields: [], extends: type };
+    case "row-extension":
+      const { fields, extends: row } = normalizeRow(type.extends);
+      return {
+        fields: [{ label: type.label, labelType: type.labelType }, ...fields],
+        extends: row
+      };
+  }
+}
+
+function printApplicationType(type: TApplication): string {
   switch (type.op) {
     case "vector":
       return `[${_printType(type.args[0])}]`;
+    case "record":
+      const arg = type.args[0];
+      const row = normalizeRow(arg);
+      const fields = row.fields
+        .map(f => `${f.label} ${_printType(f.labelType)}`)
+        .join(" ");
+      const extension =
+        row.extends.type !== "empty-row" ? ` | ${_printType(row.extends)}` : "";
+      return `{${fields}${extension}}`;
+
     default:
       return `(${type.op} ${type.args.map(_printType).join(" ")})`;
   }
@@ -93,14 +131,11 @@ function _printType(type: Monotype): string {
       return "number";
     case "string":
       return "string";
-    case "empty-row":
-      return "{}";
-    case "row-extension":
-      return `{${type.label} ${_printType(type.labelType)} | ${_printType(
-        type.extends
-      )}}`;
     case "type-variable":
       return type.name;
+    case "empty-row":
+    case "row-extension":
+      throw new Error(`Unexpected: can't print ${type.type} types`);
   }
 }
 
