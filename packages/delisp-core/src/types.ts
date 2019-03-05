@@ -28,11 +28,11 @@ export interface TVar {
   name: string;
 }
 
-interface EmptyRow {
+export interface REmpty {
   type: "empty-row";
 }
 
-interface RowExtension {
+export interface RExtension {
   type: "row-extension";
   label: string;
   labelType: Monotype;
@@ -40,7 +40,7 @@ interface RowExtension {
   extends: Monotype;
 }
 
-type Row = EmptyRow | RowExtension;
+export type Row = REmpty | RExtension;
 
 export type Monotype =
   | TBoolean
@@ -100,13 +100,13 @@ export function tFn(args: Monotype[], out: Monotype): Monotype {
   return tApp("->", ...args, out);
 }
 
-export const emptyRow: EmptyRow = { type: "empty-row" };
+export const emptyRow: REmpty = { type: "empty-row" };
 
 export const tRowExtension = (
   row: Monotype,
   label: string,
   labelType: Monotype
-): Row => ({
+): RExtension => ({
   type: "row-extension",
   label,
   labelType,

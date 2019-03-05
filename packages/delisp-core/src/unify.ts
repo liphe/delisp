@@ -1,5 +1,6 @@
 import { Substitution } from "./type-substitution";
-import { Monotype, TVar } from "./types";
+import { generateUniqueTVar } from "./type-utils";
+import { Monotype, RExtension, tRowExtension, TVar } from "./types";
 
 interface UnifySuccess {
   type: "unify-success";
@@ -88,6 +89,62 @@ function unifyArray(
   }
 }
 
+function unifyRowWithLabel(
+  row: Monotype,
+  label: string,
+  ctx: Substitution
+): { row: RExtension; substitution: Substitution } {
+  if (row.type === "type-variable") {
+    const gamma = generateUniqueTVar();
+    const beta = generateUniqueTVar();
+    const theta = tRowExtension(beta, label, gamma);
+    return {
+      row: theta,
+      substitution: { ...ctx, [row.name]: theta }
+    };
+  } else if (row.type === "row-extension") {
+    if (row.label === label) {
+      return {
+        row,
+        substitution: ctx
+      };
+    } else {
+      const { row: newRow, substitution: subs } = unifyRowWithLabel(
+        row.extends,
+        label,
+        ctx
+      );
+      return {
+        row: tRowExtension(
+          tRowExtension(newRow.extends, row.label, row.labelType),
+          label,
+          newRow.labelType
+        ),
+        substitution: subs
+      };
+    }
+  } else {
+    throw new Error("Should not get here");
+  }
+}
+
+function unifyRow(
+  row1: RExtension,
+  row2: RExtension,
+  ctx: Substitution
+): UnifyResult {
+  const { substitution: subs, row: r3 } = unifyRowWithLabel(
+    row2,
+    row1.label,
+    ctx
+  );
+  return unifyArray(
+    [row1.labelType, row1.extends],
+    [r3.labelType, r3.extends],
+    subs
+  );
+}
+
 export function unify(
   t1: Monotype,
   t2: Monotype,
@@ -105,6 +162,10 @@ export function unify(
     return unifyVariable(t1, t2, ctx);
   } else if (t2.type === "type-variable") {
     return unifyVariable(t2, t1, ctx);
+  } else if (t1.type === "empty-row" && t2.type === "empty-row") {
+    return success(ctx);
+  } else if (t1.type === "row-extension" && t2.type === "row-extension") {
+    return unifyRow(t1, t2, ctx);
   } else {
     return {
       type: "unify-mismatch-error",
