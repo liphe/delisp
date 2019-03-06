@@ -17,7 +17,43 @@ import {
 
 import { Typed } from "@delisp/core/src/infer";
 import { Module, Syntax } from "@delisp/core/src/syntax";
-import repl from "repl";
+
+import readline from "readline";
+
+let inputBuffer = "";
+
+const PROMPT = "λ ";
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+  completer,
+  prompt: PROMPT
+});
+
+rl.on("line", line => {
+  inputBuffer += "\n" + line;
+
+  let syntax;
+  try {
+    syntax = readSyntax(inputBuffer);
+  } catch (err) {
+    if (err.incomplete) {
+      rl.setPrompt("... ");
+      rl.prompt();
+      return;
+    } else {
+      throw err;
+    }
+  }
+
+  inputBuffer = "";
+  rl.setPrompt(PROMPT);
+
+  const { value, type } = delispEval(syntax);
+  console.dir({ value, type }, { depth: null });
+  rl.prompt();
+});
 
 let previousModule = createModule();
 const context = createContext();
@@ -28,23 +64,7 @@ function completer(input: string): [string[], string] {
   return [completions, input];
 }
 
-const delispEval = (
-  cmd: string,
-  _context: object,
-  _filename: string,
-  callback: (err: Error | null, result?: unknown) => void
-) => {
-  let syntax;
-  try {
-    syntax = readSyntax(cmd);
-  } catch (err) {
-    if (err.incomplete) {
-      return callback(new repl.Recoverable(err));
-    } else {
-      throw err;
-    }
-  }
-
+const delispEval = (syntax: Syntax) => {
   //
   // Type checking
   //
@@ -95,26 +115,22 @@ const delispEval = (
         ? typedSyntax.value.info.type
         : null;
 
-    callback(null, {
+    return {
       type: type && printType(type)
-    });
+    };
   } else {
     const type =
       typedSyntax && !isDeclaration(typedSyntax) ? typedSyntax.info.type : null;
 
-    callback(null, {
+    return {
       value,
       type: type && printType(type)
-    });
+    };
   }
 };
 
 export function startREPL() {
-  const replServer = repl.start({ prompt: "λ ", eval: delispEval, completer });
-  replServer.on("exit", () => {
-    console.log("\n; bye!");
-    process.exit(0);
-  });
+  rl.prompt();
 }
 
 // tslint:enable no-console
