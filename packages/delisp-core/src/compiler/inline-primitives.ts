@@ -19,25 +19,42 @@ export function getInlinePrimitiveTypes(): { [name: string]: Type } {
   );
 }
 
+function createInlinePrimitive(
+  typespec: string,
+  handle: InlineHandler
+): InlinePrim {
+  const type = readType(typespec);
+  return { type, handle };
+}
+
 function defineInlinePrimitive(
   name: string,
   typespec: string,
   handle: InlineHandler
 ) {
-  const type = readType(typespec);
-  return inlinefuncs.set(name, { type, handle });
+  return inlinefuncs.set(name, createInlinePrimitive(typespec, handle));
 }
 
 export function isInlinePrimitive(name: string) {
-  return inlinefuncs.has(name);
+  return name[0] === "." || inlinefuncs.has(name);
 }
 
 export function findInlinePrimitive(name: string): InlinePrim {
-  const prim = inlinefuncs.get(name);
-  if (!prim) {
-    throw new Error(`${name} is not an primitive inline function call`);
+  if (name[0] === ".") {
+    const label = name.slice(1);
+    return createInlinePrimitive(`(-> {${label} a} a)`, ([vec]) => ({
+      type: "MemberExpression",
+      computed: true,
+      object: vec,
+      property: { type: "Identifier", name: label }
+    }));
+  } else {
+    const prim = inlinefuncs.get(name);
+    if (!prim) {
+      throw new Error(`${name} is not an primitive inline function call`);
+    }
+    return prim;
   }
-  return prim;
 }
 
 function primitiveArity(prim: InlinePrim): number {
