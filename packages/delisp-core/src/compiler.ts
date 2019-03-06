@@ -127,6 +127,16 @@ function compileFunctionCall(
     isInlinePrimitive(funcall.fn.name)
   ) {
     return compileInlinePrimitive(funcall.fn.name, compiledArgs, "funcall");
+  } else if (
+    funcall.fn.type === "variable-reference" &&
+    funcall.fn.name[0] === "0"
+  ) {
+    return {
+      type: "MemberExpression",
+      computed: false,
+      object: compiledArgs[0],
+      property: { type: "Identifier", name: funcall.fn.name.slice(1) }
+    };
   } else {
     return {
       type: "CallExpression",
@@ -142,6 +152,20 @@ function compileVariable(
 ): JS.Expression {
   if (isInlinePrimitive(ref.name)) {
     return compileInlinePrimitive(ref.name, [], "value");
+  } else if (ref.name[0] === ".") {
+    return {
+      type: "ArrowFunctionExpression",
+      generator: false,
+      async: false,
+      expression: true,
+      params: [{ type: "Identifier", name: "rec" }],
+      body: {
+        type: "MemberExpression",
+        computed: false,
+        object: { type: "Identifier", name: "rec" },
+        property: { type: "Identifier", name: ref.name.slice(1) }
+      }
+    };
   } else {
     const binding = lookupBinding(ref.name, env);
 
