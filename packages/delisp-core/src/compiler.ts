@@ -385,5 +385,5 @@ export function compileModuleToString(
   const ast = compileModule(m, true, env);
   const code = recast.print(ast).code;
   debug("jscode:", code);
-  return recast.print(ast).code;
+  return code;
 }
