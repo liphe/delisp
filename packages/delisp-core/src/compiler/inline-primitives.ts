@@ -10,7 +10,13 @@ interface InlinePrim {
   handle: InlineHandler;
 }
 
+interface MagicPrim {
+  matches: (name: string) => boolean;
+  createType: (name: string) => string | Type;
+  createHandle: (name: string) => InlineHandler;
+}
 const inlinefuncs = new Map<string, InlinePrim>();
+const magicfuncs: MagicPrim[] = [];
 
 export function getInlinePrimitiveTypes(): { [name: string]: Type } {
   return Array.from(inlinefuncs.entries()).reduce(
@@ -20,10 +26,10 @@ export function getInlinePrimitiveTypes(): { [name: string]: Type } {
 }
 
 function createInlinePrimitive(
-  typespec: string,
+  typespec: string | Type,
   handle: InlineHandler
 ): InlinePrim {
-  const type = readType(typespec);
+  const type = typeof typespec === "string" ? readType(typespec) : typespec;
   return { type, handle };
 }
 
@@ -35,26 +41,32 @@ function defineInlinePrimitive(
   return inlinefuncs.set(name, createInlinePrimitive(typespec, handle));
 }
 
+function defineMagicPrimitive(
+  matches: MagicPrim["matches"],
+  createType: MagicPrim["createType"],
+  createHandle: MagicPrim["createHandle"]
+) {
+  magicfuncs.push({ matches, createType, createHandle });
+}
+
 export function isInlinePrimitive(name: string) {
-  return name[0] === "." || inlinefuncs.has(name);
+  return inlinefuncs.has(name) || magicfuncs.some(f => f.matches(name));
 }
 
 export function findInlinePrimitive(name: string): InlinePrim {
-  if (name[0] === ".") {
-    const label = name.slice(1);
-    return createInlinePrimitive(`(-> {${label} a} a)`, ([vec]) => ({
-      type: "MemberExpression",
-      computed: true,
-      object: vec,
-      property: { type: "Identifier", name: label }
-    }));
-  } else {
-    const prim = inlinefuncs.get(name);
-    if (!prim) {
-      throw new Error(`${name} is not an primitive inline function call`);
-    }
+  const prim = inlinefuncs.get(name);
+  if (prim) {
     return prim;
   }
+
+  const magicPrim = magicfuncs.find(f => f.matches(name));
+  if (magicPrim) {
+    const type = magicPrim.createType(name);
+    const handle = magicPrim.createHandle(name);
+    return createInlinePrimitive(type, handle);
+  }
+
+  throw new Error(`${name} is not an primitive inline function call`);
 }
 
 function primitiveArity(prim: InlinePrim): number {
@@ -192,3 +204,15 @@ defineInlinePrimitive("length", "(-> [a] number)", ([vec]) => {
     property: { type: "Identifier", name: "length" }
   };
 });
+
+// matches `.foo` and inlines `(-> {foo a | b} a)`
+defineMagicPrimitive(
+  name => name[0] === ".",
+  name => `(-> {${name.slice(1)} a} a)`,
+  name => ([vec]) => ({
+    type: "MemberExpression",
+    computed: true,
+    object: vec,
+    property: { type: "Literal", value: name.slice(1) }
+  })
+);
