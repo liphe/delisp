@@ -199,9 +199,18 @@ function infer(
           type: t
         }
       };
+      let c: TConstraint[] = [];
+      if (expr.name[0] === ".") {
+        const rlabel = expr.name.slice(1);
+        const rlabelType = generateUniqueTVar();
+        const rtype = tRecord({ [rlabel]: rlabelType }, generateUniqueTVar());
+        // const rtype = tRecord(tRowExtension(rlabel, rlabelType, generateUniqueTVar()));
+        const selectorType = tFn([rtype], rlabelType);
+        c = [constEqual(typedVar, selectorType)];
+      }
       return {
         expr: typedVar,
-        constraints: [],
+        constraints: c,
         assumptions: [typedVar]
       };
     }
