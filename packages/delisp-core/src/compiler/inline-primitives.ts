@@ -12,8 +12,7 @@ interface InlinePrim {
 
 interface MagicPrim {
   matches: (name: string) => boolean;
-  createType: (name: string) => string | Type;
-  createHandle: (name: string) => InlineHandler;
+  createPrimitive: (name: string) => InlinePrim;
 }
 const inlinefuncs = new Map<string, InlinePrim>();
 const magicfuncs: MagicPrim[] = [];
@@ -36,10 +35,9 @@ function defineInlinePrimitive(
 
 function defineMagicPrimitive(
   matches: MagicPrim["matches"],
-  createType: MagicPrim["createType"],
-  createHandle: MagicPrim["createHandle"]
+  createPrimitive: MagicPrim["createPrimitive"]
 ) {
-  magicfuncs.push({ matches, createType, createHandle });
+  magicfuncs.push({ matches, createPrimitive });
 }
 
 export function isInlinePrimitive(name: string) {
@@ -54,9 +52,7 @@ export function findInlinePrimitive(name: string): InlinePrim {
 
   const magicPrim = magicfuncs.find(f => f.matches(name));
   if (magicPrim) {
-    const type = magicPrim.createType(name);
-    const handle = magicPrim.createHandle(name);
-    return createInlinePrimitive(type, handle);
+    return magicPrim.createPrimitive(name);
   }
 
   throw new Error(`${name} is not an primitive inline function call`);
@@ -211,6 +207,8 @@ defineInlinePrimitive("length", "(-> [a] number)", ([vec]) =>
 // matches `.foo` and inlines `(-> {foo a | b} a)`
 defineMagicPrimitive(
   name => name[0] === ".",
-  name => `(-> {${name.slice(1)} a | r} a)`,
-  name => ([vec]) => member(vec, name.slice(1), true)
+  name =>
+    createInlinePrimitive(`(-> {${name.slice(1)} a | r} a)`, ([vec]) =>
+      member(vec, name.slice(1), true)
+    )
 );
