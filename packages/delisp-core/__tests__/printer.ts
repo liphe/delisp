@@ -134,4 +134,20 @@ describe("Pretty Printer", () => {
       )
     ).toMatchSnapshot();
   });
+
+  it("should print lambda with multiple forms", () => {
+    expect(
+      pprintString(
+        `
+(define hello (lambda (x)
+                (print x)
+                (print x)
+                (print x)
+                (print x)
+                (print x)
+                (print x)))
+`
+      )
+    ).toMatchSnapshot();
+  });
 });

@@ -86,14 +86,14 @@ function print(sexpr: Syntax): Doc {
 
     case "function":
       const argNames = sexpr.lambdaList.positionalArgs.map(x => x.variable);
-      return group(
-        list(
-          text("lambda"),
-          space,
-          group(list(align(...argNames.map(printVariable)))),
-          indent(concat(line, join(sexpr.body.map(print), line)))
-        )
+      const singleBody = sexpr.body.length === 1;
+      const doc = list(
+        text("lambda"),
+        space,
+        group(list(align(...argNames.map(printVariable)))),
+        indent(concat(line, join(sexpr.body.map(print), line)))
       );
+      return singleBody ? group(doc) : doc;
 
     case "function-call": {
       const fn = print(sexpr.fn);

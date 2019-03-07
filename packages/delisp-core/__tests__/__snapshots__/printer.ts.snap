@@ -187,6 +187,18 @@ exports[`Pretty Printer should print lambda abstractions beautifully 3`] = `
   xxx)"
 `;
 
+exports[`Pretty Printer should print lambda with multiple forms 1`] = `
+"
+(define hello
+  (lambda (x)
+    (print x)
+    (print x)
+    (print x)
+    (print x)
+    (print x)
+    (print x)))"
+`;
+
 exports[`Pretty Printer should print let expressions nicely 1`] = `
 "
 (let ((x 10)

@@ -57,6 +57,10 @@ describe("Type inference", () => {
         // lambda-bound variables should be monomorphic
         expect(() => typeOf(`(lambda (f) ((f "foo") (f 0)))`)).toThrow();
       });
+
+      it("should return the type of the last form", () => {
+        expect(typeOf("(lambda (x) 1)")).toBe("(-> α number)");
+      });
     });
 
     describe("Let polymorphism", () => {
