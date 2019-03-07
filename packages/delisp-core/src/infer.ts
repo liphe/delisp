@@ -347,7 +347,7 @@ function infer(
           inference: infer(b.value, monovars)
         };
       });
-      const bodyInference = infer(expr.body, monovars);
+      const bodyInference = inferMany(expr.body, monovars);
       return {
         expr: {
           ...expr,
@@ -355,9 +355,9 @@ function infer(
             ...b.binding,
             value: b.inference.expr
           })),
-          body: bodyInference.expr,
+          body: bodyInference.exprs,
           info: {
-            type: bodyInference.expr.info.type
+            type: last(bodyInference.exprs)!.info.type
           }
         },
         constraints: [
@@ -610,7 +610,7 @@ function applySubstitutionToExpr(
           ...b,
           value: applySubstitutionToExpr(b.value, env)
         })),
-        body: applySubstitutionToExpr(s.body, env),
+        body: s.body.map(e => applySubstitutionToExpr(e, env)),
         info: {
           ...s.info,
           type: applySubstitution(s.info.type, env)

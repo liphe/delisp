@@ -130,7 +130,7 @@ function print(sexpr: Syntax): Doc {
             ...sexpr.bindings.map(b => list(text(b.var), space, print(b.value)))
           )
         ),
-        indent(concat(line, print(sexpr.body)))
+        indent(concat(line, join(sexpr.body.map(print), line)))
       );
   }
 }

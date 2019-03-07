@@ -171,22 +171,32 @@ function parseLetBindings(bindings: ASExpr): SLetBinding[] {
 defineConversion("let", expr => {
   const [_let, ...args] = expr.elements;
 
-  if (args.length !== 2) {
+  if (args.length < 2) {
     const lastExpr = last([_let, ...args]) as ASExpr; // we know it is not empty!
 
-    throw new Error(
-      printHighlightedExpr(
-        `'let' needs exactly 2 arguments, got ${args.length}`,
-        lastExpr.location,
-        true
-      )
-    );
+    if (args.length === 0) {
+      throw new Error(
+        printHighlightedExpr(
+          `'let' is missing the bindings`,
+          lastExpr.location,
+          true
+        )
+      );
+    } else {
+      throw new Error(
+        printHighlightedExpr(
+          `'let' is missing the body`,
+          lastExpr.location,
+          true
+        )
+      );
+    }
   }
-  const [rawBindings, body] = args;
+  const [rawBindings, ...body] = args;
   return {
     type: "let-bindings",
     bindings: parseLetBindings(rawBindings),
-    body: convertExpr(body),
+    body: body.map(convertExpr),
     location: expr.location,
     info: {}
   };

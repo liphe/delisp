@@ -226,9 +226,15 @@ function compileLetBindings(expr: SLet, env: Environment): JS.Expression {
       body: {
         type: "BlockStatement",
         body: [
+          ...expr.body.slice(0, -1).map(
+            (e): JS.ExpressionStatement => ({
+              type: "ExpressionStatement",
+              expression: compile(e, newenv)
+            })
+          ),
           {
             type: "ReturnStatement",
-            argument: compile(expr.body, newenv)
+            argument: compile(last(expr.body)!, newenv)
           }
         ]
       }

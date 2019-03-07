@@ -64,7 +64,7 @@ export interface SLetBinding<I = {}> {
 export interface SLet<I = {}> extends Node<I> {
   type: "let-bindings";
   bindings: Array<SLetBinding<I>>;
-  body: Expression<I>;
+  body: Array<Expression<I>>;
 }
 
 export interface SRecord<I = {}> extends Node<I> {
