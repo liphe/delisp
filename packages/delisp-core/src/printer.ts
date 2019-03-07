@@ -38,6 +38,10 @@ function map(...docs: Doc[]): Doc {
   return concat(text("{"), ...docs, text("}"));
 }
 
+function printBody(ss: Syntax[]): Doc {
+  return concat(line, join(ss.map(print), line));
+}
+
 function print(sexpr: Syntax): Doc {
   switch (sexpr.type) {
     case "string":
@@ -91,7 +95,7 @@ function print(sexpr: Syntax): Doc {
         text("lambda"),
         space,
         group(list(align(...argNames.map(printVariable)))),
-        indent(concat(line, join(sexpr.body.map(print), line)))
+        indent(printBody(sexpr.body))
       );
       return singleBody ? group(doc) : doc;
 
@@ -130,7 +134,7 @@ function print(sexpr: Syntax): Doc {
             ...sexpr.bindings.map(b => list(text(b.var), space, print(b.value)))
           )
         ),
-        indent(concat(line, join(sexpr.body.map(print), line)))
+        indent(printBody(sexpr.body))
       );
   }
 }
