@@ -80,13 +80,24 @@ defineConversion("lambda", expr => {
 
   if (args.length < 2) {
     const lastExpr = last([lambda, ...args]) as ASExpr; // we know it is not empty!
-    throw new Error(
-      printHighlightedExpr(
-        `'lambda' is missing the body`,
-        lastExpr.location,
-        true
-      )
-    );
+
+    if (args.length === 0) {
+      throw new Error(
+        printHighlightedExpr(
+          `'lambda' is missing the argument list`,
+          lastExpr.location,
+          true
+        )
+      );
+    } else {
+      throw new Error(
+        printHighlightedExpr(
+          `'lambda' is missing the body`,
+          lastExpr.location,
+          true
+        )
+      );
+    }
   }
 
   return {

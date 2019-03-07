@@ -49,7 +49,7 @@ exports[`Compiler Error messages generate nice error message for invalid definit
 `;
 
 exports[`Compiler Error messages generate nice error message for invalid lambda expressions 1`] = `
-"file:1:6: 'lambda' is missing the body
+"file:1:6: 'lambda' is missing the argument list
 (lambda)
 ------^"
 `;
