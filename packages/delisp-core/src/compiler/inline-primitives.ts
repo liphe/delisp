@@ -18,13 +18,6 @@ interface MagicPrim {
 const inlinefuncs = new Map<string, InlinePrim>();
 const magicfuncs: MagicPrim[] = [];
 
-export function getInlinePrimitiveTypes(): { [name: string]: Type } {
-  return Array.from(inlinefuncs.entries()).reduce(
-    (obj, [name, prim]) => ({ ...obj, [name]: prim.type }),
-    {}
-  );
-}
-
 function createInlinePrimitive(
   typespec: string | Type,
   handle: InlineHandler

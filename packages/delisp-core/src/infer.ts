@@ -40,9 +40,19 @@ import {
   Type
 } from "./types";
 import { unify } from "./unify";
-import { difference, flatMap, intersection, mapObject, union } from "./utils";
+import {
+  difference,
+  flatMap,
+  intersection,
+  mapObject,
+  maybeMap,
+  union
+} from "./utils";
 
-import { getInlinePrimitiveTypes } from "./compiler/inline-primitives";
+import {
+  findInlinePrimitive,
+  isInlinePrimitive
+} from "./compiler/inline-primitives";
 
 import primitives from "./primitives";
 
@@ -199,18 +209,9 @@ function infer(
           type: t
         }
       };
-      let c: TConstraint[] = [];
-      if (expr.name[0] === ".") {
-        const rlabel = expr.name.slice(1);
-        const rlabelType = generateUniqueTVar();
-        const rtype = tRecord({ [rlabel]: rlabelType }, generateUniqueTVar());
-        // const rtype = tRecord(tRowExtension(rlabel, rlabelType, generateUniqueTVar()));
-        const selectorType = tFn([rtype], rlabelType);
-        c = [constEqual(typedVar, selectorType)];
-      }
       return {
         expr: typedVar,
-        constraints: c,
+        constraints: [],
         assumptions: [typedVar]
       };
     }
@@ -414,6 +415,22 @@ function inferSyntax(
 export interface TypeEnvironment {
   [v: string]: Type;
 }
+
+function lookupVariableType(
+  varName: string,
+  typeEnvironment: TypeEnvironment
+): Type | null {
+  const t = typeEnvironment[varName];
+  if (t) {
+    return t;
+  } else if (isInlinePrimitive(varName)) {
+    const prim = findInlinePrimitive(varName);
+    return prim.type;
+  } else {
+    return null;
+  }
+}
+
 // Generate constraints for those assumptions. Note that we generate
 // explicit instance constraints, as it will allow us to have
 // polymoprphic types in the environment.
@@ -421,14 +438,10 @@ function assumptionsToConstraints(
   assumptions: TAssumption[],
   typeEnvironment: TypeEnvironment
 ): TConstraint[] {
-  return flatMap(
-    v =>
-      assumptions
-        .filter(aVar => aVar.name === v)
-        .map(aVar => constExplicitInstance(aVar, typeEnvironment[v])),
-
-    Object.keys(typeEnvironment)
-  );
+  return maybeMap(a => {
+    const t = lookupVariableType(a.name, typeEnvironment);
+    return t && constExplicitInstance(a, t);
+  }, assumptions);
 }
 
 // Set of variables that are "active" in a set of constraints. This
@@ -701,7 +714,6 @@ ${printType(applySubstitution(constraint.t, solution))}
 }
 
 const defaultTypeEnvironment: TypeEnvironment = {
-  ...getInlinePrimitiveTypes(),
   ...mapObject(primitives, prim => prim.type)
 };
 
@@ -729,7 +741,9 @@ function groupAssumptions(
   unknowns: TAssumption[];
 } {
   const internals = assumptions.filter(v => v.name in internalEnv);
-  const externals = assumptions.filter(v => v.name in externalEnv);
+  const externals = assumptions.filter(
+    v => lookupVariableType(v.name, externalEnv) !== null
+  );
   return {
     internals,
     externals,
