@@ -1,6 +1,6 @@
 import * as JS from "estree";
-import { readType } from "../type-utils";
-import { Type } from "../types";
+import { generalize, generateUniqueTVar, readType } from "../type-utils";
+import { tFn, tRecord, Type } from "../types";
 import { range } from "../utils";
 
 type InlineHandler = (args: JS.Expression[]) => JS.Expression;
@@ -207,8 +207,11 @@ defineInlinePrimitive("length", "(-> [a] number)", ([vec]) =>
 // matches `.foo` and inlines `(-> {foo a | b} a)`
 defineMagicPrimitive(
   name => name[0] === ".",
-  name =>
-    createInlinePrimitive(`(-> {${name.slice(1)} a | r} a)`, ([vec]) =>
-      member(vec, name.slice(1), true)
-    )
+  name => {
+    const label = name.slice(1);
+    const a = generateUniqueTVar();
+    const r = generateUniqueTVar();
+    const t = generalize(tFn([tRecord({ [label]: a }, r)], a), []);
+    return createInlinePrimitive(t, ([vec]) => member(vec, label, true));
+  }
 );
