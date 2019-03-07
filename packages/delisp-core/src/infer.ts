@@ -134,6 +134,12 @@ function constImplicitInstance(
   return { type: "implicit-instance-constraint", expr, monovars, t };
 }
 
+interface InferResult<A> {
+  result: A;
+  constraints: TConstraint[];
+  assumptions: TAssumption[];
+}
+
 export interface Typed {
   type: Monotype;
 }
@@ -141,14 +147,10 @@ export interface Typed {
 function inferMany(
   exprs: Expression[],
   monovars: string[]
-): {
-  exprs: Array<Expression<Typed>>;
-  constraints: TConstraint[];
-  assumptions: TAssumption[];
-} {
+): InferResult<Array<Expression<Typed>>> {
   const results = exprs.map(e => infer(e, monovars));
   return {
-    exprs: results.map(r => r.expr),
+    result: results.map(r => r.result),
     constraints: flatMap(r => r.constraints, results),
     assumptions: flatMap(r => r.assumptions, results)
   };
@@ -162,21 +164,17 @@ function infer(
   // to say, all instances should have the same type. That is the set
   // of type variables introduced by lambda.
   monovars: string[]
-): {
-  expr: Expression<Typed>;
-  constraints: TConstraint[];
-  assumptions: TAssumption[];
-} {
+): InferResult<Expression<Typed>> {
   switch (expr.type) {
     case "number":
       return {
-        expr: { ...expr, info: { type: tNumber } },
+        result: { ...expr, info: { type: tNumber } },
         constraints: [],
         assumptions: []
       };
     case "string":
       return {
-        expr: { ...expr, info: { type: tString } },
+        result: { ...expr, info: { type: tString } },
         constraints: [],
         assumptions: []
       };
@@ -185,15 +183,15 @@ function infer(
       const t = generateUniqueTVar();
 
       return {
-        expr: {
+        result: {
           ...expr,
-          values: inferredValues.exprs,
+          values: inferredValues.result,
           info: { type: tVector(t) }
         },
         assumptions: inferredValues.assumptions,
         constraints: [
           ...inferredValues.constraints,
-          ...inferredValues.exprs.map(e => constEqual(e, t))
+          ...inferredValues.result.map(e => constEqual(e, t))
         ]
       };
     }
@@ -202,11 +200,11 @@ function infer(
       const inferredValues = mapObject(expr.fields, v => infer(v, monovars));
 
       return {
-        expr: {
+        result: {
           ...expr,
-          fields: mapObject(inferredValues, i => i.expr),
+          fields: mapObject(inferredValues, i => i.result),
           info: {
-            type: tRecord(mapObject(inferredValues, i => i.expr.info.type))
+            type: tRecord(mapObject(inferredValues, i => i.result.info.type))
           }
         },
         assumptions: flatMap(i => i.assumptions, Object.values(inferredValues)),
@@ -227,7 +225,7 @@ function infer(
         }
       };
       return {
-        expr: typedVar,
+        result: typedVar,
         constraints: [],
         assumptions: [typedVar]
       };
@@ -239,11 +237,11 @@ function infer(
       const t = generateUniqueTVar();
 
       return {
-        expr: {
+        result: {
           ...expr,
-          condition: condition.expr,
-          consequent: consequent.expr,
-          alternative: alternative.expr,
+          condition: condition.result,
+          consequent: consequent.result,
+          alternative: alternative.result,
           info: {
             type: t
           }
@@ -257,9 +255,9 @@ function infer(
           ...condition.constraints,
           ...consequent.constraints,
           ...alternative.constraints,
-          constEqual(condition.expr, tBoolean),
-          constEqual(consequent.expr, t),
-          constEqual(alternative.expr, t)
+          constEqual(condition.result, tBoolean),
+          constEqual(consequent.result, t),
+          constEqual(alternative.result, t)
         ]
       };
     }
@@ -267,7 +265,7 @@ function infer(
       const fnargs = expr.lambdaList.positionalArgs.map(a => a.variable);
       const argtypes = fnargs.map(_ => generateUniqueTVar());
 
-      const { exprs: typedBody, constraints, assumptions } = inferMany(
+      const { result: typedBody, constraints, assumptions } = inferMany(
         expr.body,
         [...monovars, ...argtypes.map(v => v.name)]
       );
@@ -284,7 +282,7 @@ function infer(
           })
       ];
       return {
-        expr: {
+        result: {
           ...expr,
           body: typedBody,
           info: {
@@ -301,17 +299,17 @@ function infer(
       const ifn = infer(expr.fn, monovars);
       const iargs = inferMany(expr.args, monovars);
       const tTo = generateUniqueTVar();
-      const tfn: Monotype = tFn(iargs.exprs.map(a => a.info.type), tTo);
+      const tfn: Monotype = tFn(iargs.result.map(a => a.info.type), tTo);
       return {
-        expr: {
+        result: {
           ...expr,
-          fn: ifn.expr,
-          args: iargs.exprs,
+          fn: ifn.result,
+          args: iargs.result,
           info: { type: tTo }
         },
 
         constraints: [
-          constEqual(ifn.expr, tfn) as TConstraint,
+          constEqual(ifn.result, tfn) as TConstraint,
           ...ifn.constraints,
           ...iargs.constraints
         ],
@@ -349,15 +347,15 @@ function infer(
       });
       const bodyInference = inferMany(expr.body, monovars);
       return {
-        expr: {
+        result: {
           ...expr,
           bindings: bindingsInfo.map(b => ({
             ...b.binding,
-            value: b.inference.expr
+            value: b.inference.result
           })),
-          body: bodyInference.exprs,
+          body: bodyInference.result,
           info: {
-            type: last(bodyInference.exprs)!.info.type
+            type: last(bodyInference.result)!.info.type
           }
         },
         constraints: [
@@ -377,7 +375,7 @@ function infer(
               return constImplicitInstance(
                 v,
                 monovars,
-                bInfo.inference.expr.info.type
+                bInfo.inference.result.info.type
               );
             })
         ],
@@ -390,27 +388,21 @@ function infer(
   }
 }
 
-function inferSyntax(
-  syntax: Syntax
-): {
-  syntax: Syntax<Typed>;
-  constraints: TConstraint[];
-  assumptions: TAssumption[];
-} {
+function inferSyntax(syntax: Syntax): InferResult<Syntax<Typed>> {
   if (isDeclaration(syntax)) {
-    const { expr, assumptions, constraints } = infer(syntax.value, []);
+    const { result, assumptions, constraints } = infer(syntax.value, []);
     return {
-      syntax: {
+      result: {
         ...syntax,
-        value: expr
+        value: result
       },
       assumptions,
       constraints
     };
   } else {
-    const { expr, assumptions, constraints } = infer(syntax, []);
+    const { result, assumptions, constraints } = infer(syntax, []);
     return {
-      syntax: expr,
+      result,
       assumptions,
       constraints
     };
@@ -738,7 +730,7 @@ export function inferType(
   expr: Expression,
   typeEnvironment: TypeEnvironment = defaultTypeEnvironment
 ): Expression<Typed> {
-  const { expr: tmpExpr, constraints, assumptions } = infer(expr, []);
+  const { result: tmpExpr, constraints, assumptions } = infer(expr, []);
 
   const s = solve([
     ...constraints,
@@ -776,7 +768,7 @@ export function inferModule(
   unknowns: TAssumption[];
 } {
   const bodyInferences = m.body.map(inferSyntax);
-  const body = bodyInferences.map(i => i.syntax);
+  const body = bodyInferences.map(i => i.result);
 
   const internalEnv: {
     [v: string]: Monotype;
