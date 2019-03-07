@@ -12,12 +12,12 @@
     "test": "yarn workspaces run test"
   },
   "devDependencies": {
-    "@types/jest": "^24.0.9",
-    "@types/node": "^11.10.4",
+    "@types/jest": "^23.3.9",
+    "@types/node": "^10.12.5",
     "coveralls": "^3.0.2",
-    "jest": "^24.1.0",
+    "jest": "^23.6.0",
     "prettier": "^1.15.2",
-    "ts-jest": "^24.0.0",
+    "ts-jest": "^23.10.4",
     "tslint": "^5.11.0",
     "tslint-no-circular-imports": "^0.6.1",
     "typescript": "^3.1.6"

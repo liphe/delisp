@@ -10,9 +10,9 @@
   },
   "dependencies": {
     "@delisp/runtime": "0.1.0",
-    "@types/debug": "^4.1.2",
+    "@types/debug": "^0.0.31",
     "debug": "^4.1.0",
-    "recast": "^0.17.3"
+    "recast": "^0.16.1"
   },
   "devDependencies": {
     "@types/estree": "^0.0.39"
