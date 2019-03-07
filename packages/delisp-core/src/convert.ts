@@ -29,6 +29,15 @@ function defineToplevel(name: string, fn: (expr: ASExprList) => Declaration) {
   toplevelConversions.set(name, fn);
 }
 
+function parseBody(anchor: ASExpr, exprs: ASExpr[]): Expression[] {
+  if (exprs.length === 0) {
+    throw new Error(
+      printHighlightedExpr(`body can't be empty`, anchor.location, true)
+    );
+  }
+  return exprs.map(convertExpr);
+}
+
 //
 // The format of lambda lists are (a b c ... &rest z)
 //
@@ -77,33 +86,24 @@ function parseLambdaList(ll: ASExpr): LambdaList {
 
 defineConversion("lambda", expr => {
   const [lambda, ...args] = expr.elements;
+  const lastExpr = last([lambda, ...args]) as ASExpr; // we kj
 
-  if (args.length < 2) {
-    const lastExpr = last([lambda, ...args]) as ASExpr; // we know it is not empty!
-
-    if (args.length === 0) {
-      throw new Error(
-        printHighlightedExpr(
-          `'lambda' is missing the argument list`,
-          lastExpr.location,
-          true
-        )
-      );
-    } else {
-      throw new Error(
-        printHighlightedExpr(
-          `'lambda' is missing the body`,
-          lastExpr.location,
-          true
-        )
-      );
-    }
+  if (args.length === 0) {
+    throw new Error(
+      printHighlightedExpr(
+        `'lambda' is missing the argument list`,
+        lastExpr.location,
+        true
+      )
+    );
   }
+
+  const body = parseBody(lastExpr, args.slice(1));
 
   return {
     type: "function",
     lambdaList: parseLambdaList(args[0]),
-    body: args.slice(1).map(convertExpr),
+    body,
     location: expr.location,
     info: {}
   };
@@ -170,33 +170,26 @@ function parseLetBindings(bindings: ASExpr): SLetBinding[] {
 
 defineConversion("let", expr => {
   const [_let, ...args] = expr.elements;
+  const lastExpr = last([_let, ...args]) as ASExpr; // we know it is not empty!
 
-  if (args.length < 2) {
-    const lastExpr = last([_let, ...args]) as ASExpr; // we know it is not empty!
-
-    if (args.length === 0) {
-      throw new Error(
-        printHighlightedExpr(
-          `'let' is missing the bindings`,
-          lastExpr.location,
-          true
-        )
-      );
-    } else {
-      throw new Error(
-        printHighlightedExpr(
-          `'let' is missing the body`,
-          lastExpr.location,
-          true
-        )
-      );
-    }
+  if (args.length === 0) {
+    throw new Error(
+      printHighlightedExpr(
+        `'let' is missing the bindings`,
+        lastExpr.location,
+        true
+      )
+    );
   }
-  const [rawBindings, ...body] = args;
+
+  const [rawBindings, ...rawBody] = args;
+
+  const body = parseBody(lastExpr, rawBody);
+
   return {
     type: "let-bindings",
     bindings: parseLetBindings(rawBindings),
-    body: body.map(convertExpr),
+    body,
     location: expr.location,
     info: {}
   };
