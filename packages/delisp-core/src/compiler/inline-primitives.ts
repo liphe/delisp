@@ -132,6 +132,21 @@ function methodCall(
   };
 }
 
+function member(
+  obj: JS.Expression,
+  prop: string,
+  bracketNotation: boolean = false
+): JS.Expression {
+  return {
+    type: "MemberExpression",
+    computed: bracketNotation,
+    object: obj,
+    property: bracketNotation
+      ? { type: "Literal", value: prop }
+      : { type: "Identifier", name: prop }
+  };
+}
+
 //
 // Primitives
 //
@@ -196,23 +211,13 @@ defineInlinePrimitive("reverse", "(-> [a] [a])", ([vec]) => {
   return methodCall(methodCall(vec, "slice", []), "reverse", []);
 });
 
-defineInlinePrimitive("length", "(-> [a] number)", ([vec]) => {
-  return {
-    type: "MemberExpression",
-    computed: false,
-    object: vec,
-    property: { type: "Identifier", name: "length" }
-  };
-});
+defineInlinePrimitive("length", "(-> [a] number)", ([vec]) =>
+  member(vec, "length")
+);
 
 // matches `.foo` and inlines `(-> {foo a | b} a)`
 defineMagicPrimitive(
   name => name[0] === ".",
   name => `(-> {${name.slice(1)} a} a)`,
-  name => ([vec]) => ({
-    type: "MemberExpression",
-    computed: true,
-    object: vec,
-    property: { type: "Literal", value: name.slice(1) }
-  })
+  name => ([vec]) => member(vec, name.slice(1), true)
 );
