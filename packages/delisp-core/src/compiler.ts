@@ -61,6 +61,27 @@ function lookupBinding(varName: string, env: Environment) {
   return env.bindings[varName];
 }
 
+function compileBody(body: Expression[], env: Environment): JS.BlockStatement {
+  const middleForms = body.slice(0, -1);
+  const lastForm = last(body)!;
+
+  return {
+    type: "BlockStatement",
+    body: [
+      ...middleForms.map(
+        (e): JS.ExpressionStatement => ({
+          type: "ExpressionStatement",
+          expression: compile(e, env)
+        })
+      ),
+      {
+        type: "ReturnStatement",
+        argument: compile(lastForm, env)
+      }
+    ]
+  };
+}
+
 // Convert a Delisp variable name to Javascript. This function should
 // be injective so there is no collisions and the output should be a
 // valid variable name.
@@ -84,21 +105,7 @@ function compileLambda(
   const body: JS.Expression | JS.Statement =
     fn.body.length === 1
       ? compile(fn.body[0], newEnv)
-      : {
-          type: "BlockStatement",
-          body: [
-            ...fn.body.slice(0, -1).map(
-              (e): JS.ExpressionStatement => ({
-                type: "ExpressionStatement",
-                expression: compile(e, newEnv)
-              })
-            ),
-            {
-              type: "ReturnStatement",
-              argument: compile(last(fn.body)!, newEnv)
-            }
-          ]
-        };
+      : compileBody(fn.body, newEnv);
 
   return {
     type: "ArrowFunctionExpression",
@@ -223,21 +230,7 @@ function compileLetBindings(expr: SLet, env: Environment): JS.Expression {
           name: lookupBinding(b.var, newenv).jsname
         })
       ),
-      body: {
-        type: "BlockStatement",
-        body: [
-          ...expr.body.slice(0, -1).map(
-            (e): JS.ExpressionStatement => ({
-              type: "ExpressionStatement",
-              expression: compile(e, newenv)
-            })
-          ),
-          {
-            type: "ReturnStatement",
-            argument: compile(last(expr.body)!, newenv)
-          }
-        ]
-      }
+      body: compileBody(expr.body, newenv)
     },
     arguments: expr.bindings.map(b => compile(b.value, env))
   };
