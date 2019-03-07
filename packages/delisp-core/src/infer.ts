@@ -181,19 +181,19 @@ function infer(
         assumptions: []
       };
     case "vector": {
-      const inferredValues = expr.values.map(e => infer(e, monovars));
+      const inferredValues = inferMany(expr.values, monovars);
       const t = generateUniqueTVar();
 
       return {
         expr: {
           ...expr,
-          values: inferredValues.map(i => i.expr),
+          values: inferredValues.exprs,
           info: { type: tVector(t) }
         },
-        assumptions: flatMap(i => i.assumptions, inferredValues),
+        assumptions: inferredValues.assumptions,
         constraints: [
-          ...flatMap(i => i.constraints, inferredValues),
-          ...inferredValues.map(i => constEqual(i.expr, t))
+          ...inferredValues.constraints,
+          ...inferredValues.exprs.map(e => constEqual(e, t))
         ]
       };
     }
@@ -299,24 +299,24 @@ function infer(
 
     case "function-call": {
       const ifn = infer(expr.fn, monovars);
-      const iargs = expr.args.map(arg => infer(arg, monovars));
+      const iargs = inferMany(expr.args, monovars);
       const tTo = generateUniqueTVar();
-      const tfn: Monotype = tFn(iargs.map(a => a.expr.info.type), tTo);
+      const tfn: Monotype = tFn(iargs.exprs.map(a => a.info.type), tTo);
       return {
         expr: {
           ...expr,
           fn: ifn.expr,
-          args: iargs.map(a => a.expr),
+          args: iargs.exprs,
           info: { type: tTo }
         },
 
         constraints: [
           constEqual(ifn.expr, tfn) as TConstraint,
           ...ifn.constraints,
-          ...flatMap(a => a.constraints, iargs)
+          ...iargs.constraints
         ],
 
-        assumptions: [...ifn.assumptions, ...flatMap(a => a.assumptions, iargs)]
+        assumptions: [...ifn.assumptions, ...iargs.assumptions]
       };
     }
 
