@@ -32,27 +32,33 @@ const rl = readline.createInterface({
 });
 
 rl.on("line", line => {
-  inputBuffer += "\n" + line;
-
-  let syntax;
   try {
-    syntax = readSyntax(inputBuffer);
-  } catch (err) {
-    if (err.incomplete) {
-      rl.setPrompt("... ");
-      rl.prompt();
-      return;
-    } else {
-      throw err;
+    inputBuffer += "\n" + line;
+
+    let syntax;
+    try {
+      syntax = readSyntax(inputBuffer);
+    } catch (err) {
+      if (err.incomplete) {
+        rl.setPrompt("... ");
+        rl.prompt();
+        return;
+      } else {
+        inputBuffer = "";
+        throw err;
+      }
     }
+
+    inputBuffer = "";
+    rl.setPrompt(PROMPT);
+
+    const { value, type } = delispEval(syntax);
+    console.dir({ value, type }, { depth: null });
+  } catch (err) {
+    console.error(err);
+  } finally {
+    rl.prompt();
   }
-
-  inputBuffer = "";
-  rl.setPrompt(PROMPT);
-
-  const { value, type } = delispEval(syntax);
-  console.dir({ value, type }, { depth: null });
-  rl.prompt();
 });
 
 let previousModule = createModule();
