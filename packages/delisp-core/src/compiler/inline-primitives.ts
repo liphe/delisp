@@ -211,6 +211,6 @@ defineInlinePrimitive("length", "(-> [a] number)", ([vec]) =>
 // matches `.foo` and inlines `(-> {foo a | b} a)`
 defineMagicPrimitive(
   name => name[0] === ".",
-  name => `(-> {${name.slice(1)} a} a)`,
+  name => `(-> {${name.slice(1)} a | r} a)`,
   name => ([vec]) => member(vec, name.slice(1), true)
 );
