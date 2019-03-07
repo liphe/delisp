@@ -47,7 +47,7 @@ export interface LambdaList {
 export interface SFunction<I = {}> extends Node<I> {
   type: "function";
   lambdaList: LambdaList;
-  body: Expression<I>;
+  body: Array<Expression<I>>;
 }
 
 export interface SVectorConstructor<I = {}> extends Node<I> {

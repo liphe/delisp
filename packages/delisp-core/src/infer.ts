@@ -44,6 +44,7 @@ import {
   difference,
   flatMap,
   intersection,
+  last,
   mapObject,
   maybeMap,
   union
@@ -135,6 +136,22 @@ function constImplicitInstance(
 
 export interface Typed {
   type: Monotype;
+}
+
+function inferMany(
+  exprs: Expression[],
+  monovars: string[]
+): {
+  exprs: Array<Expression<Typed>>;
+  constraints: TConstraint[];
+  assumptions: TAssumption[];
+} {
+  const results = exprs.map(e => infer(e, monovars));
+  return {
+    exprs: results.map(r => r.expr),
+    constraints: flatMap(r => r.constraints, results),
+    assumptions: flatMap(r => r.assumptions, results)
+  };
 }
 
 // Generate new types for an expression an all its subexpressions,
@@ -250,10 +267,10 @@ function infer(
       const fnargs = expr.lambdaList.positionalArgs.map(a => a.variable);
       const argtypes = fnargs.map(_ => generateUniqueTVar());
 
-      const { expr: typedBody, constraints, assumptions } = infer(expr.body, [
-        ...monovars,
-        ...argtypes.map(v => v.name)
-      ]);
+      const { exprs: typedBody, constraints, assumptions } = inferMany(
+        expr.body,
+        [...monovars, ...argtypes.map(v => v.name)]
+      );
 
       // Generate a constraint for each assumption pending for each
       // argument, stating that they are equal to the argument types
@@ -271,7 +288,7 @@ function infer(
           ...expr,
           body: typedBody,
           info: {
-            type: tFn(argtypes, typedBody.info.type)
+            type: tFn(argtypes, last(typedBody)!.info.type)
           }
         },
         constraints: [...constraints, ...newConstraints],
@@ -580,7 +597,7 @@ function applySubstitutionToExpr(
     case "function":
       return {
         ...s,
-        body: applySubstitutionToExpr(s.body, env),
+        body: s.body.map(b => applySubstitutionToExpr(b, env)),
         info: {
           ...s.info,
           type: applySubstitution(s.info.type, env)

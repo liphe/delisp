@@ -78,20 +78,21 @@ function parseLambdaList(ll: ASExpr): LambdaList {
 defineConversion("lambda", expr => {
   const [lambda, ...args] = expr.elements;
 
-  if (args.length !== 2) {
+  if (args.length < 2) {
     const lastExpr = last([lambda, ...args]) as ASExpr; // we know it is not empty!
     throw new Error(
       printHighlightedExpr(
-        `'lambda' needs exactly 2 arguments, got ${args.length}`,
+        `'lambda' is missing the body`,
         lastExpr.location,
         true
       )
     );
   }
+
   return {
     type: "function",
     lambdaList: parseLambdaList(args[0]),
-    body: convertExpr(args[1]),
+    body: args.slice(1).map(convertExpr),
     location: expr.location,
     info: {}
   };

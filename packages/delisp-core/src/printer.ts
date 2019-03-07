@@ -91,7 +91,7 @@ function print(sexpr: Syntax): Doc {
           text("lambda"),
           space,
           group(list(align(...argNames.map(printVariable)))),
-          indent(concat(line, print(sexpr.body)))
+          indent(concat(line, join(sexpr.body.map(print), line)))
         )
       );
 
