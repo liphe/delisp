@@ -14,7 +14,7 @@ import {
   SVectorConstructor,
   Syntax
 } from "./syntax";
-import { mapObject } from "./utils";
+import { last, mapObject } from "./utils";
 
 import {
   DefinitionBackend,
@@ -81,10 +81,29 @@ function compileLambda(
     })
   );
 
+  const body: JS.Expression | JS.Statement =
+    fn.body.length === 1
+      ? compile(fn.body[0], newEnv)
+      : {
+          type: "BlockStatement",
+          body: [
+            ...fn.body.slice(0, -1).map(
+              (e): JS.ExpressionStatement => ({
+                type: "ExpressionStatement",
+                expression: compile(e, newEnv)
+              })
+            ),
+            {
+              type: "ReturnStatement",
+              argument: compile(last(fn.body)!, newEnv)
+            }
+          ]
+        };
+
   return {
     type: "ArrowFunctionExpression",
     params: [...jsargs],
-    body: compile(fn.body, newEnv),
+    body,
     expression: false
   };
 }

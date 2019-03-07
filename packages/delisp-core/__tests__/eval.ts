@@ -38,6 +38,10 @@ describe("Evaluation", () => {
       expect(evaluateString("((lambda (x y) y) 4 5)")).toBe(5);
     });
 
+    it("should return the last expression of the body", () => {
+      expect(evaluateString("((lambda (x) x 1) 10)")).toBe(1);
+    });
+
     // Regression
     it("different argument names should not shadow", () => {
       expect(
