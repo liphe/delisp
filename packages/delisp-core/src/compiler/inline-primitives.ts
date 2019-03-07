@@ -206,7 +206,7 @@ defineInlinePrimitive("length", "(-> [a] number)", ([vec]) =>
 
 // matches `.foo` and inlines `(-> {foo a | b} a)`
 defineMagicPrimitive(
-  name => name[0] === ".",
+  name => name[0] === "." && name.length > 1,
   name => {
     const label = name.slice(1);
     const a = generateUniqueTVar();
