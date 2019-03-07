@@ -102,4 +102,13 @@ describe("Evaluation", () => {
       expect(evaluateString("(fold + [1 2 3 4] 0)")).toEqual(10);
     });
   });
+
+  describe("Records", () => {
+    it("should construct records", () => {
+      expect(evaluateString("{x 2 y 8}")).toEqual({ x: 2, y: 8 });
+    });
+    it("should access record fields", () => {
+      expect(evaluateString("(.foo {bar 3 foo 5 baz 2})")).toEqual(5);
+    });
+  });
 });

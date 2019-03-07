@@ -78,8 +78,23 @@ describe("Type inference", () => {
     });
 
     describe("Records", () => {
-      it.skip("should infer the type of exact records", () => {
+      it("should infer the type of exact records", () => {
         expect(typeOf('{x 10 y "hello"}')).toBe("{x number y string}");
+      });
+      it("should infer the type of a field selector", () => {
+        expect(typeOf(".x")).toBe("(-> {x α | β} α)");
+        expect(typeOf(".foo")).toBe("(-> {foo α | β} α)");
+        expect(typeOf("(if true .x .y)")).toBe("(-> {x α y α | β} α)");
+      });
+      it("should be able to access the field", () => {
+        expect(typeOf("(.x {x 5})")).toBe("number");
+        expect(typeOf("(lambda (f) (f {x 5 y 6}))")).toBe(
+          "(-> (-> {x number y number} α) α)"
+        );
+      });
+      it("should throw an error when trying to access unknown fields", () => {
+        expect(() => typeOf("(.x {y 2})")).toThrow();
+        expect(() => typeOf("(.x {})")).toThrow();
       });
     });
 
