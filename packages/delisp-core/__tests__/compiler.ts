@@ -55,5 +55,9 @@ describe("Compiler", () => {
     it("generate nice error message for invalid records", () => {
       expect(compileError("{x 10 | y}")).toMatchSnapshot();
     });
+
+    it("generate nice error message for records with duplicated labels", () => {
+      expect(compileError("{x 10 x 20}")).toMatchSnapshot();
+    });
   });
 });

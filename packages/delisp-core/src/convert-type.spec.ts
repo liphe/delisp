@@ -40,6 +40,12 @@ describe("convertType", () => {
     }).toThrow();
   });
 
+  it("should fail for duplicated labels of extensible records", () => {
+    expect(() => {
+      convert(readFromString("{x 10 x 20}"));
+    }).toThrow();
+  });
+
   it("should detect incorrect types", () => {
     function failedType(x: string) {
       let result: string | undefined;
