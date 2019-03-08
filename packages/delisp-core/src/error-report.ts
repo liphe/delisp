@@ -29,7 +29,7 @@ export function printHighlightedSource(
   const column = remainingOffset;
 
   return [
-    `file:${line + 1}:${column}: ${message}`,
+    `file:${line + 1}:${column + 1}: ${message}`,
     lines[line],
     repeatChar("-", column) + "^"
   ].join("\n");
