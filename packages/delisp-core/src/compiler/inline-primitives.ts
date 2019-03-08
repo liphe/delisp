@@ -2,6 +2,7 @@ import * as JS from "estree";
 import { generalize, generateUniqueTVar, readType } from "../type-utils";
 import { tFn, tRecord, Type } from "../types";
 import { range } from "../utils";
+import { isValidJSIdentifierName } from "./jsvariable";
 
 type InlineHandler = (args: JS.Expression[]) => JS.Expression;
 
@@ -121,18 +122,15 @@ function methodCall(
   };
 }
 
-function member(
-  obj: JS.Expression,
-  prop: string,
-  bracketNotation: boolean = false
-): JS.Expression {
+function member(obj: JS.Expression, prop: string): JS.Expression {
+  const dotNotation = isValidJSIdentifierName(prop);
   return {
     type: "MemberExpression",
-    computed: bracketNotation,
+    computed: !dotNotation,
     object: obj,
-    property: bracketNotation
-      ? { type: "Literal", value: prop }
-      : { type: "Identifier", name: prop }
+    property: dotNotation
+      ? { type: "Identifier", name: prop }
+      : { type: "Literal", value: prop }
   };
 }
 
@@ -212,6 +210,6 @@ defineMagicPrimitive(
     const a = generateUniqueTVar();
     const r = generateUniqueTVar();
     const t = generalize(tFn([tRecord([{ label, type: a }], r)], a), []);
-    return createInlinePrimitive(t, ([vec]) => member(vec, label, true));
+    return createInlinePrimitive(t, ([vec]) => member(vec, label));
   }
 );

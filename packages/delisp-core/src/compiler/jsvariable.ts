@@ -1,3 +1,10 @@
+// A valid IdentifierName can be used as a property on objects
+// This RegEx is more restrictive than needed, but at least it
+// does not return any false positives
+export function isValidJSIdentifierName(x: string): boolean {
+  return /^[_$a-zA-Z][_$a-zA-Z0-9]*$/.test(x);
+}
+
 export function varnameToJS(x: string): string {
   // This prefix is intended to avoid generating reserved Javascript
   // keywords. For instance, the Delisp variable `const` will be

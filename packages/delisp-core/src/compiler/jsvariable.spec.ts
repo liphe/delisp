@@ -1,4 +1,20 @@
-import { varnameToJS } from "./jsvariable";
+import { isValidJSIdentifierName, varnameToJS } from "./jsvariable";
+
+describe("Check valid JS identifier name", () => {
+  it("should return false for invalid JS identifier names", () => {
+    expect(isValidJSIdentifierName("foo?")).toBe(false);
+    expect(isValidJSIdentifierName("123")).toBe(false);
+    expect(isValidJSIdentifierName("2dVector")).toBe(false);
+  });
+  it("should return true for valid JS identifier names", () => {
+    expect(isValidJSIdentifierName("isFoo")).toBe(true);
+    expect(isValidJSIdentifierName("$123")).toBe(true);
+    expect(isValidJSIdentifierName("_123")).toBe(true);
+    expect(isValidJSIdentifierName("Vector2D")).toBe(true);
+    expect(isValidJSIdentifierName("default")).toBe(true);
+    expect(isValidJSIdentifierName("const")).toBe(true);
+  });
+});
 
 describe("Variable name translation", () => {
   it("should escape delisp variable characters not allowed in Javascript", () => {
