@@ -110,5 +110,13 @@ describe("Type inference", () => {
         expect(typeOf("(if true [] [1])")).toBe("[number]");
       });
     });
+
+    describe("Type annotations", () => {
+      it("user-specified variables cannot generalize inferrred types", () => {
+        expect(() =>
+          typeOf(`(the (-> a a) (the (-> string string) (lambda (x) x)))`)
+        ).toThrow();
+      });
+    });
   });
 });

@@ -50,6 +50,7 @@ Object {
         "extends": Object {
           "name": "a",
           "type": "type-variable",
+          "userSpecified": false,
         },
         "label": "y",
         "labelType": Object {

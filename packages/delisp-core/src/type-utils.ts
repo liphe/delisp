@@ -26,8 +26,8 @@ export function listTypeVariables(t: Monotype): string[] {
 }
 
 let generateUniqueTVarIdx = 0;
-export const generateUniqueTVar = (): TVar =>
-  tVar(`t${++generateUniqueTVarIdx}`);
+export const generateUniqueTVar = (userSpecified = false): TVar =>
+  tVar(`t${++generateUniqueTVarIdx}`, userSpecified);
 
 export function generalize(t: Monotype, monovars: string[]): Type {
   const vars = listTypeVariables(t);
@@ -41,11 +41,11 @@ export function generalize(t: Monotype, monovars: string[]): Type {
   };
 }
 
-export function instantiate(t: Type): Monotype {
+export function instantiate(t: Type, userSpecified = false): Monotype {
   const subst = t.tvars.reduce((s, vname) => {
     return {
       ...s,
-      [vname]: generateUniqueTVar()
+      [vname]: generateUniqueTVar(userSpecified)
     };
   }, {});
   return applySubstitution(t.mono, subst);

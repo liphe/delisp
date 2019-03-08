@@ -96,12 +96,14 @@ interface TConstraintExplicitInstance {
   type: "explicit-instance-constraint";
   expr: Expression<Typed>;
   t: Type;
+  userSpecified: boolean;
 }
 function constExplicitInstance(
   expr: Expression<Typed>,
-  t: Type
+  t: Type,
+  userSpecified = false
 ): TConstraintExplicitInstance {
-  return { type: "explicit-instance-constraint", expr, t };
+  return { type: "explicit-instance-constraint", expr, t, userSpecified };
 }
 
 // A constraint stating that an expression's type is an instance of a
@@ -394,16 +396,17 @@ function infer(
       };
     }
 
-    case "type-annotation":
+    case "type-annotation": {
       const inferred = infer(expr.value, monovars);
       return {
         result: inferred.result,
         assumptions: inferred.assumptions,
         constraints: [
           ...inferred.constraints,
-          constExplicitInstance(inferred.result, expr.valueType)
+          constExplicitInstance(inferred.result, expr.valueType, true)
         ]
       };
+    }
   }
 }
 
@@ -546,7 +549,8 @@ function applySubstitutionToConstraint(
       return {
         type: "explicit-instance-constraint",
         expr: applySubstitutionToExpr(c.expr, s),
-        t: applySubstitutionToPolytype(c.t, s)
+        t: applySubstitutionToPolytype(c.t, s),
+        userSpecified: c.userSpecified
       };
   }
 }
@@ -739,7 +743,13 @@ ${printType(applySubstitution(constraint.t, solution))}
     }
     case "explicit-instance-constraint": {
       return solve(
-        [constEqual(constraint.expr, instantiate(constraint.t)), ...rest],
+        [
+          constEqual(
+            constraint.expr,
+            instantiate(constraint.t, constraint.userSpecified)
+          ),
+          ...rest
+        ],
         solution
       );
     }
