@@ -18,7 +18,7 @@ import {
   tVector,
   tVoid
 } from "./types";
-import { last } from "./utils";
+import { duplicatedItemsBy, last } from "./utils";
 
 function convertSymbol(expr: ASExprSymbol): Monotype {
   switch (expr.name) {
@@ -108,6 +108,13 @@ function convertMap(expr: ASExprMap): Monotype {
 
   const { fields, tail } = fieldsAndTail();
   checkInvalidFields();
+
+  const duplicates = duplicatedItemsBy(fields, f => f.label.name);
+  if (duplicates.length > 0) {
+    throw new Error(
+      printHighlightedExpr("Duplicated label", duplicates[0].label.location)
+    );
+  }
 
   return tRecord(
     fields.map(({ label, value }) => ({

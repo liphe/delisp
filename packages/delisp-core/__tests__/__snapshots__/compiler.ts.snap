@@ -113,3 +113,9 @@ exports[`Compiler Error messages generate nice error message for invalid records
 {x 10 | y}
 ------^"
 `;
+
+exports[`Compiler Error messages generate nice error message for records with duplicated labels 1`] = `
+"file:1:6: Duplicated label
+{x 10 x 20}
+------^"
+`;

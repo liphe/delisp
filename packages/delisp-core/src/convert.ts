@@ -13,7 +13,7 @@ import {
   SLetBinding,
   Syntax
 } from "./syntax";
-import { last } from "./utils";
+import { duplicatedItemsBy, last } from "./utils";
 
 const conversions: Map<string, (expr: ASExprList) => Expression> = new Map();
 const toplevelConversions: Map<
@@ -298,6 +298,13 @@ function convertMap(map: ASExprMap): Expression {
         `| is not a valid field name`,
         invalidBar.label.location
       )
+    );
+  }
+
+  const duplicates = duplicatedItemsBy(map.fields, f => f.label.name);
+  if (duplicates.length > 0) {
+    throw new Error(
+      printHighlightedExpr("Duplicated label", duplicates[0].label.location)
     );
   }
 

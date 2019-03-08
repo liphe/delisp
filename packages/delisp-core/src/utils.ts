@@ -34,6 +34,20 @@ export function unique<A>(array: A[]): A[] {
   return result;
 }
 
+/** Return duplicated elements of array that are not the first occurance. */
+export function duplicatedItemsBy<A, K>(array: A[], fn: (x: A) => K): A[] {
+  const seen: Set<K> = new Set();
+  const duplicated = [];
+  for (const x of array) {
+    const key = fn(x);
+    if (seen.has(key)) {
+      duplicated.push(x);
+    }
+    seen.add(key);
+  }
+  return duplicated;
+}
+
 /** Return the last element of a list, or undefined if it is empty */
 export function last<A>(x: A[]): A | undefined {
   return x[x.length - 1];
