@@ -26,7 +26,7 @@ import {
   compileInlinePrimitive,
   isInlinePrimitive
 } from "./compiler/inline-primitives";
-import { varnameToJS } from "./compiler/jsvariable";
+import { identifierToJS } from "./compiler/jsvariable";
 import { pprint } from "./printer";
 
 import * as JS from "estree";
@@ -52,7 +52,7 @@ function addBinding(varName: string, env: Environment): Environment {
     ...env,
     bindings: {
       ...env.bindings,
-      [varName]: { jsname: varnameToJS(varName), source: "lexical" }
+      [varName]: { jsname: identifierToJS(varName), source: "lexical" }
     }
   };
 }
@@ -172,7 +172,7 @@ function compileVariable(
     const binding = lookupBinding(ref.name, env);
 
     if (!binding) {
-      return env.defs.access(varnameToJS(ref.name));
+      return env.defs.access(identifierToJS(ref.name));
     }
 
     switch (binding.source) {
@@ -347,7 +347,7 @@ export function moduleEnvironment(
   const moduleBindings = moduleDefinitions.reduce(
     (d, decl) => ({
       ...d,
-      [decl]: { jsname: varnameToJS(decl), source: "module" }
+      [decl]: { jsname: identifierToJS(decl), source: "module" }
     }),
     {}
   );

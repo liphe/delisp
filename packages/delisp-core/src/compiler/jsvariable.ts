@@ -1,8 +1,64 @@
+const reservedWords = [
+  "arguments",
+  "await",
+  "break",
+  "case",
+  "catch",
+  "class",
+  "const",
+  "continue",
+  "debugger",
+  "default",
+  "delete",
+  "do",
+  "else",
+  "enum",
+  "eval",
+  "export",
+  "extends",
+  "false",
+  "finally",
+  "for",
+  "function",
+  "if",
+  "implements",
+  "import",
+  "in",
+  "instanceof",
+  "interface",
+  "let",
+  "new",
+  "null",
+  "package",
+  "private",
+  "protected",
+  "public",
+  "return",
+  "static",
+  "super",
+  "switch",
+  "this",
+  "throw",
+  "true",
+  "try",
+  "typeof",
+  "var",
+  "void",
+  "while",
+  "with",
+  "yield"
+];
+
 // A valid IdentifierName can be used as a property on objects
 // This RegEx is more restrictive than needed, but at least it
 // does not return any false positives
 export function isValidJSIdentifierName(x: string): boolean {
   return /^[_$a-zA-Z][_$a-zA-Z0-9]*$/.test(x);
+}
+
+// A valid Identifier is more restricting and does not allow reserved (key)words
+export function isValidJSIdentifier(x: string): boolean {
+  return isValidJSIdentifierName(x) && !reservedWords.includes(x);
 }
 
 export function varnameToJS(x: string): string {
@@ -54,4 +110,8 @@ export function varnameToJS(x: string): string {
   };
 
   return `${prefix}${escapeName(x)}`;
+}
+
+export function identifierToJS(x: string): string {
+  return isValidJSIdentifier(x) ? x : varnameToJS(x);
 }

@@ -1,4 +1,8 @@
-import { isValidJSIdentifierName, varnameToJS } from "./jsvariable";
+import {
+  isValidJSIdentifier,
+  isValidJSIdentifierName,
+  varnameToJS
+} from "./jsvariable";
 
 describe("Check valid JS identifier name", () => {
   it("should return false for invalid JS identifier names", () => {
@@ -13,6 +17,17 @@ describe("Check valid JS identifier name", () => {
     expect(isValidJSIdentifierName("Vector2D")).toBe(true);
     expect(isValidJSIdentifierName("default")).toBe(true);
     expect(isValidJSIdentifierName("const")).toBe(true);
+  });
+});
+
+describe("Check valid JS identifier", () => {
+  it("should return false for invalid JS identifiers", () => {
+    expect(isValidJSIdentifier("const")).toBe(false);
+    expect(isValidJSIdentifier("default")).toBe(false);
+  });
+  it("should return true for valid JS identifiers", () => {
+    expect(isValidJSIdentifier("_const")).toBe(true);
+    expect(isValidJSIdentifier("$default")).toBe(true);
   });
 });
 
