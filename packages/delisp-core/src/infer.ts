@@ -197,20 +197,28 @@ function infer(
     }
 
     case "record": {
-      const inferredValues = mapObject(expr.fields, v => infer(v, monovars));
+      const inferred = expr.fields.map(({ label, labelLocation, value }) => ({
+        label,
+        labelLocation,
+        ...infer(value, monovars)
+      }));
 
       return {
         result: {
           ...expr,
-          fields: mapObject(inferredValues, i => i.result),
+          fields: inferred.map(({ label, labelLocation, result: value }) => ({
+            label,
+            labelLocation,
+            value
+          })),
           info: {
-            type: tRecord(mapObject(inferredValues, i => i.result.info.type))
+            type: tRecord(
+              inferred.map(i => ({ label: i.label, type: i.result.info.type }))
+            )
           }
         },
-        assumptions: flatMap(i => i.assumptions, Object.values(inferredValues)),
-        constraints: [
-          ...flatMap(i => i.constraints, Object.values(inferredValues))
-        ]
+        assumptions: flatMap(i => i.assumptions, inferred),
+        constraints: flatMap(i => i.constraints, inferred)
       };
     }
     case "variable-reference": {
@@ -559,7 +567,10 @@ function applySubstitutionToExpr(
     case "record":
       return {
         ...s,
-        fields: mapObject(s.fields, v => applySubstitutionToExpr(v, env)),
+        fields: s.fields.map(f => ({
+          ...f,
+          value: applySubstitutionToExpr(f.value, env)
+        })),
         info: {
           ...s.info,
           type: applySubstitution(s.info.type, env)

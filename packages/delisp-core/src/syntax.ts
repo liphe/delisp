@@ -69,7 +69,11 @@ export interface SLet<I = {}> extends Node<I> {
 
 export interface SRecord<I = {}> extends Node<I> {
   type: "record";
-  fields: { [key: string]: Expression<I> };
+  fields: Array<{
+    label: string;
+    labelLocation: Location;
+    value: Expression<I>;
+  }>;
 }
 
 export type Expression<I = {}> =

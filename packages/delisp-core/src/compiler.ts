@@ -256,11 +256,11 @@ function compileVector(
 function compileRecord(expr: SRecord, env: Environment): JS.Expression {
   return {
     type: "ObjectExpression",
-    properties: Object.entries(expr.fields).map(
-      ([k, v]): JS.Property => ({
+    properties: expr.fields.map(
+      ({ label, value }): JS.Property => ({
         type: "Property",
-        key: literal(k),
-        value: compile(v, env),
+        key: literal(label),
+        value: compile(value, env),
         kind: "init",
         method: false,
         shorthand: false,

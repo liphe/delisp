@@ -13,7 +13,7 @@ import {
   SLetBinding,
   Syntax
 } from "./syntax";
-import { last, mapObject } from "./utils";
+import { last } from "./utils";
 
 const conversions: Map<string, (expr: ASExprList) => Expression> = new Map();
 const toplevelConversions: Map<
@@ -291,9 +291,23 @@ function convertVector(list: ASExprVector): Expression {
 }
 
 function convertMap(map: ASExprMap): Expression {
+  const invalidBar = map.fields.find(f => f.label.name === "|");
+  if (invalidBar) {
+    throw new Error(
+      printHighlightedExpr(
+        `| is not a valid field name`,
+        invalidBar.label.location
+      )
+    );
+  }
+
   return {
     type: "record",
-    fields: mapObject(map.fields, convertExpr),
+    fields: map.fields.map(f => ({
+      label: f.label.name,
+      labelLocation: f.label.location,
+      value: convertExpr(f.value)
+    })),
     location: map.location,
     info: {}
   };

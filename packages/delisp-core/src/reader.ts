@@ -226,11 +226,15 @@ const atExpr = lazy(() => {
   });
 });
 
-const mapFields = (x: Parser<ASExpr>): Parser<[string, ASExpr]> =>
-  spaced(symbol).chain(key => {
+const mapFields = (
+  x: Parser<ASExpr>
+): Parser<{ label: ASExprSymbol; value: ASExpr }> =>
+  spaced(symbol).chain(label => {
     return x.chain(value => {
-      const fieldTuple: [string, ASExpr] = [key.name, value];
-      return Parser.of(fieldTuple);
+      return Parser.of({
+        label,
+        value
+      });
     });
   });
 
@@ -238,10 +242,7 @@ const mapP = (x: Parser<ASExpr>): Parser<ASExpr> =>
   delimitedMany(leftCurly, mapFields(x), rightCurly).map(
     (fields, location): ASExprMap => ({
       type: "map",
-      fields: fields.reduce(
-        (acc, [key, value]) => ({ ...acc, [key]: value }),
-        {}
-      ),
+      fields,
       location
     })
   );

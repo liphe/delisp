@@ -34,9 +34,10 @@ export interface ASExprVector {
 
 export interface ASExprMap {
   type: "map";
-  fields: {
-    [key: string]: ASExpr;
-  };
+  fields: Array<{
+    label: ASExprSymbol;
+    value: ASExpr;
+  }>;
   location: Location;
 }
 

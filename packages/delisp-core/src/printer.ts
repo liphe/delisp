@@ -57,7 +57,7 @@ function print(sexpr: Syntax): Doc {
         map(
           align(
             join(
-              Object.entries(sexpr.fields).map(([k, v]) =>
+              sexpr.fields.map(({ label: k, value: v }) =>
                 concat(text(k), space, print(v))
               ),
               line

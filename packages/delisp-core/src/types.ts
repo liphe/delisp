@@ -114,14 +114,13 @@ export const tRowExtension = (
 });
 
 export function tRecord(
-  fields: { [key: string]: Monotype },
+  fields: Array<{ label: string; type: Monotype }>,
   extending: Monotype = emptyRow
 ): Monotype {
   return tApp(
     "record",
-    Object.keys(fields).reduceRight(
-      (row: Monotype, label: string): Row =>
-        tRowExtension(label, fields[label], row),
+    fields.reduceRight(
+      (row: Monotype, { label, type }): Row => tRowExtension(label, type, row),
       extending
     )
   );

@@ -211,7 +211,7 @@ defineMagicPrimitive(
     const label = name.slice(1);
     const a = generateUniqueTVar();
     const r = generateUniqueTVar();
-    const t = generalize(tFn([tRecord({ [label]: a }, r)], a), []);
+    const t = generalize(tFn([tRecord([{ label, type: a }], r)], a), []);
     return createInlinePrimitive(t, ([vec]) => member(vec, label, true));
   }
 );

@@ -34,6 +34,12 @@ describe("convertType", () => {
     ).toMatchSnapshot();
   });
 
+  it("should fail for invalid syntax of extensible records", () => {
+    expect(() => {
+      convert(readFromString("{| a x number}"));
+    }).toThrow();
+  });
+
   it("should detect incorrect types", () => {
     function failedType(x: string) {
       let result: string | undefined;

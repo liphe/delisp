@@ -51,5 +51,9 @@ describe("Compiler", () => {
       expect(compileError("(if x 2)")).toMatchSnapshot();
       expect(compileError("(if x 2 3 0)")).toMatchSnapshot();
     });
+
+    it("generate nice error message for invalid records", () => {
+      expect(compileError("{x 10 | y}")).toMatchSnapshot();
+    });
   });
 });

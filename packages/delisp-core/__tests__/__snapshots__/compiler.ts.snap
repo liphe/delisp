@@ -107,3 +107,9 @@ exports[`Compiler Error messages generate nice error message for invalid let exp
 (let ((x)) x)
 ------^"
 `;
+
+exports[`Compiler Error messages generate nice error message for invalid records 1`] = `
+"file:1:6: | is not a valid field name
+{x 10 | y}
+------^"
+`;
