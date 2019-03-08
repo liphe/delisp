@@ -26,7 +26,7 @@ import {
   compileInlinePrimitive,
   isInlinePrimitive
 } from "./compiler/inline-primitives";
-import { identifierToJS } from "./compiler/jsvariable";
+import { identifierToJS, isValidJSIdentifierName } from "./compiler/jsvariable";
 import { pprint } from "./printer";
 
 import * as JS from "estree";
@@ -243,6 +243,13 @@ function literal(value: number | string): JS.Literal {
   };
 }
 
+function identifier(name: string): JS.Identifier {
+  return {
+    type: "Identifier",
+    name
+  };
+}
+
 function compileVector(
   expr: SVectorConstructor,
   env: Environment
@@ -259,7 +266,9 @@ function compileRecord(expr: SRecord, env: Environment): JS.Expression {
     properties: expr.fields.map(
       ({ label, value }): JS.Property => ({
         type: "Property",
-        key: literal(label),
+        key: isValidJSIdentifierName(label)
+          ? identifier(label)
+          : literal(label),
         value: compile(value, env),
         kind: "init",
         method: false,
