@@ -61,7 +61,7 @@ export function isValidJSIdentifier(x: string): boolean {
   return isValidJSIdentifierName(x) && !reservedWords.includes(x);
 }
 
-export function varnameToJS(x: string): string {
+export function escapeIdentifier(x: string): string {
   // This prefix is intended to avoid generating reserved Javascript
   // keywords. For instance, the Delisp variable `const` will be
   // translated to $const and not `const`.
@@ -113,5 +113,5 @@ export function varnameToJS(x: string): string {
 }
 
 export function identifierToJS(x: string): string {
-  return isValidJSIdentifier(x) ? x : varnameToJS(x);
+  return isValidJSIdentifier(x) ? x : escapeIdentifier(x);
 }
