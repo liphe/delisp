@@ -299,6 +299,8 @@ export function compile(expr: Expression, env: Environment): JS.Expression {
       return compileFunctionCall(expr, env);
     case "let-bindings":
       return compileLetBindings(expr, env);
+    case "type-annotation":
+      return compile(expr.value, env);
   }
 }
 

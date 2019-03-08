@@ -13,6 +13,8 @@ import {
 } from "./prettier";
 import { Module, Syntax } from "./syntax";
 
+import { printType } from "./type-utils";
+
 function indent(x: Doc, level = 2): Doc {
   return indent_(x, level);
 }
@@ -135,6 +137,16 @@ function print(sexpr: Syntax): Doc {
           )
         ),
         indent(printBody(sexpr.body))
+      );
+
+    case "type-annotation":
+      return group(
+        list(
+          text("the"),
+          space,
+          text(printType(sexpr.valueType.mono, false)),
+          indent(concat(line, print(sexpr.value)))
+        )
       );
   }
 }

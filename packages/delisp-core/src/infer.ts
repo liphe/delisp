@@ -393,6 +393,17 @@ function infer(
         ]
       };
     }
+
+    case "type-annotation":
+      const inferred = infer(expr.value, monovars);
+      return {
+        result: inferred.result,
+        assumptions: inferred.assumptions,
+        constraints: [
+          ...inferred.constraints,
+          constExplicitInstance(inferred.result, expr.valueType)
+        ]
+      };
   }
 }
 
@@ -614,6 +625,15 @@ function applySubstitutionToExpr(
           value: applySubstitutionToExpr(b.value, env)
         })),
         body: s.body.map(e => applySubstitutionToExpr(e, env)),
+        info: {
+          ...s.info,
+          type: applySubstitution(s.info.type, env)
+        }
+      };
+    case "type-annotation":
+      return {
+        ...s,
+        value: applySubstitutionToExpr(s.value, env),
         info: {
           ...s.info,
           type: applySubstitution(s.info.type, env)

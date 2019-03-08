@@ -15,6 +15,9 @@ import {
 } from "./syntax";
 import { duplicatedItemsBy, last } from "./utils";
 
+import { convert as convertType } from "./convert-type";
+import { generalize } from "./type-utils";
+
 const conversions: Map<string, (expr: ASExprList) => Expression> = new Map();
 const toplevelConversions: Map<
   string,
@@ -190,6 +193,40 @@ defineConversion("let", expr => {
     type: "let-bindings",
     bindings: parseLetBindings(rawBindings),
     body,
+    location: expr.location,
+    info: {}
+  };
+});
+
+defineConversion("the", expr => {
+  const [_the, ...args] = expr.elements;
+  const lastExpr = last([_the, ...args]) as ASExpr; // we know it is not empty!
+
+  if (args.length === 0) {
+    throw new Error(
+      printHighlightedExpr(
+        `'the' is missing the type and value`,
+        lastExpr.location,
+        true
+      )
+    );
+  }
+  if (args.length === 1) {
+    throw new Error(
+      printHighlightedExpr(
+        `'the' is missing the expression`,
+        lastExpr.location,
+        true
+      )
+    );
+  }
+
+  const [t, value] = args;
+
+  return {
+    type: "type-annotation",
+    valueType: generalize(convertType(t), []),
+    value: convertExpr(value),
     location: expr.location,
     info: {}
   };

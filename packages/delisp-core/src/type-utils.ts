@@ -139,8 +139,8 @@ function _printType(type: Monotype): string {
   }
 }
 
-export function printType(rawType: Monotype) {
-  const type = normalizeType(rawType);
+export function printType(rawType: Monotype, normalize = true) {
+  const type = normalize ? normalizeType(rawType) : rawType;
   return _printType(type);
 }
 

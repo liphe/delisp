@@ -1,4 +1,5 @@
 import { Location } from "./input";
+import { Type } from "./types";
 
 //
 // Expressions
@@ -76,6 +77,12 @@ export interface SRecord<I = {}> extends Node<I> {
   }>;
 }
 
+export interface STypeAnnotation<I = {}> extends Node<I> {
+  type: "type-annotation";
+  value: Expression<I>;
+  valueType: Type;
+}
+
 export type Expression<I = {}> =
   | SNumber<I>
   | SString<I>
@@ -85,7 +92,8 @@ export type Expression<I = {}> =
   | SFunction<I>
   | SVectorConstructor<I>
   | SLet<I>
-  | SRecord<I>;
+  | SRecord<I>
+  | STypeAnnotation<I>;
 
 //
 // Declarations
