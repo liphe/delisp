@@ -171,14 +171,23 @@ function unifyRow(
   row2: RExtension,
   ctx: Substitution
 ): UnifyResult {
-  const { substitution: subs, row: r3 } = rewriteRowForLabel(
+  const { substitution: subs, row: row3 } = rewriteRowForLabel(
     row2,
     row1.label,
     ctx
   );
+
+  if (row1.extends.type === "type-variable" && subs[row1.extends.name]) {
+    return {
+      type: "unify-mismatch-error",
+      t1: row1,
+      t2: row2
+    };
+  }
+
   return unifyArray(
     [row1.labelType, row1.extends],
-    [r3.labelType, r3.extends],
+    [row3.labelType, row3.extends],
     subs
   );
 }
