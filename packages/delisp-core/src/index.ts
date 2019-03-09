@@ -17,6 +17,8 @@ export { pprintModule } from "./printer";
 
 export { default as primitives } from "./primitives";
 
+export { printHighlightedExpr } from "./error-report";
+
 export function readSyntax(source: string): Syntax {
   return convertSyntax(readFromString(source));
 }

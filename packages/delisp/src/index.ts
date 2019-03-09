@@ -2,6 +2,8 @@ import {
   compileModuleToString,
   inferModule,
   pprintModule,
+  printHighlightedExpr,
+  printType,
   readModule
 } from "@delisp/core";
 import { promises as fs } from "fs";
@@ -34,7 +36,18 @@ export async function compileFile(file: string): Promise<void> {
   const module = readModule(content);
 
   // Type check module
-  inferModule(module);
+  const inferResult = inferModule(module);
+
+  // Check for unknown references
+  if (inferResult.unknowns.length > 0) {
+    const unknowns = inferResult.unknowns.map(u =>
+      printHighlightedExpr(
+        `Unknown variable ${u.name} of type ${printType(u.info.type)}`,
+        u.location
+      )
+    );
+    throw new Error(unknowns.join("\n\n"));
+  }
 
   const code = compileModuleToString(module);
 
