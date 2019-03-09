@@ -56,6 +56,28 @@ export async function compileFile(file: string): Promise<void> {
   return;
 }
 
+export async function describeFile(file: string): Promise<void> {
+  const content = await fs.readFile(file, "utf8");
+  const m = readModule(content);
+  const inferResult = inferModule(m);
+
+  const infos = inferResult.typedModule.body
+    .map(s => {
+      if (s.type === "export") {
+        return `🔸 ${s.name} :: ${printType(s.value.info.type)}`;
+      } else if (s.type === "definition") {
+        return `🔹 ${s.variable} :: ${printType(s.value.info.type)}`;
+      } else {
+        return null;
+      }
+    })
+    .filter(Boolean);
+
+  /* tslint:disable:no-console */
+  console.log(infos.join("\n"));
+  /* tslint:enable:no-console */
+}
+
 async function processArgs(args: string[]): Promise<void> {
   if (args.length < 1) {
     startREPL();
@@ -71,6 +93,12 @@ async function processArgs(args: string[]): Promise<void> {
       case "format": {
         const files = cmdArgs;
         await Promise.all(files.map(formatFile));
+        return;
+      }
+
+      case "describe": {
+        const files = cmdArgs;
+        await Promise.all(files.map(describeFile));
         return;
       }
 
