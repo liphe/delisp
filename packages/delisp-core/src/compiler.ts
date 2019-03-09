@@ -22,6 +22,7 @@ import {
   staticDefinition
 } from "./compiler/definitions";
 
+import { member } from "./compiler/estree-utils";
 import {
   compileInlinePrimitive,
   isInlinePrimitive
@@ -127,17 +128,15 @@ function compileExport(exp: SExport, env: Environment): JS.Statement {
     expression: {
       type: "AssignmentExpression",
       operator: "=",
-      left: {
-        type: "MemberExpression",
-        computed: true,
-        object: {
+      left: member(
+        {
           type: "MemberExpression",
           computed: false,
           object: { type: "Identifier", name: "module" },
           property: { type: "Identifier", name: "exports" }
         },
-        property: { type: "Literal", value: exp.name }
-      },
+        exp.name
+      ),
       right: compile(exp.value, env)
     }
   };
@@ -177,18 +176,13 @@ function compileVariable(
 
     switch (binding.source) {
       case "primitive":
-        return {
-          type: "MemberExpression",
-          computed: true,
-          object: {
+        return member(
+          {
             type: "Identifier",
             name: "env"
           },
-          property: {
-            type: "Literal",
-            value: binding.jsname
-          }
-        };
+          binding.jsname
+        );
       case "module":
         return env.defs.access(binding.jsname);
       case "lexical":

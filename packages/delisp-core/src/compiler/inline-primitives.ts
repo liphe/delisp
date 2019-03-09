@@ -2,7 +2,7 @@ import * as JS from "estree";
 import { generalize, generateUniqueTVar, readType } from "../type-utils";
 import { tFn, tRecord, Type } from "../types";
 import { range } from "../utils";
-import { isValidJSIdentifierName } from "./jsvariable";
+import { member, methodCall } from "./estree-utils";
 
 type InlineHandler = (args: JS.Expression[]) => JS.Expression;
 
@@ -99,39 +99,6 @@ export function compileInlinePrimitive(
       expression: true
     };
   }
-}
-
-//
-// Helpers
-//
-
-function methodCall(
-  e: JS.Expression,
-  method: string,
-  args: JS.Expression[]
-): JS.Expression {
-  return {
-    type: "CallExpression",
-    callee: {
-      type: "MemberExpression",
-      object: e,
-      property: { type: "Identifier", name: method },
-      computed: false
-    },
-    arguments: args
-  };
-}
-
-function member(obj: JS.Expression, prop: string): JS.Expression {
-  const dotNotation = isValidJSIdentifierName(prop);
-  return {
-    type: "MemberExpression",
-    computed: !dotNotation,
-    object: obj,
-    property: dotNotation
-      ? { type: "Identifier", name: prop }
-      : { type: "Literal", value: prop }
-  };
 }
 
 //
