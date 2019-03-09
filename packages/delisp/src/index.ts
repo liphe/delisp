@@ -49,7 +49,7 @@ export async function compileFile(file: string): Promise<void> {
     throw new Error(unknowns.join("\n\n"));
   }
 
-  const code = compileModuleToString(module);
+  const code = compileModuleToString(inferResult.typedModule);
 
   await mkdirp(path.dirname(outfile));
   await fs.writeFile(outfile, code);

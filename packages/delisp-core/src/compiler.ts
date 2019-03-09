@@ -14,6 +14,7 @@ import {
   SVectorConstructor,
   Syntax
 } from "./syntax";
+import { printType } from "./type-utils";
 import { last, mapObject } from "./utils";
 
 import {
@@ -122,8 +123,21 @@ function compileDefinition(def: SDefinition, env: Environment): JS.Statement {
   return env.defs.define(name, value);
 }
 
-function compileExport(exp: SExport, env: Environment): JS.Statement {
+function addLineComment(
+  exp: JS.ExpressionStatement,
+  str: string,
+  trailing: boolean = false
+): JS.ExpressionStatement {
+  const comment = { type: "Line", value: str, leading: !trailing, trailing };
+  const prevComments = (exp as any).comments;
   return {
+    ...exp,
+    comments: prevComments ? [...prevComments, comment] : [comment]
+  } as JS.ExpressionStatement;
+}
+
+function compileExport(exp: SExport, env: Environment): JS.Statement {
+  const exportExpr = {
     type: "ExpressionStatement",
     expression: {
       type: "AssignmentExpression",
@@ -139,7 +153,11 @@ function compileExport(exp: SExport, env: Environment): JS.Statement {
       ),
       right: compile(exp.value, env)
     }
-  };
+  } as JS.ExpressionStatement;
+  const maybeType = (exp.value.info as any).type;
+  return maybeType
+    ? addLineComment(exportExpr, ` type: ${printType(maybeType)}`)
+    : exportExpr;
 }
 
 function compileFunctionCall(
