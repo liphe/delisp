@@ -20,18 +20,25 @@ import { Module, Syntax } from "@delisp/core/src/syntax";
 
 import readline from "readline";
 
-let inputBuffer = "";
-
+let rl: readline.Interface;
 const PROMPT = "λ ";
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-  completer,
-  prompt: PROMPT
-});
+let previousModule = createModule();
+const context = createContext();
 
-rl.on("line", line => {
+export function startREPL() {
+  rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    completer,
+    prompt: PROMPT
+  });
+  rl.on("line", handleLine);
+  rl.prompt();
+}
+
+let inputBuffer = "";
+function handleLine(line: string) {
   try {
     inputBuffer += "\n" + line;
 
@@ -59,10 +66,7 @@ rl.on("line", line => {
   } finally {
     rl.prompt();
   }
-});
-
-let previousModule = createModule();
-const context = createContext();
+}
 
 function completer(input: string): [string[], string] {
   const defs = previousModule.body.filter(isDefinition);
@@ -134,9 +138,5 @@ const delispEval = (syntax: Syntax) => {
     };
   }
 };
-
-export function startREPL() {
-  rl.prompt();
-}
 
 // tslint:enable no-console
