@@ -2,42 +2,42 @@
 
 exports[`convertType should detect incorrect types 1`] = `
 "
-file:1:0: Not a valid type
+file:1:1: Not a valid type
 1
 ^"
 `;
 
 exports[`convertType should detect incorrect types 2`] = `
 "
-file:1:0: Not a valid type
+file:1:1: Not a valid type
 \\"hello\\"
 ^"
 `;
 
 exports[`convertType should detect incorrect types 3`] = `
 "
-file:1:1: Unknown type constructor
+file:1:2: Unknown type constructor
 (fn)
 -^"
 `;
 
 exports[`convertType should detect incorrect types 4`] = `
 "
-file:1:1: Unknown type constructor
+file:1:2: Unknown type constructor
 (fn a)
 -^"
 `;
 
 exports[`convertType should detect incorrect types 5`] = `
 "
-file:1:0: Expected symbol as operator
+file:1:1: Expected symbol as operator
 (1 2 3)
 ^"
 `;
 
 exports[`convertType should detect incorrect types 6`] = `
 "
-file:1:0: Expected symbol as operator
+file:1:1: Expected symbol as operator
 (\\"hello\\" \\"world\\")
 ^"
 `;

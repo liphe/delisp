@@ -1,31 +1,31 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Reader Error messages generate a user-friendly error for incomplete escaped string 1`] = `
-"file:1:5: Expected escaped string character
+"file:1:6: Expected escaped string character
 \\"abc\\\\
 -----^"
 `;
 
 exports[`Reader Error messages generate user-friendly error for a closing parenthesis 1`] = `
-"file:1:0: Expected Unmatched closed parenthesis
+"file:1:1: Expected Unmatched closed parenthesis
 )
 ^"
 `;
 
 exports[`Reader Error messages generate user-friendly error for an incomplete list 1`] = `
-"file:1:6: Expected close parenthesis, number, double quote, symbol, list, open parenthesis, open square bracket, or open curly brace
+"file:1:7: Expected close parenthesis, number, double quote, symbol, list, open parenthesis, open square bracket, or open curly brace
 (1 2 3
 ------^"
 `;
 
 exports[`Reader Error messages generate user-friendly error for an incomplete string 1`] = `
-"file:1:4: Expected double quote, or string character
+"file:1:5: Expected double quote, or string character
 \\"foo
 ----^"
 `;
 
 exports[`Reader Error messages generate user-friendly error for badly escaped string 1`] = `
-"file:1:4: Expected escaped string character
+"file:1:5: Expected escaped string character
 \\"ab\\\\xyz\\"
 ----^"
 `;
