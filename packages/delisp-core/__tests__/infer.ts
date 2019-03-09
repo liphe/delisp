@@ -112,7 +112,16 @@ describe("Type inference", () => {
     });
 
     describe("Type annotations", () => {
-      it("user-specified variables cannot generalize inferrred types", () => {
+      it("user-specified variables can specialize inferred types", () => {
+        expect(typeOf("(the [number] [])")).toBe("[number]");
+      });
+
+      it("user-specified variables can be isomorphic to inferred types", () => {
+        expect(typeOf("(the [a] [])")).toBe("[α]");
+      });
+
+      it("user-specified variables cannot generalize inferred types", () => {
+        expect(() => typeOf(`(the a 3)`)).toThrow();
         expect(() =>
           typeOf(`(the (-> a a) (the (-> string string) (lambda (x) x)))`)
         ).toThrow();
