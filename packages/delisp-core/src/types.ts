@@ -26,6 +26,7 @@ export interface TApplication {
 export interface TVar {
   type: "type-variable";
   name: string;
+  userSpecified: boolean;
 }
 
 export interface REmpty {
@@ -77,10 +78,11 @@ export const tString: TString = {
   type: "string"
 };
 
-export function tVar(name: string): TVar {
+export function tVar(name: string, userSpecified = false): TVar {
   return {
     type: "type-variable",
-    name
+    name,
+    userSpecified
   };
 }
 

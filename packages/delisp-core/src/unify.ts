@@ -211,13 +211,26 @@ export function unify(
     return success(ctx);
   } else if (t1.type === "boolean" && t2.type === "boolean") {
     return success(ctx);
+  } else if (
+    t1.type === "type-variable" &&
+    t1.userSpecified &&
+    t2.type === "type-variable" &&
+    t2.userSpecified
+  ) {
+    return t1 === t2
+      ? success(ctx)
+      : {
+          type: "unify-mismatch-error",
+          t1,
+          t2
+        };
   } else if (t1.type === "application" && t2.type === "application") {
     // RULE: (uni-app)
     return unifyArray(t1.args, t2.args, ctx);
-  } else if (t1.type === "type-variable") {
+  } else if (t1.type === "type-variable" && !t1.userSpecified) {
     // RULE: (uni-varl)
     return unifyVariable(t1, t2, ctx);
-  } else if (t2.type === "type-variable") {
+  } else if (t2.type === "type-variable" && !t2.userSpecified) {
     // RULE: (uni-varr)
     return unifyVariable(t2, t1, ctx);
   } else if (t1.type === "empty-row" && t2.type === "empty-row") {
