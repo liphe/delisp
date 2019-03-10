@@ -14,7 +14,7 @@
 
 import { Substitution } from "./type-substitution";
 import { generateUniqueTVar } from "./type-utils";
-import { Monotype, RExtension, tRowExtension, TVar } from "./types";
+import { Monotype, RExtension, tRowExtension, TVar, tVoid } from "./types";
 
 interface UnifySuccess {
   type: "unify-success";
@@ -205,7 +205,11 @@ export function unify(
   ctx: Substitution = {}
 ): UnifyResult {
   // RULE (uni-const)
-  if (t1.type === "string" && t2.type === "string") {
+  if (t1 === undefined) {
+    return { type: "unify-mismatch-error", t1: tVoid, t2 };
+  } else if (t2 === undefined) {
+    return { type: "unify-mismatch-error", t1, t2: tVoid };
+  } else if (t1.type === "string" && t2.type === "string") {
     return success(ctx);
   } else if (t1.type === "number" && t2.type === "number") {
     return success(ctx);
