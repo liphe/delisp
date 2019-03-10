@@ -1,12 +1,35 @@
-import { readSyntax } from "../src/index";
-import { pprint } from "../src/printer";
+import { readModule, readSyntax } from "../src/index";
+import { pprint, pprintModule } from "../src/printer";
 
 function pprintString(source: string, lineWidth: number = 80) {
   const syntax = readSyntax(source);
   return "\n" + pprint(syntax, lineWidth);
 }
 
+function pprintLines(source: string, lineWidth: number = 80) {
+  const m = readModule(source);
+  return "\n" + pprintModule(m, lineWidth);
+}
+
 describe("Pretty Printer", () => {
+  it("should insert newlines", () => {
+    expect(pprintLines(`aaa bbb ccc`)).toMatchSnapshot();
+  });
+  it("should preserve some empty lines", () => {
+    expect(
+      pprintLines(`
+aaa
+bbb
+
+ccc
+ddd
+
+
+eee
+`)
+    ).toMatchSnapshot();
+  });
+
   it("should print lambda abstractions beautifully", () => {
     expect(pprintString("(lambda (aaa bbb ccc) xxx)")).toMatchSnapshot();
     expect(
