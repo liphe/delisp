@@ -14,7 +14,8 @@
 
 import { Substitution } from "./type-substitution";
 import { generateUniqueTVar } from "./type-utils";
-import { Monotype, RExtension, tRowExtension, TVar, tVoid } from "./types";
+import { Monotype, RExtension, tRowExtension, TVar } from "./types";
+import { last } from "./utils";
 
 interface UnifySuccess {
   type: "unify-success";
@@ -33,7 +34,15 @@ interface UnifyMismatchError {
   t2: Monotype;
 }
 
-type UnifyError = UnifyOccurCheckError | UnifyMismatchError;
+interface UnifyMissingValueError {
+  type: "unify-missing-value-error";
+  t: Monotype;
+}
+
+type UnifyError =
+  | UnifyOccurCheckError
+  | UnifyMismatchError
+  | UnifyMissingValueError;
 type UnifyResult = UnifySuccess | UnifyError;
 
 function success(s: Substitution): UnifyResult {
@@ -91,6 +100,16 @@ function unifyArray(
 ): UnifyResult {
   if (t1s.length === 0 && t2s.length === 0) {
     return success(ctx);
+  } else if (t1s.length === 0) {
+    return {
+      type: "unify-missing-value-error",
+      t: t2s[0]
+    };
+  } else if (t2s.length === 0) {
+    return {
+      type: "unify-missing-value-error",
+      t: t1s[0]
+    };
   } else {
     const [t1, ...rest1] = t1s;
     const [t2, ...rest2] = t2s;
@@ -205,11 +224,7 @@ export function unify(
   ctx: Substitution = {}
 ): UnifyResult {
   // RULE (uni-const)
-  if (t1 === undefined) {
-    return { type: "unify-mismatch-error", t1: tVoid, t2 };
-  } else if (t2 === undefined) {
-    return { type: "unify-mismatch-error", t1, t2: tVoid };
-  } else if (t1.type === "string" && t2.type === "string") {
+  if (t1.type === "string" && t2.type === "string") {
     return success(ctx);
   } else if (t1.type === "number" && t2.type === "number") {
     return success(ctx);
@@ -230,7 +245,16 @@ export function unify(
         };
   } else if (t1.type === "application" && t2.type === "application") {
     // RULE: (uni-app)
-    return unifyArray(t1.args, t2.args, ctx);
+    const argResult = unifyArray(
+      t1.args.slice(0, t1.args.length - 1),
+      t2.args.slice(0, t2.args.length - 1),
+      ctx
+    );
+    if (argResult.type === "unify-success") {
+      return unify(last(t1.args)!, last(t2.args)!, argResult.substitution);
+    } else {
+      return argResult;
+    }
   } else if (t1.type === "type-variable" && !t1.userSpecified) {
     // RULE: (uni-varl)
     return unifyVariable(t1, t2, ctx);
