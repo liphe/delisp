@@ -1,4 +1,4 @@
-import { tNumber, tVar, tVector, tRecord } from "../src/types";
+import { tFn, tNumber, tRecord, tVar, tVector } from "../src/types";
 import { unify } from "../src/unify";
 
 describe("Unification", () => {
@@ -7,6 +7,13 @@ describe("Unification", () => {
     const t2 = tVector(t1);
     const result = unify(t1, t2);
     expect(result.type).toBe("unify-occur-check-error");
+  });
+
+  it("should catch function arity mismatches", () => {
+    const t1 = tFn([tNumber, tNumber], tNumber);
+    const t2 = tFn([tNumber], tNumber);
+    const result = unify(t1, t2);
+    expect(result.type).not.toBe("unify-syccess");
   });
 
   describe("Records", () => {
