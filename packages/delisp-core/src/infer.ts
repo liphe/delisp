@@ -726,6 +726,10 @@ function solve(
             printHighlightedExpr(
               `Type mismatch
 
+Expected ${printType(
+                applySubstitution(result.t2, solution)
+              )} instead of ${printType(applySubstitution(result.t1, solution))}
+
 ${printType(applySubstitution(constraint.expr.info.type, solution))}
 
 vs.
