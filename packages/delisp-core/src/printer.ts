@@ -156,5 +156,19 @@ export function pprint(sexpr: Syntax, lineWidth: number): string {
 }
 
 export function pprintModule(m: Module, lineWidth: number): string {
-  return m.body.map(s => pprint(s, lineWidth)).join("\n\n");
+  return m.body
+    .map((s, i) => {
+      let newlines;
+      if (i > 0) {
+        const end = m.body[i - 1].location.end;
+        const start = s.location.start;
+        const between = s.location.input.toString().slice(end, start);
+        newlines = between.split("\n").length - 1;
+      } else {
+        newlines = 0;
+      }
+      const nl = newlines > 1 ? "\n" : "";
+      return nl + pprint(s, lineWidth);
+    })
+    .join("\n");
 }
