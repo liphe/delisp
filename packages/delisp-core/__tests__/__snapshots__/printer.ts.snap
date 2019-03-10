@@ -85,6 +85,13 @@ exports[`Pretty Printer should align nested function calls 3`] = `
                ttt))"
 `;
 
+exports[`Pretty Printer should insert newlines 1`] = `
+"
+aaa
+bbb
+ccc"
+`;
+
 exports[`Pretty Printer should place all arguments of a function call in the next line if necessary 1`] = `
 "
 (this-is-a-very-long-and-ugly-function-name
@@ -93,6 +100,17 @@ exports[`Pretty Printer should place all arguments of a function call in the nex
           (a b c d)
           (a b c d)
           (a b c d)))"
+`;
+
+exports[`Pretty Printer should preserve some empty lines 1`] = `
+"
+aaa
+bbb
+
+ccc
+ddd
+
+eee"
 `;
 
 exports[`Pretty Printer should pretty print a combination of lambda and function call 1`] = `
