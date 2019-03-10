@@ -13,7 +13,7 @@ describe("Unification", () => {
     const t1 = tFn([tNumber, tNumber], tNumber);
     const t2 = tFn([tNumber], tNumber);
     const result = unify(t1, t2);
-    expect(result.type).not.toBe("unify-syccess");
+    expect(result.type).toBe("unify-missing-value-error");
   });
 
   describe("Records", () => {

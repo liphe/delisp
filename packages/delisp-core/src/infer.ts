@@ -734,7 +734,23 @@ ${printType(applySubstitution(constraint.expr.info.type, solution))}
 
 vs.
 
+${printType(applySubstitution(constraint.t, solution))}`,
+              constraint.expr.location
+            )
+          );
+        case "unify-missing-value-error":
+          throw new Error(
+            printHighlightedExpr(
+              `Type mismatch
+
+Missing value of type ${printType(applySubstitution(result.t, solution))}
+
+${printType(applySubstitution(constraint.expr.info.type, solution))}
+
+vs.
+
 ${printType(applySubstitution(constraint.t, solution))}
+
 `,
               constraint.expr.location
             )
