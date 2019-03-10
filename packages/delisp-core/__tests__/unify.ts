@@ -9,11 +9,19 @@ describe("Unification", () => {
     expect(result.type).toBe("unify-occur-check-error");
   });
 
-  it("should catch function arity mismatches", () => {
-    const t1 = tFn([tNumber, tNumber], tNumber);
-    const t2 = tFn([tNumber], tNumber);
-    const result = unify(t1, t2);
-    expect(result.type).toBe("unify-missing-value-error");
+  describe("Application", () => {
+    it("should catch function arity mismatches", () => {
+      const t1 = tFn([tNumber, tNumber], tNumber);
+      const t2 = tFn([tNumber], tNumber);
+      const result = unify(t1, t2);
+      expect(result.type).toBe("unify-missing-value-error");
+    });
+    it("should catch operator mismatches", () => {
+      const t1 = tVector(tNumber);
+      const t2 = tFn([], tNumber);
+      const result = unify(t1, t2);
+      expect(result.type).toBe("unify-mismatch-error");
+    });
   });
 
   describe("Records", () => {
