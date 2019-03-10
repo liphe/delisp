@@ -243,7 +243,11 @@ export function unify(
           t1,
           t2
         };
-  } else if (t1.type === "application" && t2.type === "application") {
+  } else if (
+    t1.type === "application" &&
+    t2.type === "application" &&
+    t1.op === t2.op
+  ) {
     // RULE: (uni-app)
     const argResult = unifyArray(
       t1.args.slice(0, t1.args.length - 1),
