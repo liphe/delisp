@@ -122,7 +122,7 @@ function print(sexpr: Syntax): Doc {
         list(
           text("export"),
           space,
-          text(sexpr.name),
+          text(sexpr.value.name),
           indent(concat(line, print(sexpr.value)))
         )
       );

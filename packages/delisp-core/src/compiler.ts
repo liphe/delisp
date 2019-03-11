@@ -137,9 +137,9 @@ function compileExport(exp: SExport, env: Environment): JS.Statement {
           object: { type: "Identifier", name: "module" },
           property: { type: "Identifier", name: "exports" }
         },
-        exp.name
+        exp.value.name
       ),
-      right: compile(exp.value, env)
+      right: compileVariable(exp.value, env)
     }
   };
 }
