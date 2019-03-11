@@ -126,6 +126,23 @@ describe("Type inference", () => {
           typeOf(`(the (-> a a) (the (-> string string) (lambda (x) x)))`)
         ).toThrow();
       });
+
+      it("supports partial type annotations", () => {
+        expect(typeOf('(the [_a] ["foo"])')).toBe("[string]");
+        expect(typeOf("(the (-> _a _b) (lambda (x) 42))")).toBe(
+          "(-> α number)"
+        );
+        expect(typeOf("(the (-> _a _b) (lambda (x) (+ x 42)))")).toBe(
+          "(-> number number)"
+        );
+
+        expect(typeOf(`(lambda (f) ((the (-> _a _b _c) f) 42 "foo"))`)).toBe(
+          "(-> (-> number string α) α)"
+        );
+        expect(() =>
+          typeOf(`(lambda (f) ((the (-> _a _a _c) f) 42 "foo"))`)
+        ).toThrow();
+      });
     });
   });
 });
