@@ -147,6 +147,12 @@ describe("Type inference", () => {
           "(-> (-> number string α) α)"
         );
       });
+
+      it.skip("`_` should not be equal to any named wildcard _<name>", () => {
+        expect(typeOf(`(the (-> _ __t1) (lambda (x) (print x) 42))`)).toBe(
+          "(-> string number)"
+        );
+      });
     });
   });
 });
