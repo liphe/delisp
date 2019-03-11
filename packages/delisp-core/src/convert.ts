@@ -11,6 +11,7 @@ import {
   Expression,
   LambdaList,
   SLetBinding,
+  SVariableReference,
   Syntax
 } from "./syntax";
 import { last } from "./utils";
@@ -266,29 +267,28 @@ defineToplevel("define", expr => {
 defineToplevel("export", expr => {
   const [exp, ...args] = expr.elements;
 
-  if (args.length !== 2) {
+  if (args.length !== 1) {
     const lastExpr = last([exp, ...args]) as ASExpr;
     throw new Error(
       printHighlightedExpr(
-        `'export' needs exactly 2 arguments, got ${args.length}`,
+        `'export' needs exactly 1 arguments, got ${args.length}`,
         lastExpr.location,
         true
       )
     );
   }
 
-  const [name, value] = args;
+  const [variable] = args;
 
-  if (name.type !== "symbol") {
+  if (variable.type !== "symbol") {
     throw new Error(
-      printHighlightedExpr("'export' expected a symbol", name.location)
+      printHighlightedExpr("'export' expected a symbol", variable.location)
     );
   }
 
   return {
     type: "export",
-    name: name.name,
-    value: convertExpr(value),
+    value: convertSymbol(variable),
     location: expr.location
   };
 });
@@ -344,6 +344,15 @@ function convertMap(map: ASExprMap): Expression {
   };
 }
 
+function convertSymbol(expr: ASExprSymbol): SVariableReference {
+  return {
+    type: "variable-reference",
+    name: expr.name,
+    location: expr.location,
+    info: {}
+  };
+}
+
 export function convertExpr(expr: ASExpr): Expression {
   switch (expr.type) {
     case "number":
@@ -351,12 +360,7 @@ export function convertExpr(expr: ASExpr): Expression {
     case "string":
       return { ...expr, info: {} };
     case "symbol":
-      return {
-        type: "variable-reference",
-        name: expr.name,
-        location: expr.location,
-        info: {}
-      };
+      return convertSymbol(expr);
     case "list":
       return convertList(expr);
     case "vector":

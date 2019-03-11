@@ -9,13 +9,7 @@
 //   https://pdfs.semanticscholar.org/8983/233b3dff2c5b94efb31235f62bddc22dc899.pdf
 //
 
-import {
-  Expression,
-  isDeclaration,
-  Module,
-  SVariableReference,
-  Syntax
-} from "./syntax";
+import { Expression, Module, SVariableReference, Syntax } from "./syntax";
 
 import { printType } from "./type-utils";
 
@@ -434,12 +428,22 @@ function infer(
 }
 
 function inferSyntax(syntax: Syntax): InferResult<Syntax<Typed>> {
-  if (isDeclaration(syntax)) {
+  if (syntax.type === "definition") {
     const { result, assumptions, constraints } = infer(syntax.value, []);
     return {
       result: {
         ...syntax,
         value: result
+      },
+      assumptions,
+      constraints
+    };
+  } else if (syntax.type === "export") {
+    const { result, assumptions, constraints } = infer(syntax.value, []);
+    return {
+      result: {
+        ...syntax,
+        value: result as SVariableReference<Typed>
       },
       assumptions,
       constraints
@@ -673,10 +677,15 @@ function applySubstitutionToSyntax(
   s: Syntax<Typed>,
   env: Substitution
 ): Syntax<Typed> {
-  if (isDeclaration(s)) {
+  if (s.type === "definition") {
     return {
       ...s,
       value: applySubstitutionToExpr(s.value, env)
+    };
+  } else if (s.type === "export") {
+    return {
+      ...s,
+      value: applySubstitutionToExpr(s.value, env) as SVariableReference<Typed>
     };
   } else {
     return applySubstitutionToExpr(s, env);

@@ -109,8 +109,7 @@ export interface SDefinition<I = {}> {
 
 export interface SExport<I = {}> {
   type: "export";
-  name: string;
-  value: Expression<I>;
+  value: SVariableReference<I>;
   location: Location;
 }
 
