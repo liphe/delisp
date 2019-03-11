@@ -1,7 +1,8 @@
 import { convert as convertType } from "./convert-type";
 import { readFromString } from "./reader";
+import { generateUniqueTVar } from "./type-generate";
 import { applySubstitution } from "./type-substitution";
-import { emptyRow, Monotype, TApplication, tVar, TVar, Type } from "./types";
+import { emptyRow, Monotype, TApplication, tVar, Type } from "./types";
 import { flatMap, unique } from "./utils";
 
 // Return the list of type variables in the order they show up
@@ -25,10 +26,6 @@ export function listTypeVariables(t: Monotype): string[] {
   }
 }
 
-let generateUniqueTVarIdx = 0;
-export const generateUniqueTVar = (userSpecified = false): TVar =>
-  tVar(`t${++generateUniqueTVarIdx}`, userSpecified);
-
 export function generalize(t: Monotype, monovars: string[]): Type {
   const vars = listTypeVariables(t);
   return {
@@ -43,9 +40,10 @@ export function generalize(t: Monotype, monovars: string[]): Type {
 
 export function instantiate(t: Type, userSpecified = false): Monotype {
   const subst = t.tvars.reduce((s, vname) => {
+    const isHole = vname.startsWith("_");
     return {
       ...s,
-      [vname]: generateUniqueTVar(userSpecified)
+      [vname]: generateUniqueTVar(isHole ? false : userSpecified)
     };
   }, {});
   return applySubstitution(t.mono, subst);

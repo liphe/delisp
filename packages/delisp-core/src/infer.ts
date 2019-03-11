@@ -21,13 +21,10 @@ import { printType } from "./type-utils";
 
 import { printHighlightedExpr } from "./error-report";
 
+import { generateUniqueTVar } from "./type-generate";
 import { applySubstitution, Substitution } from "./type-substitution";
-import {
-  generalize,
-  generateUniqueTVar,
-  instantiate,
-  listTypeVariables
-} from "./type-utils";
+import { generalize, instantiate, listTypeVariables } from "./type-utils";
+
 import {
   Monotype,
   tBoolean,

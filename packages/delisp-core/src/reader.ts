@@ -109,6 +109,7 @@ const symbol: Parser<ASExprSymbol> = atLeastOne(
     // compiler and ensuring that it is able to generate JS variables
     // for those names.
     character("!"),
+    character("_"),
     character("|"),
     character("#"),
     character("$"),

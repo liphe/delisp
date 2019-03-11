@@ -1,5 +1,6 @@
 import * as JS from "estree";
-import { generalize, generateUniqueTVar, readType } from "../type-utils";
+import { generateUniqueTVar } from "../type-generate";
+import { generalize, readType } from "../type-utils";
 import { tFn, tRecord, Type } from "../types";
 import { range } from "../utils";
 import { member, methodCall } from "./estree-utils";

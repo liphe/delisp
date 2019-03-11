@@ -12,8 +12,8 @@
  * The `unify` function is the main entry-point for this module.
  */
 
+import { generateUniqueTVar } from "./type-generate";
 import { Substitution } from "./type-substitution";
-import { generateUniqueTVar } from "./type-utils";
 import { Monotype, RExtension, tRowExtension, TVar } from "./types";
 import { last } from "./utils";
 
