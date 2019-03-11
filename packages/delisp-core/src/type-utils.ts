@@ -43,9 +43,10 @@ export function generalize(t: Monotype, monovars: string[]): Type {
 
 export function instantiate(t: Type, userSpecified = false): Monotype {
   const subst = t.tvars.reduce((s, vname) => {
+    const isHole = vname.startsWith("_");
     return {
       ...s,
-      [vname]: generateUniqueTVar(userSpecified)
+      [vname]: generateUniqueTVar(isHole ? false : userSpecified)
     };
   }, {});
   return applySubstitution(t.mono, subst);
