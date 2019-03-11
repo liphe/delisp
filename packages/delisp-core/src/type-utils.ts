@@ -1,7 +1,8 @@
 import { convert as convertType } from "./convert-type";
 import { readFromString } from "./reader";
+import { generateUniqueTVar } from "./type-generate";
 import { applySubstitution } from "./type-substitution";
-import { emptyRow, Monotype, TApplication, tVar, TVar, Type } from "./types";
+import { emptyRow, Monotype, TApplication, tVar, Type } from "./types";
 import { flatMap, unique } from "./utils";
 
 // Return the list of type variables in the order they show up
@@ -24,10 +25,6 @@ export function listTypeVariables(t: Monotype): string[] {
       return [t.name];
   }
 }
-
-let generateUniqueTVarIdx = 0;
-export const generateUniqueTVar = (userSpecified = false): TVar =>
-  tVar(`t${++generateUniqueTVarIdx}`, userSpecified);
 
 export function generalize(t: Monotype, monovars: string[]): Type {
   const vars = listTypeVariables(t);

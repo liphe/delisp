@@ -142,6 +142,10 @@ describe("Type inference", () => {
         expect(() =>
           typeOf(`(lambda (f) ((the (-> _a _a _c) f) 42 "foo"))`)
         ).toThrow();
+
+        expect(typeOf(`(lambda (f) ((the (-> _ _ _) f) 42 "foo"))`)).toBe(
+          "(-> (-> number string α) α)"
+        );
       });
     });
   });
