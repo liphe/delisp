@@ -23,6 +23,7 @@ import {
   dynamicDefinition,
   staticDefinition
 } from "./compiler/definitions";
+import { cjs } from "./compiler/modules";
 
 import { member } from "./compiler/estree-utils";
 import {
@@ -124,24 +125,11 @@ function compileDefinition(def: SDefinition, env: Environment): JS.Statement {
   return env.defs.define(name, value);
 }
 
-function compileExport(exp: SExport, env: Environment): JS.Statement {
-  return {
-    type: "ExpressionStatement",
-    expression: {
-      type: "AssignmentExpression",
-      operator: "=",
-      left: member(
-        {
-          type: "MemberExpression",
-          computed: false,
-          object: { type: "Identifier", name: "module" },
-          property: { type: "Identifier", name: "exports" }
-        },
-        exp.value.name
-      ),
-      right: compileVariable(exp.value, env)
-    }
-  };
+function compileExport(
+  exp: SExport,
+  env: Environment
+): JS.Statement | JS.ModuleDeclaration {
+  return cjs.export(exp.value.name, compileVariable(exp.value, env), exp);
 }
 
 function compileFunctionCall(
@@ -314,8 +302,11 @@ export function compile(expr: Expression, env: Environment): JS.Expression {
   }
 }
 
-function compileTopLevel(syntax: Syntax, env: Environment): JS.Statement {
-  const js: JS.Statement =
+function compileTopLevel(
+  syntax: Syntax,
+  env: Environment
+): JS.Statement | JS.ModuleDeclaration {
+  const js: JS.Statement | JS.ModuleDeclaration =
     syntax.type === "definition"
       ? compileDefinition(syntax, env)
       : syntax.type === "export"
@@ -403,7 +394,8 @@ function compileModule(
     body: [
       ...(includeRuntime ? [compileRuntime()] : []),
       ...m.body.map(
-        (syntax: Syntax): JS.Statement => compileTopLevel(syntax, env)
+        (syntax: Syntax): JS.Statement | JS.ModuleDeclaration =>
+          compileTopLevel(syntax, env)
       )
     ]
   };
