@@ -47,7 +47,7 @@
 
 (defvar delisp-font-lock-keywords
   (list
-   (list "(\\\(define\\\)\\s-*\\\(\\sw+\\\)"
+   (list "(\\\(define\\\)\\s-*\\\(\\(?:\\sw\\|\\s_\\)+\\\)"
          '(1 font-lock-keyword-face)
          '(2 font-lock-variable-name-face))
    (list
@@ -57,6 +57,12 @@
    ;; '("\\<#?:\\sw+\\>" . font-lock-builtin-face)
    )
   "Expressions to highlight in Delisp mode.")
+
+
+(defvar delisp-mode-syntax-table
+  (let ((st (make-syntax-table)))
+    st)
+  "Syntax table for Delisp mode.")
 
 ;;;###autoload
 (define-derived-mode delisp-mode prog-mode "Delisp"
