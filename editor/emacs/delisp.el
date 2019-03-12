@@ -20,7 +20,7 @@
 
 ;;; Commentary:
 
-;; 
+;;
 
 ;;; Code:
 
@@ -30,6 +30,20 @@
 ;; Add support for dimmed parenthesis
 (when (boundp 'paren-face-modes)
   (add-to-list 'paren-face-modes 'delisp-mode))
+
+
+(defvar delisp-program
+  "delisp")
+
+(defun delisp-format-buffer ()
+  "Format file using delisp format"
+  (interactive)
+  (let ((tmpfile (make-temp-file "delisp_format")))
+    (write-region (point-min) (point-max) tmpfile)
+    (apply #'call-process delisp-program nil nil nil
+           (list "format" tmpfile))
+    (insert-file-contents-literally tmpfile nil nil nil t)))
+
 
 (defvar delisp-font-lock-keywords
   (list
@@ -50,7 +64,9 @@
 
 \\{delisp-mode-map}"
   :group 'delisp
-  (setq font-lock-defaults '(delisp-font-lock-keywords nil nil nil)))
+  (setq font-lock-defaults '(delisp-font-lock-keywords nil nil nil))
+  (add-hook 'before-save-hook 'delisp-format-buffer nil 'local)
+  (setq-local delisp-program (delisp-find-program)))
 
 (provide 'delisp)
 ;;; delisp.el ends here
