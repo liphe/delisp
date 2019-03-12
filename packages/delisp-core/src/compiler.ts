@@ -23,7 +23,7 @@ import {
   dynamicDefinition,
   staticDefinition
 } from "./compiler/definitions";
-import { cjs } from "./compiler/modules";
+import { cjs, esm, ModuleBackend } from "./compiler/modules";
 
 import { member } from "./compiler/estree-utils";
 import {
@@ -46,6 +46,7 @@ interface EnvironmentBinding {
 
 export interface Environment {
   defs: DefinitionBackend;
+  moduleFormat: ModuleBackend;
   bindings: {
     [symbol: string]: EnvironmentBinding;
   };
@@ -129,7 +130,11 @@ function compileExport(
   exp: SExport,
   env: Environment
 ): JS.Statement | JS.ModuleDeclaration {
-  return cjs.export(exp.value.name, compileVariable(exp.value, env), exp);
+  return env.moduleFormat.export(
+    exp.value.name,
+    compileVariable(exp.value, env),
+    exp
+  );
 }
 
 function compileFunctionCall(
@@ -351,7 +356,8 @@ function compileRuntime(): JS.VariableDeclaration {
 
 export function moduleEnvironment(
   m: Module,
-  definitionContainer?: string
+  definitionContainer?: string,
+  esModule: boolean = false
 ): Environment {
   const moduleDefinitions = m.body
     .filter(isDefinition)
@@ -376,6 +382,7 @@ export function moduleEnvironment(
     defs: definitionContainer
       ? dynamicDefinition(definitionContainer)
       : staticDefinition,
+    moduleFormat: esModule ? esm : cjs,
 
     bindings: { ...primitiveBindings, ...moduleBindings }
   };
@@ -410,9 +417,10 @@ export function compileToString(syntax: Syntax, env: Environment): string {
 
 export function compileModuleToString(
   m: Module,
-  definitionContainer?: string
+  definitionContainer?: string,
+  esModule?: boolean
 ): string {
-  const env = moduleEnvironment(m, definitionContainer);
+  const env = moduleEnvironment(m, definitionContainer, esModule);
   const ast = compileModule(m, true, env);
   const code = recast.print(ast).code;
   debug("jscode:", code);
