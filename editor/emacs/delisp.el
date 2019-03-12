@@ -51,7 +51,7 @@
          '(1 font-lock-keyword-face)
          '(2 font-lock-variable-name-face))
    (list
-    (concat "(" (regexp-opt '("if" "lambda" "let" "export" "and" "or") t) "\\>")
+    (concat "(" (regexp-opt '("if" "lambda" "let" "export" "and" "or" "the") t) "\\>")
     '(1 font-lock-keyword-face))
    ;; Delisp `:' and `#:' keywords as builtins.
    ;; '("\\<#?:\\sw+\\>" . font-lock-builtin-face)
