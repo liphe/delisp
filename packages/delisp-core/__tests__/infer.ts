@@ -100,6 +100,21 @@ describe("Type inference", () => {
         expect(() => typeOf("(.x {y 2})")).toThrow();
         expect(() => typeOf("(.x {})")).toThrow();
       });
+      it("should infer the type of updating record fields", () => {
+        expect(typeOf("{x 2 | {x 1}}")).toBe("{x number}");
+        expect(typeOf('{x "foo" | {x 1}}')).toBe("{x string}");
+        expect(typeOf("{x 3 | (if true {x 1} {x 2})}")).toBe("{x number}");
+        expect(typeOf("(lambda (r v) {x v | r})")).toBe(
+          "(-> {x α | β} γ {x γ | β})"
+        );
+      });
+      it("should not allow to extend a record", () => {
+        expect(() => typeOf("{y 2 | {x 1}}")).toThrow();
+      });
+      it("should not allow to extend any other type", () => {
+        expect(() => typeOf("{x 1 | 5}")).toThrow();
+        expect(() => typeOf('{x 1 | "foo"}')).toThrow();
+      });
     });
 
     describe("Conditionals", () => {

@@ -14,6 +14,8 @@ import {
   SVectorConstructor,
   Syntax
 } from "./syntax";
+
+import { methodCall } from "./compiler/estree-utils";
 import { last, mapObject } from "./utils";
 
 import {
@@ -255,7 +257,7 @@ function compileVector(
 }
 
 function compileRecord(expr: SRecord, env: Environment): JS.Expression {
-  return {
+  const newObj: JS.ObjectExpression = {
     type: "ObjectExpression",
     properties: expr.fields.map(
       ({ label, value }): JS.Property => ({
@@ -271,6 +273,15 @@ function compileRecord(expr: SRecord, env: Environment): JS.Expression {
       })
     )
   };
+  if (expr.extends) {
+    return methodCall({ type: "Identifier", name: "Object" }, "assign", [
+      { type: "ObjectExpression", properties: [] },
+      compile(expr.extends, env),
+      newObj
+    ]);
+  } else {
+    return newObj;
+  }
 }
 
 export function compile(expr: Expression, env: Environment): JS.Expression {

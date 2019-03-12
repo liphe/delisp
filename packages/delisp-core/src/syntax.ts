@@ -75,6 +75,7 @@ export interface SRecord<I = {}> extends Node<I> {
     labelLocation: Location;
     value: Expression<I>;
   }>;
+  extends?: Expression<I>;
 }
 
 export interface STypeAnnotation<I = {}> extends Node<I> {

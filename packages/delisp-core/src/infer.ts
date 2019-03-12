@@ -26,6 +26,7 @@ import { applySubstitution, Substitution } from "./type-substitution";
 import { generalize, instantiate, listTypeVariables } from "./type-utils";
 
 import {
+  emptyRow,
   Monotype,
   tBoolean,
   tFn,
@@ -202,6 +203,9 @@ function infer(
         ...infer(value, monovars)
       }));
 
+      const tailInferred = expr.extends && infer(expr.extends, monovars);
+      const tailRowType = generateUniqueTVar();
+
       return {
         result: {
           ...expr,
@@ -210,14 +214,36 @@ function infer(
             labelLocation,
             value
           })),
+          extends: tailInferred && tailInferred.result,
           info: {
             type: tRecord(
-              inferred.map(i => ({ label: i.label, type: i.result.info.type }))
+              inferred.map(i => ({ label: i.label, type: i.result.info.type })),
+              tailInferred ? tailRowType : emptyRow
             )
           }
         },
-        assumptions: flatMap(i => i.assumptions, inferred),
-        constraints: flatMap(i => i.constraints, inferred)
+        assumptions: [
+          ...flatMap(i => i.assumptions, inferred),
+          ...(tailInferred ? tailInferred.assumptions : [])
+        ],
+        constraints: [
+          ...flatMap(i => i.constraints, inferred),
+          ...(tailInferred ? tailInferred.constraints : []),
+          ...(tailInferred
+            ? [
+                constEqual(
+                  tailInferred.result,
+                  tRecord(
+                    inferred.map(i => ({
+                      label: i.label,
+                      type: generateUniqueTVar()
+                    })),
+                    tailRowType
+                  )
+                )
+              ]
+            : [])
+        ]
       };
     }
     case "variable-reference": {

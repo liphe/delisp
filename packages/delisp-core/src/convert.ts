@@ -329,7 +329,7 @@ function convertVector(list: ASExprVector): Expression {
 }
 
 function convertMap(map: ASExprMap): Expression {
-  const { fields } = parseRecord(map);
+  const { fields, tail } = parseRecord(map);
 
   return {
     type: "record",
@@ -338,6 +338,7 @@ function convertMap(map: ASExprMap): Expression {
       labelLocation: f.label.location,
       value: convertExpr(f.value)
     })),
+    extends: tail && convertExpr(tail),
     location: map.location,
     info: {}
   };

@@ -114,5 +114,9 @@ describe("Evaluation", () => {
     it("should access record fields", () => {
       expect(evaluateString("(.foo {bar 3 foo 5 baz 2})")).toEqual(5);
     });
+    it("should update records", () => {
+      expect(evaluateString("{x 2 | {x 1}}")).toEqual({ x: 2 });
+      expect(evaluateString("{x 3 | {x 1 y 2}}")).toEqual({ x: 3, y: 2 });
+    });
   });
 });
