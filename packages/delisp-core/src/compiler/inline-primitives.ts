@@ -133,6 +133,15 @@ defineInlinePrimitive("+", "(-> number number number)", args => {
   };
 });
 
+defineInlinePrimitive("-", "(-> number number number)", args => {
+  return {
+    type: "BinaryExpression",
+    operator: "-",
+    left: args[0],
+    right: args[1]
+  };
+});
+
 defineInlinePrimitive("*", "(-> number number number)", args => {
   return {
     type: "BinaryExpression",
@@ -169,6 +178,20 @@ defineInlinePrimitive("reverse", "(-> [a] [a])", ([vec]) => {
 defineInlinePrimitive("length", "(-> [a] number)", ([vec]) =>
   member(vec, "length")
 );
+
+defineInlinePrimitive("=", "(-> number number boolean)", ([x, y]) => ({
+  type: "BinaryExpression",
+  operator: "===",
+  left: x,
+  right: y
+}));
+
+defineInlinePrimitive("string=", "(-> string string boolean)", ([x, y]) => ({
+  type: "BinaryExpression",
+  operator: "===",
+  left: x,
+  right: y
+}));
 
 // matches `.foo` and inlines `(-> {foo a | b} a)`
 defineMagicPrimitive(
