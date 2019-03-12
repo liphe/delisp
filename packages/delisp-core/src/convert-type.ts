@@ -1,3 +1,4 @@
+import { parseRecord } from "./convert-utils";
 import { printHighlightedExpr } from "./error-report";
 import {
   ASExpr,
@@ -19,7 +20,6 @@ import {
   tVector,
   tVoid
 } from "./types";
-import { duplicatedItemsBy, last } from "./utils";
 
 function convertSymbol(expr: ASExprSymbol): Monotype {
   switch (expr.name) {
@@ -78,46 +78,7 @@ function convertVector(expr: ASExprVector): Monotype {
 }
 
 function convertMap(expr: ASExprMap): Monotype {
-  //
-  // Destructure a map into fields and tail
-  function fieldsAndTail() {
-    if (expr.fields.length === 0) {
-      return { fields: expr.fields, tail: null };
-    } else {
-      const lastField = last(expr.fields)!;
-      return lastField.label.name === "|"
-        ? {
-            fields: expr.fields.slice(0, -1),
-            tail: lastField.value
-          }
-        : {
-            fields: expr.fields,
-            tail: null
-          };
-    }
-  }
-
-  function checkInvalidFields() {
-    const invalidBar = fields.find(f => f.label.name === "|");
-    if (invalidBar) {
-      throw new Error(
-        printHighlightedExpr(
-          "'|' is not a valid field name",
-          invalidBar.label.location
-        )
-      );
-    }
-  }
-
-  const { fields, tail } = fieldsAndTail();
-  checkInvalidFields();
-
-  const duplicates = duplicatedItemsBy(fields, f => f.label.name);
-  if (duplicates.length > 0) {
-    throw new Error(
-      printHighlightedExpr("Duplicated label", duplicates[0].label.location)
-    );
-  }
+  const { fields, tail } = parseRecord(expr);
 
   return tRecord(
     fields.map(({ label, value }) => ({

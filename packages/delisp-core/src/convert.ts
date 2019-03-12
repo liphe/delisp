@@ -13,9 +13,10 @@ import {
   SLetBinding,
   Syntax
 } from "./syntax";
-import { duplicatedItemsBy, last } from "./utils";
+import { last } from "./utils";
 
 import { convert as convertType } from "./convert-type";
+import { parseRecord } from "./convert-utils";
 import { generalize } from "./type-utils";
 
 const conversions: Map<string, (expr: ASExprList) => Expression> = new Map();
@@ -328,26 +329,11 @@ function convertVector(list: ASExprVector): Expression {
 }
 
 function convertMap(map: ASExprMap): Expression {
-  const invalidBar = map.fields.find(f => f.label.name === "|");
-  if (invalidBar) {
-    throw new Error(
-      printHighlightedExpr(
-        `| is not a valid field name`,
-        invalidBar.label.location
-      )
-    );
-  }
-
-  const duplicates = duplicatedItemsBy(map.fields, f => f.label.name);
-  if (duplicates.length > 0) {
-    throw new Error(
-      printHighlightedExpr("Duplicated label", duplicates[0].label.location)
-    );
-  }
+  const { fields } = parseRecord(map);
 
   return {
     type: "record",
-    fields: map.fields.map(f => ({
+    fields: fields.map(f => ({
       label: f.label.name,
       labelLocation: f.label.location,
       value: convertExpr(f.value)
