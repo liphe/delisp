@@ -128,6 +128,10 @@ export function isDefinition(syntax: Syntax): syntax is SDefinition {
   return syntax.type === "definition";
 }
 
+export function isExport(syntax: Syntax): syntax is SExport {
+  return syntax.type === "export";
+}
+
 export interface Module<I = {}> {
   type: "module";
   body: Array<Syntax<I>>;

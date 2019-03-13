@@ -2,6 +2,7 @@ import runtime from "@delisp/runtime";
 import {
   Expression,
   isDefinition,
+  isExport,
   Module,
   SConditional,
   SDefinition,
@@ -16,7 +17,9 @@ import {
 } from "./syntax";
 
 import { methodCall } from "./compiler/estree-utils";
-import { last, mapObject } from "./utils";
+import { last, mapObject, maybeMap } from "./utils";
+
+import { printHighlightedExpr } from "./error-report";
 
 import {
   DefinitionBackend,
@@ -124,17 +127,6 @@ function compileDefinition(def: SDefinition, env: Environment): JS.Statement {
   const value = compile(def.value, env);
   const name = lookupBinding(def.variable, env).jsname;
   return env.defs.define(name, value);
-}
-
-function compileExport(
-  exp: SExport,
-  env: Environment
-): JS.Statement | JS.ModuleDeclaration {
-  return env.moduleFormat.export(
-    exp.value.name,
-    compileVariable(exp.value, env),
-    exp
-  );
 }
 
 function compileFunctionCall(
@@ -310,12 +302,15 @@ export function compile(expr: Expression, env: Environment): JS.Expression {
 function compileTopLevel(
   syntax: Syntax,
   env: Environment
-): JS.Statement | JS.ModuleDeclaration {
-  const js: JS.Statement | JS.ModuleDeclaration =
+): JS.Statement | null {
+  if (isExport(syntax)) {
+    // exports are compiled at the end of the module
+    return null;
+  }
+
+  const js: JS.Statement =
     syntax.type === "definition"
       ? compileDefinition(syntax, env)
-      : syntax.type === "export"
-      ? compileExport(syntax, env)
       : {
           type: "ExpressionStatement",
           expression: compile(syntax, env)
@@ -354,6 +349,24 @@ function compileRuntime(): JS.VariableDeclaration {
   };
 }
 
+function compileExports(exps: SExport[], env: Environment) {
+  const exportNames = exps.map(exp => {
+    const binding = lookupBinding(exp.value.name, env);
+    if (!binding || binding.source !== "module") {
+      throw new Error(
+        printHighlightedExpr(
+          "You can only export user definitions",
+          exp.value.location
+        )
+      );
+    } else {
+      return binding.jsname;
+    }
+  });
+
+  return env.moduleFormat.export(exportNames);
+}
+
 export function moduleEnvironment(
   m: Module,
   definitionContainer?: string,
@@ -383,7 +396,6 @@ export function moduleEnvironment(
       ? dynamicDefinition(definitionContainer)
       : staticDefinition,
     moduleFormat: esModule ? esm : cjs,
-
     bindings: { ...primitiveBindings, ...moduleBindings }
   };
 
@@ -400,10 +412,8 @@ function compileModule(
     sourceType: "module",
     body: [
       ...(includeRuntime ? [compileRuntime()] : []),
-      ...m.body.map(
-        (syntax: Syntax): JS.Statement | JS.ModuleDeclaration =>
-          compileTopLevel(syntax, env)
-      )
+      ...maybeMap((syntax: Syntax) => compileTopLevel(syntax, env), m.body),
+      compileExports(m.body.filter(isExport), env)
     ]
   };
 }

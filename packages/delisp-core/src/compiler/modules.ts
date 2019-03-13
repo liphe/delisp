@@ -1,60 +1,54 @@
 import * as JS from "estree";
-import { member } from "./estree-utils";
-import { identifierToJS } from "./jsvariable";
-
-import { printHighlightedExpr } from "../error-report";
-import { SExport } from "../syntax";
 
 export interface ModuleBackend {
-  export(
-    name: string,
-    value: JS.Expression,
-    exp: SExport
-  ): JS.Statement | JS.ModuleDeclaration;
+  export(vars: string[]): JS.Statement | JS.ModuleDeclaration;
 }
 
 export const cjs: ModuleBackend = {
-  export(name, value) {
+  export(vars) {
     return {
       type: "ExpressionStatement",
       expression: {
         type: "AssignmentExpression",
         operator: "=",
-        left: member(
-          {
-            type: "MemberExpression",
-            computed: false,
-            object: { type: "Identifier", name: "module" },
-            property: { type: "Identifier", name: "exports" }
-          },
-          identifierToJS(name)
-        ),
-        right: value
+        left: {
+          type: "MemberExpression",
+          computed: false,
+          object: { type: "Identifier", name: "module" },
+          property: { type: "Identifier", name: "exports" }
+        },
+
+        right: {
+          type: "ObjectExpression",
+          properties: vars.map(
+            (vari): JS.Property => ({
+              type: "Property",
+              kind: "init",
+              key: { type: "Identifier", name: vari },
+              value: { type: "Identifier", name: vari },
+              method: false,
+              computed: false,
+              shorthand: true
+            })
+          )
+        }
       }
     };
   }
 };
 
 export const esm: ModuleBackend = {
-  export(name, value, exp) {
-    if (value.type !== "Identifier") {
-      throw new Error(
-        printHighlightedExpr(
-          "Only user defined symbols can be exported",
-          exp.value.location
-        )
-      );
-    }
+  export(vars) {
     return {
       type: "ExportNamedDeclaration",
       exportKind: "value",
-      specifiers: [
-        {
+      specifiers: vars.map(
+        (vari): JS.ExportSpecifier => ({
           type: "ExportSpecifier",
-          local: value,
-          exported: { type: "Identifier", name: identifierToJS(name) }
-        }
-      ],
+          exported: { type: "Identifier", name: vari },
+          local: { type: "Identifier", name: vari }
+        })
+      ),
       declaration: null
     };
   }
