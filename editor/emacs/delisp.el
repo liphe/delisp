@@ -88,7 +88,7 @@
     (regexp-opt '("map" "filter" "fold") 'symbols)
     '(1 font-lock-builtin-face))
 
-   ;; Delisp `:' keywords as builtins.
+   ;; Delisp `:' keywords as constants.
    '("\\<:\\sw+\\>" . font-lock-constant-face)
    )
   "Expressions to highlight in Delisp mode.")
