@@ -59,8 +59,14 @@ function handleLine(line: string) {
     inputBuffer = "";
     rl.setPrompt(PROMPT);
 
-    const { value, type } = delispEval(syntax);
-    console.dir({ value, type }, { depth: null });
+    const { value, type, name } = delispEval(syntax);
+    if (type) {
+      console.log(
+        `(the ${printType(type)} ${name ? name : printValue(value)})`
+      );
+    } else {
+      console.log(printValue(value));
+    }
   } catch (err) {
     console.error(err);
   } finally {
@@ -125,19 +131,37 @@ const delispEval = (syntax: Syntax) => {
         ? typedSyntax.value.info.type
         : null;
 
-    return {
-      type: type && printType(type)
-    };
+    if (isDefinition(syntax)) {
+      return { type, name: syntax.variable };
+    } else {
+      return { type };
+    }
   } else {
     const type =
       typedSyntax && !isDeclaration(typedSyntax) ? typedSyntax.info.type : null;
-
-    return {
-      value,
-      type: type && printType(type)
-    };
+    return { value, type };
   }
 };
+
+function printValue(value: any): string {
+  if (typeof value === "number") {
+    return `${value}`;
+  } else if (typeof value === "string") {
+    return `"${value}"`;
+  } else if (Array.isArray(value)) {
+    return `[${value.map(printValue).join(" ")}]`;
+  } else if (typeof value === "object") {
+    return `{${Object.entries(value)
+      .map(([k, v]) => `:${k} ${printValue(v)}`)
+      .join(" ")}}`;
+  } else if (typeof value === "function") {
+    return `#<function>`;
+  } else if (value === undefined || value === null) {
+    return "#<undefined>";
+  } else {
+    return "?";
+  }
+}
 
 export async function cmdREPL(_args: string[]) {
   startREPL();
