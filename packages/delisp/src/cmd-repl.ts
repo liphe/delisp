@@ -18,6 +18,7 @@ import {
 import { Typed } from "@delisp/core/src/infer";
 import { Module, Syntax } from "@delisp/core/src/syntax";
 
+import chalk from "chalk";
 import readline from "readline";
 
 let rl: readline.Interface;
@@ -62,13 +63,17 @@ function handleLine(line: string) {
     const { value, type, name } = delispEval(syntax);
     if (type) {
       console.log(
-        `(the ${printType(type)} ${name ? name : printValue(value)})`
+        dimBrackets(
+          `(${chalk.dim("the")} ${chalk.blueBright(printType(type))} ${
+            name ? chalk.magentaBright(name) : printColoredValue(value)
+          })`
+        )
       );
     } else {
-      console.log(printValue(value));
+      console.log(printColoredValue(value));
     }
   } catch (err) {
-    console.error(err);
+    console.error(chalk.redBright(err.message));
   } finally {
     rl.prompt();
   }
@@ -104,14 +109,16 @@ const delispEval = (syntax: Syntax) => {
     typedModule = result.typedModule;
     result.unknowns.forEach(v => {
       console.warn(
-        `Unknown variable ${v.name} expected with type ${printType(
-          v.info.type
-        )}`
+        chalk.yellowBright(
+          `Unknown variable ${v.name} expected with type ${printType(
+            v.info.type
+          )}`
+        )
       );
     });
   } catch (err) {
-    console.log("TYPE WARNING:");
-    console.log(err);
+    console.log(chalk.redBright("TYPE WARNING:"));
+    console.log(chalk.red(err.message));
   }
 
   const typedSyntax: Syntax<Typed> | null = typedModule
@@ -161,6 +168,21 @@ function printValue(value: any): string {
   } else {
     return "?";
   }
+}
+
+function printColoredValue(value: any): string {
+  const printedValue = printValue(value);
+  return printedValue[0] === "#" || printedValue[0] === "?"
+    ? chalk.yellow(printedValue)
+    : chalk.green(printedValue);
+}
+
+function dimBrackets(str: string): string {
+  return str
+    .split("(")
+    .join(chalk.dim("("))
+    .split(")")
+    .join(chalk.dim(")"));
 }
 
 export async function cmdREPL(_args: string[]) {
