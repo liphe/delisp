@@ -89,7 +89,7 @@
     '(1 font-lock-builtin-face))
 
    ;; Delisp `:' keywords as builtins.
-   '("\\<:\\sw+\\>" . font-lock-builtin-face)
+   '("\\<:\\sw+\\>" . font-lock-constant-face)
    )
   "Expressions to highlight in Delisp mode.")
 
