@@ -24,6 +24,8 @@
 
 ;;; Code:
 
+(require 'thingatpt)
+
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.dl\\'" . delisp-mode))
 
@@ -106,6 +108,18 @@
       (goto-char indent-pos))))
 
 
+(defun delisp-fontify-string (string)
+  (with-temp-buffer
+    (delisp-mode)
+    (insert string)
+    (font-lock-ensure (point-min) (point-max))
+    (buffer-substring (point-min) (point-max))))
+
+(defun delisp-mode-eldoc-function ()
+  (let ((highlighted-type (delisp-fontify-string "(-> [a] number)")))
+    (concat (thing-at-point 'sexp) ": " highlighted-type)))
+
+
 (defvar delisp-font-lock-keywords
   (list
    (list "(\\\(define\\\)\\s-*\\\(\\sw+\\\)"
@@ -140,6 +154,7 @@
     (modify-syntax-entry ?\} "){" st)
     (modify-syntax-entry ?\[ "(]" st)
     (modify-syntax-entry ?\] ")[" st)
+    (modify-syntax-entry ?? "_" st)
     st)
   "Syntax table for Delisp mode.")
 
@@ -152,6 +167,7 @@
   (setq-local indent-line-function 'delisp-indent-line)
   (setq-local delisp-format-error-overlays nil)
   (setq font-lock-defaults '(delisp-font-lock-keywords nil nil (("+-*/.<>=!?$%_&:" . "w"))))
+  (add-function :before-until (local 'eldoc-documentation-function) #'delisp-mode-eldoc-function)
   (add-hook 'before-save-hook 'delisp-format-buffer nil 'local))
 
 (provide 'delisp)
