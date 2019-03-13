@@ -53,6 +53,20 @@
    (list
     (concat "(" (regexp-opt '("if" "lambda" "let" "export" "and" "or" "the") t) "\\>")
     '(1 font-lock-keyword-face))
+
+   (list
+    (concat "(" (regexp-opt '("->") t) "\\>")
+    '(1 font-lock-type-face))
+
+   (list
+    (regexp-opt '("number" "string" "boolean") 'symbols)
+    '(1 font-lock-type-face))
+
+   ;; Built-ins
+   (list
+    (regexp-opt '("map" "filter" "fold") 'symbols)
+    '(1 font-lock-builtin-face))
+
    ;; Delisp `:' and `#:' keywords as builtins.
    ;; '("\\<#?:\\sw+\\>" . font-lock-builtin-face)
    )
@@ -61,6 +75,10 @@
 
 (defvar delisp-mode-syntax-table
   (let ((st (make-syntax-table)))
+    (modify-syntax-entry ?\{ "(}" st)
+    (modify-syntax-entry ?\} "){" st)
+    (modify-syntax-entry ?\[ "(]" st)
+    (modify-syntax-entry ?\] ")[" st)
     st)
   "Syntax table for Delisp mode.")
 
@@ -70,9 +88,8 @@
 
 \\{delisp-mode-map}"
   :group 'delisp
-  (setq font-lock-defaults '(delisp-font-lock-keywords nil nil nil))
-  (add-hook 'before-save-hook 'delisp-format-buffer nil 'local)
-  (setq-local delisp-program (delisp-find-program)))
+  (setq font-lock-defaults '(delisp-font-lock-keywords nil nil (("+-*/.<>=!?$%_&:" . "w"))))
+  (add-hook 'before-save-hook 'delisp-format-buffer nil 'local))
 
 (provide 'delisp)
 ;;; delisp.el ends here
