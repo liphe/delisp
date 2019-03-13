@@ -33,10 +33,14 @@
 
 
 (defvar delisp-program
-  "delisp")
+  "delisp"
+  "Program to invoke to interact with delisp.")
+
+(defvar delisp-indent-level 2
+  "Number of spaces to use for indentation in Delisp programs.")
 
 (defun delisp-format-buffer ()
-  "Format file using delisp format"
+  "Format file using delisp format."
   (interactive)
   (let ((tmpfile (make-temp-file "delisp_format")))
     (write-region (point-min) (point-max) tmpfile)
@@ -44,10 +48,27 @@
            (list "format" tmpfile))
     (insert-file-contents-literally tmpfile nil nil nil t)))
 
+(defun delisp-indent-line ()
+  "Indent Delisp line."
+  (let ((position (point))
+        (indent-pos))
+    (save-excursion
+      (let ((level (car (syntax-ppss (point-at-bol)))))
+
+        ;; Handle closing pairs
+        (when (looking-at "\\s-*\\s)")
+          (setq level (1- level)))
+
+        (indent-line-to (* delisp-indent-level level))
+        (setq indent-pos (point))))
+
+    (when (< position indent-pos)
+      (goto-char indent-pos))))
+
 
 (defvar delisp-font-lock-keywords
   (list
-   (list "(\\\(define\\\)\\s-*\\\(\\(?:\\sw\\|\\s_\\)+\\\)"
+   (list "(\\\(define\\\)\\s-*\\\(\\sw+\\\)"
          '(1 font-lock-keyword-face)
          '(2 font-lock-variable-name-face))
    (list
@@ -67,8 +88,8 @@
     (regexp-opt '("map" "filter" "fold") 'symbols)
     '(1 font-lock-builtin-face))
 
-   ;; Delisp `:' and `#:' keywords as builtins.
-   ;; '("\\<#?:\\sw+\\>" . font-lock-builtin-face)
+   ;; Delisp `:' keywords as builtins.
+   '("\\<:\\sw+\\>" . font-lock-builtin-face)
    )
   "Expressions to highlight in Delisp mode.")
 
@@ -88,6 +109,7 @@
 
 \\{delisp-mode-map}"
   :group 'delisp
+  (setq-local indent-line-function 'delisp-indent-line)
   (setq font-lock-defaults '(delisp-font-lock-keywords nil nil (("+-*/.<>=!?$%_&:" . "w"))))
   (add-hook 'before-save-hook 'delisp-format-buffer nil 'local))
 
