@@ -18,7 +18,7 @@ export async function formatFile(file: string): Promise<void> {
   const content = await fs.readFile(file, "utf8");
   const m = readModule(content);
   // TODO: Customize lineWidth?
-  const formatted = pprintModule(m, 80);
+  const formatted = pprintModule(m, 40);
   await fs.writeFile(file, formatted);
 }
 
