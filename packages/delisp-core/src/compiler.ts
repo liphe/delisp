@@ -349,7 +349,10 @@ function compileRuntime(): JS.VariableDeclaration {
   };
 }
 
-function compileExports(exps: SExport[], env: Environment) {
+function compileExports(
+  exps: SExport[],
+  env: Environment
+): Array<JS.Statement | JS.ModuleDeclaration> {
   const exportNames = exps.map(exp => {
     const binding = lookupBinding(exp.value.name, env);
     if (!binding || binding.source !== "module") {
@@ -364,7 +367,11 @@ function compileExports(exps: SExport[], env: Environment) {
     }
   });
 
-  return env.moduleFormat.export(exportNames);
+  if (exportNames.length > 0) {
+    return [env.moduleFormat.export(exportNames)];
+  } else {
+    return [];
+  }
 }
 
 export function moduleEnvironment(
@@ -413,7 +420,7 @@ function compileModule(
     body: [
       ...(includeRuntime ? [compileRuntime()] : []),
       ...maybeMap((syntax: Syntax) => compileTopLevel(syntax, env), m.body),
-      compileExports(m.body.filter(isExport), env)
+      ...compileExports(m.body.filter(isExport), env)
     ]
   };
 }
