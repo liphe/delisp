@@ -26,7 +26,7 @@ const PROMPT = "λ ";
 let previousModule = createModule();
 const context = createContext();
 
-export function startREPL() {
+function startREPL() {
   rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -138,5 +138,9 @@ const delispEval = (syntax: Syntax) => {
     };
   }
 };
+
+export async function cmdREPL(_args: string[]) {
+  startREPL();
+}
 
 // tslint:enable no-console
