@@ -125,7 +125,8 @@ const symbol: Parser<ASExprSymbol> = atLeastOne(
     character("/"),
     character("~"),
     character("?"),
-    character("=")
+    character("="),
+    character(":")
   )
 )
   .map(

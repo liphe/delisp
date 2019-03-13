@@ -52,13 +52,13 @@ Object {
           "type": "type-variable",
           "userSpecified": false,
         },
-        "label": "y",
+        "label": ":y",
         "labelType": Object {
           "type": "number",
         },
         "type": "row-extension",
       },
-      "label": "x",
+      "label": ":x",
       "labelType": Object {
         "type": "number",
       },

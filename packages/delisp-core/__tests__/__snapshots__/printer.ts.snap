@@ -226,8 +226,8 @@ exports[`Pretty Printer should print let expressions nicely 1`] = `
 
 exports[`Pretty Printer should print records with nested expressions 1`] = `
 "
-{xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 20
- z (* 10 (+ 1 2))}"
+{:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 20
+ :z (* 10 (+ 1 2))}"
 `;
 
 exports[`Pretty Printer should some real code 1`] = `

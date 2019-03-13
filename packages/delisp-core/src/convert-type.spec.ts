@@ -30,19 +30,19 @@ describe("convertType", () => {
 
   it("should read extensible record", () => {
     expect(
-      convert(readFromString("{x number y number | a}"))
+      convert(readFromString("{:x number :y number | a}"))
     ).toMatchSnapshot();
   });
 
   it("should fail for invalid syntax of extensible records", () => {
     expect(() => {
-      convert(readFromString("{| a x number}"));
+      convert(readFromString("{| a :x number}"));
     }).toThrow();
   });
 
   it("should fail for duplicated labels of extensible records", () => {
     expect(() => {
-      convert(readFromString("{x 10 x 20}"));
+      convert(readFromString("{:x 10 :x 20}"));
     }).toThrow();
   });
 

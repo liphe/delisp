@@ -260,17 +260,22 @@ function compileRecord(expr: SRecord, env: Environment): JS.Expression {
   const newObj: JS.ObjectExpression = {
     type: "ObjectExpression",
     properties: expr.fields.map(
-      ({ label, value }): JS.Property => ({
-        type: "Property",
-        key: isValidJSIdentifierName(label)
-          ? identifier(label)
-          : literal(label),
-        value: compile(value, env),
-        kind: "init",
-        method: false,
-        shorthand: false,
-        computed: false
-      })
+      ({ label, value }): JS.Property => {
+        if (!label.startsWith(":")) {
+          throw new Error(`assert: invalid record field name ${label}`);
+        }
+        const name = label.replace(/^:/, "");
+
+        return {
+          type: "Property",
+          key: isValidJSIdentifierName(name) ? identifier(name) : literal(name),
+          value: compile(value, env),
+          kind: "init",
+          method: false,
+          shorthand: false,
+          computed: false
+        };
+      }
     )
   };
   if (expr.extends) {

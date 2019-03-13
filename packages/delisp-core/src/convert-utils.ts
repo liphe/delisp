@@ -20,12 +20,15 @@ export function parseRecord(expr: ASExprMap) {
   }
 
   function checkInvalidFields() {
-    const invalidBar = fields.find(f => f.label.name === "|");
-    if (invalidBar) {
+    const invalidFields = fields.filter(f => !f.label.name.startsWith(":"));
+    if (invalidFields.length > 0) {
+      const field = invalidFields[0];
       throw new Error(
         printHighlightedExpr(
-          "'|' is not a valid field name",
-          invalidBar.label.location
+          `'${
+            field.label.name
+          }' is not a valid field name. Fields should start with ':' (colon).`,
+          field.label.location
         )
       );
     }

@@ -109,13 +109,13 @@ exports[`Compiler Error messages generate nice error message for invalid let exp
 `;
 
 exports[`Compiler Error messages generate nice error message for invalid records 1`] = `
-"file:1:7: '|' is not a valid field name
-{x 10 | y z 20}
-------^"
+"file:1:8: '|' is not a valid field name. Fields should start with ':' (colon).
+{:x 10 | y :z 20}
+-------^"
 `;
 
 exports[`Compiler Error messages generate nice error message for records with duplicated labels 1`] = `
-"file:1:7: Duplicated label
-{x 10 x 20}
-------^"
+"file:1:8: Duplicated label
+{:x 10 :x 20}
+-------^"
 `;

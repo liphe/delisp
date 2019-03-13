@@ -195,12 +195,12 @@ defineInlinePrimitive("string=", "(-> string string boolean)", ([x, y]) => ({
 
 // matches `.foo` and inlines `(-> {foo a | b} a)`
 defineMagicPrimitive(
-  name => name[0] === "." && name.length > 1,
+  name => name[0] === ":" && name.length > 1,
   name => {
-    const label = name.slice(1);
     const a = generateUniqueTVar();
     const r = generateUniqueTVar();
-    const t = generalize(tFn([tRecord([{ label, type: a }], r)], a), []);
-    return createInlinePrimitive(t, ([vec]) => member(vec, label));
+    const jsname = name.replace(/^:/, "");
+    const t = generalize(tFn([tRecord([{ label: name, type: a }], r)], a), []);
+    return createInlinePrimitive(t, ([vec]) => member(vec, jsname));
   }
 );
