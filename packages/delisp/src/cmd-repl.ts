@@ -1,5 +1,7 @@
 // tslint:disable no-console
 
+import { CommandModule } from "yargs";
+
 import {
   addToModule,
   createContext,
@@ -185,8 +187,12 @@ function dimBrackets(str: string): string {
     .join(chalk.dim(")"));
 }
 
-export async function cmdREPL(_args: string[]) {
-  startREPL();
-}
+export const cmdREPL: CommandModule = {
+  command: ["repl", "*"],
+  describe: "Start a REPL",
+  handler: () => {
+    startREPL();
+  }
+};
 
 // tslint:enable no-console

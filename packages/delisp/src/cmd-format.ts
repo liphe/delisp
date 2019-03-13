@@ -1,3 +1,5 @@
+import { CommandModule } from "yargs";
+
 import { promises as fs } from "fs";
 
 import { pprintModule, readModule } from "@delisp/core";
@@ -10,6 +12,15 @@ async function formatFile(file: string): Promise<void> {
   await fs.writeFile(file, formatted);
 }
 
-export async function cmdFormat(args: string[]) {
-  await Promise.all(args.map(formatFile));
-}
+export const cmdFormat: CommandModule = {
+  command: "format [files...]",
+  describe: "Format delisp files",
+  handler: args => {
+    const files = args.files as string[];
+    Promise.all(files.map(formatFile)).catch(err => {
+      // tslint:disable: no-console
+      console.log(err.message);
+      process.exit(-1);
+    });
+  }
+};

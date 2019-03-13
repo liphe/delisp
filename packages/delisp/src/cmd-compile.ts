@@ -1,3 +1,5 @@
+import { CommandModule } from "yargs";
+
 import {
   compileModuleToString,
   inferModule,
@@ -48,6 +50,15 @@ async function compileFile(file: string): Promise<void> {
   return;
 }
 
-export async function cmdCompile(args: string[]) {
-  await Promise.all(args.map(compileFile));
-}
+export const cmdCompile: CommandModule = {
+  command: "compile [files...]",
+  describe: "Compile delisp files",
+  handler: args => {
+    const files = args.files as string[];
+    Promise.all(files.map(compileFile)).catch(err => {
+      // tslint:disable: no-console
+      console.log(err.message);
+      process.exit(-1);
+    });
+  }
+};
