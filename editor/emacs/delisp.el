@@ -39,14 +39,54 @@
 (defvar delisp-indent-level 2
   "Number of spaces to use for indentation in Delisp programs.")
 
+(defvar delisp-format-error-overlays nil)
+
 (defun delisp-format-buffer ()
   "Format file using delisp format."
   (interactive)
-  (let ((tmpfile (make-temp-file "delisp_format")))
-    (write-region (point-min) (point-max) tmpfile)
-    (apply #'call-process delisp-program nil nil nil
-           (list "format" tmpfile))
-    (insert-file-contents tmpfile nil nil nil t)))
+  (let ((tmpfile (make-temp-file "delisp_format"))
+        (output-buffer (generate-new-buffer " *delisp-format*")))
+    (unwind-protect
+        (progn
+          (write-region (point-min) (point-max) tmpfile)
+          (let ((errcode (apply #'call-process delisp-program
+                                nil
+                                (list output-buffer t)
+                                nil
+                                (list "format" tmpfile))))
+            (cond
+             ((zerop errcode)
+              (insert-file-contents tmpfile nil nil nil t))
+             (t
+              (let (line column message)
+
+                (with-current-buffer output-buffer
+                  (let ((stderr (buffer-substring (point-min) (point-max))))
+                    (message "delisp-format-error: %s" stderr)
+                    (goto-char (point-min))
+                    (search-forward "file:")
+                    (when (looking-at "\\([[:digit:]]+\\):\\([[:digit:]]+\\):\\(.*\\)")
+                      (setq line (string-to-number (match-string 1))
+                            column (1- (string-to-number (match-string 2)))
+                            message (match-string 3)))))
+
+                ;; Clean previous format errors!
+                (dolist (overlay delisp-format-error-overlays)
+                  (delete-overlay overlay))
+
+                ;; Add errors to the buffer
+                (when (and line column)
+                  (save-excursion
+                    (goto-char (point-min))
+                    (forward-line (1- line))
+                    (forward-char column)
+                    (let ((overlay (make-overlay (point) (1+ (point)))))
+                      (overlay-put overlay 'evaporate t)
+                      (overlay-put overlay 'face 'flycheck-error)
+                      ;(overlay-put overlay 'help-echo message)
+                      (add-to-list 'delisp-format-error-overlays overlay)))))))))
+
+      (kill-buffer output-buffer))))
 
 (defun delisp-indent-line ()
   "Indent Delisp line."
@@ -110,6 +150,7 @@
 \\{delisp-mode-map}"
   :group 'delisp
   (setq-local indent-line-function 'delisp-indent-line)
+  (setq-local delisp-format-error-overlays nil)
   (setq font-lock-defaults '(delisp-font-lock-keywords nil nil (("+-*/.<>=!?$%_&:" . "w"))))
   (add-hook 'before-save-hook 'delisp-format-buffer nil 'local))
 

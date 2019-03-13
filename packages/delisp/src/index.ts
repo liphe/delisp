@@ -20,7 +20,7 @@ async function processArgs(args: string[]): Promise<void> {
 
 processArgs(process.argv.slice(2)).catch(err => {
   /* tslint:disable:no-console */
-  console.error(err);
+  console.error(err.message);
   /* tslint:enable:no-console */
   process.exit(-1);
 });
