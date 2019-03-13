@@ -46,7 +46,7 @@
     (write-region (point-min) (point-max) tmpfile)
     (apply #'call-process delisp-program nil nil nil
            (list "format" tmpfile))
-    (insert-file-contents-literally tmpfile nil nil nil t)))
+    (insert-file-contents tmpfile nil nil nil t)))
 
 (defun delisp-indent-line ()
   "Indent Delisp line."
