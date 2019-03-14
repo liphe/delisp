@@ -166,11 +166,17 @@
 
    ;; Built-ins
    (list
-    (regexp-opt '("map" "filter" "fold") 'symbols)
+    (regexp-opt '("true" "false" "map" "filter" "fold") 'symbols)
     '(1 font-lock-builtin-face))
 
    ;; Delisp `:' keywords as constants.
    '("\\<:\\sw+\\>" . font-lock-constant-face)
+
+   ;; @-Expressions
+   '("@\\w+" . font-lock-doc-face)
+   '("@\\(TODO\\)" (1 'warning t))
+   '("@url{\\([^}]*\\)}" (1 'link t))
+   '("@ref{\\([^}]*\\)}" (1 font-lock-variable-name-face t))
    )
   "Expressions to highlight in Delisp mode.")
 
@@ -191,11 +197,15 @@
 
 \\{delisp-mode-map}"
   :group 'delisp
+  (setq comment-start "@doc{")
+  (setq comment-padding "")
+  (setq comment-end "}")
   (setq-local indent-line-function 'delisp-indent-line)
   (setq-local delisp-format-error-overlays nil)
   (setq font-lock-defaults '(delisp-font-lock-keywords nil nil (("+-*/.<>=!?$%_&:" . "w"))))
   (add-function :before-until (local 'eldoc-documentation-function) #'delisp-mode-eldoc-function)
-  (add-hook 'before-save-hook 'delisp-format-buffer nil 'local))
+  (add-hook 'before-save-hook 'delisp-format-buffer nil 'local)
+  )
 
 (provide 'delisp)
 ;;; delisp.el ends here
