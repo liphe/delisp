@@ -1,6 +1,6 @@
 {
   "name": "delisp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "index.js",
   "license": "MIT",
   "bin": {
@@ -16,7 +16,7 @@
     "index.js"
   ],
   "dependencies": {
-    "@delisp/core": "^0.1.0",
+    "@delisp/core": "^0.1.1",
     "@types/debug": "^0.0.31",
     "@types/mkdirp": "^0.5.2",
     "chalk": "^2.4.2",
