@@ -157,6 +157,8 @@ const delispEval = (syntax: Syntax) => {
 function printValue(value: any): string {
   if (typeof value === "number") {
     return `${value}`;
+  } else if (typeof value === "boolean") {
+    return `${value}`;
   } else if (typeof value === "string") {
     return `"${value}"`;
   } else if (Array.isArray(value)) {
