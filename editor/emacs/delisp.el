@@ -50,7 +50,7 @@
         (output-buffer (generate-new-buffer " *delisp-format*")))
     (unwind-protect
         (progn
-          (write-region (point-min) (point-max) tmpfile)
+          (write-region (point-min) (point-max) tmpfile nil 'silent)
           (let ((errcode (apply #'call-process delisp-program
                                 nil
                                 (list output-buffer t)
@@ -115,9 +115,36 @@
     (font-lock-ensure (point-min) (point-max))
     (buffer-substring (point-min) (point-max))))
 
+
+(defun delisp-infer-type (position)
+  (let ((tmpfile (make-temp-file "delisp_infer"))
+        (output-buffer (generate-new-buffer " *delisp-infer*")))
+    (unwind-protect
+        (progn
+          (write-region (point-min) (point-max) tmpfile nil 'silent)
+          (let ((errcode (apply #'call-process delisp-program
+                                nil
+                                (list output-buffer nil)
+                                nil
+                                (list "infer-type" tmpfile
+                                      "--cursor-offset" (number-to-string position)))))
+            (cond
+             ((zerop errcode)
+              (with-current-buffer output-buffer
+                (let ((type (buffer-substring (point-min) (point-max))))
+                  (if (string= type "")
+                      nil
+                    type))))
+             (t
+              nil))))
+      (kill-buffer output-buffer))))
+
+
 (defun delisp-mode-eldoc-function ()
-  (let ((highlighted-type (delisp-fontify-string "(-> [a] number)")))
-    (concat (thing-at-point 'sexp) ": " highlighted-type)))
+  (let ((type (delisp-infer-type (point))))
+    (when type
+      (let ((highlighted-type (delisp-fontify-string type)))
+        (concat (thing-at-point 'symbol) ": " highlighted-type)))))
 
 
 (defvar delisp-font-lock-keywords

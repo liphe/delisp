@@ -3,6 +3,7 @@ import { CommandModule } from "yargs";
 import {
   findSyntaxByOffset,
   inferModule,
+  isDeclaration,
   isExpression,
   printType,
   readModule
@@ -50,8 +51,12 @@ export const cmdInferType: CommandModule = {
 
     const s = findSyntaxByOffset(typedModule, cursorOffset);
 
-    if (s && isExpression(s)) {
-      console.log(printType(s.info.type));
+    if (s) {
+      if (isExpression(s)) {
+        console.log(printType(s.info.type));
+      } else if (isDeclaration(s)) {
+        console.log(printType(s.value.info.type));
+      }
     }
 
     process.exit(0);
