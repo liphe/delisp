@@ -1,0 +1,3 @@
+(define >>>
+  (lambda (f1 f2)
+    (lambda (x) (f2 (f1 x)))))

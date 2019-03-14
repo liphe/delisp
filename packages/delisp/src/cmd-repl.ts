@@ -1,18 +1,23 @@
 // tslint:disable no-console
 
+import path from "path";
+import fs from "fs";
+import { promisify } from "util";
+
 import { CommandModule } from "yargs";
 
 import {
   addToModule,
   createContext,
-  createModule,
   evaluate,
+  evaluateModule,
   inferModule,
   isDeclaration,
   isDefinition,
   isExpression,
   moduleEnvironment,
   printType,
+  readModule,
   readSyntax,
   removeModuleDefinition
 } from "@delisp/core";
@@ -23,13 +28,25 @@ import { Module, Syntax } from "@delisp/core/src/syntax";
 import chalk from "chalk";
 import readline from "readline";
 
+const readFile = promisify(fs.readFile);
+
 let rl: readline.Interface;
 const PROMPT = "λ ";
 
-let previousModule = createModule();
+let previousModule: Module;
 const context = createContext();
 
-function startREPL() {
+async function loadModule(file: string): Promise<Module> {
+  const code = await readFile(path.join(file), "utf-8");
+  const m = readModule(code);
+  inferModule(m);
+  evaluateModule(m, context);
+  return m;
+}
+
+async function startREPL() {
+  previousModule = await loadModule(path.join(__dirname, "../../init.dl"));
+
   rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,

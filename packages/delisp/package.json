@@ -13,7 +13,8 @@
   },
   "files": [
     "dist",
-    "index.js"
+    "index.js",
+    "init.dl"
   ],
   "dependencies": {
     "@delisp/core": "^0.1.1",
