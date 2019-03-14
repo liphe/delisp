@@ -24,6 +24,7 @@
 
 ;;; Code:
 
+(require 'comint)
 (require 'thingatpt)
 
 ;;;###autoload
@@ -85,7 +86,7 @@
                     (let ((overlay (make-overlay (point) (1+ (point)))))
                       (overlay-put overlay 'evaporate t)
                       (overlay-put overlay 'face 'flycheck-error)
-                      ;(overlay-put overlay 'help-echo message)
+                                        ;(overlay-put overlay 'help-echo message)
                       (add-to-list 'delisp-format-error-overlays overlay)))))))))
 
       (kill-buffer output-buffer))))
@@ -180,6 +181,18 @@
    )
   "Expressions to highlight in Delisp mode.")
 
+(defvar delisp-font-lock-defaults
+  '(delisp-font-lock-keywords nil nil (("+-*/.<>=!?$%_&:" . "w"))))
+
+
+(defvar delisp-mode-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map prog-mode-map)
+    (define-key map (kbd "C-c C-z") #'delisp-switch-to-output-buffer)
+    (define-key map (kbd "C-c C-c") #'delisp-send-toplevel)
+    (define-key map (kbd "C-c C-l") #'delisp-send-buffer)
+    map)
+  "Keymap for Delisp mode.")
 
 (defvar delisp-mode-syntax-table
   (let ((st (make-syntax-table)))
@@ -196,16 +209,58 @@
   "Major mode for editing Delisp code.
 
 \\{delisp-mode-map}"
-  :group 'delisp
   (setq comment-start "@doc{")
   (setq comment-padding "")
   (setq comment-end "}")
   (setq-local indent-line-function 'delisp-indent-line)
   (setq-local delisp-format-error-overlays nil)
-  (setq font-lock-defaults '(delisp-font-lock-keywords nil nil (("+-*/.<>=!?$%_&:" . "w"))))
+  (setq font-lock-defaults delisp-font-lock-defaults)
   (add-function :before-until (local 'eldoc-documentation-function) #'delisp-mode-eldoc-function)
-  (add-hook 'before-save-hook 'delisp-format-buffer nil 'local)
-  )
+  (add-hook 'before-save-hook 'delisp-format-buffer nil 'local))
+
+
+
+;;;; REPL
+
+(defvar delisp-repl-buffer "*delisp-repl*")
+
+(define-derived-mode delisp-repl-mode comint-mode "Delisp-REPL"
+  "Run a Delisp REPL."
+  :syntax-table delisp-mode-syntax-table
+  (ansi-color-for-comint-mode-on)
+  (setq font-lock-defaults delisp-font-lock-defaults)
+  (setq comint-process-echoes t)
+  (setq-local comint-prompt-read-only t)
+  (setq-local comint-use-prompt-regexp t)
+  (setq-local comint-prompt-regexp "^λ"))
+
+(defun delisp ()
+  (interactive)
+  (unless (executable-find delisp-program)
+    (message "Delisp not found."))
+  (let ((buffer (make-comint-in-buffer "Delisp-REPL" delisp-repl-buffer delisp-program nil)))
+    (pop-to-buffer buffer)
+    (delisp-repl-mode)))
+
+(defun delisp-switch-to-output-buffer ()
+  (interactive)
+  (if (get-buffer delisp-repl-buffer)
+      (pop-to-buffer delisp-repl-buffer)
+    (delisp)))
+
+(defun delisp-send-toplevel ()
+  (interactive)
+  (let ((content (thing-at-point 'defun)))
+    (funcall comint-input-sender delisp-repl-buffer content)
+    (funcall comint-input-sender delisp-repl-buffer "\n")))
+
+(defun delisp-send-buffer ()
+  (interactive)
+  (let ((content (buffer-substring (point-min) (point-max))))
+    (funcall comint-input-sender delisp-repl-buffer content)
+    (funcall comint-input-sender delisp-repl-buffer "\n")))
+
+
 
 (provide 'delisp)
 ;;; delisp.el ends here

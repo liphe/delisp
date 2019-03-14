@@ -50,7 +50,7 @@ function handleLine(line: string) {
       syntax = readSyntax(inputBuffer);
     } catch (err) {
       if (err.incomplete) {
-        rl.setPrompt("... ");
+        rl.setPrompt(process.env.INSIDE_EMACS ? "" : "... ");
         rl.prompt();
         return;
       } else {
@@ -64,9 +64,11 @@ function handleLine(line: string) {
 
     const { value, type, name } = delispEval(syntax);
     if (type) {
+      const typ = printType(type);
+      const sep = typ.length > 10 ? "\n  " : " ";
       console.log(
         dimBrackets(
-          `(${chalk.dim("the")} ${chalk.blueBright(printType(type))} ${
+          `(${chalk.dim("the")} ${chalk.blueBright(typ)}${sep}${
             name ? chalk.magentaBright(name) : printColoredValue(value)
           })`
         )

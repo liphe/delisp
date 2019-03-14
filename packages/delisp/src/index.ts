@@ -8,6 +8,11 @@ import { cmdREPL } from "./cmd-repl";
 // tslint:disable no-unused-expression
 yargs
   .usage("usage: $0 <command>")
+  .option("color", {
+    // We don't do anything with this flag, but we avoid the warning
+    // of unkonwn option and chalk will interpret it.
+    type: "boolean"
+  })
   .command(cmdREPL)
   .command(cmdFormat)
   .command(cmdCompile)
