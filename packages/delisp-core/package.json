@@ -11,6 +11,9 @@
   "files": [
     "dist/"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@delisp/runtime": "^0.1.0",
     "@types/debug": "^0.0.31",
