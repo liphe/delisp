@@ -26,6 +26,7 @@
 
 (require 'comint)
 (require 'thingatpt)
+(require 'pulse)
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.dl\\'" . delisp-mode))
@@ -250,16 +251,17 @@
 
 (defun delisp-send-toplevel ()
   (interactive)
-  (let ((content (thing-at-point 'defun)))
-    (funcall comint-input-sender delisp-repl-buffer content)
-    (funcall comint-input-sender delisp-repl-buffer "\n")))
+  (let* ((bounds (bounds-of-thing-at-point 'defun))
+         (start (car bounds))
+         (end (cdr bounds)))
+    (let ((content (string-trim (buffer-substring start end))))
+      (pulse-momentary-highlight-region start end)
+      (comint-send-string delisp-repl-buffer (concat content "\n")))))
 
 (defun delisp-send-buffer ()
   (interactive)
-  (let ((content (buffer-substring (point-min) (point-max))))
-    (funcall comint-input-sender delisp-repl-buffer content)
-    (funcall comint-input-sender delisp-repl-buffer "\n")))
-
+  (comint-send-region delisp-repl-buffer (point-min) (point-max))
+  (comint-send-string delisp-repl-buffer "\n"))
 
 
 (provide 'delisp)
