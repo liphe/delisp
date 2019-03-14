@@ -8,6 +8,9 @@
     "lint": "tslint --project tsconfig.json",
     "test": "jest"
   },
+  "files": [
+    "dist/"
+  ],
   "dependencies": {
     "@delisp/runtime": "0.1.0",
     "@types/debug": "^0.0.31",

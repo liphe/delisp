@@ -11,6 +11,10 @@
     "lint": "tslint --project tsconfig.json",
     "test": "true"
   },
+  "files": [
+    "dist",
+    "index.js"
+  ],
   "dependencies": {
     "@delisp/core": "0.1.0",
     "@types/debug": "^0.0.31",
