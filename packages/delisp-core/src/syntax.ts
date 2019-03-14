@@ -116,19 +116,19 @@ export interface SExport<I = {}> {
 export type Declaration<I = {}> = SDefinition<I> | SExport<I>;
 export type Syntax<I = {}> = Expression<I> | Declaration<I>;
 
-export function isDeclaration(syntax: Syntax): syntax is Declaration {
+export function isDeclaration<I>(syntax: Syntax<I>): syntax is Declaration<I> {
   return syntax.type === "definition" || syntax.type === "export";
 }
 
-export function isExpression(syntax: Syntax): syntax is Expression {
+export function isExpression<I>(syntax: Syntax<I>): syntax is Expression<I> {
   return !isDeclaration(syntax);
 }
 
-export function isDefinition(syntax: Syntax): syntax is SDefinition {
+export function isDefinition<I>(syntax: Syntax<I>): syntax is SDefinition<I> {
   return syntax.type === "definition";
 }
 
-export function isExport(syntax: Syntax): syntax is SExport {
+export function isExport<I>(syntax: Syntax<I>): syntax is SExport<I> {
   return syntax.type === "export";
 }
 

@@ -23,4 +23,6 @@ export function readSyntax(source: string): Syntax {
   return convertSyntax(readFromString(source));
 }
 
+export { findSyntaxByOffset } from "./syntax-utils";
+
 export * from "./module";
