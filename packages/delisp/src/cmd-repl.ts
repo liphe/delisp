@@ -19,7 +19,8 @@ import {
   printType,
   readModule,
   readSyntax,
-  removeModuleDefinition
+  removeModuleDefinition,
+  removeModuleTypeDefinition
 } from "@delisp/core";
 
 import { Typed } from "@delisp/core/src/infer";
@@ -118,10 +119,14 @@ const delispEval = (syntax: Syntax) => {
     previousModule = removeModuleDefinition(previousModule, syntax.variable);
     previousModule = addToModule(previousModule, syntax);
     m = previousModule;
+  } else if (syntax.type === "type-alias") {
+    previousModule = removeModuleTypeDefinition(previousModule, syntax.name);
+    previousModule = addToModule(previousModule, syntax);
+    m = previousModule;
   } else if (isExpression(syntax)) {
     m = addToModule(previousModule, syntax);
   } else {
-    m = previousModule;
+    throw new Error(`I don't know how to handle this in the REPL.`);
   }
 
   let typedModule: Module<Typed> | undefined;

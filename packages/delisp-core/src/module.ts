@@ -31,3 +31,12 @@ export function removeModuleDefinition(m: Module, name: string): Module {
     })
   };
 }
+
+export function removeModuleTypeDefinition(m: Module, name: string): Module {
+  return {
+    type: "module",
+    body: m.body.filter(d => {
+      return d.type === "type-alias" ? d.name !== name : true;
+    })
+  };
+}
