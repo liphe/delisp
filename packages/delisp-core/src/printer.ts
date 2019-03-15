@@ -155,7 +155,7 @@ function print(sexpr: Syntax): Doc {
           text("type"),
           space,
           text(sexpr.name),
-          indent(concat(line, text(printType(sexpr.definition.mono, false))))
+          indent(concat(line, text(printType(sexpr.definition, false))))
         )
       );
   }

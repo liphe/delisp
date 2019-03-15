@@ -21,7 +21,7 @@ import {
   convert as convertType
 } from "./convert-type";
 import { parseRecord } from "./convert-utils";
-import { generalize } from "./type-utils";
+import { generalize, listTypeVariables } from "./type-utils";
 
 const conversions: Map<string, (expr: ASExprList) => Expression> = new Map();
 const toplevelConversions: Map<
@@ -297,10 +297,10 @@ defineToplevel("export", expr => {
 });
 
 defineToplevel("type", expr => {
-  const [typ, ...args] = expr.elements;
+  const [typeOp, ...args] = expr.elements;
 
   if (args.length !== 2) {
-    const lastExpr = last([typ, ...args]) as ASExpr;
+    const lastExpr = last([typeOp, ...args]) as ASExpr;
     throw new Error(
       printHighlightedExpr(
         `'type' needs exactly 2 arguments, got ${args.length}`,
@@ -310,7 +310,7 @@ defineToplevel("type", expr => {
     );
   }
 
-  const [name, alias] = args;
+  const [name, definition] = args;
 
   if (name.type !== "symbol") {
     throw new Error(
@@ -320,10 +320,17 @@ defineToplevel("type", expr => {
 
   checkUserDefinedTypeName(name);
 
+  const definitionType = convertType(definition);
+  if (listTypeVariables(definitionType).length > 0) {
+    throw new Error(
+      printHighlightedExpr("Type variable out of scope", definition.location)
+    );
+  }
+
   return {
     type: "type-alias",
     name: name.name,
-    definition: generalize(convertType(alias), []),
+    definition: definitionType,
     location: expr.location
   };
 });

@@ -1,5 +1,5 @@
 import { Location } from "./input";
-import { Type } from "./types";
+import { Monotype, Type } from "./types";
 
 //
 // Expressions
@@ -116,7 +116,7 @@ export interface SExport<I = {}> {
 export interface STypeAlias<_I> {
   type: "type-alias";
   name: SVar;
-  definition: Type;
+  definition: Monotype;
   location: Location;
 }
 

@@ -478,6 +478,7 @@ function inferSyntax(syntax: Syntax): InferResult<Syntax<Typed>> {
 // assumptions. Those assumptions are from variables we have not
 // found, so they are supposed to be part of a global environment (or
 // non existing!).
+
 export interface TypeEnvironment {
   [v: string]: Type;
 }
@@ -873,6 +874,8 @@ export function inferModule(
   const bodyInferences = m.body.map(inferSyntax);
   const body = bodyInferences.map(i => i.result);
 
+  // This environment names of variables defined internally in this
+  // module to their type.
   const internalEnv: {
     [v: string]: Monotype;
   } = body.reduce((env, s) => {
