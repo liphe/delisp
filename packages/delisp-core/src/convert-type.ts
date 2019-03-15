@@ -33,7 +33,7 @@ function capitalize(str: string) {
 
 /** Return true if a symbol is a valid name for a user defined type, false otherwise. */
 export function userDefinedType(expr: ASExprSymbol): boolean {
-  return expr.name[0] === expr.name[0].toUpperCase();
+  return /^[A-Z]/.test(expr.name);
 }
 
 /** Check if a symbol is a valid user defined type name or throw a user-friendly error otherwise. */
