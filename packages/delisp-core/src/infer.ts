@@ -479,15 +479,12 @@ function inferSyntax(syntax: Syntax): InferResult<Syntax<Typed>> {
 // found, so they are supposed to be part of a global environment (or
 // non existing!).
 
-export interface TypeEnvironment {
+interface Environment {
   [v: string]: Type;
 }
 
-function lookupVariableType(
-  varName: string,
-  typeEnvironment: TypeEnvironment
-): Type | null {
-  const t = typeEnvironment[varName];
+function lookupVariableType(varName: string, env: Environment): Type | null {
+  const t = env[varName];
   if (t) {
     return t;
   } else if (isInlinePrimitive(varName)) {
@@ -503,10 +500,10 @@ function lookupVariableType(
 // polymoprphic types in the environment.
 function assumptionsToConstraints(
   assumptions: TAssumption[],
-  typeEnvironment: TypeEnvironment
+  env: Environment
 ): TConstraint[] {
   return maybeMap(a => {
-    const t = lookupVariableType(a.name, typeEnvironment);
+    const t = lookupVariableType(a.name, env);
     return t && constExplicitInstance(a, t);
   }, assumptions);
 }
@@ -826,19 +823,19 @@ ${printType(applySubstitution(constraint.t, solution))}
   }
 }
 
-const defaultTypeEnvironment: TypeEnvironment = {
+const defaultEnvironment: Environment = {
   ...mapObject(primitives, prim => prim.type)
 };
 
 export function inferType(
   expr: Expression,
-  typeEnvironment: TypeEnvironment = defaultTypeEnvironment
+  env: Environment = defaultEnvironment
 ): Expression<Typed> {
   const { result: tmpExpr, constraints, assumptions } = infer(expr, []);
 
   const s = solve([
     ...constraints,
-    ...assumptionsToConstraints(assumptions, typeEnvironment)
+    ...assumptionsToConstraints(assumptions, env)
   ]);
 
   return applySubstitutionToExpr(tmpExpr, s);
@@ -847,7 +844,7 @@ export function inferType(
 function groupAssumptions(
   assumptions: TAssumption[],
   internalEnv: { [v: string]: Monotype },
-  externalEnv: TypeEnvironment
+  externalEnv: Environment
 ): {
   internals: TAssumption[];
   externals: TAssumption[];
@@ -866,7 +863,7 @@ function groupAssumptions(
 
 export function inferModule(
   m: Module,
-  externalEnv: TypeEnvironment = defaultTypeEnvironment
+  externalEnv: Environment = defaultEnvironment
 ): {
   typedModule: Module<Typed>;
   unknowns: TAssumption[];
