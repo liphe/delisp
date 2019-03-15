@@ -1,8 +1,11 @@
 import { readSyntax, isDeclaration } from "../src/index";
-import { inferType, TypeEnvironment } from "../src/infer";
+import { inferType, ExternalEnvironment } from "../src/infer";
 import { readType, printType } from "../src/type-utils";
 
-function typeOf(str: string, env: TypeEnvironment = {}): string {
+function typeOf(
+  str: string,
+  env: ExternalEnvironment = { variables: {}, types: {} }
+): string {
   const syntax = readSyntax(str);
   if (isDeclaration(syntax)) {
     throw new Error(`Not an expression!`);
@@ -31,9 +34,12 @@ describe("Type inference", () => {
   describe("Function calls", () => {
     it("should have the right type", () => {
       const env = {
-        length: readType("(-> string int)"),
-        "+": readType("(-> number number number)"),
-        const: readType("(-> a (-> b a))")
+        variables: {
+          length: readType("(-> string int)"),
+          "+": readType("(-> number number number)"),
+          const: readType("(-> a (-> b a))")
+        },
+        types: {}
       };
       expect(typeOf("(+ 1 2)", env)).toBe("number");
       expect(typeOf("(+ (+ 1 1) 2)", env)).toBe("number");

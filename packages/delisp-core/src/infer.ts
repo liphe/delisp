@@ -479,7 +479,7 @@ function inferSyntax(syntax: Syntax): InferResult<Syntax<Typed>> {
 // found, so they are supposed to be part of a global environment (or
 // non existing!).
 
-interface ExternalEnvironment {
+export interface ExternalEnvironment {
   variables: {
     [v: string]: Type;
   };
