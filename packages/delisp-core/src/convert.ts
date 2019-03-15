@@ -16,7 +16,10 @@ import {
 } from "./syntax";
 import { last } from "./utils";
 
-import { convert as convertType } from "./convert-type";
+import {
+  checkUserDefinedTypeName,
+  convert as convertType
+} from "./convert-type";
 import { parseRecord } from "./convert-utils";
 import { generalize } from "./type-utils";
 
@@ -314,6 +317,8 @@ defineToplevel("type", expr => {
       printHighlightedExpr("'type' expected a symbol as a name", name.location)
     );
   }
+
+  checkUserDefinedTypeName(name);
 
   return {
     type: "type-alias",

@@ -29,6 +29,11 @@ export interface TVar {
   userSpecified: boolean;
 }
 
+export interface TUserDefined {
+  type: "user-defined-type";
+  name: string;
+}
+
 export interface REmpty {
   type: "empty-row";
 }
@@ -50,7 +55,8 @@ export type Monotype =
   | TApplication
   | TVar
   | Row
-  | TVoid;
+  | TVoid
+  | TUserDefined;
 
 export interface Type {
   type: "type";
@@ -83,6 +89,13 @@ export function tVar(name: string, userSpecified = false): TVar {
     type: "type-variable",
     name,
     userSpecified
+  };
+}
+
+export function tUserDefined(name: string): TUserDefined {
+  return {
+    type: "user-defined-type",
+    name
   };
 }
 

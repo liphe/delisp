@@ -12,6 +12,7 @@ export function listTypeVariables(t: Monotype): string[] {
     case "boolean":
     case "string":
     case "number":
+    case "user-defined-type":
     case "empty-row":
       return [];
     case "application":
@@ -130,6 +131,8 @@ function _printType(type: Monotype): string {
     case "string":
       return "string";
     case "type-variable":
+      return type.name;
+    case "user-defined-type":
       return type.name;
     case "empty-row":
     case "row-extension":

@@ -16,10 +16,41 @@ import {
   tNumber,
   tRecord,
   tString,
+  tUserDefined,
   tVar,
   tVector,
   tVoid
 } from "./types";
+
+/** Capitalize a string like "foo" to "Foo". */
+function capitalize(str: string) {
+  if (str === "") {
+    return "";
+  } else {
+    return str[0].toUpperCase() + str.slice(1);
+  }
+}
+
+/** Return true if a symbol is a valid name for a user defined type, false otherwise. */
+export function userDefinedType(expr: ASExprSymbol): boolean {
+  return expr.name[0] === expr.name[0].toUpperCase();
+}
+
+/** Check if a symbol is a valid user defined type name or throw a user-friendly error otherwise. */
+export function checkUserDefinedTypeName(expr: ASExprSymbol): void {
+  if (!userDefinedType(expr)) {
+    throw new Error(
+      printHighlightedExpr(
+        `'${
+          expr.name
+        }' is not a valid name for a type. Type names should start with a capital letter. Try '${capitalize(
+          expr.name
+        )}'?`,
+        expr.location
+      )
+    );
+  }
+}
 
 function convertSymbol(expr: ASExprSymbol): Monotype {
   switch (expr.name) {
@@ -34,7 +65,7 @@ function convertSymbol(expr: ASExprSymbol): Monotype {
     case "_":
       return generateUniqueTVar(false, "__t");
     default:
-      return tVar(expr.name);
+      return userDefinedType(expr) ? tUserDefined(expr.name) : tVar(expr.name);
   }
 }
 
@@ -89,6 +120,7 @@ function convertMap(expr: ASExprMap): Monotype {
   );
 }
 
+/* Try to convert a S-Expression into a type. */
 export function convert(expr: ASExpr): Monotype {
   switch (expr.type) {
     case "list":
