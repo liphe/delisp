@@ -39,12 +39,17 @@ export function generalize(t: Monotype, monovars: string[]): Type {
   };
 }
 
+export function isWildcardTypeVarName(name: string): boolean {
+  return name.startsWith("_");
+}
+
 export function instantiate(t: Type, userSpecified = false): Monotype {
   const subst = t.tvars.reduce((s, vname) => {
-    const isHole = vname.startsWith("_");
     return {
       ...s,
-      [vname]: generateUniqueTVar(isHole ? false : userSpecified)
+      [vname]: generateUniqueTVar(
+        isWildcardTypeVarName(vname) ? false : userSpecified
+      )
     };
   }, {});
   return applySubstitution(t.mono, subst);
