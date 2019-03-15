@@ -479,12 +479,29 @@ function inferSyntax(syntax: Syntax): InferResult<Syntax<Typed>> {
 // found, so they are supposed to be part of a global environment (or
 // non existing!).
 
-interface Environment {
-  [v: string]: Type;
+interface ExternalEnvironment {
+  variables: {
+    [v: string]: Type;
+  };
+  types: {
+    [t: string]: Monotype;
+  };
 }
 
-function lookupVariableType(varName: string, env: Environment): Type | null {
-  const t = env[varName];
+interface InternalEnvironment {
+  variables: {
+    [v: string]: Monotype;
+  };
+  types: {
+    [t: string]: Monotype;
+  };
+}
+
+function lookupVariableType(
+  varName: string,
+  env: ExternalEnvironment
+): Type | null {
+  const t = env.variables[varName];
   if (t) {
     return t;
   } else if (isInlinePrimitive(varName)) {
@@ -500,7 +517,7 @@ function lookupVariableType(varName: string, env: Environment): Type | null {
 // polymoprphic types in the environment.
 function assumptionsToConstraints(
   assumptions: TAssumption[],
-  env: Environment
+  env: ExternalEnvironment
 ): TConstraint[] {
   return maybeMap(a => {
     const t = lookupVariableType(a.name, env);
@@ -704,7 +721,8 @@ function applySubstitutionToSyntax(
 // can be applied to the temporary types to get the principal type of the expression.
 function solve(
   constraints: TConstraint[],
-  solution: Substitution = {}
+  solution: Substitution,
+  typeEnvironment: InternalEnvironment["types"]
 ): Substitution {
   if (constraints.length === 0) {
     return solution;
@@ -752,7 +770,11 @@ function solve(
       switch (result.type) {
         case "unify-success": {
           const s = result.substitution;
-          return solve(rest.map(c => applySubstitutionToConstraint(c, s)), s);
+          return solve(
+            rest.map(c => applySubstitutionToConstraint(c, s)),
+            s,
+            typeEnvironment
+          );
         }
         case "unify-occur-check-error":
           throw new Error(
@@ -810,41 +832,51 @@ ${printType(applySubstitution(constraint.t, solution))}
           ),
           ...rest
         ],
-        solution
+        solution,
+        typeEnvironment
       );
     }
     case "implicit-instance-constraint": {
       const t = generalize(constraint.t, constraint.monovars);
       return solve(
         [constExplicitInstance(constraint.expr, t), ...rest],
-        solution
+        solution,
+        typeEnvironment
       );
     }
   }
 }
 
-const defaultEnvironment: Environment = {
-  ...mapObject(primitives, prim => prim.type)
+const defaultEnvironment: ExternalEnvironment = {
+  variables: mapObject(primitives, prim => prim.type),
+  types: {}
 };
 
 export function inferType(
   expr: Expression,
-  env: Environment = defaultEnvironment
+  env: ExternalEnvironment = defaultEnvironment
 ): Expression<Typed> {
   const { result: tmpExpr, constraints, assumptions } = infer(expr, []);
 
-  const s = solve([
-    ...constraints,
-    ...assumptionsToConstraints(assumptions, env)
-  ]);
+  const s = solve(
+    [...constraints, ...assumptionsToConstraints(assumptions, env)],
+    {},
+    {}
+  );
 
   return applySubstitutionToExpr(tmpExpr, s);
 }
 
+// Group the gathered assumptions and classify them into:
+//
+// - internals: The variable referes to a variable defined in this module.
+// - externals: The variable referes to an imported module.
+// - unknown: The variable does not refer to anything known.
+//
 function groupAssumptions(
   assumptions: TAssumption[],
-  internalEnv: { [v: string]: Monotype },
-  externalEnv: Environment
+  internalEnv: InternalEnvironment,
+  externalEnv: ExternalEnvironment
 ): {
   internals: TAssumption[];
   externals: TAssumption[];
@@ -861,9 +893,16 @@ function groupAssumptions(
   };
 }
 
+/** Run the type inference on a module.
+ *
+ * @description Takes a Module and the external environment, will run
+ * inference returning the same module with the types annotated in the
+ * AST. Additionally, a set of unkonwn references is returned so those
+ * can be reported.
+ */
 export function inferModule(
   m: Module,
-  externalEnv: Environment = defaultEnvironment
+  externalEnv: ExternalEnvironment = defaultEnvironment
 ): {
   typedModule: Module<Typed>;
   unknowns: TAssumption[];
@@ -871,17 +910,23 @@ export function inferModule(
   const bodyInferences = m.body.map(inferSyntax);
   const body = bodyInferences.map(i => i.result);
 
-  // This environment names of variables defined internally in this
-  // module to their type.
-  const internalEnv: {
-    [v: string]: Monotype;
-  } = body.reduce((env, s) => {
-    if (s.type === "definition") {
-      return { ...env, [s.variable]: s.value.info.type };
-    } else {
-      return env;
-    }
-  }, {});
+  const internalEnv: InternalEnvironment = {
+    variables: body.reduce((env, s) => {
+      if (s.type === "definition") {
+        return { ...env, [s.variable]: s.value.info.type };
+      } else {
+        return env;
+      }
+    }, {}),
+
+    types: body.reduce((env, s) => {
+      if (s.type === "type-alias") {
+        return { ...env, [s.name]: s.definition };
+      } else {
+        return env;
+      }
+    }, {})
+  };
 
   const assumptions = groupAssumptions(
     flatMap(i => i.assumptions, bodyInferences),
@@ -895,11 +940,11 @@ export function inferModule(
     ...assumptionsToConstraints(assumptions.externals, externalEnv),
 
     ...assumptions.internals.map(v =>
-      constImplicitInstance(v, [], internalEnv[v.name])
+      constImplicitInstance(v, [], internalEnv.variables[v.name])
     )
   ];
 
-  const solution = solve(constraints);
+  const solution = solve(constraints, {}, internalEnv.types);
 
   return {
     typedModule: {
