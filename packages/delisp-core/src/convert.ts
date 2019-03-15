@@ -293,6 +293,36 @@ defineToplevel("export", expr => {
   };
 });
 
+defineToplevel("type", expr => {
+  const [typ, ...args] = expr.elements;
+
+  if (args.length !== 2) {
+    const lastExpr = last([typ, ...args]) as ASExpr;
+    throw new Error(
+      printHighlightedExpr(
+        `'type' needs exactly 2 arguments, got ${args.length}`,
+        lastExpr.location,
+        true
+      )
+    );
+  }
+
+  const [name, alias] = args;
+
+  if (name.type !== "symbol") {
+    throw new Error(
+      printHighlightedExpr("'type' expected a symbol as a name", name.location)
+    );
+  }
+
+  return {
+    type: "type-alias",
+    name: name.name,
+    definition: generalize(convertType(alias), []),
+    location: expr.location
+  };
+});
+
 function convertList(list: ASExprList): Expression {
   if (list.elements.length === 0) {
     throw new Error(

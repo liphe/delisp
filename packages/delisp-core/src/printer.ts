@@ -148,6 +148,16 @@ function print(sexpr: Syntax): Doc {
           indent(concat(line, print(sexpr.value)))
         )
       );
+
+    case "type-alias":
+      return group(
+        list(
+          text("type"),
+          space,
+          text(sexpr.name),
+          indent(concat(line, text(printType(sexpr.definition.mono, false))))
+        )
+      );
   }
 }
 

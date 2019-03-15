@@ -448,6 +448,14 @@ function inferSyntax(syntax: Syntax): InferResult<Syntax<Typed>> {
       assumptions,
       constraints
     };
+  } else if (syntax.type === "type-alias") {
+    return {
+      result: {
+        ...syntax
+      },
+      assumptions: [],
+      constraints: []
+    };
   } else {
     const { result, assumptions, constraints } = infer(syntax, []);
     return {
@@ -687,6 +695,8 @@ function applySubstitutionToSyntax(
       ...s,
       value: applySubstitutionToExpr(s.value, env) as SVariableReference<Typed>
     };
+  } else if (s.type === "type-alias") {
+    return s;
   } else {
     return applySubstitutionToExpr(s, env);
   }

@@ -155,7 +155,7 @@ const delispEval = (syntax: Syntax) => {
 
   if (isDeclaration(syntax)) {
     const type =
-      typedSyntax && isDeclaration(typedSyntax)
+      typedSyntax && isDefinition(typedSyntax)
         ? typedSyntax.value.info.type
         : null;
 

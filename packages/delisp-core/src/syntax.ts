@@ -113,11 +113,22 @@ export interface SExport<I = {}> {
   location: Location;
 }
 
-export type Declaration<I = {}> = SDefinition<I> | SExport<I>;
+export interface STypeAlias<_I> {
+  type: "type-alias";
+  name: SVar;
+  definition: Type;
+  location: Location;
+}
+
+export type Declaration<I = {}> = SDefinition<I> | SExport<I> | STypeAlias<I>;
 export type Syntax<I = {}> = Expression<I> | Declaration<I>;
 
 export function isDeclaration<I>(syntax: Syntax<I>): syntax is Declaration<I> {
-  return syntax.type === "definition" || syntax.type === "export";
+  return (
+    syntax.type === "definition" ||
+    syntax.type === "export" ||
+    syntax.type === "type-alias"
+  );
 }
 
 export function isExpression<I>(syntax: Syntax<I>): syntax is Expression<I> {
@@ -130,6 +141,10 @@ export function isDefinition<I>(syntax: Syntax<I>): syntax is SDefinition<I> {
 
 export function isExport<I>(syntax: Syntax<I>): syntax is SExport<I> {
   return syntax.type === "export";
+}
+
+export function isTypeAlias<I>(syntax: Syntax<I>): syntax is STypeAlias<I> {
+  return syntax.type === "type-alias";
 }
 
 export interface Module<I = {}> {

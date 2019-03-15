@@ -29,6 +29,8 @@ function syntaxChildren<I>(s: Syntax<I>): Array<Expression<I>> {
       return [s.value];
     case "export":
       return [s.value];
+    case "type-alias":
+      return [];
     default:
       return expressionChildren(s);
   }
