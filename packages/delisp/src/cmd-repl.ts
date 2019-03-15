@@ -178,6 +178,8 @@ function printValue(value: any): string {
     return `${value}`;
   } else if (typeof value === "string") {
     return `"${value}"`;
+  } else if (value === undefined || value === null) {
+    return "#<undefined>";
   } else if (Array.isArray(value)) {
     return `[${value.map(printValue).join(" ")}]`;
   } else if (typeof value === "object") {
@@ -186,8 +188,6 @@ function printValue(value: any): string {
       .join(" ")}}`;
   } else if (typeof value === "function") {
     return `#<function>`;
-  } else if (value === undefined || value === null) {
-    return "#<undefined>";
   } else {
     return "?";
   }
