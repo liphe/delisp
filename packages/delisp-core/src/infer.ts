@@ -31,7 +31,7 @@ import {
   tVector,
   Type
 } from "./types";
-import { unify } from "./unify";
+import { unificationInEnvironment } from "./unify";
 import {
   difference,
   flatMap,
@@ -727,6 +727,10 @@ function solve(
   if (constraints.length === 0) {
     return solution;
   }
+
+  const unify = unificationInEnvironment(name => {
+    return typeEnvironment[name];
+  });
 
   // Check if a constraint is solvable.
   //

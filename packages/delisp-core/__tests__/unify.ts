@@ -1,5 +1,9 @@
 import { tFn, tNumber, tRecord, tVar, tVector } from "../src/types";
-import { unify } from "../src/unify";
+import { unificationInEnvironment } from "../src/unify";
+
+const unify = unificationInEnvironment(name => {
+  throw new Error(`Unkonwn user defined type ${name}`);
+});
 
 describe("Unification", () => {
   it("should perform an occur check", () => {
