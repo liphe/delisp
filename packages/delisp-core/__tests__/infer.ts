@@ -65,7 +65,7 @@ describe("Type inference", () => {
 
     describe("Let polymorphism", () => {
       it("should generalize basic types in let", () => {
-        expect(typeOf("(let ((id (lambda (x) x))) id)")).toBe("(-> α α)");
+        expect(typeOf("(let {id (lambda (x) x)} id)")).toBe("(-> α α)");
       });
     });
 

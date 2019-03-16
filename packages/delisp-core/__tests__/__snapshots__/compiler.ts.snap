@@ -85,27 +85,27 @@ exports[`Compiler Error messages generate nice error message for invalid let exp
 `;
 
 exports[`Compiler Error messages generate nice error message for invalid let expressions 2`] = `
-"file:1:6: 'let' bindings should be a list
+"file:1:6: 'let' bindings should be a map
 (let x 5)
 -----^"
 `;
 
 exports[`Compiler Error messages generate nice error message for invalid let expressions 3`] = `
-"file:1:7: 'let' binding should be a list
-(let (x) x)
-------^"
+"file:1:6: 'let' bindings should be a map
+(let (x 5) x)
+-----^"
 `;
 
 exports[`Compiler Error messages generate nice error message for invalid let expressions 4`] = `
-"file:1:8: expected a symbol
-(let ((5 5)) x)
--------^"
+"file:1:9: Expected a digit, or an alphanumeric character
+(let {x} x)
+--------^"
 `;
 
 exports[`Compiler Error messages generate nice error message for invalid let expressions 5`] = `
-"file:1:7: ill-formed let binding
-(let ((x)) x)
-------^"
+"file:1:13: Expected a digit, or an alphanumeric character
+(let {a b c} x)
+------------^"
 `;
 
 exports[`Compiler Error messages generate nice error message for invalid records 1`] = `

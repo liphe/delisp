@@ -83,7 +83,7 @@ eee
     expect(
       pprintString(
         `
-(define bq-frob 
+(define bq-frob
   (lambda (x)
     (and (consp x) (or (eq (car x) *comma*) (eq (car x) *comma-atsign*)))))
 `
@@ -120,7 +120,7 @@ eee
   });
 
   it("should print let expressions nicely", () => {
-    expect(pprintString(`(let ((x 10) (y 20)) (+ x y))`)).toMatchSnapshot();
+    expect(pprintString(`(let {x 10 y 20} (+ x y))`)).toMatchSnapshot();
   });
 
   it("should print conditional expressions nicely", () => {
@@ -148,8 +148,8 @@ eee
   (lambda (fn x)
     (if (atom x)
           (funcall fn x)
-          (let ((a (funcall fn (car x)))
-                (d (maptree fn (cdr x))))
+          (let {a (funcall fn (car x))
+                d (maptree fn (cdr x))}
             (if (and (eql a (car x)) (eql d (cdr x)))
                 x
                 (cons a d))))))

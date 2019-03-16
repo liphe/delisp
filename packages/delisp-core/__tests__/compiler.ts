@@ -33,9 +33,9 @@ describe("Compiler", () => {
     it("generate nice error message for invalid let expressions", () => {
       expect(compileError("(let)")).toMatchSnapshot();
       expect(compileError("(let x 5)")).toMatchSnapshot();
-      expect(compileError("(let (x) x)")).toMatchSnapshot();
-      expect(compileError("(let ((5 5)) x)")).toMatchSnapshot();
-      expect(compileError("(let ((x)) x)")).toMatchSnapshot();
+      expect(compileError("(let (x 5) x)")).toMatchSnapshot();
+      expect(compileError("(let {x} x)")).toMatchSnapshot();
+      expect(compileError("(let {a b c} x)")).toMatchSnapshot();
     });
 
     it("generate nice error message for invalid definitions", () => {

@@ -56,13 +56,13 @@ describe("Evaluation", () => {
 
   describe("Let bindings", () => {
     it("should evaluate to the right value", () => {
-      expect(evaluateString("(let () 5)")).toBe(5);
-      expect(evaluateString("(let ((x 5)) x)")).toBe(5);
-      expect(evaluateString("(let ((x 5) (y 5)) (+ x y))")).toBe(10);
+      expect(evaluateString("(let {} 5)")).toBe(5);
+      expect(evaluateString("(let {x 5} x)")).toBe(5);
+      expect(evaluateString("(let {x 4 y 6} (+ x y))")).toBe(10);
       expect(
         evaluateString(`
-(let ((const (lambda (x)
-               (lambda (y) x))))
+(let {const (lambda (x)
+              (lambda (y) x))}
   (+ ((const 10) "foo")
      ((const 20) 42)))
 `)
@@ -70,7 +70,7 @@ describe("Evaluation", () => {
     });
 
     it("inner lets should shadow outer ones", () => {
-      expect(evaluateString("(let ((x 5)) (let ((x 1)) x))")).toBe(1);
+      expect(evaluateString("(let {x 5} (let {x 1} x))")).toBe(1);
     });
   });
 
