@@ -226,6 +226,16 @@ defineConversion("the", expr => {
     );
   }
 
+  if (args.length > 2) {
+    throw new Error(
+      printHighlightedExpr(
+        `Too many arguments. 'the' should take two arguments.`,
+        args[2].location,
+        true
+      )
+    );
+  }
+
   const [t, value] = args;
 
   return {
