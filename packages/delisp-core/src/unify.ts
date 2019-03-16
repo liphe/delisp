@@ -223,11 +223,7 @@ export function unificationInEnvironment(
    * the most general one, in the sense that any other substitution can
    * be obtained as a composition of this one with another one.
    */
-  function unify(
-    t1: Monotype,
-    t2: Monotype,
-    ctx: Substitution = {}
-  ): UnifyResult {
+  function unify(t1: Monotype, t2: Monotype, ctx: Substitution): UnifyResult {
     // RULE (uni-const)
     if (t1.type === "string" && t2.type === "string") {
       return success(ctx);
@@ -271,9 +267,9 @@ export function unificationInEnvironment(
       // RULE: (uni-varr)
       return unifyVariable(t2, t1, ctx);
     } else if (t1.type === "user-defined-type") {
-      return unify(lookupUserDefinedType(t1.name), t2);
+      return unify(lookupUserDefinedType(t1.name), t2, ctx);
     } else if (t2.type === "user-defined-type") {
-      return unify(t1, lookupUserDefinedType(t2.name));
+      return unify(t1, lookupUserDefinedType(t2.name), ctx);
     } else if (t1.type === "empty-row" && t2.type === "empty-row") {
       // RULE (uni-const)
       return success(ctx);

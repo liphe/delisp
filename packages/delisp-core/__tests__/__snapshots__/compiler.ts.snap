@@ -1,5 +1,35 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Compiler Error messages generate nice error message for bad type declarations 1`] = `
+"file:1:5: 'type' needs exactly 2 arguments, got 0
+(type)
+----^"
+`;
+
+exports[`Compiler Error messages generate nice error message for bad type declarations 2`] = `
+"file:1:7: 'type' needs exactly 2 arguments, got 1
+(type a)
+------^"
+`;
+
+exports[`Compiler Error messages generate nice error message for bad type declarations 3`] = `
+"file:1:7: 'type' needs exactly 2 arguments, got 1
+(type A)
+------^"
+`;
+
+exports[`Compiler Error messages generate nice error message for bad type declarations 4`] = `
+"file:1:9: Not a valid type
+(type A 3)
+--------^"
+`;
+
+exports[`Compiler Error messages generate nice error message for bad type declarations 5`] = `
+"file:1:7: 'a' is not a valid name for a type. Type names should start with a capital letter. Try 'A'?
+(type a {})
+------^"
+`;
+
 exports[`Compiler Error messages generate nice error message for conditionals 1`] = `
 "file:1:3: 'if' needs exactly 3 arguments, got 1
 (if)

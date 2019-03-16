@@ -177,11 +177,16 @@ describe("Type inference", () => {
     });
 
     describe("Type aliases", () => {
+      const env = {
+        variables: {},
+        types: { ID: readType("number").mono }
+      };
+
+      it("should unify with their definition", () => {
+        expect(typeOf("(if true (the ID 5) 3)", env)).not.toBe("α");
+      });
+
       it("should preserve the type alias name", () => {
-        const env = {
-          variables: {},
-          types: { ID: readType("number").mono }
-        };
         expect(typeOf("(the ID 5)", env)).toBe("ID");
       });
     });

@@ -59,5 +59,13 @@ describe("Compiler", () => {
     it("generate nice error message for records with duplicated labels", () => {
       expect(compileError("{:x 10 :x 20}")).toMatchSnapshot();
     });
+
+    it("generate nice error message for bad type declarations", () => {
+      expect(compileError("(type)")).toMatchSnapshot();
+      expect(compileError("(type a)")).toMatchSnapshot();
+      expect(compileError("(type A)")).toMatchSnapshot();
+      expect(compileError("(type A 3)")).toMatchSnapshot();
+      expect(compileError("(type a {})")).toMatchSnapshot();
+    });
   });
 });
