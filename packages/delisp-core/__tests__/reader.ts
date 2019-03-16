@@ -230,10 +230,10 @@ describe("Reader", () => {
     const failedRead = (x: string) => {
       try {
         readFromString(x);
-        throw new Error(`This expression didn't fail!`);
       } catch (err) {
         return err.message;
       }
+      throw new Error(`This expression didn't fail!`);
     };
 
     it("generate user-friendly error for an incomplete list", () => {
