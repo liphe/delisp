@@ -140,40 +140,17 @@ defineConversion("if", expr => {
 });
 
 function parseLetBindings(bindings: ASExpr): SLetBinding[] {
-  if (bindings.type !== "list") {
+  if (bindings.type !== "map") {
     throw new Error(
-      printHighlightedExpr(`'let' bindings should be a list`, bindings.location)
+      printHighlightedExpr(`'let' bindings should be a map`, bindings.location)
     );
   }
 
-  const output: SLetBinding[] = [];
-
-  bindings.elements.forEach(binding => {
-    if (binding.type !== "list") {
-      throw new Error(
-        printHighlightedExpr(`'let' binding should be a list`, binding.location)
-      );
-    }
-    if (binding.elements.length !== 2) {
-      throw new Error(
-        printHighlightedExpr(`ill-formed let binding`, binding.location)
-      );
-    }
-
-    const [name, value] = binding.elements;
-
-    if (name.type !== "symbol") {
-      throw new Error(printHighlightedExpr(`expected a symbol`, name.location));
-    }
-
-    output.push({
-      var: name.name,
-      value: convertExpr(value),
-      location: binding.location
-    });
-  });
-
-  return output;
+  return bindings.fields.map(field => ({
+    var: field.label.name,
+    value: convertExpr(field.value),
+    location: field.label.location
+  }));
 }
 
 defineConversion("let", expr => {
@@ -192,12 +169,10 @@ defineConversion("let", expr => {
 
   const [rawBindings, ...rawBody] = args;
 
-  const body = parseBody(lastExpr, rawBody);
-
   return {
     type: "let-bindings",
     bindings: parseLetBindings(rawBindings),
-    body,
+    body: parseBody(lastExpr, rawBody),
     location: expr.location,
     info: {}
   };
