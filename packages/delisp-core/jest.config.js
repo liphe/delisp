@@ -5,5 +5,10 @@ module.exports = {
   testRegex: "(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$",
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
   collectCoverageFrom: ["src/**/*.{ts}"],
-  verbose: true
+  verbose: true,
+  globals: {
+    "ts-jest": {
+      tsConfig: "tsconfig.build.json"
+    }
+  }
 };

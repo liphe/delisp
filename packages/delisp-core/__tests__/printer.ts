@@ -83,7 +83,7 @@ eee
     expect(
       pprintString(
         `
-(define bq-frob 
+(define bq-frob
   (lambda (x)
     (and (consp x) (or (eq (car x) *comma*) (eq (car x) *comma-atsign*)))))
 `

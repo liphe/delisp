@@ -1,9 +1,7 @@
 {
-  "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "declaration": true
+    "noEmit": true
   },
-  "include": ["./src/"],
-  "references": [{ "path": "../delisp-runtime" }]
+  "extends": "./tsconfig.build.json",
+  "include": ["./__tests__", "./src/"]
 }

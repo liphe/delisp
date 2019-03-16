@@ -3,7 +3,7 @@
   "include": [],
   "references": [
     { "path": "delisp/" },
-    { "path": "delisp-core/" },
+    { "path": "delisp-core/tsconfig.build.json" },
     { "path": "delisp-runtime/" }
   ]
 }

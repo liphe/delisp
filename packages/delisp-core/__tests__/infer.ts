@@ -1,6 +1,6 @@
-import { readSyntax, isDeclaration } from "../src/index";
-import { inferType, ExternalEnvironment } from "../src/infer";
-import { readType, printType } from "../src/type-utils";
+import { isDeclaration, readSyntax } from "../src/index";
+import { ExternalEnvironment, inferType } from "../src/infer";
+import { printType, readType } from "../src/type-utils";
 
 function typeOf(
   str: string,

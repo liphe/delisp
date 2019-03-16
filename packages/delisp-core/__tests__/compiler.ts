@@ -1,7 +1,7 @@
-import { readFromString } from "../src/reader";
+import { compileToString, moduleEnvironment } from "../src/compiler";
 import { convert } from "../src/convert";
 import { createModule } from "../src/module";
-import { compileToString, moduleEnvironment } from "../src/compiler";
+import { readFromString } from "../src/reader";
 
 describe("Compiler", () => {
   describe("Error messages", () => {
