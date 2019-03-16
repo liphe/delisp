@@ -865,7 +865,7 @@ export function inferType(
   const s = solve(
     [...constraints, ...assumptionsToConstraints(assumptions, env)],
     {},
-    {}
+    env.types
   );
 
   return applySubstitutionToExpr(tmpExpr, s);

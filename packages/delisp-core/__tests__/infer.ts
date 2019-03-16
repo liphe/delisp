@@ -175,5 +175,15 @@ describe("Type inference", () => {
         );
       });
     });
+
+    describe("Type aliases", () => {
+      it("should preserve the type alias name", () => {
+        const env = {
+          variables: {},
+          types: { ID: readType("number").mono }
+        };
+        expect(typeOf("(the ID 5)", env)).toBe("ID");
+      });
+    });
   });
 });
