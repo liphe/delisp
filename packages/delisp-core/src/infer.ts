@@ -881,7 +881,7 @@ function groupAssumptions(
   externals: TAssumption[];
   unknowns: TAssumption[];
 } {
-  const internals = assumptions.filter(v => v.name in internalEnv);
+  const internals = assumptions.filter(v => v.name in internalEnv.variables);
   const externals = assumptions.filter(
     v => lookupVariableType(v.name, externalEnv) !== null
   );
