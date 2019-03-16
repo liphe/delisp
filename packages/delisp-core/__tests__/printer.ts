@@ -83,7 +83,7 @@ eee
     expect(
       pprintString(
         `
-(define bq-frob 
+(define bq-frob
   (lambda (x)
     (and (consp x) (or (eq (car x) *comma*) (eq (car x) *comma-atsign*)))))
 `
@@ -130,6 +130,14 @@ eee
         `(if aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 1 2)`
       )
     ).toMatchSnapshot();
+  });
+
+  it("should print empty vectors", () => {
+    expect(pprintString(`[]`)).toMatchSnapshot();
+  });
+
+  it("should print empty records", () => {
+    expect(pprintString(`{}`)).toMatchSnapshot();
   });
 
   it("should print records with nested expressions", () => {

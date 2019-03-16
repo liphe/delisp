@@ -165,6 +165,16 @@ exports[`Pretty Printer should print deeply nested function calls nicely 1`] = `
                  30)"
 `;
 
+exports[`Pretty Printer should print empty records 1`] = `
+"
+{}"
+`;
+
+exports[`Pretty Printer should print empty vectors 1`] = `
+"
+[]"
+`;
+
 exports[`Pretty Printer should print lambda abstractions beautifully 1`] = `
 "
 (lambda (aaa bbb ccc) xxx)"

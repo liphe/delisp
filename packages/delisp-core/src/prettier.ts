@@ -236,7 +236,11 @@ export const space = text(" ");
  * Insert `sep` in between each of the documents.
  */
 export function join(docs: Doc[], sep: Doc) {
-  return docs.reduce((a, d) => concat(a, sep, d));
+  if (docs.length > 0) {
+    return docs.reduce((a, d) => concat(a, sep, d));
+  } else {
+    return nil;
+  }
 }
 
 // Pretty printing documents
