@@ -79,7 +79,7 @@ export function range(n: number) {
   return new Array(Math.max(0, n)).fill(0).map((_, i) => i);
 }
 
-export function equals(arr1: Array<unknown>, arr2: Array<unknown>): boolean {
+export function equals(arr1: unknown[], arr2: unknown[]): boolean {
   if (arr1.length !== arr2.length) {
     return false;
   } else {
