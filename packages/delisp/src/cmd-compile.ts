@@ -43,7 +43,7 @@ async function compileFile(file: string): Promise<void> {
     throw new Error(unknowns.join("\n\n"));
   }
 
-  const code = compileModuleToString(module);
+  const code = compileModuleToString(module, undefined, !!process.env.ESM);
 
   await mkdirp(path.dirname(outfile));
   await fs.writeFile(outfile, code);
