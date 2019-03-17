@@ -335,22 +335,8 @@ function compileTopLevel(
   };
 }
 
-function compileRuntime(): JS.VariableDeclaration {
-  return {
-    type: "VariableDeclaration",
-    kind: "const",
-    declarations: [
-      {
-        type: "VariableDeclarator",
-        id: { type: "Identifier", name: "env" },
-        init: {
-          type: "CallExpression",
-          callee: { type: "Identifier", name: "require" },
-          arguments: [{ type: "Literal", value: "@delisp/runtime" }]
-        }
-      }
-    ]
-  };
+function compileRuntime(env: Environment): JS.Statement | JS.ModuleDeclaration {
+  return env.moduleFormat.importRuntime("env");
 }
 
 function compileExports(
@@ -422,7 +408,7 @@ function compileModule(
     type: "Program",
     sourceType: "module",
     body: [
-      ...(includeRuntime ? [compileRuntime()] : []),
+      ...(includeRuntime ? [compileRuntime(env)] : []),
       ...maybeMap((syntax: Syntax) => compileTopLevel(syntax, env), m.body),
       ...compileExports(m.body.filter(isExport), env)
     ]
