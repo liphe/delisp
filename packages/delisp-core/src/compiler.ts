@@ -3,6 +3,7 @@ import {
   Expression,
   isDefinition,
   isExport,
+  isTypeAlias,
   Module,
   SConditional,
   SDefinition,
@@ -303,18 +304,21 @@ function compileTopLevel(
   syntax: Syntax,
   env: Environment
 ): JS.Statement | null {
-  if (isExport(syntax)) {
+  if (isExport(syntax) || isTypeAlias(syntax)) {
     // exports are compiled at the end of the module
     return null;
   }
 
-  const js: JS.Statement =
-    syntax.type === "definition"
-      ? compileDefinition(syntax, env)
-      : {
-          type: "ExpressionStatement",
-          expression: compile(syntax, env)
-        };
+  let js: JS.Statement;
+
+  if (isDefinition(syntax)) {
+    js = compileDefinition(syntax, env);
+  } else {
+    js = {
+      type: "ExpressionStatement",
+      expression: compile(syntax, env)
+    };
+  }
 
   return {
     ...js,

@@ -16,9 +16,12 @@ import {
 } from "./syntax";
 import { last } from "./utils";
 
-import { convert as convertType } from "./convert-type";
+import {
+  checkUserDefinedTypeName,
+  convert as convertType
+} from "./convert-type";
 import { parseRecord } from "./convert-utils";
-import { generalize } from "./type-utils";
+import { generalize, listTypeVariables } from "./type-utils";
 
 const conversions: Map<string, (expr: ASExprList) => Expression> = new Map();
 const toplevelConversions: Map<
@@ -223,6 +226,16 @@ defineConversion("the", expr => {
     );
   }
 
+  if (args.length > 2) {
+    throw new Error(
+      printHighlightedExpr(
+        `Too many arguments. 'the' should take two arguments.`,
+        args[2].location,
+        true
+      )
+    );
+  }
+
   const [t, value] = args;
 
   return {
@@ -289,6 +302,45 @@ defineToplevel("export", expr => {
   return {
     type: "export",
     value: convertSymbol(variable),
+    location: expr.location
+  };
+});
+
+defineToplevel("type", expr => {
+  const [typeOp, ...args] = expr.elements;
+
+  if (args.length !== 2) {
+    const lastExpr = last([typeOp, ...args]) as ASExpr;
+    throw new Error(
+      printHighlightedExpr(
+        `'type' needs exactly 2 arguments, got ${args.length}`,
+        lastExpr.location,
+        true
+      )
+    );
+  }
+
+  const [name, definition] = args;
+
+  if (name.type !== "symbol") {
+    throw new Error(
+      printHighlightedExpr("'type' expected a symbol as a name", name.location)
+    );
+  }
+
+  checkUserDefinedTypeName(name);
+
+  const definitionType = convertType(definition);
+  if (listTypeVariables(definitionType).length > 0) {
+    throw new Error(
+      printHighlightedExpr("Type variable out of scope", definition.location)
+    );
+  }
+
+  return {
+    type: "type-alias",
+    name: name.name,
+    definition: definitionType,
     location: expr.location
   };
 });

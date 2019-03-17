@@ -1,4 +1,5 @@
 import { Monotype, tApp, tRowExtension } from "./types";
+
 export interface Substitution {
   [t: string]: Monotype;
 }
@@ -20,6 +21,8 @@ export function applySubstitution(t: Monotype, env: Substitution): Monotype {
         return t;
       }
     }
+    case "user-defined-type":
+      return t;
     case "empty-row":
       return t;
     case "row-extension":

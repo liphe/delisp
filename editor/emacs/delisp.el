@@ -154,6 +154,11 @@
    (list "(\\\(define\\\)\\(?:\\s-+\\\(\\sw+\\\)\\)?"
          '(1 font-lock-keyword-face nil)
          '(2 font-lock-variable-name-face))
+
+   (list "(\\\(type\\\)\\(?:\\s-+\\\(\\sw+\\\)\\)?"
+         '(1 font-lock-keyword-face nil)
+         '(2 font-lock-variable-name-face))
+
    (list
     (concat "(" (regexp-opt '("if" "lambda" "let" "export" "and" "or" "the") t) "\\>")
     '(1 font-lock-keyword-face))

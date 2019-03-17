@@ -1,11 +1,22 @@
-import { tFn, tNumber, tRecord, tVar, tVector } from "../src/types";
-import { unify } from "../src/unify";
+import {
+  tFn,
+  tNumber,
+  tRecord,
+  tUserDefined,
+  tVar,
+  tVector
+} from "../src/types";
+import { unificationInEnvironment } from "../src/unify";
+
+const unify = unificationInEnvironment(name => {
+  throw new Error(`Unkonwn user defined type ${name}`);
+});
 
 describe("Unification", () => {
   it("should perform an occur check", () => {
     const t1 = tVar("t1");
     const t2 = tVector(t1);
-    const result = unify(t1, t2);
+    const result = unify(t1, t2, {});
     expect(result.type).toBe("unify-occur-check-error");
   });
 
@@ -13,13 +24,13 @@ describe("Unification", () => {
     it("should catch function arity mismatches", () => {
       const t1 = tFn([tNumber, tNumber], tNumber);
       const t2 = tFn([tNumber], tNumber);
-      const result = unify(t1, t2);
+      const result = unify(t1, t2, {});
       expect(result.type).toBe("unify-missing-value-error");
     });
     it("should catch operator mismatches", () => {
       const t1 = tVector(tNumber);
       const t2 = tFn([], tNumber);
-      const result = unify(t1, t2);
+      const result = unify(t1, t2, {});
       expect(result.type).toBe("unify-mismatch-error");
     });
   });
@@ -29,7 +40,7 @@ describe("Unification", () => {
       const r = tVar("r");
       const t1 = tRecord([{ label: ":x", type: tNumber }], r);
       const t2 = tRecord([{ label: ":y", type: tNumber }], r);
-      const result = unify(t1, t2);
+      const result = unify(t1, t2, {});
       expect(result.type).toBe("unify-mismatch-error");
     });
 
@@ -40,8 +51,24 @@ describe("Unification", () => {
         [{ label: "z", type: tNumber }, { label: ":y", type: tNumber }],
         r
       );
-      const result = unify(t1, t2);
+      const result = unify(t1, t2, {});
       expect(result.type).toBe("unify-mismatch-error");
+    });
+  });
+
+  describe("Type aliases", () => {
+    const unifyWithA = unificationInEnvironment(_name => {
+      return tNumber;
+    });
+
+    it("should unify with its definition", () => {
+      const t1 = tNumber;
+      const t2 = tUserDefined("A");
+      const result = unifyWithA(t1, t2, { a: tNumber });
+      expect(result.type).toBe("unify-success");
+      if (result.type === "unify-success") {
+        expect(result.substitution).toHaveProperty("a");
+      }
     });
   });
 });

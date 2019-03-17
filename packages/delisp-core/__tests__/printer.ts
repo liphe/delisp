@@ -181,4 +181,12 @@ eee
       )
     ).toMatchSnapshot();
   });
+
+  it("should pretty print type declarations", () => {
+    expect(
+      pprintString(
+        `(type Person {:name string :age number :books [{:name string :author string}]}) `
+      )
+    ).toMatchSnapshot();
+  });
 });

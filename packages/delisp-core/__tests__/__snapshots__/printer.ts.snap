@@ -139,6 +139,11 @@ exports[`Pretty Printer should pretty print a combination of lambda and function
                       ttt))))"
 `;
 
+exports[`Pretty Printer should pretty print type declarations 1`] = `
+"
+(type Person {:name string :age number :books [{:name string :author string}]})"
+`;
+
 exports[`Pretty Printer should print amll real code beautifully 1`] = `
 "
 (define bq-frob

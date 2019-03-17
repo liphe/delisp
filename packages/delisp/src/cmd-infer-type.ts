@@ -3,8 +3,10 @@ import { CommandModule } from "yargs";
 import {
   findSyntaxByOffset,
   inferModule,
-  isDeclaration,
+  isDefinition,
+  isExport,
   isExpression,
+  isTypeAlias,
   printType,
   readModule
 } from "@delisp/core";
@@ -54,7 +56,11 @@ export const cmdInferType: CommandModule = {
     if (s) {
       if (isExpression(s)) {
         console.log(printType(s.info.type));
-      } else if (isDeclaration(s)) {
+      } else if (isTypeAlias(s)) {
+        console.log(s);
+      } else if (isDefinition(s)) {
+        console.log(printType(s.value.info.type));
+      } else if (isExport(s)) {
         console.log(printType(s.value.info.type));
       }
     }

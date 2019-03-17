@@ -1,7 +1,7 @@
-import { readSyntax } from "../src/index";
-import { evaluate } from "../src/eval";
-import { createModule } from "../src/module";
 import { moduleEnvironment } from "../src/compiler";
+import { evaluate } from "../src/eval";
+import { readSyntax } from "../src/index";
+import { createModule } from "../src/module";
 
 function evaluateString(str: string): any {
   const env = moduleEnvironment(createModule());
