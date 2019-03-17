@@ -16,7 +16,10 @@ import _mkdirp from "mkdirp";
 
 const mkdirp = promisify(_mkdirp);
 
-async function compileFile(file: string): Promise<void> {
+async function compileFile(
+  file: string,
+  moduleFormat: "cjs" | "esm"
+): Promise<void> {
   const cwd = process.cwd();
   const OUTPUT_DIR = path.join(cwd, ".delisp", "build");
   const basename = path.basename(file, path.extname(file));
@@ -43,7 +46,7 @@ async function compileFile(file: string): Promise<void> {
     throw new Error(unknowns.join("\n\n"));
   }
 
-  const code = compileModuleToString(module, undefined, !!process.env.ESM);
+  const code = compileModuleToString(module, undefined, moduleFormat === "esm");
 
   await mkdirp(path.dirname(outfile));
   await fs.writeFile(outfile, code);
@@ -53,9 +56,17 @@ async function compileFile(file: string): Promise<void> {
 export const cmdCompile: CommandModule = {
   command: "compile [files...]",
   describe: "Compile delisp files",
+  builder: yargs =>
+    yargs.option("module", {
+      choices: ["cjs", "esm"],
+      default: "cjs",
+      describe: "Module format to use"
+    }),
   handler: args => {
     const files = args.files as string[];
-    Promise.all(files.map(compileFile)).catch(err => {
+    Promise.all(
+      files.map(file => compileFile(file, args.module as "cjs" | "esm"))
+    ).catch(err => {
       // tslint:disable: no-console
       console.log(err.message);
       process.exit(-1);
