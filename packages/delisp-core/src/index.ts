@@ -31,4 +31,10 @@ export function readSyntax(source: string): Syntax {
 
 export { findSyntaxByOffset } from "./syntax-utils";
 
-export * from "./module";
+export {
+  createModule,
+  readModule,
+  addToModule,
+  removeModuleDefinition,
+  removeModuleTypeDefinition
+} from "./module";
