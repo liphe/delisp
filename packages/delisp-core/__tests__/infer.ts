@@ -1,16 +1,21 @@
 import { isDeclaration, readSyntax } from "../src/index";
-import { ExternalEnvironment, inferType } from "../src/infer";
+import {
+  ExternalEnvironment,
+  inferType,
+  InternalTypeEnvironment
+} from "../src/infer";
 import { printType, readType } from "../src/type-utils";
 
 function typeOf(
   str: string,
-  env: ExternalEnvironment = { variables: {}, types: {} }
+  externalEnv: ExternalEnvironment = { variables: {}, types: {} },
+  internalEnv: InternalTypeEnvironment = {}
 ): string {
   const syntax = readSyntax(str);
   if (isDeclaration(syntax)) {
     throw new Error(`Not an expression!`);
   }
-  const typedExpr = inferType(syntax, env);
+  const typedExpr = inferType(syntax, externalEnv, internalEnv);
   return printType(typedExpr.info.type);
 }
 

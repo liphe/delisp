@@ -11,7 +11,14 @@
 
 import { InvariantViolation } from "./invariant";
 
-import { Expression, Module, SVariableReference, Syntax } from "./syntax";
+import {
+  Expression,
+  isTypeAlias,
+  Module,
+  STypeAlias,
+  SVariableReference,
+  Syntax
+} from "./syntax";
 
 import { printType } from "./type-utils";
 
@@ -19,11 +26,17 @@ import { printHighlightedExpr } from "./error-report";
 
 import { generateUniqueTVar } from "./type-generate";
 import { applySubstitution, Substitution } from "./type-substitution";
-import { generalize, instantiate, listTypeVariables } from "./type-utils";
+import {
+  generalize,
+  instantiate,
+  listTypeVariables,
+  listUserDefinedReferences
+} from "./type-utils";
 
 import {
   emptyRow,
   Monotype,
+  tApp,
   tBoolean,
   tFn,
   tNumber,
@@ -140,9 +153,10 @@ export interface Typed {
 
 function inferMany(
   exprs: Expression[],
-  monovars: string[]
+  monovars: string[],
+  internalTypes: InternalTypeEnvironment
 ): InferResult<Array<Expression<Typed>>> {
-  const results = exprs.map(e => infer(e, monovars));
+  const results = exprs.map(e => infer(e, monovars, internalTypes));
   return {
     result: results.map(r => r.result),
     constraints: flatMap(r => r.constraints, results),
@@ -157,7 +171,9 @@ function infer(
   // A set of type variables names whose type is monomorphic. That is
   // to say, all instances should have the same type. That is the set
   // of type variables introduced by lambda.
-  monovars: string[]
+  monovars: string[],
+  // Known type aliases that must be expanded
+  internalTypes: InternalTypeEnvironment
 ): InferResult<Expression<Typed>> {
   switch (expr.type) {
     case "number":
@@ -173,7 +189,7 @@ function infer(
         assumptions: []
       };
     case "vector": {
-      const inferredValues = inferMany(expr.values, monovars);
+      const inferredValues = inferMany(expr.values, monovars, internalTypes);
       const t = generateUniqueTVar();
 
       return {
@@ -194,10 +210,11 @@ function infer(
       const inferred = expr.fields.map(({ label, labelLocation, value }) => ({
         label,
         labelLocation,
-        ...infer(value, monovars)
+        ...infer(value, monovars, internalTypes)
       }));
 
-      const tailInferred = expr.extends && infer(expr.extends, monovars);
+      const tailInferred =
+        expr.extends && infer(expr.extends, monovars, internalTypes);
       const tailRowType = generateUniqueTVar();
 
       return {
@@ -258,9 +275,9 @@ function infer(
       };
     }
     case "conditional": {
-      const condition = infer(expr.condition, monovars);
-      const consequent = infer(expr.consequent, monovars);
-      const alternative = infer(expr.alternative, monovars);
+      const condition = infer(expr.condition, monovars, internalTypes);
+      const consequent = infer(expr.consequent, monovars, internalTypes);
+      const alternative = infer(expr.alternative, monovars, internalTypes);
       const t = generateUniqueTVar();
 
       return {
@@ -294,7 +311,8 @@ function infer(
 
       const { result: typedBody, constraints, assumptions } = inferMany(
         expr.body,
-        [...monovars, ...argtypes.map(v => v.name)]
+        [...monovars, ...argtypes.map(v => v.name)],
+        internalTypes
       );
 
       // Generate a constraint for each assumption pending for each
@@ -323,8 +341,8 @@ function infer(
     }
 
     case "function-call": {
-      const ifn = infer(expr.fn, monovars);
-      const iargs = inferMany(expr.args, monovars);
+      const ifn = infer(expr.fn, monovars, internalTypes);
+      const iargs = inferMany(expr.args, monovars, internalTypes);
       const tTo = generateUniqueTVar();
       const tfn: Monotype = tFn(iargs.result.map(a => a.info.type), tTo);
       return {
@@ -369,10 +387,10 @@ function infer(
       const bindingsInfo = expr.bindings.map(b => {
         return {
           binding: b,
-          inference: infer(b.value, monovars)
+          inference: infer(b.value, monovars, internalTypes)
         };
       });
-      const bodyInference = inferMany(expr.body, monovars);
+      const bodyInference = inferMany(expr.body, monovars, internalTypes);
       return {
         result: {
           ...expr,
@@ -414,8 +432,11 @@ function infer(
     }
 
     case "type-annotation": {
-      const inferred = infer(expr.value, monovars);
-      const t = instantiate(expr.valueType, true);
+      const inferred = infer(expr.value, monovars, internalTypes);
+      const t = expandTypeAliases(
+        instantiate(expr.valueType, true),
+        internalTypes
+      );
 
       return {
         result: {
@@ -431,9 +452,16 @@ function infer(
   }
 }
 
-function inferSyntax(syntax: Syntax): InferResult<Syntax<Typed>> {
+function inferSyntax(
+  syntax: Syntax,
+  internalTypes: InternalTypeEnvironment
+): InferResult<Syntax<Typed>> {
   if (syntax.type === "definition") {
-    const { result, assumptions, constraints } = infer(syntax.value, []);
+    const { result, assumptions, constraints } = infer(
+      syntax.value,
+      [],
+      internalTypes
+    );
     return {
       result: {
         ...syntax,
@@ -443,7 +471,11 @@ function inferSyntax(syntax: Syntax): InferResult<Syntax<Typed>> {
       constraints
     };
   } else if (syntax.type === "export") {
-    const { result, assumptions, constraints } = infer(syntax.value, []);
+    const { result, assumptions, constraints } = infer(
+      syntax.value,
+      [],
+      internalTypes
+    );
     return {
       result: {
         ...syntax,
@@ -461,7 +493,11 @@ function inferSyntax(syntax: Syntax): InferResult<Syntax<Typed>> {
       constraints: []
     };
   } else {
-    const { result, assumptions, constraints } = infer(syntax, []);
+    const { result, assumptions, constraints } = infer(
+      syntax,
+      [],
+      internalTypes
+    );
     return {
       result,
       assumptions,
@@ -492,13 +528,15 @@ export interface ExternalEnvironment {
   };
 }
 
-interface InternalEnvironment {
+export interface InternalTypeEnvironment {
+  [t: string]: Monotype;
+}
+
+export interface InternalEnvironment {
   variables: {
     [v: string]: Monotype;
   };
-  types: {
-    [t: string]: Monotype;
-  };
+  types: InternalTypeEnvironment;
 }
 
 function lookupVariableType(
@@ -725,7 +763,7 @@ function applySubstitutionToSyntax(
 function solve(
   constraints: TConstraint[],
   solution: Substitution,
-  typeEnvironment: InternalEnvironment["types"]
+  typeEnvironment: InternalTypeEnvironment
 ): Substitution {
   if (constraints.length === 0) {
     return solution;
@@ -857,9 +895,14 @@ const defaultEnvironment: ExternalEnvironment = {
 
 export function inferType(
   expr: Expression,
-  env: ExternalEnvironment = defaultEnvironment
+  env: ExternalEnvironment = defaultEnvironment,
+  internalTypes: InternalTypeEnvironment
 ): Expression<Typed> {
-  const { result: tmpExpr, constraints, assumptions } = infer(expr, []);
+  const { result: tmpExpr, constraints, assumptions } = infer(
+    expr,
+    [],
+    internalTypes
+  );
 
   const s = solve(
     [...constraints, ...assumptionsToConstraints(assumptions, env)],
@@ -896,6 +939,77 @@ function groupAssumptions(
   };
 }
 
+/** Check that there is no cycles in env, throwing an error otherwise. */
+function checkCircularTypes(allTypeAliases: STypeAlias[]) {
+  // The type aliases reference each other and then form a directed
+  // graph. Here we do a simple depth-first search, keeping track of
+  // the path to report if we find any cycles.
+  function visit(typeAlias: STypeAlias, path: STypeAlias[]) {
+    const index = path.indexOf(typeAlias);
+    if (index < 0) {
+      listUserDefinedReferences(typeAlias.definition)
+        .map(ud => {
+          return allTypeAliases.find(x => x.name === ud.name);
+        })
+        .forEach(dep => {
+          if (!dep) {
+            return;
+          }
+          visit(dep, [...path, typeAlias]);
+        });
+    } else {
+      // the current node is reachable from itself. We can report a
+      // cycle here.
+      const cycle = [...path.slice(index), typeAlias];
+      if (cycle.length === 1) {
+        throw new Error(
+          printHighlightedExpr(
+            `Recursive type aliases are not allowed.`,
+            typeAlias.location
+          )
+        );
+      } else {
+        throw new Error(
+          printHighlightedExpr(
+            `Cicular dependency in type aliases found
+  ${cycle.map(s => s.name).join(" -> ")}
+`,
+            typeAlias.location
+          )
+        );
+      }
+    }
+  }
+
+  allTypeAliases.forEach(tAlias => visit(tAlias, []));
+}
+
+/** Expand known type aliases from a monotype. */
+function expandTypeAliases(
+  t: Monotype,
+  env: InternalTypeEnvironment
+): Monotype {
+  switch (t.type) {
+    case "void":
+    case "boolean":
+    case "number":
+    case "string":
+    case "type-variable":
+    case "empty-row":
+      return t;
+    case "row-extension":
+      return tRecord(
+        [{ label: t.label, type: expandTypeAliases(t.labelType, env) }],
+        expandTypeAliases(t.extends, env)
+      );
+    case "application":
+      return tApp(t.op, ...t.args.map(t1 => expandTypeAliases(t1, env)));
+    case "user-defined-type":
+      const def = env[t.name];
+      return def ? expandTypeAliases(def, env) : t;
+  }
+}
+
 /** Run the type inference on a module.
  *
  * @description Takes a Module and the external environment, will run
@@ -910,7 +1024,16 @@ export function inferModule(
   typedModule: Module<Typed>;
   unknowns: TAssumption[];
 } {
-  const bodyInferences = m.body.map(inferSyntax);
+  checkCircularTypes(m.body.filter(isTypeAlias));
+  const internalTypes: InternalTypeEnvironment = m.body.reduce((env, s) => {
+    if (s.type === "type-alias") {
+      return { ...env, [s.name]: s.definition };
+    } else {
+      return env;
+    }
+  }, {});
+
+  const bodyInferences = m.body.map(form => inferSyntax(form, internalTypes));
   const body = bodyInferences.map(i => i.result);
 
   const internalEnv: InternalEnvironment = {
@@ -922,13 +1045,7 @@ export function inferModule(
       }
     }, {}),
 
-    types: body.reduce((env, s) => {
-      if (s.type === "type-alias") {
-        return { ...env, [s.name]: s.definition };
-      } else {
-        return env;
-      }
-    }, {})
+    types: internalTypes
   };
 
   const assumptions = groupAssumptions(

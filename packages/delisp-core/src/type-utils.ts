@@ -4,8 +4,37 @@ import { convert as convertType } from "./convert-type";
 import { readFromString } from "./reader";
 import { generateUniqueTVar } from "./type-generate";
 import { applySubstitution } from "./type-substitution";
-import { emptyRow, Monotype, TApplication, tVar, Type } from "./types";
+import {
+  emptyRow,
+  Monotype,
+  TApplication,
+  TUserDefined,
+  tVar,
+  Type
+} from "./types";
 import { flatMap, unique } from "./utils";
+
+// Return user defined types
+export function listUserDefinedReferences(t: Monotype): TUserDefined[] {
+  switch (t.type) {
+    case "void":
+    case "boolean":
+    case "string":
+    case "number":
+    case "empty-row":
+    case "type-variable":
+      return [];
+    case "user-defined-type":
+      return [t];
+    case "application":
+      return flatMap(listUserDefinedReferences, t.args);
+    case "row-extension":
+      return [
+        ...listUserDefinedReferences(t.labelType),
+        ...listUserDefinedReferences(t.extends)
+      ];
+  }
+}
 
 // Return the list of type variables in the order they show up
 export function listTypeVariables(t: Monotype): string[] {

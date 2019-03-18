@@ -113,7 +113,7 @@ export interface SExport<I = {}> {
   location: Location;
 }
 
-export interface STypeAlias<_I> {
+export interface STypeAlias<_I = {}> {
   type: "type-alias";
   name: SVar;
   definition: Monotype;
