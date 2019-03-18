@@ -196,7 +196,8 @@ describe("Type inference", () => {
     describe("Type aliases", () => {
       const env = { variables: {}, types: {} };
       const intEnv: InternalTypeEnvironment = {
-        ID: readType("number").mono
+        ID: readType("number").mono,
+        Person: readType("{:x string}").mono
       };
 
       it("should be compatible if they are internal", () => {
@@ -205,6 +206,12 @@ describe("Type inference", () => {
 
       it("should expand to their definition if they are internal", () => {
         expect(typeOf("(the ID 5)", env, intEnv)).toBe("number");
+      });
+
+      it("should be compatible when defined as a record", () => {
+        expect(typeOf('(the Person {:name "david"})', env, intEnv)).toBe(
+          "{:name string}"
+        );
       });
     });
   });
