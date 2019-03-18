@@ -900,7 +900,7 @@ function groupAssumptions(
  *
  * @description Takes a Module and the external environment, will run
  * inference returning the same module with the types annotated in the
- * AST. Additionally, a set of unkonwn references is returned so those
+ * AST. Additionally, a set of unknown references is returned so those
  * can be reported.
  */
 export function inferModule(
