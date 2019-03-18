@@ -6,11 +6,7 @@ import {
   tVar,
   tVector
 } from "../src/types";
-import { unificationInEnvironment } from "../src/unify";
-
-const unify = unificationInEnvironment(name => {
-  throw new Error(`Unkonwn user defined type ${name}`);
-});
+import { unify } from "../src/unify";
 
 describe("Unification", () => {
   it("should perform an occur check", () => {
@@ -56,19 +52,19 @@ describe("Unification", () => {
     });
   });
 
-  describe("Type aliases", () => {
-    const unifyWithA = unificationInEnvironment(_name => {
-      return tNumber;
+  describe("User defined types", () => {
+    it("should unify with themselves", () => {
+      const t1 = tUserDefined("A");
+      const t2 = tUserDefined("A");
+      const result = unify(t1, t2, {});
+      expect(result.type).toBe("unify-success");
     });
 
-    it("should unify with its definition", () => {
+    it("should not unify with its definition", () => {
       const t1 = tNumber;
       const t2 = tUserDefined("A");
-      const result = unifyWithA(t1, t2, { a: tNumber });
-      expect(result.type).toBe("unify-success");
-      if (result.type === "unify-success") {
-        expect(result.substitution).toHaveProperty("a");
-      }
+      const result = unify(t1, t2, { a: tNumber });
+      expect(result.type).toBe("unify-mismatch-error");
     });
   });
 });

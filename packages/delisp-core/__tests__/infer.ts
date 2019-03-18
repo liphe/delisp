@@ -182,17 +182,17 @@ describe("Type inference", () => {
     });
 
     describe("Type aliases", () => {
-      const env = {
-        variables: {},
-        types: { ID: readType("number").mono }
+      const env = { variables: {}, types: {} };
+      const intEnv: InternalTypeEnvironment = {
+        ID: readType("number").mono
       };
 
-      it("should unify with their definition", () => {
-        expect(typeOf("(if true (the ID 5) 3)", env)).not.toBe("α");
+      it("should be compatible if they are internal", () => {
+        expect(typeOf("(if true (the ID 5) 3)", env, intEnv)).not.toBe("α");
       });
 
-      it("should preserve the type alias name", () => {
-        expect(typeOf("(the ID 5)", env)).toBe("ID");
+      it("should expand to their definition if they are internal", () => {
+        expect(typeOf("(the ID 5)", env, intEnv)).toBe("number");
       });
     });
   });
