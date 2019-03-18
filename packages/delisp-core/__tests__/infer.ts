@@ -197,7 +197,7 @@ describe("Type inference", () => {
       const env = { variables: {}, types: {} };
       const intEnv: InternalTypeEnvironment = {
         ID: readType("number").mono,
-        Person: readType("{:x string}").mono
+        Person: readType("{:name string}").mono
       };
 
       it("should be compatible if they are internal", () => {

@@ -41,6 +41,7 @@ import {
   tFn,
   tNumber,
   tRecord,
+  tRow,
   tString,
   tVar,
   tVector,
@@ -994,7 +995,7 @@ function expandTypeAliases(
     case "empty-row":
       return t;
     case "row-extension":
-      return tRecord(
+      return tRow(
         [{ label: t.label, type: expandTypeAliases(t.labelType, env) }],
         expandTypeAliases(t.extends, env)
       );
