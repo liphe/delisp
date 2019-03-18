@@ -181,6 +181,18 @@ describe("Type inference", () => {
       });
     });
 
+    describe("User-defined type", () => {
+      const env = { variables: {}, types: { ID: readType("number").mono } };
+
+      it("should NOT be compatible", () => {
+        expect(() => typeOf("(if true (the ID 5) 3)", env)).toThrow();
+      });
+
+      it("should NOT expand to their definition", () => {
+        expect(typeOf("(lambda (x) (the ID x))", env)).toBe("(-> ID ID)");
+      });
+    });
+
     describe("Type aliases", () => {
       const env = { variables: {}, types: {} };
       const intEnv: InternalTypeEnvironment = {
