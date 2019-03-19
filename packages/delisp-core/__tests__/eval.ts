@@ -38,8 +38,13 @@ describe("Evaluation", () => {
       expect(evaluateString("((lambda (x y) y) 4 5)")).toBe(5);
     });
 
+    it("should return records as objects", () => {
+      expect(evaluateString("((lambda (x) {:x x}) 10)")).toEqual({ x: 10 });
+    });
+
     it("should return the last expression of the body", () => {
       expect(evaluateString("((lambda (x) x 1) 10)")).toBe(1);
+      expect(evaluateString("((lambda (x) x {:a 1}) 10)")).toEqual({ a: 1 });
     });
 
     // Regression
