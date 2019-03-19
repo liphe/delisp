@@ -1,16 +1,21 @@
 import { isDeclaration, readSyntax } from "../src/index";
-import { ExternalEnvironment, inferType } from "../src/infer";
+import {
+  ExternalEnvironment,
+  inferType,
+  InternalTypeEnvironment
+} from "../src/infer";
 import { printType, readType } from "../src/type-utils";
 
 function typeOf(
   str: string,
-  env: ExternalEnvironment = { variables: {}, types: {} }
+  externalEnv: ExternalEnvironment = { variables: {}, types: {} },
+  internalEnv: InternalTypeEnvironment = {}
 ): string {
   const syntax = readSyntax(str);
   if (isDeclaration(syntax)) {
     throw new Error(`Not an expression!`);
   }
-  const typedExpr = inferType(syntax, env);
+  const typedExpr = inferType(syntax, externalEnv, internalEnv);
   return printType(typedExpr.info.type);
 }
 
@@ -176,18 +181,37 @@ describe("Type inference", () => {
       });
     });
 
-    describe("Type aliases", () => {
-      const env = {
-        variables: {},
-        types: { ID: readType("number").mono }
-      };
+    describe("User-defined type", () => {
+      const env = { variables: {}, types: { ID: readType("number").mono } };
 
-      it("should unify with their definition", () => {
-        expect(typeOf("(if true (the ID 5) 3)", env)).not.toBe("α");
+      it("should NOT be compatible", () => {
+        expect(() => typeOf("(if true (the ID 5) 3)", env)).toThrow();
       });
 
-      it("should preserve the type alias name", () => {
-        expect(typeOf("(the ID 5)", env)).toBe("ID");
+      it("should NOT expand to their definition", () => {
+        expect(typeOf("(lambda (x) (the ID x))", env)).toBe("(-> ID ID)");
+      });
+    });
+
+    describe("Type aliases", () => {
+      const env = { variables: {}, types: {} };
+      const intEnv: InternalTypeEnvironment = {
+        ID: readType("number").mono,
+        Person: readType("{:name string}").mono
+      };
+
+      it("should be compatible if they are internal", () => {
+        expect(typeOf("(if true (the ID 5) 3)", env, intEnv)).not.toBe("α");
+      });
+
+      it("should expand to their definition if they are internal", () => {
+        expect(typeOf("(the ID 5)", env, intEnv)).toBe("number");
+      });
+
+      it("should be compatible when defined as a record", () => {
+        expect(typeOf('(the Person {:name "david"})', env, intEnv)).toBe(
+          "{:name string}"
+        );
       });
     });
   });
