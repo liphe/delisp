@@ -37,8 +37,8 @@ import {
 import { identifierToJS, isValidJSIdentifierName } from "./compiler/jsvariable";
 import { pprint } from "./printer";
 
+import * as escodegen from "escodegen";
 import * as JS from "estree";
-import * as recast from "recast";
 
 import createDebug from "debug";
 const debug = createDebug("delisp:compiler");
@@ -431,7 +431,7 @@ function compileModule(
 
 export function compileToString(syntax: Syntax, env: Environment): string {
   const ast = compileModule({ type: "module", body: [syntax] }, false, env);
-  const code = recast.print(ast).code;
+  const code = escodegen.generate(ast);
   debug("jscode:", code);
   return code;
 }
@@ -443,7 +443,7 @@ export function compileModuleToString(
 ): string {
   const env = moduleEnvironment(m, definitionContainer, esModule);
   const ast = compileModule(m, true, env);
-  const code = recast.print(ast).code;
+  const code = escodegen.generate(ast);
   debug("jscode:", code);
   return code;
 }

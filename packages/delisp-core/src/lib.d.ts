@@ -1,3 +1,3 @@
-declare module "recast" {
-  export function print(ast: object): { code: string };
+declare module "escodegen" {
+  export function generate(ast: object, opts?: object): string;
 }
