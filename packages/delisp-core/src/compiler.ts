@@ -342,8 +342,8 @@ function compileTopLevel(
       {
         type: "Block",
         value: `
-    ${pprint(syntax, 60)}
-    `
+${pprint(syntax, 60)}
+`
       }
     ]
   };
@@ -431,7 +431,7 @@ function compileModule(
 
 export function compileToString(syntax: Syntax, env: Environment): string {
   const ast = compileModule({ type: "module", body: [syntax] }, false, env);
-  const code = escodegen.generate(ast);
+  const code = escodegen.generate(ast, { comment: true });
   debug("jscode:", code);
   return code;
 }
@@ -443,7 +443,7 @@ export function compileModuleToString(
 ): string {
   const env = moduleEnvironment(m, definitionContainer, esModule);
   const ast = compileModule(m, true, env);
-  const code = escodegen.generate(ast);
+  const code = escodegen.generate(ast, { comment: true });
   debug("jscode:", code);
   return code;
 }
