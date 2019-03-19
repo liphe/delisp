@@ -19,7 +19,7 @@
     "@delisp/runtime": "^0.1.1",
     "@types/debug": "^4.1.2",
     "debug": "^4.1.0",
-    "recast": "^0.17.3"
+    "escodegen": "^1.11.1"
   },
   "devDependencies": {
     "@types/estree": "^0.0.39"
