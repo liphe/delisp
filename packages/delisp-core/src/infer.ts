@@ -20,6 +20,8 @@ import {
   Syntax
 } from "./syntax";
 
+import { transformRecurExpr } from "./syntax-utils";
+
 import { printType } from "./type-utils";
 
 import { printHighlightedExpr } from "./error-report";
@@ -651,63 +653,13 @@ function applySubstitutionToExpr(
   s: Expression<Typed>,
   env: Substitution
 ): Expression<Typed> {
-  function update<A extends Expression<Typed>>(
-    expr: A,
-    fields: Partial<A> = {}
-  ): A {
-    return {
-      ...expr,
-      info: {
-        ...expr.info,
-        ...fields,
-        type: applySubstitution(expr.info.type, env)
-      }
-    };
-  }
-  switch (s.type) {
-    case "string":
-    case "number":
-    case "variable-reference":
-      return update(s);
-    case "vector":
-      return update(s, {
-        values: s.values.map(s1 => applySubstitutionToExpr(s1, env))
-      });
-    case "record":
-      return update(s, {
-        fields: s.fields.map(f => ({
-          ...f,
-          value: applySubstitutionToExpr(f.value, env)
-        }))
-      });
-    case "function-call":
-      return update(s, {
-        fn: applySubstitutionToExpr(s.fn, env),
-        args: s.args.map(a => applySubstitutionToExpr(a, env))
-      });
-    case "conditional":
-      return update(s, {
-        condition: applySubstitutionToExpr(s.condition, env),
-        consequent: applySubstitutionToExpr(s.consequent, env),
-        alternative: applySubstitutionToExpr(s.alternative, env)
-      });
-    case "function":
-      return update(s, {
-        body: s.body.map(b => applySubstitutionToExpr(b, env))
-      });
-    case "let-bindings":
-      return update(s, {
-        bindings: s.bindings.map(b => ({
-          ...b,
-          value: applySubstitutionToExpr(b.value, env)
-        })),
-        body: s.body.map(e => applySubstitutionToExpr(e, env))
-      });
-    case "type-annotation":
-      return update(s, {
-        value: applySubstitutionToExpr(s.value, env)
-      });
-  }
+  return transformRecurExpr(s, expr => ({
+    ...expr,
+    info: {
+      ...expr.info,
+      type: applySubstitution(expr.info.type, env)
+    }
+  }));
 }
 
 function applySubstitutionToSyntax(
