@@ -111,16 +111,17 @@ function compileLambda(
     })
   );
 
-  const body: JS.Expression | JS.Statement =
-    fn.body.length === 1
-      ? compile(fn.body[0], newEnv)
-      : compileBody(fn.body, newEnv);
+  const implicitReturn = fn.body.length === 1;
+
+  const body: JS.Expression | JS.Statement = implicitReturn
+    ? compile(fn.body[0], newEnv)
+    : compileBody(fn.body, newEnv);
 
   return {
     type: "ArrowFunctionExpression",
     params: [...jsargs],
     body,
-    expression: false
+    expression: implicitReturn
   };
 }
 
