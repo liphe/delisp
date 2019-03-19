@@ -651,90 +651,62 @@ function applySubstitutionToExpr(
   s: Expression<Typed>,
   env: Substitution
 ): Expression<Typed> {
+  function update<A extends Expression<Typed>>(
+    expr: A,
+    fields: Partial<A> = {}
+  ): A {
+    return {
+      ...expr,
+      info: {
+        ...expr.info,
+        ...fields,
+        type: applySubstitution(expr.info.type, env)
+      }
+    };
+  }
   switch (s.type) {
     case "string":
     case "number":
     case "variable-reference":
-      return {
-        ...s,
-        info: {
-          ...s.info,
-          type: applySubstitution(s.info.type, env)
-        }
-      };
+      return update(s);
     case "vector":
-      return {
-        ...s,
-        values: s.values.map(s1 => applySubstitutionToExpr(s1, env)),
-        info: {
-          ...s.info,
-          type: applySubstitution(s.info.type, env)
-        }
-      };
+      return update(s, {
+        values: s.values.map(s1 => applySubstitutionToExpr(s1, env))
+      });
     case "record":
-      return {
-        ...s,
+      return update(s, {
         fields: s.fields.map(f => ({
           ...f,
           value: applySubstitutionToExpr(f.value, env)
-        })),
-        info: {
-          ...s.info,
-          type: applySubstitution(s.info.type, env)
-        }
-      };
+        }))
+      });
     case "function-call":
-      return {
-        ...s,
+      return update(s, {
         fn: applySubstitutionToExpr(s.fn, env),
-        args: s.args.map(a => applySubstitutionToExpr(a, env)),
-        info: {
-          ...s.info,
-          type: applySubstitution(s.info.type, env)
-        }
-      };
+        args: s.args.map(a => applySubstitutionToExpr(a, env))
+      });
     case "conditional":
-      return {
-        ...s,
+      return update(s, {
         condition: applySubstitutionToExpr(s.condition, env),
         consequent: applySubstitutionToExpr(s.consequent, env),
-        alternative: applySubstitutionToExpr(s.alternative, env),
-        info: {
-          ...s.info,
-          type: applySubstitution(s.info.type, env)
-        }
-      };
+        alternative: applySubstitutionToExpr(s.alternative, env)
+      });
     case "function":
-      return {
-        ...s,
-        body: s.body.map(b => applySubstitutionToExpr(b, env)),
-        info: {
-          ...s.info,
-          type: applySubstitution(s.info.type, env)
-        }
-      };
+      return update(s, {
+        body: s.body.map(b => applySubstitutionToExpr(b, env))
+      });
     case "let-bindings":
-      return {
-        ...s,
+      return update(s, {
         bindings: s.bindings.map(b => ({
           ...b,
           value: applySubstitutionToExpr(b.value, env)
         })),
-        body: s.body.map(e => applySubstitutionToExpr(e, env)),
-        info: {
-          ...s.info,
-          type: applySubstitution(s.info.type, env)
-        }
-      };
+        body: s.body.map(e => applySubstitutionToExpr(e, env))
+      });
     case "type-annotation":
-      return {
-        ...s,
-        value: applySubstitutionToExpr(s.value, env),
-        info: {
-          ...s.info,
-          type: applySubstitution(s.info.type, env)
-        }
-      };
+      return update(s, {
+        value: applySubstitutionToExpr(s.value, env)
+      });
   }
 }
 
