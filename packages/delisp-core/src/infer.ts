@@ -9,6 +9,8 @@
 //   https://pdfs.semanticscholar.org/8983/233b3dff2c5b94efb31235f62bddc22dc899.pdf
 //
 
+import { InvariantViolation } from "./invariant";
+
 import { Expression, Module, SVariableReference, Syntax } from "./syntax";
 
 import { printType } from "./type-utils";
@@ -825,7 +827,9 @@ ${printType(applySubstitution(constraint.t, solution))}
         default:
           // Adding a default clause here makes Typescript detects
           // that this case won't fall through to the next one.
-          throw new Error(`can't happen`);
+          throw new InvariantViolation(
+            `This should never happen. Typescript doesnt detect the exhaustiveness of this function.`
+          );
       }
     }
     case "explicit-instance-constraint": {

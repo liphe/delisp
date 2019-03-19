@@ -1,4 +1,5 @@
 import * as JS from "estree";
+import { InvariantViolation } from "../invariant";
 import { generateUniqueTVar } from "../type-generate";
 import { generalize, readType } from "../type-utils";
 import { tFn, tRecord, Type } from "../types";
@@ -57,7 +58,9 @@ export function findInlinePrimitive(name: string): InlinePrim {
     return magicPrim.createPrimitive(name);
   }
 
-  throw new Error(`${name} is not an primitive inline function call`);
+  throw new InvariantViolation(
+    `${name} is not an primitive inline function call`
+  );
 }
 
 function primitiveArity(prim: InlinePrim): number {

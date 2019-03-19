@@ -9,6 +9,8 @@
 // operators is not enough.
 //
 
+import { InvariantViolation } from "./invariant";
+
 interface DocNil {
   type: "nil";
 }
@@ -258,7 +260,9 @@ function fits(doc: Doc, w: number): boolean {
     case "text":
       return fits(doc.next, w - doc.content.length);
     case "union":
-      throw new Error(`Unsupported`);
+      throw new InvariantViolation(
+        `unions should be removed before checking if it fits.`
+      );
     case "align":
       return fits(doc.root, w) && doc.docs.every(d => fits(d, w));
     case "indent":
@@ -334,7 +338,7 @@ function layout(doc: Doc, indentation: number, alignment: number): string {
         "\n" + repeatChar(" ", indentation) + layout(doc.next, indentation, 0)
       );
     case "union":
-      throw new Error(`No layout for unions!`);
+      throw new InvariantViolation(`No layout for unions!`);
     case "align":
       return (
         [

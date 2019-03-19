@@ -1,3 +1,5 @@
+import { InvariantViolation } from "../invariant";
+
 const reservedWords = [
   "arguments",
   "await",
@@ -101,7 +103,7 @@ export function escapeIdentifier(x: string): string {
           const replacement: string = escapes.get(ch)!;
           return "$" + replacement + "$";
         } else {
-          throw new Error(
+          throw new InvariantViolation(
             `Error: the variable ${x} contained a non-allowed character ${ch}.`
           );
         }

@@ -1,3 +1,5 @@
+import { InvariantViolation } from "./invariant";
+
 import { convert as convertType } from "./convert-type";
 import { readFromString } from "./reader";
 import { generateUniqueTVar } from "./type-generate";
@@ -87,7 +89,7 @@ function normalizeRow(
     type.type !== "row-extension" &&
     type.type !== "type-variable"
   ) {
-    throw new Error(`FATAL: Record should be built on top of rows`);
+    throw new InvariantViolation(`Row tail should be a row-kinded type.`);
   }
 
   switch (type.type) {
@@ -141,7 +143,7 @@ function _printType(type: Monotype): string {
       return type.name;
     case "empty-row":
     case "row-extension":
-      throw new Error(`Unexpected: can't print ${type.type} types`);
+      throw new InvariantViolation(`Can't print ${type.type} types`);
   }
 }
 

@@ -5,6 +5,8 @@
  * expected to parse to facilitate generating friendly error messages.
  */
 
+import { InvariantViolation } from "./invariant";
+
 import { printHighlightedSource } from "./error-report";
 import { Input, Location, Offset } from "./input";
 
@@ -326,8 +328,9 @@ export function getParserError(source: string, rootError: ParserError): string {
   // Process the error tree
   const offset = maxOffset(rootError);
   const prunedTree = pruneErrorTree(rootError, offset);
+
   if (prunedTree === null) {
-    throw new Error(
+    throw new InvariantViolation(
       `Assertion failed. A tree pruned to its maximum offset should not be empty.`
     );
   }

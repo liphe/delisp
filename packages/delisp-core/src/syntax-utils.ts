@@ -39,7 +39,7 @@ function syntaxChildren<I>(s: Syntax<I>): Array<Expression<I>> {
 function syntaxPathFromOffset<I>(s: Syntax<I>, offset: number): Syntax<I> {
   const children = syntaxChildren(s);
   if (!(s.location.start <= offset && offset < s.location.end)) {
-    throw new Error(`invariant: offset is not in syntax`);
+    throw new Error(`Offset is out of range.`);
   }
   for (const c of children) {
     if (c.location.start <= offset && offset < c.location.end) {

@@ -20,6 +20,8 @@ import {
 import { methodCall } from "./compiler/estree-utils";
 import { last, mapObject, maybeMap } from "./utils";
 
+import { InvariantViolation } from "./invariant";
+
 import { printHighlightedExpr } from "./error-report";
 
 import {
@@ -180,7 +182,9 @@ function compileVariable(
           name: binding.jsname
         };
       default:
-        throw new Error("Stupid TS");
+        throw new InvariantViolation(
+          "This switch-statement should be exhaustive but TS doesn't detect it somehow."
+        );
     }
   }
 }
@@ -249,8 +253,9 @@ function compileRecord(expr: SRecord, env: Environment): JS.Expression {
     properties: expr.fields.map(
       ({ label, value }): JS.Property => {
         if (!label.startsWith(":")) {
-          throw new Error(`assert: invalid record field name ${label}`);
+          throw new InvariantViolation(`Invalid record ${label}`);
         }
+
         const name = label.replace(/^:/, "");
 
         return {
