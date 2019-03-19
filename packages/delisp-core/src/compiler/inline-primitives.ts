@@ -186,6 +186,13 @@ defineInlinePrimitive("=", "(-> number number boolean)", ([x, y]) => ({
   right: y
 }));
 
+defineInlinePrimitive("zero?", "(-> number boolean)", ([x]) => ({
+  type: "BinaryExpression",
+  operator: "===",
+  left: x,
+  right: { type: "Literal", value: 0 }
+}));
+
 defineInlinePrimitive("string=", "(-> string string boolean)", ([x, y]) => ({
   type: "BinaryExpression",
   operator: "===",
