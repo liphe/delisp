@@ -275,10 +275,23 @@ function compileRecord(expr: SRecord, env: Environment): JS.Expression {
   }
 }
 
+function compileNumber(value: number): JS.Expression {
+  if (value >= 0) {
+    return literal(value);
+  } else {
+    return {
+      type: "UnaryExpression",
+      operator: "-",
+      prefix: true,
+      argument: literal(-value)
+    };
+  }
+}
+
 export function compile(expr: Expression, env: Environment): JS.Expression {
   switch (expr.type) {
     case "number":
-      return literal(expr.value);
+      return compileNumber(expr.value);
     case "string":
       return literal(expr.value);
     case "vector":
