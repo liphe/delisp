@@ -13,7 +13,6 @@ before_script:
   - yarn global add codecov
 
 script:
-  - yarn prettier:check
   - yarn lint
   - yarn build
   - yarn test --coverage

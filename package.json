@@ -7,8 +7,6 @@
   "scripts": {
     "build": "tsc --build packages/",
     "lint": "eslint --ext .ts .",
-    "prettier": "prettier --write '**/*.ts'",
-    "prettier:check": "prettier --list-different '**/*.ts'",
     "test": "yarn workspaces run test"
   },
   "devDependencies": {
