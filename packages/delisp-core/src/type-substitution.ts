@@ -1,35 +1,21 @@
-import { Monotype, tApp, tRowExtension } from "./types";
+import { transformRecurType } from "./type-utils";
+import { Monotype } from "./types";
 
 export interface Substitution {
   [t: string]: Monotype;
 }
 
 export function applySubstitution(t: Monotype, env: Substitution): Monotype {
-  switch (t.type) {
-    case "void":
-    case "boolean":
-    case "number":
-    case "string":
-      return t;
-    case "application":
-      return tApp(t.op, ...t.args.map(t1 => applySubstitution(t1, env)));
-    case "type-variable": {
-      if (t.name in env) {
-        const tt = env[t.name];
+  return transformRecurType(t, t1 => {
+    if (t1.type === "type-variable") {
+      if (t1.name in env) {
+        const tt = env[t1.name];
         return applySubstitution(tt, env);
       } else {
-        return t;
+        return t1;
       }
+    } else {
+      return t1;
     }
-    case "user-defined-type":
-      return t;
-    case "empty-row":
-      return t;
-    case "row-extension":
-      return tRowExtension(
-        t.label,
-        applySubstitution(t.labelType, env),
-        applySubstitution(t.extends, env)
-      );
-  }
+  });
 }

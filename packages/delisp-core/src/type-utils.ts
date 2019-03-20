@@ -7,12 +7,38 @@ import { applySubstitution } from "./type-substitution";
 import {
   emptyRow,
   Monotype,
+  tApp,
   TApplication,
+  tRowExtension,
   TUserDefined,
   tVar,
   Type
 } from "./types";
 import { flatMap, unique } from "./utils";
+
+export function transformRecurType(
+  t: Monotype,
+  fn: (t1: Monotype) => Monotype
+): Monotype {
+  switch (t.type) {
+    case "void":
+    case "boolean":
+    case "number":
+    case "string":
+    case "type-variable":
+    case "user-defined-type":
+    case "empty-row":
+      return fn(t);
+    case "application":
+      return fn(tApp(t.op, ...t.args.map(t1 => transformRecurType(t1, fn))));
+    case "row-extension":
+      return tRowExtension(
+        t.label,
+        transformRecurType(t.labelType, fn),
+        transformRecurType(t.extends, fn)
+      );
+  }
+}
 
 // Return user defined types
 export function listUserDefinedReferences(t: Monotype): TUserDefined[] {
