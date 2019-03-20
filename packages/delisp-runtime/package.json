@@ -5,7 +5,6 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc",
-    "lint": "tslint --project tsconfig.json",
     "test": "exit 0"
   },
   "publishConfig": {

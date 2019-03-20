@@ -6,7 +6,6 @@
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
     "build:all": "tsc --build tsconfig.json",
-    "lint": "tslint --project tsconfig.json",
     "test": "jest"
   },
   "files": [
