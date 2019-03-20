@@ -3,7 +3,7 @@ import { evaluate } from "../src/eval";
 import { readSyntax } from "../src/index";
 import { createModule } from "../src/module";
 
-function evaluateString(str: string): any {
+function evaluateString(str: string): unknown {
   const env = moduleEnvironment(createModule());
   const s = readSyntax(str);
   return evaluate(s, env);

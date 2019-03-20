@@ -3,16 +3,6 @@ interface Primitives {
 }
 
 const prims: Primitives = {
-  // log: {
-  //   type: "(-> string string)",
-  //   fn: (...args: any) => {
-  //     /* tslint:disable:no-console */
-  //     console.log(...args);
-  //     /* tslint:enable:no-console */
-  //     return
-  //   }
-  // },
-
   not: {
     type: "(-> boolean boolean)",
     value: (a: boolean) => !a

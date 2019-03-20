@@ -6,19 +6,19 @@ function removeLocation(x: ASExpr): object {
     case "number":
     case "symbol":
     case "string": {
-      const { location, ...props } = x;
+      const { location: _, ...props } = x;
       return props;
     }
     case "list":
     case "vector": {
-      const { location, ...props } = x;
+      const { location: _, ...props } = x;
       return {
         ...props,
         elements: x.elements.map(removeLocation)
       };
     }
     case "map": {
-      const { location, ...props } = x;
+      const { location: _, ...props } = x;
       return {
         ...props,
         fields: x.fields.map(f => ({

@@ -13,8 +13,6 @@ import {
 
 import { promises as fs } from "fs";
 
-// tslint:disable no-console
-
 function wrap<A>(fn: (args: A) => Promise<unknown>): (args: A) => void {
   return async (...args) => {
     try {

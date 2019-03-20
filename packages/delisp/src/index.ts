@@ -5,7 +5,6 @@ import { cmdFormat } from "./cmd-format";
 import { cmdInferType } from "./cmd-infer-type";
 import { cmdREPL } from "./cmd-repl";
 
-// tslint:disable no-unused-expression
 yargs
   .usage("usage: $0 <command>")
   .option("color", {

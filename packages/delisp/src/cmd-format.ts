@@ -18,7 +18,6 @@ export const cmdFormat: CommandModule = {
   handler: args => {
     const files = args.files as string[];
     Promise.all(files.map(formatFile)).catch(err => {
-      // tslint:disable: no-console
       console.log(err.message);
       process.exit(-1);
     });

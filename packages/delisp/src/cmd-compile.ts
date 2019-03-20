@@ -67,7 +67,7 @@ export const cmdCompile: CommandModule = {
     Promise.all(
       files.map(file => compileFile(file, args.module as "cjs" | "esm"))
     ).catch(err => {
-      // tslint:disable: no-console
+      // eslint:disable: no-console
       console.log(err.message);
       process.exit(-1);
     });

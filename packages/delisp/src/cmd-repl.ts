@@ -1,5 +1,3 @@
-// tslint:disable no-console
-
 import fs from "fs";
 import path from "path";
 import { promisify } from "util";
@@ -54,6 +52,7 @@ async function startREPL() {
     completer,
     prompt: PROMPT
   });
+
   rl.on("line", handleLine);
   rl.prompt();
 }
@@ -220,5 +219,3 @@ export const cmdREPL: CommandModule = {
     startREPL();
   }
 };
-
-// tslint:enable no-console

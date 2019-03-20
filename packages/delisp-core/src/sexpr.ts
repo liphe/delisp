@@ -18,6 +18,7 @@ export interface ASExprString {
   location: Location;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface SExprArray extends Array<ASExpr> {}
 
 export interface ASExprList {
