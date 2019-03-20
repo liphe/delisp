@@ -8,7 +8,8 @@ import {
   mapObject,
   range,
   union,
-  unique
+  unique,
+  capitalize
 } from "./utils";
 
 describe("Utils", () => {
@@ -104,5 +105,11 @@ describe("Utils", () => {
     it("detects differences in the order of elements", () => {
       expect(equals([1, 2, 3], [2, 3, 1])).toBeFalsy();
     });
+  });
+
+  describe("capitalize", () => {
+    expect(capitalize("")).toBe("");
+    expect(capitalize("foo")).toBe("Foo");
+    expect(capitalize("FOO")).toBe("FOO");
   });
 });

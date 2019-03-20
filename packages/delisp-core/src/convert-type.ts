@@ -1,3 +1,4 @@
+import { capitalize } from "./utils";
 import { parseRecord } from "./convert-utils";
 import { printHighlightedExpr } from "./error-report";
 import {
@@ -21,15 +22,6 @@ import {
   tVector,
   tVoid
 } from "./types";
-
-/** Capitalize a string like "foo" to "Foo". */
-function capitalize(str: string) {
-  if (str === "") {
-    return "";
-  } else {
-    return str[0].toUpperCase() + str.slice(1);
-  }
-}
 
 /** Return true if a symbol is a valid name for a user defined type, false otherwise. */
 export function userDefinedType(expr: ASExprSymbol): boolean {

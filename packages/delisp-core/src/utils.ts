@@ -91,3 +91,12 @@ export function equals(arr1: unknown[], arr2: unknown[]): boolean {
     return true;
   }
 }
+
+/** Capitalize a string like "foo" to "Foo". */
+export function capitalize(str: string) {
+  if (str === "") {
+    return "";
+  } else {
+    return str[0].toUpperCase() + str.slice(1);
+  }
+}
