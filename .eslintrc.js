@@ -9,6 +9,20 @@ module.exports = {
     ecmaVersion: 2018,
     sourceType: "module"
   },
+  plugins: ["import"],
+  settings: {
+    // In theory, we could remove all the import/* settings when there
+    // is a new release of the eslint-plugin-import plugin.
+    "import/extensions": [".js", ".ts"],
+    "import/parsers": {
+      "@typescript-eslint/parser": [".ts"]
+    },
+    "import/resolver": {
+      node: {
+        extensions: [".js", ".ts"]
+      }
+    }
+  },
   rules: {
     "arrow-parens": ["error", "as-needed"],
     "comma-dangle": ["error", "never"],
@@ -24,6 +38,7 @@ module.exports = {
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/array-type": ["error", "array-simple"],
     "@typescript-eslint/no-non-null-assertion": "off",
-    "@typescript-eslint/no-explicit-any": "off"
+    "@typescript-eslint/no-explicit-any": "off",
+    "import/no-cycle": "error"
   }
 };
