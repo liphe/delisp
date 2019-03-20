@@ -13,7 +13,7 @@
  */
 
 import { generateUniqueTVar } from "./type-generate";
-import { Substitution } from "./type-substitution";
+import { Substitution } from "./type-utils";
 import { Monotype, RExtension, tRowExtension, TVar } from "./types";
 import { last } from "./utils";
 

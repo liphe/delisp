@@ -3,7 +3,7 @@ import { InvariantViolation } from "./invariant";
 import { convert as convertType } from "./convert-type";
 import { readFromString } from "./reader";
 import { generateUniqueTVar } from "./type-generate";
-import { applySubstitution } from "./type-substitution";
+
 import {
   emptyRow,
   Monotype,
@@ -38,6 +38,25 @@ export function transformRecurType(
         transformRecurType(t.extends, fn)
       );
   }
+}
+
+export interface Substitution {
+  [t: string]: Monotype;
+}
+
+export function applySubstitution(t: Monotype, env: Substitution): Monotype {
+  return transformRecurType(t, t1 => {
+    if (t1.type === "type-variable") {
+      if (t1.name in env) {
+        const tt = env[t1.name];
+        return applySubstitution(tt, env);
+      } else {
+        return t1;
+      }
+    } else {
+      return t1;
+    }
+  });
 }
 
 // Return user defined types

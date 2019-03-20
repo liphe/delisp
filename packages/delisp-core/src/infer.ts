@@ -22,12 +22,11 @@ import {
 
 import { transformRecurExpr } from "./syntax-utils";
 
-import { printType } from "./type-utils";
+import { applySubstitution, printType, Substitution } from "./type-utils";
 
 import { printHighlightedExpr } from "./error-report";
 
 import { generateUniqueTVar } from "./type-generate";
-import { applySubstitution, Substitution } from "./type-substitution";
 import {
   generalize,
   instantiate,
