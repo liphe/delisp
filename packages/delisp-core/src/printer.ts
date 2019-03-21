@@ -13,7 +13,7 @@ import {
 } from "./prettier";
 import { Module, Syntax } from "./syntax";
 
-import { printType } from "./type-utils";
+import { printType } from "./type-printer";
 
 function indent(x: Doc, level = 2): Doc {
   return indent_(x, level);

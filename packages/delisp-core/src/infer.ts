@@ -22,7 +22,8 @@ import {
 
 import { transformRecurExpr } from "./syntax-utils";
 
-import { applySubstitution, printType, Substitution } from "./type-utils";
+import { applySubstitution, Substitution } from "./type-utils";
+import { printType } from "./type-printer";
 
 import { printHighlightedExpr } from "./error-report";
 

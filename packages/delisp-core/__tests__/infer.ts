@@ -4,7 +4,8 @@ import {
   inferType,
   InternalTypeEnvironment
 } from "../src/infer";
-import { printType, readType } from "../src/type-utils";
+import { readType } from "../src/type-utils";
+import { printType } from "../src/type-printer";
 
 function typeOf(
   str: string,
