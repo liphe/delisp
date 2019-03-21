@@ -94,28 +94,40 @@ function syntaxChildren<I>(s: Syntax<I>): Array<Expression<I>> {
   }
 }
 
-function syntaxPathFromOffset<I>(s: Syntax<I>, offset: number): Syntax<I> {
+function syntaxPathFromOffset<I>(
+  s: Syntax<I>,
+  start: number,
+  end: number
+): Syntax<I> {
   const children = syntaxChildren(s);
-  if (!(s.location.start <= offset && offset < s.location.end)) {
+  if (!(s.location.start <= start && end < s.location.end)) {
     throw new InvariantViolation(`Offset is out of range.`);
   }
   for (const c of children) {
-    if (c.location.start <= offset && offset < c.location.end) {
-      return syntaxPathFromOffset(c, offset);
+    if (c.location.start <= start && end < c.location.end) {
+      return syntaxPathFromOffset(c, start, end);
     }
   }
   return s;
+}
+
+export function findSyntaxByRange<I>(
+  m: Module<I>,
+  start: number,
+  end: number
+): Syntax<I> | undefined {
+  const child = m.body.find(
+    e => e.location.start <= start && end < e.location.end
+  );
+  if (!child) {
+    return;
+  }
+  return syntaxPathFromOffset(child, start, end);
 }
 
 export function findSyntaxByOffset<I>(
   m: Module<I>,
   offset: number
 ): Syntax<I> | undefined {
-  const child = m.body.find(
-    e => e.location.start <= offset && offset < e.location.end
-  );
-  if (!child) {
-    return;
-  }
-  return syntaxPathFromOffset(child, offset);
+  return findSyntaxByRange(m, offset, offset);
 }

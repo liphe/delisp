@@ -28,7 +28,7 @@ export function readSyntax(source: string): Syntax {
   return convertSyntax(readFromString(source));
 }
 
-export { findSyntaxByOffset } from "./syntax-utils";
+export { findSyntaxByOffset, findSyntaxByRange } from "./syntax-utils";
 
 export {
   createModule,
