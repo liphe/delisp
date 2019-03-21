@@ -37,3 +37,5 @@ export {
   removeModuleDefinition,
   removeModuleTypeDefinition
 } from "./module";
+
+export { generateTSModuleDeclaration } from "./typescript-generation";

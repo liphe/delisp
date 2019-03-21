@@ -1,9 +1,13 @@
 // TODO: replace with the pretty printer
 
 import { InvariantViolation } from "./invariant";
-import { TApplication, emptyRow, Monotype, tVar } from "./types";
+import { TApplication, Monotype, tVar } from "./types";
 
-import { listTypeVariables, applySubstitution } from "./type-utils";
+import {
+  normalizeRow,
+  listTypeVariables,
+  applySubstitution
+} from "./type-utils";
 
 function typeIndexName(index: number): string {
   const alphabet = "αβγδεζηθικμνξοπρστυφχψ";
@@ -24,34 +28,6 @@ function normalizeType(t: Monotype): Monotype {
         };
   }, {});
   return applySubstitution(t, substitution);
-}
-
-function normalizeRow(
-  type: Monotype
-): {
-  fields: Array<{ label: string; labelType: Monotype }>;
-  extends: Monotype;
-} {
-  if (
-    type.type !== "empty-row" &&
-    type.type !== "row-extension" &&
-    type.type !== "type-variable"
-  ) {
-    throw new InvariantViolation(`Row tail should be a row-kinded type.`);
-  }
-
-  switch (type.type) {
-    case "empty-row":
-      return { fields: [], extends: emptyRow };
-    case "type-variable":
-      return { fields: [], extends: type };
-    case "row-extension":
-      const { fields, extends: row } = normalizeRow(type.extends);
-      return {
-        fields: [{ label: type.label, labelType: type.labelType }, ...fields],
-        extends: row
-      };
-  }
 }
 
 function printApplicationType(type: TApplication): string {

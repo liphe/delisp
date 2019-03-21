@@ -5,7 +5,8 @@ import {
   inferModule,
   printHighlightedExpr,
   printType,
-  readModule
+  readModule,
+  generateTSModuleDeclaration
 } from "@delisp/core";
 
 import { promises as fs } from "fs";
@@ -16,9 +17,14 @@ import _mkdirp from "mkdirp";
 
 const mkdirp = promisify(_mkdirp);
 
+interface CompileOptions {
+  moduleFormat: "cjs" | "esm";
+  tsDeclaration: boolean;
+}
+
 async function compileFile(
   file: string,
-  moduleFormat: "cjs" | "esm"
+  { moduleFormat, tsDeclaration }: CompileOptions
 ): Promise<void> {
   const cwd = process.cwd();
   const OUTPUT_DIR = path.join(cwd, ".delisp", "build");
@@ -34,6 +40,7 @@ async function compileFile(
 
   // Type check module
   const inferResult = inferModule(module);
+  const typedModule = inferResult.typedModule;
 
   // Check for unknown references
   if (inferResult.unknowns.length > 0) {
@@ -50,6 +57,16 @@ async function compileFile(
 
   await mkdirp(path.dirname(outfile));
   await fs.writeFile(outfile, code);
+
+  if (tsDeclaration) {
+    const declarationFile = path.resolve(
+      OUTPUT_DIR,
+      path.relative(cwd, basename + ".d.ts")
+    );
+    const content = generateTSModuleDeclaration(typedModule);
+    await fs.writeFile(declarationFile, content);
+  }
+
   return;
 }
 
@@ -57,15 +74,26 @@ export const cmdCompile: CommandModule = {
   command: "compile [files...]",
   describe: "Compile delisp files",
   builder: yargs =>
-    yargs.option("module", {
-      choices: ["cjs", "esm"],
-      default: "cjs",
-      describe: "Module format to use"
-    }),
+    yargs
+      .option("module", {
+        choices: ["cjs", "esm"],
+        default: "cjs",
+        describe: "Module format to use"
+      })
+      .option("ts-declaration", {
+        type: "boolean",
+        describe: "Generate Typescript declaration file"
+      }),
+
   handler: args => {
     const files = args.files as string[];
     Promise.all(
-      files.map(file => compileFile(file, args.module as "cjs" | "esm"))
+      files.map(file =>
+        compileFile(file, {
+          moduleFormat: args.module as "cjs" | "esm",
+          tsDeclaration: args["ts-declaration"] ? true : false
+        })
+      )
     ).catch(err => {
       // eslint:disable: no-console
       console.log(err.message);
