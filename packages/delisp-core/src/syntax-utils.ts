@@ -94,7 +94,7 @@ function syntaxChildren<I>(s: Syntax<I>): Array<Expression<I>> {
   }
 }
 
-function syntaxPathFromOffset<I>(
+function syntaxPathFromRange<I>(
   s: Syntax<I>,
   start: number,
   end: number
@@ -105,7 +105,7 @@ function syntaxPathFromOffset<I>(
   }
   for (const c of children) {
     if (c.location.start <= start && end < c.location.end) {
-      return syntaxPathFromOffset(c, start, end);
+      return syntaxPathFromRange(c, start, end);
     }
   }
   return s;
@@ -122,7 +122,7 @@ export function findSyntaxByRange<I>(
   if (!child) {
     return;
   }
-  return syntaxPathFromOffset(child, start, end);
+  return syntaxPathFromRange(child, start, end);
 }
 
 export function findSyntaxByOffset<I>(
