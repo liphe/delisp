@@ -2,7 +2,14 @@ import { InvariantViolation } from "./invariant";
 
 import { escapeIdentifier } from "./compiler/jsvariable";
 
-import { SDefinition, STypeAlias, Syntax, Typed, Module } from "./syntax";
+import {
+  isExport,
+  SDefinition,
+  STypeAlias,
+  Syntax,
+  Typed,
+  Module
+} from "./syntax";
 
 import { Monotype, Type } from "./types";
 import { generalize, normalizeRow } from "./type-utils";
@@ -124,6 +131,15 @@ export function generateTSDeclaration(
   }
 }
 
+function commentIf(flag: boolean, code: string) {
+  return flag ? `/* ${code} */` : code;
+}
+
+function isExported(name: string, m: Module): boolean {
+  const exports = m.body.filter(isExport);
+  return exports.find(e => e.value.name === name) !== undefined;
+}
+
 /** Generate Typescript declaration module for a Delisp module. */
 export function generateTSModuleDeclaration(m: Module<Typed>): string {
   function isGenerable(
@@ -131,6 +147,13 @@ export function generateTSModuleDeclaration(m: Module<Typed>): string {
   ): x is SDefinition<Typed> | STypeAlias<Typed> {
     return x.type === "definition" || x.type === "type-alias";
   }
+
   const declarations = m.body.filter(isGenerable);
-  return declarations.map(generateTSDeclaration).join("\n");
+  return declarations
+    .map(d => {
+      const tstype = generateTSDeclaration(d);
+      const active = d.type === "definition" && isExported(d.variable, m);
+      return commentIf(!active, tstype);
+    })
+    .join("\n");
 }
