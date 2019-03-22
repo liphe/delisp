@@ -203,6 +203,31 @@ defineInlinePrimitive("string=", "(-> string string boolean)", ([x, y]) => ({
   right: y
 }));
 
+defineInlinePrimitive("string-length", "(-> string number)", ([str]) =>
+  member(str, "length")
+);
+
+defineInlinePrimitive("string-upcase", "(-> string string)", ([str]) =>
+  methodCall(str, "toUpperCase", [])
+);
+
+defineInlinePrimitive("string-downcase", "(-> string string)", ([str]) =>
+  methodCall(str, "toLowerCase", [])
+);
+
+defineInlinePrimitive(
+  "string-append",
+  "(-> string string string)",
+  ([str1, str2]) => {
+    return {
+      type: "BinaryExpression",
+      operator: "+",
+      left: str1,
+      right: str2
+    };
+  }
+);
+
 // matches `.foo` and inlines `(-> {foo a | b} a)`
 defineMagicPrimitive(
   name => name[0] === ":" && name.length > 1,
