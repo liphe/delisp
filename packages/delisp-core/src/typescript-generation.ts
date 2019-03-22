@@ -131,8 +131,8 @@ export function generateTSDeclaration(
   }
 }
 
-function commentIf(flag: boolean, code: string) {
-  return flag ? `/* ${code} */` : code;
+function exportIf(flag: boolean, code: string) {
+  return flag ? `export ${code}` : code;
 }
 
 function isExported(name: string, m: Module): boolean {
@@ -149,11 +149,17 @@ export function generateTSModuleDeclaration(m: Module<Typed>): string {
   }
 
   const declarations = m.body.filter(isGenerable);
-  return declarations
-    .map(d => {
-      const tstype = generateTSDeclaration(d);
-      const active = d.type === "definition" && isExported(d.variable, m);
-      return commentIf(!active, tstype);
-    })
-    .join("\n");
+  return (
+    declarations
+      .map(d => {
+        const tstype = generateTSDeclaration(d);
+        const active = d.type === "definition" && isExported(d.variable, m);
+        return exportIf(active, tstype);
+      })
+      .join("\n") +
+    `
+
+export {}
+`
+  );
 }
