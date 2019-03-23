@@ -1,6 +1,6 @@
 import { InvariantViolation } from "./invariant";
 
-import { escapeIdentifier } from "./compiler/jsvariable";
+import { identifierToJS } from "./compiler/jsvariable";
 
 import {
   isExport,
@@ -45,10 +45,15 @@ function generateRecord([arg]: Monotype[], mapping: TSMapping): string {
   return (
     "{" +
     normalizedRow.fields
-      .map(
-        ({ label, labelType }) =>
-          `${label}: ${generateTSMonotype(labelType, mapping)};`
-      )
+      .map(({ label, labelType }) => {
+        if (!label.startsWith(":")) {
+          throw new InvariantViolation(
+            `Field name must start with colon (:), but found ${label}.`
+          );
+        }
+        const labelName = label.slice(1);
+        return `${labelName}: ${generateTSMonotype(labelType, mapping)};`;
+      })
       .join("\n") +
     "}"
   );
@@ -87,7 +92,7 @@ export function generateTSMonotype(t: Monotype, mapping: TSMapping): string {
       );
 
     case "user-defined-type":
-      return escapeIdentifier(t.name);
+      return identifierToJS(t.name);
 
     case "type-variable":
       const entry = mapping.find(e => e.delispName === t.name);
@@ -119,12 +124,12 @@ export function generateTSDeclaration(
 ): string {
   switch (s.type) {
     case "definition": {
-      const varname = escapeIdentifier(s.variable);
+      const varname = identifierToJS(s.variable);
       const typ = generateTSType(generalize(s.value.info.type, []));
       return `declare const ${varname}: ${typ};`;
     }
     case "type-alias": {
-      const typename = escapeIdentifier(s.name);
+      const typename = identifierToJS(s.name);
       const typ = generateTSType(generalize(s.definition, []));
       return `type ${typename} = ${typ};`;
     }
