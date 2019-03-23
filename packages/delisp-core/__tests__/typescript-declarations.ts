@@ -17,7 +17,9 @@ const writeFile = promisify(fs.writeFile);
 // Compile a TS file.
 async function tsc(file: string) {
   try {
-    return exec(`npx tsc "${file}"`);
+    return exec(
+      `${path.join(__dirname, "../../../")}/node_modules/.bin/tsc "${file}"`
+    );
   } catch (err) {
     throw new Error(err.stdout);
   }
