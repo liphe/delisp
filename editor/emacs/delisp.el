@@ -96,18 +96,25 @@
   "Indent Delisp line."
   (let ((position (point))
         (indent-pos))
-    (save-excursion
-      (let ((level (car (syntax-ppss (point-at-bol)))))
-
-        ;; Handle closing pairs
-        (when (looking-at "\\s-*\\s)")
-          (setq level (1- level)))
-
-        (indent-line-to (* delisp-indent-level level))
-        (setq indent-pos (point))))
-
-    (when (< position indent-pos)
-      (goto-char indent-pos))))
+    (cl-destructuring-bind (level parent-form-position &rest _)
+        (syntax-ppss (point-at-bol))
+      (let (indent-to)
+        (save-excursion
+          (cond
+           ((not parent-form-position)
+            (setq indent-to 0))
+           (t
+            (goto-char parent-form-position)
+            (down-list)
+            (case (symbol-at-point)
+              ((define lambda)
+               (setq indent-to (* delisp-indent-level level)))
+              (t
+               (forward-sexp 2)
+               (backward-sexp)
+               (setq indent-to (current-column)))))))
+        
+        (indent-line-to indent-to)))))
 
 
 (defun delisp-fontify-string (string)
