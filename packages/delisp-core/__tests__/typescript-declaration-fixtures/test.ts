@@ -1,3 +1,3 @@
-import * as E from "./.delisp/build/example";
+import * as E from "./example";
 
 console.log(E.upcase_name({ name: "foo" }));

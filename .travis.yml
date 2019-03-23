@@ -17,4 +17,3 @@ script:
   - yarn build
   - yarn test --coverage
   - codecov
-  - yarn test:cli
