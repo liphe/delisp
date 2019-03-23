@@ -11,7 +11,7 @@ import {
   readModule
 } from "@delisp/core";
 
-import { promises as fs } from "fs";
+import * as fs from "./fs-helpers";
 
 function wrap<A>(fn: (args: A) => Promise<unknown>): (args: A) => void {
   return async (...args) => {

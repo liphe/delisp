@@ -8,7 +8,7 @@ import {
   readModule
 } from "@delisp/core";
 
-import { promises as fs } from "fs";
+import * as fs from "./fs-helpers";
 import path from "path";
 import { promisify } from "util";
 

@@ -1,6 +1,5 @@
-import fs from "fs";
+import * as fs from "./fs-helpers";
 import path from "path";
-import { promisify } from "util";
 
 import { CommandModule } from "yargs";
 
@@ -27,8 +26,6 @@ import { Module, Syntax } from "@delisp/core/src/syntax";
 import chalk from "chalk";
 import readline from "readline";
 
-const readFile = promisify(fs.readFile);
-
 let rl: readline.Interface;
 const PROMPT = "λ ";
 
@@ -36,7 +33,7 @@ let previousModule: Module;
 const context = createContext();
 
 async function loadModule(file: string): Promise<Module> {
-  const code = await readFile(path.join(file), "utf-8");
+  const code = await fs.readFile(path.join(file), "utf-8");
   const m = readModule(code);
   inferModule(m);
   evaluateModule(m, context);

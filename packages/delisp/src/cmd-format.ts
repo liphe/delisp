@@ -1,6 +1,6 @@
 import { CommandModule } from "yargs";
 
-import { promises as fs } from "fs";
+import * as fs from "./fs-helpers";
 
 import { pprintModule, readModule } from "@delisp/core";
 
