@@ -7,7 +7,8 @@
   "scripts": {
     "build": "tsc --build packages/",
     "lint": "eslint --ext .ts .",
-    "test": "yarn workspaces run test"
+    "test": "yarn workspaces run test",
+    "test:cli": "./tests/run.sh"
   },
   "devDependencies": {
     "@types/jest": "^23.3.9",
