@@ -1,12 +1,7 @@
-import { readModule, readSyntax } from "../src/index";
-import { pprint, pprintModule } from "../src/printer";
+import { readModule } from "../src/index";
+import { pprintModule } from "../src/printer";
 
-function pprintString(source: string, lineWidth: number = 80) {
-  const syntax = readSyntax(source);
-  return "\n" + pprint(syntax, lineWidth);
-}
-
-function pprintLines(source: string, lineWidth: number = 80) {
+function pprintSource(source: string, lineWidth: number = 80) {
   const m = readModule(source);
   return "\n" + pprintModule(m, lineWidth);
 }
@@ -16,16 +11,16 @@ function sansSpace(str: string) {
 }
 
 function prettySimilar(src: string) {
-  expect(sansSpace(pprintLines(src))).toBe(sansSpace(src));
+  expect(sansSpace(pprintSource(src))).toBe(sansSpace(src));
 }
 
 describe("Pretty Printer", () => {
   it("should insert newlines", () => {
-    expect(pprintLines(`aaa bbb ccc`)).toMatchSnapshot();
+    expect(pprintSource(`aaa bbb ccc`)).toMatchSnapshot();
   });
   it("should preserve some empty lines", () => {
     expect(
-      pprintLines(`
+      pprintSource(`
 aaa
 bbb
 
@@ -69,23 +64,23 @@ eee
   });
 
   it("should print lambda abstractions beautifully", () => {
-    expect(pprintString("(lambda (aaa bbb ccc) xxx)")).toMatchSnapshot();
+    expect(pprintSource("(lambda (aaa bbb ccc) xxx)")).toMatchSnapshot();
     expect(
-      pprintString(
+      pprintSource(
         "(lambda (aaa bbb ccc ddd eee fff ggg hhh iii jjj kkk lll mmm nnn ooo ppp qqq) xxx)"
       )
     ).toMatchSnapshot();
     expect(
-      pprintString(
+      pprintSource(
         "(lambda (aaa bbb ccc ddd eee fff ggg hhh iii jjj kkk lll mmm nnn ooo ppp qqq rrr sss ttt uuu vvv www xx) xxx)"
       )
     ).toMatchSnapshot();
   });
 
   it("shold print definitions beautifully", () => {
-    expect(pprintString("(define x 10)")).toMatchSnapshot();
+    expect(pprintSource("(define x 10)")).toMatchSnapshot();
     expect(
-      pprintString(
+      pprintSource(
         "(define x (lambda (aaa bbb ccc ddd eee fff ggg hhh iii jjj kkk lll mmm nnn ooo ppp qqq rrr sss ttt uuu vvv www xx) xxx))"
       )
     ).toMatchSnapshot();
@@ -93,17 +88,17 @@ eee
 
   it("should align nested function calls", () => {
     expect(
-      pprintString(
+      pprintSource(
         "(funcall aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa (fxyz 000 111 222) aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa aaaaa)"
       )
     ).toMatchSnapshot();
 
     expect(
-      pprintString("(funcall aaaaa aaaaa aaaaa (fxyz 000 111 222))")
+      pprintSource("(funcall aaaaa aaaaa aaaaa (fxyz 000 111 222))")
     ).toMatchSnapshot();
 
     expect(
-      pprintString(
+      pprintSource(
         "(funcall aaaaa aaaaa aaaaa (fxyz 000 111 222 333 444 555 666 777 888 999 aaa bbb xxx yyy zzz www uuu ttt))"
       )
     ).toMatchSnapshot();
@@ -111,7 +106,7 @@ eee
 
   it("should pretty print a combination of lambda and function call", () => {
     expect(
-      pprintString(
+      pprintSource(
         "(foo (lambda (x y z) (funcall aaaaa aaaaa aaaaa (fxyz 000 111 222 333 444 555 666 777 888 999 aaa bbb xxx yyy zzz www uuu ttt))))"
       )
     ).toMatchSnapshot();
@@ -119,7 +114,7 @@ eee
 
   it("should print amll real code beautifully", () => {
     expect(
-      pprintString(
+      pprintSource(
         `
 (define bq-frob
   (lambda (x)
@@ -131,7 +126,7 @@ eee
 
   it("should place all arguments of a function call in the next line if necessary", () => {
     expect(
-      pprintString(
+      pprintSource(
         `
 (this-is-a-very-long-and-ugly-function-name
  (axbxcxd (a b c d)
@@ -147,7 +142,7 @@ eee
 
   it("should print deeply nested function calls nicely", () => {
     expect(
-      pprintString(`
+      pprintSource(`
 (function-call-1 (function-call-2 (function-call-3 (function-call-4 (function-call-5 3
                                                                                      4
                                                                                      5
@@ -158,29 +153,29 @@ eee
   });
 
   it("should print let expressions nicely", () => {
-    expect(pprintString(`(let {x 10 y 20} (+ x y))`)).toMatchSnapshot();
+    expect(pprintSource(`(let {x 10 y 20} (+ x y))`)).toMatchSnapshot();
   });
 
   it("should print conditional expressions nicely", () => {
-    expect(pprintString(`(if true 1 2)`)).toMatchSnapshot();
+    expect(pprintSource(`(if true 1 2)`)).toMatchSnapshot();
     expect(
-      pprintString(
+      pprintSource(
         `(if aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 1 2)`
       )
     ).toMatchSnapshot();
   });
 
   it("should print empty vectors", () => {
-    expect(pprintString(`[]`)).toMatchSnapshot();
+    expect(pprintSource(`[]`)).toMatchSnapshot();
   });
 
   it("should print empty records", () => {
-    expect(pprintString(`{}`)).toMatchSnapshot();
+    expect(pprintSource(`{}`)).toMatchSnapshot();
   });
 
   it("should print records with nested expressions", () => {
     expect(
-      pprintString(
+      pprintSource(
         `{:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 20 :z (* 10 (+ 1 2))}`
       )
     ).toMatchSnapshot();
@@ -188,7 +183,7 @@ eee
 
   it("should some real code", () => {
     expect(
-      pprintString(
+      pprintSource(
         `
 (define maptree
   (lambda (fn x)
@@ -206,7 +201,7 @@ eee
 
   it("should print lambda with multiple forms", () => {
     expect(
-      pprintString(
+      pprintSource(
         `
 (define hello (lambda (x)
                 (print x)
@@ -222,7 +217,7 @@ eee
 
   it("should pretty print type declarations", () => {
     expect(
-      pprintString(
+      pprintSource(
         `(type Person {:name string :age number :books [{:name string :author string}]}) `
       )
     ).toMatchSnapshot();
