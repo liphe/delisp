@@ -76,6 +76,12 @@ describe("Reader", () => {
       location: { start: 2, end: 4 }
     });
 
+    expect(readFromString("  3d  ")).toMatchObject({
+      type: "symbol",
+      name: "3d",
+      location: { start: 2, end: 4 }
+    });
+
     expect(readFromString("  $bc  ")).toMatchObject({
       type: "symbol",
       name: "$bc",
