@@ -47,6 +47,16 @@ describe("Reader", () => {
       value: -12,
       location: { start: 2, end: 5 }
     });
+    expect(readFromString("  0.05  ")).toMatchObject({
+      type: "number",
+      value: 0.05,
+      location: { start: 2, end: 6 }
+    });
+    expect(readFromString("  -0.9  ")).toMatchObject({
+      type: "number",
+      value: -0.9,
+      location: { start: 2, end: 6 }
+    });
   });
 
   it("should read strings", () => {

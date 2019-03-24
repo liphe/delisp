@@ -137,10 +137,10 @@ const numberOrSymbol: Parser<ASExprSymbol | ASExprNumber> = atLeastOne(
   .map(
     (chars, location): ASExprSymbol | ASExprNumber => {
       const str = chars.join("");
-      if (/^\-?[0-9]+$/.test(str)) {
+      if (/^\-?[0-9]+(\.[0-9]+)?$/.test(str)) {
         return {
           type: "number",
-          value: parseInt(str, 10),
+          value: parseFloat(str),
           location
         };
       } else {
