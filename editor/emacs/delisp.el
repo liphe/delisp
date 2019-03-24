@@ -92,29 +92,32 @@
 
       (kill-buffer output-buffer))))
 
+(defun delisp--calculate-indentation (pos)
+  (save-excursion
+    (cl-destructuring-bind (level parent-form-position &rest _)
+        (syntax-ppss pos)
+      (if (not parent-form-position)
+          0
+        (goto-char parent-form-position)
+        ;; check if it is { or [
+        (down-list)
+        (case (symbol-at-point)
+          ((define lambda let)
+           (* delisp-indent-level level))
+          (t
+           (forward-sexp 2)
+           (backward-sexp)
+           (current-column)))))))
+
 (defun delisp-indent-line ()
   "Indent Delisp line."
-  (let ((position (point))
-        (indent-pos))
-    (cl-destructuring-bind (level parent-form-position &rest _)
-        (syntax-ppss (point-at-bol))
-      (let (indent-to)
-        (save-excursion
-          (cond
-           ((not parent-form-position)
-            (setq indent-to 0))
-           (t
-            (goto-char parent-form-position)
-            (down-list)
-            (case (symbol-at-point)
-              ((define lambda)
-               (setq indent-to (* delisp-indent-level level)))
-              (t
-               (forward-sexp 2)
-               (backward-sexp)
-               (setq indent-to (current-column)))))))
-        
-        (indent-line-to indent-to)))))
+  (let ((indent-to (delisp--calculate-indentation (point-at-bol)))
+        indented-pos)
+    (save-excursion
+      (indent-line-to indent-to)
+      (setq indented-pos (point)))
+    (when (< (point) indented-pos)
+      (goto-char indented-pos))))
 
 
 (defun delisp-fontify-string (string)
