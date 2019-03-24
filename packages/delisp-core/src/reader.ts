@@ -19,7 +19,13 @@ import {
   until
 } from "./parser-combinators";
 
-import { ASExpr, ASExprMap, ASExprSymbol } from "./sexpr";
+import {
+  ASExpr,
+  ASExprMap,
+  ASExprNumber,
+  ASExprString,
+  ASExprSymbol
+} from "./sexpr";
 
 const spaces = many(
   alternatives(character(" "), character("\t"), character("\n"))
@@ -37,34 +43,41 @@ const alphanumeric = character().chain(char => {
   }
 });
 
-const digit = character().chain(char => {
-  if (/[0-9]/.test(char)) {
-    return Parser.of(char);
-  } else {
-    return Parser.fail("a digit");
-  }
-});
-
+// Those special characters are valid in Delisp symbols.
 //
-// Number
-//
-
-const unsignedInteger: Parser<number> = atLeastOne(digit).map(digits =>
-  parseInt(digits.join(""), 10)
+// If you want to change this list, please remmeber checking the
+// compiler and ensuring that it is able to generate JS variables
+// for those names.
+const specialChar = alternatives(
+  // character("`"),
+  character("~"),
+  character("!"),
+  // @ is used for at-expressions
+  character("#"),
+  character("$"),
+  character("%"),
+  character("^"),
+  character("&"),
+  character("*"),
+  // ( and ) are used for lists
+  character("-"),
+  character("_"),
+  character("="),
+  character("+"),
+  // [ and ] are used for vectors
+  // { and } are used for maps
+  // \ is used for escaping strings
+  character("|"),
+  // character(";"),
+  character(":"),
+  // character("'"),
+  // character(","),
+  character("<"),
+  character("."),
+  character(">"),
+  character("/"),
+  character("?")
 );
-const negativeInteger: Parser<number> = character("-")
-  .chain(_ => unsignedInteger)
-  .map(num => -num);
-
-const numberP: Parser<ASExpr> = alternatives(negativeInteger, unsignedInteger)
-  .map(
-    (val, location): ASExpr => ({
-      type: "number",
-      value: val,
-      location
-    })
-  )
-  .description("number");
 
 //
 // String
@@ -86,9 +99,13 @@ const stringChar = character()
   })
   .description("string character");
 
-const stringP = delimitedMany(doubleQuote, stringChar, doubleQuote)
+const stringP: Parser<ASExprString> = delimitedMany(
+  doubleQuote,
+  stringChar,
+  doubleQuote
+)
   .map(
-    (chars, location): ASExpr => ({
+    (chars, location): ASExprString => ({
       type: "string",
       value: chars.join(""),
       location
@@ -101,50 +118,50 @@ const stringP = delimitedMany(doubleQuote, stringChar, doubleQuote)
 //
 
 const symbol: Parser<ASExprSymbol> = atLeastOne(
-  alternatives(
-    alphanumeric,
-    // Those special characters are valid in Delisp symbols.
-    //
-    // If you want to change this list, please remmeber checking the
-    // compiler and ensuring that it is able to generate JS variables
-    // for those names.
-    character("!"),
-    character("_"),
-    character("|"),
-    character("#"),
-    character("$"),
-    character("%"),
-    character("^"),
-    character("&"),
-    character("."),
-    character("*"),
-    character("<"),
-    character(">"),
-    character("+"),
-    character("-"),
-    character("/"),
-    character("~"),
-    character("?"),
-    character("="),
-    character(":")
-  )
+  alternatives(alphanumeric, specialChar)
+).map(
+  (chars, location): ASExprSymbol => ({
+    type: "symbol",
+    name: chars.join(""),
+    location
+  })
+);
+
+//
+// Symbol or Number
+//
+
+const numberOrSymbol: Parser<ASExprSymbol | ASExprNumber> = atLeastOne(
+  alternatives(alphanumeric, specialChar)
 )
   .map(
-    (chars, location): ASExprSymbol => ({
-      type: "symbol",
-      name: chars.join(""),
-      location
-    })
+    (chars, location): ASExprSymbol | ASExprNumber => {
+      const str = chars.join("");
+      if (/^\-?[0-9]+$/.test(str)) {
+        return {
+          type: "number",
+          value: parseInt(str, 10),
+          location
+        };
+      } else {
+        return {
+          type: "symbol",
+          name: str,
+          location
+        };
+      }
+    }
   )
-  .description("symbol");
+  .description("number or symbol");
 
 //
 // Lists & S-Expressions
 //
 
-const atom: Parser<ASExpr> = alternatives(numberP, stringP, symbol).description(
-  "atom"
-);
+const atom: Parser<ASExpr> = alternatives<ASExpr>(
+  numberOrSymbol,
+  stringP
+).description("atom");
 
 const leftParen = character("(").description("open parenthesis");
 const rightParen = character(")").description("close parenthesis");
