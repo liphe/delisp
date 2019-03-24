@@ -11,6 +11,14 @@ function pprintLines(source: string, lineWidth: number = 80) {
   return "\n" + pprintModule(m, lineWidth);
 }
 
+function sansSpace(str: string) {
+  return str && str.replace(/\s/g, "");
+}
+
+function prettySimilar(src: string) {
+  expect(sansSpace(pprintLines(src))).toBe(sansSpace(src));
+}
+
 describe("Pretty Printer", () => {
   it("should insert newlines", () => {
     expect(pprintLines(`aaa bbb ccc`)).toMatchSnapshot();
@@ -28,6 +36,36 @@ ddd
 eee
 `)
     ).toMatchSnapshot();
+  });
+
+  it("should only touch spaces and newlines", () => {
+    prettySimilar(`(define sqr (lambda (x) (* x x))) (export sqr)`);
+
+    prettySimilar(
+      `(lambda (name age) {:name (the string name) :age (the number age)})`
+    );
+
+    prettySimilar(
+      `(define foo (lambda (a b)
+         (let {ap100 (+ 100 a) bsum (fold + b 0) msg "Hello!"}
+         (print msg)
+         {:x ap100 :y [bsum bsum bsum]}
+         ))) (export foo)`
+    );
+
+    prettySimilar(
+      `(the (-> string _a {:name string :info _a}) (lambda (name info) {:name name :info info}))`
+    );
+  });
+
+  it.skip("should retain partial type annotations", () => {
+    prettySimilar(
+      `(the (-> string number _) (lambda (name age) {:name name :age age}))`
+    );
+  });
+
+  it.skip("should retain at-expressions", () => {
+    prettySimilar(`@doc{This is simple annotation}`);
   });
 
   it("should print lambda abstractions beautifully", () => {
