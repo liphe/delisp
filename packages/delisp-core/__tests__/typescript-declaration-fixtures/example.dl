@@ -1,0 +1,5 @@
+(define upcase_name
+  (lambda (p)
+    {:name (string-upcase (:name p))}))
+
+(export upcase_name)

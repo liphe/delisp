@@ -1,8 +1,17 @@
+import { InvariantViolation } from "./invariant";
+
 import { convert as convertType } from "./convert-type";
 import { readFromString } from "./reader";
 import { generateUniqueTVar } from "./type-generate";
 
-import { Monotype, tApp, tRowExtension, TUserDefined, Type } from "./types";
+import {
+  Monotype,
+  tApp,
+  tRowExtension,
+  emptyRow,
+  TUserDefined,
+  Type
+} from "./types";
 import { flatMap, unique } from "./utils";
 
 export function transformRecurType(
@@ -122,4 +131,31 @@ export function instantiate(t: Type, userSpecified = false): Monotype {
 
 export function readType(source: string): Type {
   return generalize(convertType(readFromString(source)), []);
+}
+
+export function normalizeRow(
+  type: Monotype
+): {
+  fields: Array<{ label: string; labelType: Monotype }>;
+  extends: Monotype;
+} {
+  if (
+    type.type !== "empty-row" &&
+    type.type !== "row-extension" &&
+    type.type !== "type-variable"
+  ) {
+    throw new InvariantViolation(`Row tail should be a row-kinded type.`);
+  }
+  switch (type.type) {
+    case "empty-row":
+      return { fields: [], extends: emptyRow };
+    case "type-variable":
+      return { fields: [], extends: type };
+    case "row-extension":
+      const { fields, extends: row } = normalizeRow(type.extends);
+      return {
+        fields: [{ label: type.label, labelType: type.labelType }, ...fields],
+        extends: row
+      };
+  }
 }

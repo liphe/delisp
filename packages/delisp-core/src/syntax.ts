@@ -151,3 +151,7 @@ export interface Module<I = {}> {
   type: "module";
   body: Array<Syntax<I>>;
 }
+
+export interface Typed {
+  type: Monotype;
+}

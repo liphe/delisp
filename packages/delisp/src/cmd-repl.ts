@@ -20,7 +20,7 @@ import {
   removeModuleTypeDefinition
 } from "@delisp/core";
 
-import { Typed } from "@delisp/core/src/infer";
+import { Typed } from "@delisp/core/src/syntax";
 import { Module, Syntax } from "@delisp/core/src/syntax";
 
 import chalk from "chalk";

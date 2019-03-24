@@ -17,7 +17,8 @@ import {
   Module,
   STypeAlias,
   SVariableReference,
-  Syntax
+  Syntax,
+  Typed
 } from "./syntax";
 
 import { transformRecurExpr } from "./syntax-utils";
@@ -148,10 +149,6 @@ interface InferResult<A> {
   result: A;
   constraints: TConstraint[];
   assumptions: TAssumption[];
-}
-
-export interface Typed {
-  type: Monotype;
 }
 
 function inferMany(
