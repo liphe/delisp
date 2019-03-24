@@ -124,9 +124,11 @@ function print(sexpr: Syntax): Doc {
       return list(
         text("let"),
         space,
-        list(
+        map(
           align(
-            ...sexpr.bindings.map(b => list(text(b.var), space, print(b.value)))
+            ...sexpr.bindings.map(b =>
+              concat(text(b.var), space, print(b.value))
+            )
           )
         ),
         indent(printBody(sexpr.body))

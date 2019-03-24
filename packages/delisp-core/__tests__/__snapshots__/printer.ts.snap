@@ -234,8 +234,8 @@ exports[`Pretty Printer should print lambda with multiple forms 1`] = `
 
 exports[`Pretty Printer should print let expressions nicely 1`] = `
 "
-(let ((x 10)
-      (y 20))
+(let {x 10
+      y 20}
   (+ x y))"
 `;
 
@@ -251,8 +251,8 @@ exports[`Pretty Printer should some real code 1`] = `
   (lambda (fn x)
     (if (atom x)
         (funcall fn x)
-        (let ((a (funcall fn (car x)))
-              (d (maptree fn (cdr x))))
+        (let {a (funcall fn (car x))
+              d (maptree fn (cdr x))}
           (if (and (eql a (car x)) (eql d (cdr x)))
               x
               (cons a d))))))"
