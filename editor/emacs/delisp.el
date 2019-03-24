@@ -92,14 +92,27 @@
 
       (kill-buffer output-buffer))))
 
-(defun delisp--calculate-indentation (pos)
+(cl-defun delisp--calculate-indentation (pos)
   (save-excursion
     (cl-destructuring-bind (level parent-form-position &rest _)
         (syntax-ppss pos)
-      (if (not parent-form-position)
-          0
-        (goto-char parent-form-position)
-        ;; check if it is { or [
+
+      ;; Toplevel form:
+      ;; Indented to the first column.
+      (when (not parent-form-position)
+        (return-from delisp--calculate-indentation 0))
+
+      (goto-char parent-form-position)
+      (cond
+       ;; Vector/map:
+       ;; Align to the column of the first element
+       ((find (char-after) "{[")
+        (down-list)
+        (forward-sexp)
+        (backward-sexp)
+        (current-column))
+       ;; Lists?
+       (t
         (down-list)
         (case (symbol-at-point)
           ((define lambda let)
@@ -107,7 +120,7 @@
           (t
            (forward-sexp 2)
            (backward-sexp)
-           (current-column)))))))
+           (current-column))))))))
 
 (defun delisp-indent-line ()
   "Indent Delisp line."
