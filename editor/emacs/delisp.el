@@ -24,6 +24,7 @@
 
 ;;; Code:
 
+(require 'cl)
 (require 'comint)
 (require 'thingatpt)
 (require 'pulse)
