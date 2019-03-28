@@ -8,7 +8,7 @@ import {
   ASExprSymbol,
   ASExprVector
 } from "./sexpr";
-import { generateUniqueTVar } from "./type-generate";
+
 import {
   emptyRow,
   Monotype,
@@ -54,8 +54,6 @@ function convertSymbol(expr: ASExprSymbol): Monotype {
       return tString;
     case "void":
       return tVoid;
-    case "_":
-      return generateUniqueTVar(false, "__t");
     default:
       return userDefinedType(expr) ? tUserDefined(expr.name) : tVar(expr.name);
   }

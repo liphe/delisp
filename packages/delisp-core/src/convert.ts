@@ -21,7 +21,7 @@ import {
   convert as convertType
 } from "./convert-type";
 import { parseRecord } from "./convert-utils";
-import { generalize, listTypeVariables } from "./type-utils";
+import { listTypeVariables } from "./type-utils";
 
 const conversions: Map<string, (expr: ASExprList) => Expression> = new Map();
 const toplevelConversions: Map<
@@ -215,7 +215,9 @@ defineConversion("the", expr => {
 
   return {
     type: "type-annotation",
-    valueType: generalize(convertType(t), []),
+    valueType: {
+      typeWithWildcards: convertType(t)
+    },
     value: convertExpr(value),
     location: expr.location,
     info: {}

@@ -21,7 +21,7 @@ import {
   Typed
 } from "./syntax";
 
-import { transformRecurExpr } from "./syntax-utils";
+import { transformRecurExpr, instantiateTypeAnnotation } from "./syntax-utils";
 
 import { applySubstitution, Substitution } from "./type-utils";
 import { printType } from "./type-printer";
@@ -434,7 +434,7 @@ function infer(
     case "type-annotation": {
       const inferred = infer(expr.value, monovars, internalTypes);
       const t = expandTypeAliases(
-        instantiate(expr.valueType, true),
+        instantiateTypeAnnotation(expr),
         internalTypes
       );
 
