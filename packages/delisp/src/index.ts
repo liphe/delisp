@@ -2,6 +2,7 @@ import yargs from "yargs";
 
 import { cmdCompile } from "./cmd-compile";
 import { cmdFormat } from "./cmd-format";
+import { cmdLint } from "./cmd-lint";
 import { cmdInferType } from "./cmd-infer-type";
 import { cmdREPL } from "./cmd-repl";
 
@@ -14,6 +15,7 @@ yargs
   })
   .command(cmdREPL)
   .command(cmdFormat)
+  .command(cmdLint)
   .command(cmdCompile)
   // Commands for editor integration
   .command(cmdInferType)
