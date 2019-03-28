@@ -1,4 +1,4 @@
-import yargs from "yargs";
+import "yargs";
 
 declare module "yargs" {
   interface Argv<T = {}> {
