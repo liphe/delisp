@@ -44,8 +44,6 @@
 (defvar delisp-indent-level 2
   "Number of spaces to use for indentation in Delisp programs.")
 
-(defvar delisp-format-error-overlays nil)
-
 (defun delisp-format-buffer ()
   "Format file using delisp format."
   (interactive)
@@ -75,21 +73,7 @@
                             column (1- (string-to-number (match-string 2)))
                             message (match-string 3)))))
 
-                ;; Clean previous format errors!
-                (dolist (overlay delisp-format-error-overlays)
-                  (delete-overlay overlay))
-
-                ;; Add errors to the buffer
-                (when (and line column)
-                  (save-excursion
-                    (goto-char (point-min))
-                    (forward-line (1- line))
-                    (forward-char column)
-                    (let ((overlay (make-overlay (point) (1+ (point)))))
-                      (overlay-put overlay 'evaporate t)
-                      (overlay-put overlay 'face 'flycheck-error)
-                                        ;(overlay-put overlay 'help-echo message)
-                      (add-to-list 'delisp-format-error-overlays overlay)))))))))
+                (message message))))))
 
       (kill-buffer output-buffer))))
 
@@ -243,7 +227,6 @@
   (setq comment-padding "")
   (setq comment-end "}")
   (setq-local indent-line-function 'delisp-indent-line)
-  (setq-local delisp-format-error-overlays nil)
   (setq font-lock-defaults delisp-font-lock-defaults)
   (add-function :before-until (local 'eldoc-documentation-function) #'delisp-mode-eldoc-function)
   (add-hook 'before-save-hook 'delisp-format-buffer nil 'local))
