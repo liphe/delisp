@@ -116,7 +116,7 @@
        (t
         (down-list)
         (case (symbol-at-point)
-          ((define lambda let)
+          ((define lambda let the)
            (* delisp-indent-level level))
           (t
            (forward-sexp 2)
