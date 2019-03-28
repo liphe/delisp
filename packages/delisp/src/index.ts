@@ -17,5 +17,6 @@ yargs
   .command(cmdCompile)
   // Commands for editor integration
   .command(cmdInferType)
+  .parserConfiguration({ "camel-case-expansion": false })
   .strict()
   .help("help").argv;
