@@ -156,36 +156,36 @@ function compileVariable(
   ref: SVariableReference,
   env: Environment
 ): JS.Expression {
-  if (isInlinePrimitive(ref.name)) {
-    return compileInlinePrimitive(ref.name, [], "value");
-  } else {
-    const binding = lookupBinding(ref.name, env);
+  const binding = lookupBinding(ref.name, env);
 
-    if (!binding) {
+  if (!binding) {
+    if (isInlinePrimitive(ref.name)) {
+      return compileInlinePrimitive(ref.name, [], "value");
+    } else {
       return env.defs.access(identifierToJS(ref.name));
     }
+  }
 
-    switch (binding.source) {
-      case "primitive":
-        return member(
-          {
-            type: "Identifier",
-            name: "env"
-          },
-          binding.jsname
-        );
-      case "module":
-        return env.defs.access(binding.jsname);
-      case "lexical":
-        return {
+  switch (binding.source) {
+    case "primitive":
+      return member(
+        {
           type: "Identifier",
-          name: binding.jsname
-        };
-      default:
-        throw new InvariantViolation(
-          "This switch-statement should be exhaustive but TS doesn't detect it somehow."
-        );
-    }
+          name: "env"
+        },
+        binding.jsname
+      );
+    case "module":
+      return env.defs.access(binding.jsname);
+    case "lexical":
+      return {
+        type: "Identifier",
+        name: binding.jsname
+      };
+    default:
+      throw new InvariantViolation(
+        "This switch-statement should be exhaustive but TS doesn't detect it somehow."
+      );
   }
 }
 

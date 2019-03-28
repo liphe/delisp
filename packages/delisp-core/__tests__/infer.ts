@@ -79,6 +79,10 @@ describe("Type inference", () => {
       it("should generalize basic types in let", () => {
         expect(typeOf("(let {id (lambda (x) x)} id)")).toBe("(-> α α)");
       });
+
+      it("should shadow inline primitivres", () => {
+        expect(typeOf("(let {+ 10} +)")).toBe("number");
+      });
     });
 
     describe("Lists", () => {

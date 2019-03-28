@@ -77,6 +77,10 @@ describe("Evaluation", () => {
     it("inner lets should shadow outer ones", () => {
       expect(evaluateString("(let {x 5} (let {x 1} x))")).toBe(1);
     });
+
+    it("should shadow inline primitives", () => {
+      expect(evaluateString("(let {+ 10} +)")).toBe(10);
+    });
   });
 
   describe("lists", () => {
