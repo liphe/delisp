@@ -131,3 +131,29 @@ export function findSyntaxByOffset<I>(
 ): Syntax<I> | undefined {
   return findSyntaxByRange(m, offset, offset);
 }
+
+type VisitorFn<I> = (s: Syntax<I>) => void;
+
+function traverse<I>(
+  s: Syntax<I>,
+  onEnter?: VisitorFn<I>,
+  onExit?: VisitorFn<I>
+): any {
+  if (onEnter) {
+    onEnter(s);
+  }
+  syntaxChildren(s).forEach(c => {
+    traverse(c, onEnter, onExit);
+  });
+  if (onExit) {
+    onExit(s);
+  }
+}
+
+export function traverseModule<I>(
+  m: Module<I>,
+  onEnter?: VisitorFn<I>,
+  onExit?: VisitorFn<I>
+): void {
+  m.body.forEach(s => traverse(s, onEnter, onExit));
+}
