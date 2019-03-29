@@ -13,7 +13,7 @@ describe("Unification", () => {
     const t1 = tVar("t1");
     const t2 = tVector(t1);
     const result = unify(t1, t2, {});
-    expect(result.type).toBe("unify-occur-check-error");
+    expect(result.tag).toBe("unify-occur-check-error");
   });
 
   describe("Application", () => {
@@ -21,13 +21,13 @@ describe("Unification", () => {
       const t1 = tFn([tNumber, tNumber], tNumber);
       const t2 = tFn([tNumber], tNumber);
       const result = unify(t1, t2, {});
-      expect(result.type).toBe("unify-missing-value-error");
+      expect(result.tag).toBe("unify-missing-value-error");
     });
     it("should catch operator mismatches", () => {
       const t1 = tVector(tNumber);
       const t2 = tFn([], tNumber);
       const result = unify(t1, t2, {});
-      expect(result.type).toBe("unify-mismatch-error");
+      expect(result.tag).toBe("unify-mismatch-error");
     });
   });
 
@@ -37,7 +37,7 @@ describe("Unification", () => {
       const t1 = tRecord([{ label: ":x", type: tNumber }], r);
       const t2 = tRecord([{ label: ":y", type: tNumber }], r);
       const result = unify(t1, t2, {});
-      expect(result.type).toBe("unify-mismatch-error");
+      expect(result.tag).toBe("unify-mismatch-error");
     });
 
     it("with multiple different head and same tail should not unify", () => {
@@ -48,7 +48,7 @@ describe("Unification", () => {
         r
       );
       const result = unify(t1, t2, {});
-      expect(result.type).toBe("unify-mismatch-error");
+      expect(result.tag).toBe("unify-mismatch-error");
     });
   });
 
@@ -57,14 +57,14 @@ describe("Unification", () => {
       const t1 = tUserDefined("A");
       const t2 = tUserDefined("A");
       const result = unify(t1, t2, {});
-      expect(result.type).toBe("unify-success");
+      expect(result.tag).toBe("unify-success");
     });
 
     it("should not unify with its definition", () => {
       const t1 = tNumber;
       const t2 = tUserDefined("A");
       const result = unify(t1, t2, { a: tNumber });
-      expect(result.type).toBe("unify-mismatch-error");
+      expect(result.tag).toBe("unify-mismatch-error");
     });
   });
 });

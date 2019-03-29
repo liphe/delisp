@@ -82,7 +82,7 @@ export interface SRecord<I = {}> extends Node<I> {
 export interface STypeAnnotation<I = {}> extends Node<I> {
   tag: "type-annotation";
   value: Expression<I>;
-  valueType: TypeWithWildcards;
+  typeWithWildcards: TypeWithWildcards;
 }
 
 export type Expression<I = {}> =

@@ -216,7 +216,7 @@ defineConversion("the", expr => {
 
   return {
     tag: "type-annotation",
-    valueType: new TypeWithWildcards(convertType(t)),
+    typeWithWildcards: new TypeWithWildcards(convertType(t)),
     value: convertExpr(value),
     location: expr.location,
     info: {}

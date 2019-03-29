@@ -91,12 +91,12 @@ type TConstraint =
 // A constraint stating that an expression's type should be equal to a
 // given type.
 interface TConstraintEqual {
-  type: "equal-constraint";
+  tag: "equal-constraint";
   expr: Expression<Typed>;
   t: Monotype;
 }
 function constEqual(expr: Expression<Typed>, t: Monotype): TConstraintEqual {
-  return { type: "equal-constraint", expr, t };
+  return { tag: "equal-constraint", expr, t };
 }
 
 // A constriant stating that an expression's type is an instance of
@@ -104,7 +104,7 @@ function constEqual(expr: Expression<Typed>, t: Monotype): TConstraintEqual {
 // the generalized type of an expression. For example if the user has
 // provided some type annotations.
 interface TConstraintExplicitInstance {
-  type: "explicit-instance-constraint";
+  tag: "explicit-instance-constraint";
   expr: Expression<Typed>;
   t: Type;
 }
@@ -112,7 +112,7 @@ function constExplicitInstance(
   expr: Expression<Typed>,
   t: Type
 ): TConstraintExplicitInstance {
-  return { type: "explicit-instance-constraint", expr, t };
+  return { tag: "explicit-instance-constraint", expr, t };
 }
 
 // A constraint stating that an expression's type is an instance of a
@@ -131,7 +131,7 @@ function constExplicitInstance(
 // instantiation from another type at this point.
 //
 interface TConstraintImplicitInstance {
-  type: "implicit-instance-constraint";
+  tag: "implicit-instance-constraint";
   expr: Expression<Typed>;
   t: Monotype;
   monovars: string[];
@@ -142,7 +142,7 @@ function constImplicitInstance(
   monovars: string[],
   t: Monotype
 ): TConstraintImplicitInstance {
-  return { type: "implicit-instance-constraint", expr, monovars, t };
+  return { tag: "implicit-instance-constraint", expr, monovars, t };
 }
 
 interface InferResult<A> {
@@ -433,7 +433,10 @@ function infer(
 
     case "type-annotation": {
       const inferred = infer(expr.value, monovars, internalTypes);
-      const t = expandTypeAliases(expr.valueType.instantiate(), internalTypes);
+      const t = expandTypeAliases(
+        expr.typeWithWildcards.instantiate(),
+        internalTypes
+      );
 
       return {
         result: {
@@ -570,7 +573,7 @@ function assumptionsToConstraints(
 // set can be solved first. See `solve`/`solvable` for further info.
 function activevars(constraints: TConstraint[]): string[] {
   return flatMap(c => {
-    switch (c.type) {
+    switch (c.tag) {
       case "equal-constraint":
         return union(
           listTypeVariables(c.expr.info.type),
@@ -620,23 +623,23 @@ function applySubstitutionToConstraint(
   c: TConstraint,
   s: Substitution
 ): TConstraint {
-  switch (c.type) {
+  switch (c.tag) {
     case "equal-constraint":
       return {
-        type: "equal-constraint",
+        tag: "equal-constraint",
         expr: applySubstitutionToExpr(c.expr, s),
         t: applySubstitution(c.t, s)
       };
     case "implicit-instance-constraint":
       return {
-        type: "implicit-instance-constraint",
+        tag: "implicit-instance-constraint",
         expr: applySubstitutionToExpr(c.expr, s),
         t: applySubstitution(c.t, s),
         monovars: flatMap(name => substituteVar(name, s), c.monovars)
       };
     case "explicit-instance-constraint":
       return {
-        type: "explicit-instance-constraint",
+        tag: "explicit-instance-constraint",
         expr: applySubstitutionToExpr(c.expr, s),
         t: applySubstitutionToPolytype(c.t, s)
       };
@@ -700,7 +703,7 @@ function solve(
   // TODO: This can be made more efficient by studing the dependency
   // between the constraints
   function solvable(c: TConstraint): boolean {
-    switch (c.type) {
+    switch (c.tag) {
       case "equal-constraint":
       case "explicit-instance-constraint":
         return true;
@@ -722,11 +725,11 @@ function solve(
 
   const rest = constraints.filter(c => c !== constraint);
 
-  switch (constraint.type) {
+  switch (constraint.tag) {
     case "equal-constraint": {
       const result = unify(constraint.expr.info.type, constraint.t, solution);
 
-      switch (result.type) {
+      switch (result.tag) {
         case "unify-success": {
           const s = result.substitution;
           return solve(rest.map(c => applySubstitutionToConstraint(c, s)), s);

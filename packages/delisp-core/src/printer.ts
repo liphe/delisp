@@ -143,7 +143,7 @@ function print(sexpr: Syntax): Doc {
         list(
           text("the"),
           space,
-          text(sexpr.valueType.print()),
+          text(sexpr.typeWithWildcards.print()),
           indent(concat(line, print(sexpr.value)))
         )
       );

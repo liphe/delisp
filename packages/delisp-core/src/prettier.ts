@@ -12,31 +12,31 @@
 import { InvariantViolation } from "./invariant";
 
 interface DocNil {
-  type: "nil";
+  tag: "nil";
 }
 interface DocText {
-  type: "text";
+  tag: "text";
   content: string;
   next: Doc;
 }
 interface DocLine {
-  type: "line";
+  tag: "line";
   next: Doc;
 }
 interface DocUnion {
-  type: "union";
+  tag: "union";
   x: Doc;
   y: Doc;
   width?: number;
 }
 interface DocAlign {
-  type: "align";
+  tag: "align";
   root: Doc;
   docs: Doc[];
   next: Doc;
 }
 interface DocIndent {
-  type: "indent";
+  tag: "indent";
   doc: Doc;
   level: number;
   next: Doc;
@@ -45,7 +45,7 @@ interface DocIndent {
 export type Doc = DocNil | DocText | DocLine | DocUnion | DocAlign | DocIndent;
 
 /** Empty document. */
-export const nil: Doc = { type: "nil" };
+export const nil: Doc = { tag: "nil" };
 
 // Primitive document builders
 //
@@ -55,7 +55,7 @@ export function text(content: string): Doc {
   if (content.includes("\n")) {
     throw new Error(`Newline is not allowed in a call to 'text'`);
   }
-  return { type: "text", content, next: nil };
+  return { tag: "text", content, next: nil };
 }
 
 /** A new line.
@@ -64,20 +64,20 @@ export function text(content: string): Doc {
  * current indentation level.
  */
 export const line: Doc = {
-  type: "line",
+  tag: "line",
   next: nil
 };
 
 /** Indent a document by a number of levels. */
 export function indent(doc: Doc, level: number): Doc {
-  return { type: "indent", doc, next: nil, level };
+  return { tag: "indent", doc, next: nil, level };
 }
 
 function union(x: Doc, y: Doc, width?: number): Doc {
   // invariant: every first line of x must be longer than than first
   // line of y
   return {
-    type: "union",
+    tag: "union",
     x,
     y,
     width
@@ -91,7 +91,7 @@ export function align(...docs: Doc[]): Doc {
   }
   const [root, ...rest] = docs;
   return {
-    type: "align",
+    tag: "align",
     root,
     docs: rest,
     next: nil
@@ -107,36 +107,36 @@ export function groupalign(x: Doc, y: Doc): Doc {
 }
 
 function concat2(x: Doc, y: Doc): Doc {
-  switch (x.type) {
+  switch (x.tag) {
     case "nil":
       return y;
     case "text":
       return {
-        type: "text",
+        tag: "text",
         content: x.content,
         next: concat2(x.next, y)
       };
     case "line":
       return {
-        type: "line",
+        tag: "line",
         next: concat2(x.next, y)
       };
     case "union":
       return {
-        type: "union",
+        tag: "union",
         x: concat2(x.x, y),
         y: concat2(x.y, y)
       };
     case "align":
       return {
-        type: "align",
+        tag: "align",
         root: x.root,
         docs: x.docs,
         next: concat2(x.next, y)
       };
     case "indent":
       return {
-        type: "indent",
+        tag: "indent",
         doc: x.doc,
         next: concat2(x.next, y),
         level: x.level
@@ -150,18 +150,18 @@ export function concat(...docs: Doc[]): Doc {
 }
 
 function flatten(doc: Doc): Doc {
-  switch (doc.type) {
+  switch (doc.tag) {
     case "nil":
       return nil;
     case "text":
       return {
-        type: "text",
+        tag: "text",
         content: doc.content,
         next: flatten(doc.next)
       };
     case "line":
       return {
-        type: "text",
+        tag: "text",
         content: " ",
         next: flatten(doc.next)
       };
@@ -177,7 +177,7 @@ function flatten(doc: Doc): Doc {
       );
     case "indent":
       return {
-        type: "indent",
+        tag: "indent",
         level: doc.level,
         doc: flatten(doc.doc),
         next: flatten(doc.next)
@@ -194,12 +194,12 @@ function flatten(doc: Doc): Doc {
  * nested groups.
  */
 export function group(doc: Doc, width?: number): Doc {
-  switch (doc.type) {
+  switch (doc.tag) {
     case "nil":
       return nil;
     case "text":
       return {
-        type: "text",
+        tag: "text",
         content: doc.content,
         next: group(doc.next, width)
       };
@@ -219,7 +219,7 @@ export function group(doc: Doc, width?: number): Doc {
       return union(flatten(doc), doc, width);
     case "indent":
       return {
-        type: "indent",
+        tag: "indent",
         level: doc.level,
         doc: group(doc.doc, width),
         next: group(doc.next, width)
@@ -252,7 +252,7 @@ function fits(doc: Doc, w: number): boolean {
   if (w < 0) {
     return false;
   }
-  switch (doc.type) {
+  switch (doc.tag) {
     case "nil":
       return true;
     case "line":
@@ -275,18 +275,18 @@ function better(x: Doc, y: Doc, w: number, k: number): Doc {
 }
 
 function best(doc: Doc, w: number, k: number): Doc {
-  switch (doc.type) {
+  switch (doc.tag) {
     case "nil":
       return nil;
     case "text":
       return {
-        type: "text",
+        tag: "text",
         content: doc.content,
         next: best(doc.next, w, k + doc.content.length)
       };
     case "line":
       return {
-        type: "line",
+        tag: "line",
         next: best(doc.next, w, 0)
       };
     case "union":
@@ -303,14 +303,14 @@ function best(doc: Doc, w: number, k: number): Doc {
 
     case "align":
       return {
-        type: "align",
+        tag: "align",
         root: best(doc.root, w, k),
         docs: doc.docs.map(d => best(d, w, k)),
         next: best(doc.next, w, k)
       };
     case "indent":
       return {
-        type: "indent",
+        tag: "indent",
         doc: best(doc.doc, w - doc.level, k),
         level: doc.level,
         next: best(doc.next, w, k)
@@ -325,7 +325,7 @@ function repeatChar(ch: string, n: number): string {
 }
 
 function layout(doc: Doc, indentation: number, alignment: number): string {
-  switch (doc.type) {
+  switch (doc.tag) {
     case "nil":
       return "";
     case "text":

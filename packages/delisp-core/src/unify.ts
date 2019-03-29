@@ -18,24 +18,24 @@ import { Monotype, RExtension, tRowExtension, TVar } from "./types";
 import { last } from "./utils";
 
 interface UnifySuccess {
-  type: "unify-success";
+  tag: "unify-success";
   substitution: Substitution;
 }
 
 interface UnifyOccurCheckError {
-  type: "unify-occur-check-error";
+  tag: "unify-occur-check-error";
   variable: TVar;
   t: Monotype;
 }
 
 interface UnifyMismatchError {
-  type: "unify-mismatch-error";
+  tag: "unify-mismatch-error";
   t1: Monotype;
   t2: Monotype;
 }
 
 interface UnifyMissingValueError {
-  type: "unify-missing-value-error";
+  tag: "unify-missing-value-error";
   t: Monotype;
 }
 
@@ -47,7 +47,7 @@ type UnifyResult = UnifySuccess | UnifyError;
 
 function success(s: Substitution): UnifyResult {
   return {
-    type: "unify-success",
+    tag: "unify-success",
     substitution: s
   };
 }
@@ -56,7 +56,7 @@ function occurCheck(v: TVar, rootT: Monotype): UnifyOccurCheckError | null {
   function check(t: Monotype): UnifyOccurCheckError | null {
     if (t.tag === "type-variable" && t.name === v.name) {
       const err: UnifyOccurCheckError = {
-        type: "unify-occur-check-error",
+        tag: "unify-occur-check-error",
         variable: v,
         t: rootT
       };
@@ -104,19 +104,19 @@ function unifyArray(
     return success(ctx);
   } else if (t1s.length === 0) {
     return {
-      type: "unify-missing-value-error",
+      tag: "unify-missing-value-error",
       t: t2s[0]
     };
   } else if (t2s.length === 0) {
     return {
-      type: "unify-missing-value-error",
+      tag: "unify-missing-value-error",
       t: t1s[0]
     };
   } else {
     const [t1, ...rest1] = t1s;
     const [t2, ...rest2] = t2s;
     const result = unify(t1, t2, ctx);
-    if (result.type === "unify-success") {
+    if (result.tag === "unify-success") {
       return unifyArray(rest1, rest2, result.substitution);
     } else {
       return result;
@@ -200,7 +200,7 @@ function unifyRow(
 
   if (row1.extends.tag === "type-variable" && subs[row1.extends.name]) {
     return {
-      type: "unify-mismatch-error",
+      tag: "unify-mismatch-error",
       t1: row1,
       t2: row2
     };
@@ -236,7 +236,7 @@ export function unify(
     return t1.name === t2.name
       ? success(ctx)
       : {
-          type: "unify-mismatch-error",
+          tag: "unify-mismatch-error",
           t1,
           t2
         };
@@ -249,7 +249,7 @@ export function unify(
     return t1 === t2
       ? success(ctx)
       : {
-          type: "unify-mismatch-error",
+          tag: "unify-mismatch-error",
           t1,
           t2
         };
@@ -264,7 +264,7 @@ export function unify(
       t2.args.slice(0, t2.args.length - 1),
       ctx
     );
-    if (argResult.type === "unify-success") {
+    if (argResult.tag === "unify-success") {
       return unify(last(t1.args)!, last(t2.args)!, argResult.substitution);
     } else {
       return argResult;
@@ -283,7 +283,7 @@ export function unify(
     return unifyRow(t1, t2, ctx);
   } else {
     return {
-      type: "unify-mismatch-error",
+      tag: "unify-mismatch-error",
       t1,
       t2
     };
