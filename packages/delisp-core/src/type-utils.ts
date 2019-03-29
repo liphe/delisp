@@ -5,19 +5,16 @@ import { readFromString } from "./reader";
 import { generateUniqueTVar } from "./type-generate";
 
 import {
-  Monotype,
+  Type,
   tApp,
   tRowExtension,
   emptyRow,
   TUserDefined,
-  Type
+  TypeSchema
 } from "./types";
 import { flatMap, unique } from "./utils";
 
-export function transformRecurType(
-  t: Monotype,
-  fn: (t1: Monotype) => Monotype
-): Monotype {
+export function transformRecurType(t: Type, fn: (t1: Type) => Type): Type {
   switch (t.tag) {
     case "void":
     case "boolean":
@@ -39,10 +36,10 @@ export function transformRecurType(
 }
 
 export interface Substitution {
-  [t: string]: Monotype;
+  [t: string]: Type;
 }
 
-export function applySubstitution(t: Monotype, env: Substitution): Monotype {
+export function applySubstitution(t: Type, env: Substitution): Type {
   return transformRecurType(t, t1 => {
     if (t1.tag === "type-variable") {
       if (t1.name in env) {
@@ -58,7 +55,7 @@ export function applySubstitution(t: Monotype, env: Substitution): Monotype {
 }
 
 // Return user defined types
-export function listUserDefinedReferences(t: Monotype): TUserDefined[] {
+export function listUserDefinedReferences(t: Type): TUserDefined[] {
   switch (t.tag) {
     case "void":
     case "boolean":
@@ -80,7 +77,7 @@ export function listUserDefinedReferences(t: Monotype): TUserDefined[] {
 }
 
 // Return the list of type variables in the order they show up
-export function listTypeVariables(t: Monotype): string[] {
+export function listTypeVariables(t: Type): string[] {
   switch (t.tag) {
     case "void":
     case "boolean":
@@ -101,7 +98,7 @@ export function listTypeVariables(t: Monotype): string[] {
   }
 }
 
-export function generalize(t: Monotype, monovars: string[]): Type {
+export function generalize(t: Type, monovars: string[]): TypeSchema {
   const vars = listTypeVariables(t);
   return {
     tag: "type",
@@ -117,7 +114,7 @@ export function isWildcardTypeVarName(name: string): boolean {
   return name.startsWith("_");
 }
 
-export function instantiate(t: Type, userSpecified = false): Monotype {
+export function instantiate(t: TypeSchema, userSpecified = false): Type {
   const subst = t.tvars.reduce((s, vname) => {
     return {
       ...s,
@@ -129,15 +126,15 @@ export function instantiate(t: Type, userSpecified = false): Monotype {
   return applySubstitution(t.mono, subst);
 }
 
-export function readType(source: string): Type {
+export function readType(source: string): TypeSchema {
   return generalize(convertType(readFromString(source)), []);
 }
 
 export function normalizeRow(
-  type: Monotype
+  type: Type
 ): {
-  fields: Array<{ label: string; labelType: Monotype }>;
-  extends: Monotype;
+  fields: Array<{ label: string; labelType: Type }>;
+  extends: Type;
 } {
   if (
     type.tag !== "empty-row" &&

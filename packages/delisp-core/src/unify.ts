@@ -14,7 +14,7 @@
 
 import { generateUniqueTVar } from "./type-generate";
 import { Substitution } from "./type-utils";
-import { Monotype, RExtension, tRowExtension, TVar } from "./types";
+import { Type, RExtension, tRowExtension, TVar } from "./types";
 import { last } from "./utils";
 
 interface UnifySuccess {
@@ -25,18 +25,18 @@ interface UnifySuccess {
 interface UnifyOccurCheckError {
   tag: "unify-occur-check-error";
   variable: TVar;
-  t: Monotype;
+  t: Type;
 }
 
 interface UnifyMismatchError {
   tag: "unify-mismatch-error";
-  t1: Monotype;
-  t2: Monotype;
+  t1: Type;
+  t2: Type;
 }
 
 interface UnifyMissingValueError {
   tag: "unify-missing-value-error";
-  t: Monotype;
+  t: Type;
 }
 
 type UnifyError =
@@ -52,8 +52,8 @@ function success(s: Substitution): UnifyResult {
   };
 }
 
-function occurCheck(v: TVar, rootT: Monotype): UnifyOccurCheckError | null {
-  function check(t: Monotype): UnifyOccurCheckError | null {
+function occurCheck(v: TVar, rootT: Type): UnifyOccurCheckError | null {
+  function check(t: Type): UnifyOccurCheckError | null {
     if (t.tag === "type-variable" && t.name === v.name) {
       const err: UnifyOccurCheckError = {
         tag: "unify-occur-check-error",
@@ -73,7 +73,7 @@ function occurCheck(v: TVar, rootT: Monotype): UnifyOccurCheckError | null {
 
 //
 //
-function unifyVariable(v: TVar, t: Monotype, ctx: Substitution): UnifyResult {
+function unifyVariable(v: TVar, t: Type, ctx: Substitution): UnifyResult {
   if (v.name in ctx) {
     return unify(ctx[v.name], t, ctx);
   }
@@ -95,11 +95,7 @@ function unifyVariable(v: TVar, t: Monotype, ctx: Substitution): UnifyResult {
   }
 }
 
-function unifyArray(
-  t1s: Monotype[],
-  t2s: Monotype[],
-  ctx: Substitution
-): UnifyResult {
+function unifyArray(t1s: Type[], t2s: Type[], ctx: Substitution): UnifyResult {
   if (t1s.length === 0 && t2s.length === 0) {
     return success(ctx);
   } else if (t1s.length === 0) {
@@ -130,7 +126,7 @@ function unifyArray(
  * partially unify it with `row` (only the head of the extension).
  */
 function rewriteRowForLabel(
-  row: Monotype,
+  row: Type,
   label: string,
   ctx: Substitution
 ): { row: RExtension; substitution: Substitution } {
@@ -220,11 +216,7 @@ function unifyRow(
  * the most general one, in the sense that any other substitution can
  * be obtained as a composition of this one with another one.
  */
-export function unify(
-  t1: Monotype,
-  t2: Monotype,
-  ctx: Substitution
-): UnifyResult {
+export function unify(t1: Type, t2: Type, ctx: Substitution): UnifyResult {
   // RULE (uni-const)
   if (t1.tag === "string" && t2.tag === "string") {
     return success(ctx);

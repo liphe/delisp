@@ -1,4 +1,4 @@
-import { Monotype, Type } from "./types";
+import { Type, TypeSchema } from "./types";
 import { generalize, instantiate, transformRecurType } from "./type-utils";
 import { generateUniqueTVar } from "./type-generate";
 import { printType } from "./type-printer";
@@ -21,12 +21,12 @@ import { printType } from "./type-printer";
  *
  **/
 export class TypeWithWildcards {
-  private body: Monotype;
-  constructor(body: Monotype) {
+  private body: Type;
+  constructor(body: Type) {
     this.body = body;
   }
 
-  generalize(): Type {
+  generalize(): TypeSchema {
     const nowildcards = transformRecurType(this.body, t1 => {
       if (t1.tag === "type-variable" && t1.name === "_") {
         return generateUniqueTVar(false, "__t");
@@ -37,7 +37,7 @@ export class TypeWithWildcards {
     return generalize(nowildcards, []);
   }
 
-  instantiate(): Monotype {
+  instantiate(): Type {
     return instantiate(this.generalize(), true);
   }
 

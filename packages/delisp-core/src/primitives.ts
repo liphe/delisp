@@ -1,10 +1,10 @@
 import { primitives } from "@delisp/runtime";
 
 import { readType } from "./type-utils";
-import { Type } from "./types";
+import { TypeSchema } from "./types";
 import { mapObject } from "./utils";
 interface Primitive {
-  type: Type;
+  type: TypeSchema;
   value: unknown;
 }
 

@@ -20,7 +20,7 @@ interface TString {
 export interface TApplication {
   tag: "application";
   op: string;
-  args: Monotype[];
+  args: Type[];
 }
 
 export interface TVar {
@@ -41,14 +41,14 @@ export interface REmpty {
 export interface RExtension {
   tag: "row-extension";
   label: string;
-  labelType: Monotype;
+  labelType: Type;
   // TODO: Implement kind system!
-  extends: Monotype;
+  extends: Type;
 }
 
 export type Row = REmpty | RExtension;
 
-export type Monotype =
+export type Type =
   | TBoolean
   | TNumber
   | TString
@@ -58,10 +58,10 @@ export type Monotype =
   | TVoid
   | TUserDefined;
 
-export interface Type {
+export interface TypeSchema {
   tag: "type";
   tvars: string[];
-  mono: Monotype;
+  mono: Type;
 }
 
 //
@@ -99,7 +99,7 @@ export function tUserDefined(name: string): TUserDefined {
   };
 }
 
-export function tApp(op: string, ...args: Monotype[]): Monotype {
+export function tApp(op: string, ...args: Type[]): Type {
   return {
     tag: "application",
     op,
@@ -107,11 +107,11 @@ export function tApp(op: string, ...args: Monotype[]): Monotype {
   };
 }
 
-export function tVector(t: Monotype): Monotype {
+export function tVector(t: Type): Type {
   return tApp("vector", t);
 }
 
-export function tFn(args: Monotype[], out: Monotype): Monotype {
+export function tFn(args: Type[], out: Type): Type {
   return tApp("->", ...args, out);
 }
 
@@ -119,8 +119,8 @@ export const emptyRow: REmpty = { tag: "empty-row" };
 
 export const tRowExtension = (
   label: string,
-  labelType: Monotype,
-  row: Monotype
+  labelType: Type,
+  row: Type
 ): RExtension => ({
   tag: "row-extension",
   label,
@@ -129,18 +129,18 @@ export const tRowExtension = (
 });
 
 export function tRow(
-  fields: Array<{ label: string; type: Monotype }>,
-  extending: Monotype = emptyRow
-): Monotype {
+  fields: Array<{ label: string; type: Type }>,
+  extending: Type = emptyRow
+): Type {
   return fields.reduceRight(
-    (row: Monotype, { label, type }): Row => tRowExtension(label, type, row),
+    (row: Type, { label, type }): Row => tRowExtension(label, type, row),
     extending
   );
 }
 
 export function tRecord(
-  fields: Array<{ label: string; type: Monotype }>,
-  extending: Monotype = emptyRow
-): Monotype {
+  fields: Array<{ label: string; type: Type }>,
+  extending: Type = emptyRow
+): Type {
   return tApp("record", tRow(fields, extending));
 }

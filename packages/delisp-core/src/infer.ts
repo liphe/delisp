@@ -38,7 +38,7 @@ import {
 
 import {
   emptyRow,
-  Monotype,
+  Type,
   tApp,
   tBoolean,
   tFn,
@@ -48,7 +48,7 @@ import {
   tString,
   tVar,
   tVector,
-  Type
+  TypeSchema
 } from "./types";
 import { unify } from "./unify";
 import {
@@ -93,9 +93,9 @@ type TConstraint =
 interface TConstraintEqual {
   tag: "equal-constraint";
   expr: Expression<Typed>;
-  t: Monotype;
+  t: Type;
 }
-function constEqual(expr: Expression<Typed>, t: Monotype): TConstraintEqual {
+function constEqual(expr: Expression<Typed>, t: Type): TConstraintEqual {
   return { tag: "equal-constraint", expr, t };
 }
 
@@ -106,11 +106,11 @@ function constEqual(expr: Expression<Typed>, t: Monotype): TConstraintEqual {
 interface TConstraintExplicitInstance {
   tag: "explicit-instance-constraint";
   expr: Expression<Typed>;
-  t: Type;
+  t: TypeSchema;
 }
 function constExplicitInstance(
   expr: Expression<Typed>,
-  t: Type
+  t: TypeSchema
 ): TConstraintExplicitInstance {
   return { tag: "explicit-instance-constraint", expr, t };
 }
@@ -133,14 +133,14 @@ function constExplicitInstance(
 interface TConstraintImplicitInstance {
   tag: "implicit-instance-constraint";
   expr: Expression<Typed>;
-  t: Monotype;
+  t: Type;
   monovars: string[];
 }
 
 function constImplicitInstance(
   expr: Expression<Typed>,
   monovars: string[],
-  t: Monotype
+  t: Type
 ): TConstraintImplicitInstance {
   return { tag: "implicit-instance-constraint", expr, monovars, t };
 }
@@ -344,7 +344,7 @@ function infer(
       const ifn = infer(expr.fn, monovars, internalTypes);
       const iargs = inferMany(expr.args, monovars, internalTypes);
       const tTo = generateUniqueTVar();
-      const tfn: Monotype = tFn(iargs.result.map(a => a.info.type), tTo);
+      const tfn: Type = tFn(iargs.result.map(a => a.info.type), tTo);
       return {
         result: {
           ...expr,
@@ -521,20 +521,20 @@ function inferSyntax(
 
 export interface ExternalEnvironment {
   variables: {
-    [v: string]: Type;
+    [v: string]: TypeSchema;
   };
   types: {
-    [t: string]: Monotype;
+    [t: string]: Type;
   };
 }
 
 export interface InternalTypeEnvironment {
-  [t: string]: Monotype;
+  [t: string]: Type;
 }
 
 export interface InternalEnvironment {
   variables: {
-    [v: string]: Monotype;
+    [v: string]: Type;
   };
   types: InternalTypeEnvironment;
 }
@@ -542,7 +542,7 @@ export interface InternalEnvironment {
 function lookupVariableType(
   varName: string,
   env: ExternalEnvironment
-): Type | null {
+): TypeSchema | null {
   const t = env.variables[varName];
   if (t) {
     return t;
@@ -611,7 +611,10 @@ function removeSubstitution(s: Substitution, removeVars: string[]) {
 
 // Apply a substitution to a polytype, replacing only free variables
 // from the polytype.
-function applySubstitutionToPolytype(t: Type, s: Substitution): Type {
+function applySubstitutionToPolytype(
+  t: TypeSchema,
+  s: Substitution
+): TypeSchema {
   return {
     tag: "type",
     tvars: t.tvars,
@@ -895,10 +898,7 @@ function checkCircularTypes(allTypeAliases: STypeAlias[]) {
 }
 
 /** Expand known type aliases from a monotype. */
-function expandTypeAliases(
-  t: Monotype,
-  env: InternalTypeEnvironment
-): Monotype {
+function expandTypeAliases(t: Type, env: InternalTypeEnvironment): Type {
   switch (t.tag) {
     case "void":
     case "boolean":

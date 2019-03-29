@@ -11,12 +11,12 @@ import {
   Module
 } from "./syntax";
 
-import { Monotype, Type } from "./types";
+import { Type, TypeSchema } from "./types";
 import { generalize, normalizeRow } from "./type-utils";
 import { printType } from "./type-printer";
 
 interface TAppHandler {
-  (args: Monotype[], mapping: TSMapping): string;
+  (args: Type[], mapping: TSMapping): string;
 }
 
 type TSMapping = Array<{
@@ -24,7 +24,7 @@ type TSMapping = Array<{
   tsName: string;
 }>;
 
-function generateFn(args: Monotype[], mapping: TSMapping): string {
+function generateFn(args: Type[], mapping: TSMapping): string {
   const argTypes = args.slice(0, -1);
   const returnType = args[args.length - 1];
   return (
@@ -36,11 +36,11 @@ function generateFn(args: Monotype[], mapping: TSMapping): string {
   );
 }
 
-function generateVector([arg]: Monotype[], mapping: TSMapping): string {
+function generateVector([arg]: Type[], mapping: TSMapping): string {
   return `Array<${generateTSMonotype(arg, mapping)}>`;
 }
 
-function generateRecord([arg]: Monotype[], mapping: TSMapping): string {
+function generateRecord([arg]: Type[], mapping: TSMapping): string {
   const normalizedRow = normalizeRow(arg);
   return (
     "{" +
@@ -65,7 +65,7 @@ const generateTApps: { [name: string]: TAppHandler } = {
   "->": generateFn
 };
 
-export function generateTSMonotype(t: Monotype, mapping: TSMapping): string {
+export function generateTSMonotype(t: Type, mapping: TSMapping): string {
   switch (t.tag) {
     case "void":
       return "void";
@@ -105,7 +105,7 @@ export function generateTSMonotype(t: Monotype, mapping: TSMapping): string {
   }
 }
 
-function generateTSType(t: Type): string {
+function generateTSType(t: TypeSchema): string {
   const mapping = t.tvars.map((varname, i) => ({
     delispName: varname,
     tsName: `T${i + 1}`

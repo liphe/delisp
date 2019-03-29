@@ -2,14 +2,14 @@ import * as JS from "estree";
 import { InvariantViolation } from "../invariant";
 import { generateUniqueTVar } from "../type-generate";
 import { generalize, readType } from "../type-utils";
-import { tFn, tRecord, Type } from "../types";
+import { tFn, tRecord, TypeSchema } from "../types";
 import { range } from "../utils";
 import { member, methodCall } from "./estree-utils";
 
 type InlineHandler = (args: JS.Expression[]) => JS.Expression;
 
 interface InlinePrim {
-  type: Type;
+  type: TypeSchema;
   handle: InlineHandler;
 }
 
@@ -21,7 +21,7 @@ const inlinefuncs = new Map<string, InlinePrim>();
 const magicfuncs: MagicPrim[] = [];
 
 function createInlinePrimitive(
-  typespec: string | Type,
+  typespec: string | TypeSchema,
   handle: InlineHandler
 ): InlinePrim {
   const type = typeof typespec === "string" ? readType(typespec) : typespec;

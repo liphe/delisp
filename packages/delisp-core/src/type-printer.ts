@@ -1,7 +1,7 @@
 // TODO: replace with the pretty printer
 
 import { InvariantViolation } from "./invariant";
-import { TApplication, Monotype, tVar } from "./types";
+import { TApplication, Type, tVar } from "./types";
 
 import {
   normalizeRow,
@@ -16,7 +16,7 @@ function typeIndexName(index: number): string {
     : `ω${index - alphabet.length + 1}`;
 }
 
-function normalizeType(t: Monotype): Monotype {
+function normalizeType(t: Type): Type {
   const vars = listTypeVariables(t);
   const substitution = vars.reduce((s, v, i) => {
     const normalizedName = typeIndexName(i);
@@ -49,7 +49,7 @@ function printApplicationType(type: TApplication): string {
   }
 }
 
-function _printType(type: Monotype): string {
+function _printType(type: Type): string {
   switch (type.tag) {
     case "application":
       return printApplicationType(type);
@@ -71,7 +71,7 @@ function _printType(type: Monotype): string {
   }
 }
 
-export function printType(rawType: Monotype, normalize = true) {
+export function printType(rawType: Type, normalize = true) {
   const type = normalize ? normalizeType(rawType) : rawType;
   return _printType(type);
 }

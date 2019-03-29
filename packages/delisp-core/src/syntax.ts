@@ -1,5 +1,5 @@
 import { Location } from "./input";
-import { Monotype } from "./types";
+import { Type } from "./types";
 import { TypeWithWildcards } from "./type-wildcards";
 
 //
@@ -117,7 +117,7 @@ export interface SExport<I = {}> {
 export interface STypeAlias<_I = {}> {
   tag: "type-alias";
   name: SVar;
-  definition: Monotype;
+  definition: Type;
   location: Location;
 }
 
@@ -154,5 +154,5 @@ export interface Module<I = {}> {
 }
 
 export interface Typed {
-  type: Monotype;
+  type: Type;
 }

@@ -11,7 +11,7 @@ import {
 
 import {
   emptyRow,
-  Monotype,
+  Type,
   tApp,
   tBoolean,
   tNumber,
@@ -44,7 +44,7 @@ export function checkUserDefinedTypeName(expr: ASExprSymbol): void {
   }
 }
 
-function convertSymbol(expr: ASExprSymbol): Monotype {
+function convertSymbol(expr: ASExprSymbol): Type {
   switch (expr.name) {
     case "boolean":
       return tBoolean;
@@ -59,7 +59,7 @@ function convertSymbol(expr: ASExprSymbol): Monotype {
   }
 }
 
-function convertList(expr: ASExprList): Monotype {
+function convertList(expr: ASExprList): Type {
   const [op, ...args] = expr.elements;
 
   if (op.tag !== "symbol") {
@@ -89,7 +89,7 @@ function convertList(expr: ASExprList): Monotype {
   return tApp(op.name, ...args.map(convert));
 }
 
-function convertVector(expr: ASExprVector): Monotype {
+function convertVector(expr: ASExprVector): Type {
   if (expr.elements.length !== 1) {
     throw new Error(
       printHighlightedExpr("Expected exactly 1 argument", expr.location)
@@ -98,7 +98,7 @@ function convertVector(expr: ASExprVector): Monotype {
   return tVector(convert(expr.elements[0]));
 }
 
-function convertMap(expr: ASExprMap): Monotype {
+function convertMap(expr: ASExprMap): Type {
   const { fields, tail } = parseRecord(expr);
 
   return tRecord(
@@ -111,7 +111,7 @@ function convertMap(expr: ASExprMap): Monotype {
 }
 
 /* Try to convert a S-Expression into a type. */
-export function convert(expr: ASExpr): Monotype {
+export function convert(expr: ASExpr): Type {
   switch (expr.tag) {
     case "list":
       return convertList(expr);
