@@ -104,7 +104,11 @@ function print(sexpr: Syntax): Doc {
     case "function-call": {
       const fn = print(sexpr.fn);
       const args = sexpr.args.map(print);
-      return group(list(groupalign(fn, align(...args))));
+      if (args.length === 0) {
+        return group(list(fn));
+      } else {
+        return group(list(groupalign(fn, align(...args))));
+      }
     }
 
     case "definition":
