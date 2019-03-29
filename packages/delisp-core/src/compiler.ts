@@ -58,6 +58,11 @@ export interface Environment {
   };
 }
 
+export interface CompilerOptions {
+  definitionContainer?: string;
+  esModule?: boolean;
+}
+
 function addBinding(varName: string, env: Environment): Environment {
   return {
     ...env,
@@ -385,8 +390,7 @@ function compileExports(
 
 export function moduleEnvironment(
   m: Module,
-  definitionContainer?: string,
-  esModule: boolean = false
+  opts: CompilerOptions = {}
 ): Environment {
   const moduleDefinitions = m.body
     .filter(isDefinition)
@@ -408,10 +412,10 @@ export function moduleEnvironment(
   );
 
   const initialEnv = {
-    defs: definitionContainer
-      ? dynamicDefinition(definitionContainer)
+    defs: opts.definitionContainer
+      ? dynamicDefinition(opts.definitionContainer)
       : staticDefinition,
-    moduleFormat: esModule ? esm : cjs,
+    moduleFormat: opts.esModule ? esm : cjs,
     bindings: { ...primitiveBindings, ...moduleBindings }
   };
 
@@ -443,10 +447,9 @@ export function compileToString(syntax: Syntax, env: Environment): string {
 
 export function compileModuleToString(
   m: Module,
-  definitionContainer?: string,
-  esModule?: boolean
+  opts: CompilerOptions = {}
 ): string {
-  const env = moduleEnvironment(m, definitionContainer, esModule);
+  const env = moduleEnvironment(m, opts);
   const ast = compileModule(m, true, env);
   const code = escodegen.generate(ast, { comment: true });
   debug("jscode:", code);

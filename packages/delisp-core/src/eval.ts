@@ -28,7 +28,7 @@ export function evaluate(
 }
 
 export function evaluateModule(m: Module, context = createContext()): void {
-  const env = moduleEnvironment(m, "env");
+  const env = moduleEnvironment(m, { definitionContainer: "env" });
   m.body.forEach(s => {
     return evaluate(s, env, context);
   });

@@ -151,7 +151,7 @@ const delispEval = (syntax: Syntax) => {
   // Evaluation
   //
 
-  const env = moduleEnvironment(previousModule, "env");
+  const env = moduleEnvironment(previousModule, { definitionContainer: "env" });
   const value = evaluate(syntax, env, context);
 
   if (isDeclaration(syntax)) {

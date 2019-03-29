@@ -53,7 +53,9 @@ async function compileFile(
     throw new Error(unknowns.join("\n\n"));
   }
 
-  const code = compileModuleToString(module, undefined, moduleFormat === "esm");
+  const code = compileModuleToString(module, {
+    esModule: moduleFormat === "esm"
+  });
 
   await mkdirp(path.dirname(outfile));
   await fs.writeFile(outfile, code);
