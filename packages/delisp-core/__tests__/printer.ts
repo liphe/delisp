@@ -152,6 +152,10 @@ eee
     ).toMatchSnapshot();
   });
 
+  it.skip("should print no trailing space in empty function calls", () => {
+    expect(pprintSource(`(f)`)).toBe("(f)");
+  });
+
   it("should print let expressions nicely", () => {
     expect(pprintSource(`(let {x 10 y 20} (+ x y))`)).toMatchSnapshot();
   });
