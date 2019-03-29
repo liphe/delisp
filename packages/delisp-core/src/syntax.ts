@@ -1,5 +1,6 @@
 import { Location } from "./input";
 import { Monotype } from "./types";
+import { TypeWithWildcards } from "./type-wildcards";
 
 //
 // Expressions
@@ -81,9 +82,7 @@ export interface SRecord<I = {}> extends Node<I> {
 export interface STypeAnnotation<I = {}> extends Node<I> {
   type: "type-annotation";
   value: Expression<I>;
-  valueType: {
-    typeWithWildcards: Monotype;
-  };
+  valueType: TypeWithWildcards;
 }
 
 export type Expression<I = {}> =

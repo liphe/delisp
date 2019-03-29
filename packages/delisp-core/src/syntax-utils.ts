@@ -1,9 +1,5 @@
 import { InvariantViolation } from "./invariant";
-import { Expression, Module, STypeAnnotation, Syntax } from "./syntax";
-
-import { Monotype } from "./types";
-import { transformRecurType, generalize, instantiate } from "./type-utils";
-import { generateUniqueTVar } from "./type-generate";
+import { Expression, Module, Syntax } from "./syntax";
 
 export function transformRecurExpr<I>(
   s: Expression<I>,
@@ -134,16 +130,4 @@ export function findSyntaxByOffset<I>(
   offset: number
 ): Syntax<I> | undefined {
   return findSyntaxByRange(m, offset, offset);
-}
-
-export function instantiateTypeAnnotation(t: STypeAnnotation): Monotype {
-  const nowildcards = transformRecurType(t.valueType.typeWithWildcards, t1 => {
-    if (t1.type === "type-variable" && t1.name === "_") {
-      return generateUniqueTVar(false, "__t");
-    } else {
-      return t1;
-    }
-  });
-  const typ = generalize(nowildcards, []);
-  return instantiate(typ, true);
 }
