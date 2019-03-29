@@ -31,8 +31,7 @@
   :command ("delisp" "lint" source)
   :error-patterns
   ((error line-start "file:" line ":" column ": " (message) line-end))
-  :modes delisp-mode
-  :next-checkers ((warning . scala-scalastyle)))
+  :modes delisp-mode)
 
 (add-to-list 'flycheck-checkers 'delisp)
 
