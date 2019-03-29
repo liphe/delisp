@@ -41,7 +41,7 @@ function printApplicationType(type: TApplication): string {
         .map(f => `${f.label} ${_printType(f.labelType)}`)
         .join(" ");
       const extension =
-        row.extends.type !== "empty-row" ? ` | ${_printType(row.extends)}` : "";
+        row.extends.tag !== "empty-row" ? ` | ${_printType(row.extends)}` : "";
       return `{${fields}${extension}}`;
 
     default:
@@ -50,7 +50,7 @@ function printApplicationType(type: TApplication): string {
 }
 
 function _printType(type: Monotype): string {
-  switch (type.type) {
+  switch (type.tag) {
     case "application":
       return printApplicationType(type);
     case "void":
@@ -67,7 +67,7 @@ function _printType(type: Monotype): string {
       return type.name;
     case "empty-row":
     case "row-extension":
-      throw new InvariantViolation(`Can't print ${type.type} types`);
+      throw new InvariantViolation(`Can't print ${type.tag} types`);
   }
 }
 

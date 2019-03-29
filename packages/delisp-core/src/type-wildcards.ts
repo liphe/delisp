@@ -28,7 +28,7 @@ export class TypeWithWildcards {
 
   generalize(): Type {
     const nowildcards = transformRecurType(this.body, t1 => {
-      if (t1.type === "type-variable" && t1.name === "_") {
+      if (t1.tag === "type-variable" && t1.name === "_") {
         return generateUniqueTVar(false, "__t");
       } else {
         return t1;

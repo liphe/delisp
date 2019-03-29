@@ -49,23 +49,23 @@ Object {
       "extends": Object {
         "extends": Object {
           "name": "a",
-          "type": "type-variable",
+          "tag": "type-variable",
           "userSpecified": false,
         },
         "label": ":y",
         "labelType": Object {
-          "type": "number",
+          "tag": "number",
         },
-        "type": "row-extension",
+        "tag": "row-extension",
       },
       "label": ":x",
       "labelType": Object {
-        "type": "number",
+        "tag": "number",
       },
-      "type": "row-extension",
+      "tag": "row-extension",
     },
   ],
   "op": "record",
-  "type": "application",
+  "tag": "application",
 }
 `;

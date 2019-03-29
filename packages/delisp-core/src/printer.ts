@@ -45,7 +45,7 @@ function printBody(ss: Syntax[]): Doc {
 }
 
 function print(sexpr: Syntax): Doc {
-  switch (sexpr.type) {
+  switch (sexpr.tag) {
     case "string":
       return printString(sexpr.value);
     case "number":

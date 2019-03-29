@@ -4,39 +4,39 @@ import { Module, Syntax } from "./syntax";
 
 export function createModule(): Module {
   return {
-    type: "module",
+    tag: "module",
     body: []
   };
 }
 
 export function readModule(str: string): Module {
   return {
-    type: "module",
+    tag: "module",
     body: readAllFromString(str).map(convert)
   };
 }
 
 export function addToModule(m: Module, s: Syntax): Module {
   return {
-    type: "module",
+    tag: "module",
     body: [...m.body, s]
   };
 }
 
 export function removeModuleDefinition(m: Module, name: string): Module {
   return {
-    type: "module",
+    tag: "module",
     body: m.body.filter(d => {
-      return d.type === "definition" ? d.variable !== name : true;
+      return d.tag === "definition" ? d.variable !== name : true;
     })
   };
 }
 
 export function removeModuleTypeDefinition(m: Module, name: string): Module {
   return {
-    type: "module",
+    tag: "module",
     body: m.body.filter(d => {
-      return d.type === "type-alias" ? d.name !== name : true;
+      return d.tag === "type-alias" ? d.name !== name : true;
     })
   };
 }

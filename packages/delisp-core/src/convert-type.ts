@@ -62,7 +62,7 @@ function convertSymbol(expr: ASExprSymbol): Monotype {
 function convertList(expr: ASExprList): Monotype {
   const [op, ...args] = expr.elements;
 
-  if (op.type !== "symbol") {
+  if (op.tag !== "symbol") {
     throw new Error(
       printHighlightedExpr("Expected symbol as operator", expr.location)
     );
@@ -112,7 +112,7 @@ function convertMap(expr: ASExprMap): Monotype {
 
 /* Try to convert a S-Expression into a type. */
 export function convert(expr: ASExpr): Monotype {
-  switch (expr.type) {
+  switch (expr.tag) {
     case "list":
       return convertList(expr);
     case "symbol":

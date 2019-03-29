@@ -52,14 +52,14 @@ function parseBody(anchor: ASExpr, exprs: ASExpr[]): Expression[] {
 //
 
 function parseLambdaList(ll: ASExpr): LambdaList {
-  if (ll.type !== "list") {
+  if (ll.tag !== "list") {
     throw new Error(
       printHighlightedExpr("Expected a list of arguments", ll.location)
     );
   }
 
   ll.elements.forEach(arg => {
-    if (arg.type !== "symbol") {
+    if (arg.tag !== "symbol") {
       throw new Error(
         printHighlightedExpr(
           "A list of arguments should be made of symbols",
@@ -110,7 +110,7 @@ defineConversion("lambda", expr => {
   const body = parseBody(lastExpr, args.slice(1));
 
   return {
-    type: "function",
+    tag: "function",
     lambdaList: parseLambdaList(args[0]),
     body,
     location: expr.location,
@@ -131,7 +131,7 @@ defineConversion("if", expr => {
   }
   const [, conditionForm, consequentForm, alternativeForm] = expr.elements;
   return {
-    type: "conditional",
+    tag: "conditional",
     condition: convertExpr(conditionForm),
     consequent: convertExpr(consequentForm),
     alternative: convertExpr(alternativeForm),
@@ -141,7 +141,7 @@ defineConversion("if", expr => {
 });
 
 function parseLetBindings(bindings: ASExpr): SLetBinding[] {
-  if (bindings.type !== "map") {
+  if (bindings.tag !== "map") {
     throw new Error(
       printHighlightedExpr(`'let' bindings should be a map`, bindings.location)
     );
@@ -171,7 +171,7 @@ defineConversion("let", expr => {
   const [rawBindings, ...rawBody] = args;
 
   return {
-    type: "let-bindings",
+    tag: "let-bindings",
     bindings: parseLetBindings(rawBindings),
     body: parseBody(lastExpr, rawBody),
     location: expr.location,
@@ -215,7 +215,7 @@ defineConversion("the", expr => {
   const [t, value] = args;
 
   return {
-    type: "type-annotation",
+    tag: "type-annotation",
     valueType: new TypeWithWildcards(convertType(t)),
     value: convertExpr(value),
     location: expr.location,
@@ -239,14 +239,14 @@ defineToplevel("define", expr => {
 
   const [variable, value] = args;
 
-  if (variable.type !== "symbol") {
+  if (variable.tag !== "symbol") {
     throw new Error(
       printHighlightedExpr("'define' expected a symbol", variable.location)
     );
   }
 
   return {
-    type: "definition",
+    tag: "definition",
     variable: variable.name,
     value: convertExpr(value),
     location: expr.location
@@ -269,14 +269,14 @@ defineToplevel("export", expr => {
 
   const [variable] = args;
 
-  if (variable.type !== "symbol") {
+  if (variable.tag !== "symbol") {
     throw new Error(
       printHighlightedExpr("'export' expected a symbol", variable.location)
     );
   }
 
   return {
-    type: "export",
+    tag: "export",
     value: convertSymbol(variable),
     location: expr.location
   };
@@ -298,7 +298,7 @@ defineToplevel("type", expr => {
 
   const [name, definition] = args;
 
-  if (name.type !== "symbol") {
+  if (name.tag !== "symbol") {
     throw new Error(
       printHighlightedExpr("'type' expected a symbol as a name", name.location)
     );
@@ -314,7 +314,7 @@ defineToplevel("type", expr => {
   }
 
   return {
-    type: "type-alias",
+    tag: "type-alias",
     name: name.name,
     definition: definitionType,
     location: expr.location
@@ -331,14 +331,14 @@ function convertList(list: ASExprList): Expression {
   const [first] = list.elements;
 
   const convertSpecialForm =
-    first.type === "symbol" ? conversions.get(first.name) : undefined;
+    first.tag === "symbol" ? conversions.get(first.name) : undefined;
 
   if (convertSpecialForm) {
     return convertSpecialForm(list);
   } else {
     const [fn, ...args] = list.elements;
     return {
-      type: "function-call",
+      tag: "function-call",
       fn: convertExpr(fn),
       args: args.map(convertExpr),
       location: list.location,
@@ -349,7 +349,7 @@ function convertList(list: ASExprList): Expression {
 
 function convertVector(list: ASExprVector): Expression {
   return {
-    type: "vector",
+    tag: "vector",
     values: list.elements.map(a => convertExpr(a)),
     location: list.location,
     info: {}
@@ -360,7 +360,7 @@ function convertMap(map: ASExprMap): Expression {
   const { fields, tail } = parseRecord(map);
 
   return {
-    type: "record",
+    tag: "record",
     fields: fields.map(f => ({
       label: f.label.name,
       labelLocation: f.label.location,
@@ -374,7 +374,7 @@ function convertMap(map: ASExprMap): Expression {
 
 function convertSymbol(expr: ASExprSymbol): SVariableReference {
   return {
-    type: "variable-reference",
+    tag: "variable-reference",
     name: expr.name,
     location: expr.location,
     info: {}
@@ -382,7 +382,7 @@ function convertSymbol(expr: ASExprSymbol): SVariableReference {
 }
 
 export function convertExpr(expr: ASExpr): Expression {
-  switch (expr.type) {
+  switch (expr.tag) {
     case "number":
       return { ...expr, info: {} };
     case "string":
@@ -399,7 +399,7 @@ export function convertExpr(expr: ASExpr): Expression {
 }
 
 export function convert(expr: ASExpr): Syntax {
-  if (expr.type === "list") {
+  if (expr.tag === "list") {
     if (expr.elements.length === 0) {
       throw new Error(
         printHighlightedExpr("Empty list is not a function call", expr.location)
@@ -408,7 +408,7 @@ export function convert(expr: ASExpr): Syntax {
 
     const [first] = expr.elements;
     const convertDeclaration =
-      first.type === "symbol" ? toplevelConversions.get(first.name) : undefined;
+      first.tag === "symbol" ? toplevelConversions.get(first.name) : undefined;
 
     if (convertDeclaration) {
       return convertDeclaration(expr);

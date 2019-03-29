@@ -18,7 +18,7 @@ export function transformRecurType(
   t: Monotype,
   fn: (t1: Monotype) => Monotype
 ): Monotype {
-  switch (t.type) {
+  switch (t.tag) {
     case "void":
     case "boolean":
     case "number":
@@ -44,7 +44,7 @@ export interface Substitution {
 
 export function applySubstitution(t: Monotype, env: Substitution): Monotype {
   return transformRecurType(t, t1 => {
-    if (t1.type === "type-variable") {
+    if (t1.tag === "type-variable") {
       if (t1.name in env) {
         const tt = env[t1.name];
         return applySubstitution(tt, env);
@@ -59,7 +59,7 @@ export function applySubstitution(t: Monotype, env: Substitution): Monotype {
 
 // Return user defined types
 export function listUserDefinedReferences(t: Monotype): TUserDefined[] {
-  switch (t.type) {
+  switch (t.tag) {
     case "void":
     case "boolean":
     case "string":
@@ -81,7 +81,7 @@ export function listUserDefinedReferences(t: Monotype): TUserDefined[] {
 
 // Return the list of type variables in the order they show up
 export function listTypeVariables(t: Monotype): string[] {
-  switch (t.type) {
+  switch (t.tag) {
     case "void":
     case "boolean":
     case "string":
@@ -104,7 +104,7 @@ export function listTypeVariables(t: Monotype): string[] {
 export function generalize(t: Monotype, monovars: string[]): Type {
   const vars = listTypeVariables(t);
   return {
-    type: "type",
+    tag: "type",
     // All free variables in the type that are not in the set of
     // monomorphic set must be polymorphic. So we generalize over
     // them.
@@ -140,13 +140,13 @@ export function normalizeRow(
   extends: Monotype;
 } {
   if (
-    type.type !== "empty-row" &&
-    type.type !== "row-extension" &&
-    type.type !== "type-variable"
+    type.tag !== "empty-row" &&
+    type.tag !== "row-extension" &&
+    type.tag !== "type-variable"
   ) {
     throw new InvariantViolation(`Row tail should be a row-kinded type.`);
   }
-  switch (type.type) {
+  switch (type.tag) {
     case "empty-row":
       return { fields: [], extends: emptyRow };
     case "type-variable":

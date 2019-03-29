@@ -1,19 +1,19 @@
 import { Location } from "./input";
 
 export interface ASExprNumber {
-  type: "number";
+  tag: "number";
   value: number;
   location: Location;
 }
 
 export interface ASExprSymbol {
-  type: "symbol";
+  tag: "symbol";
   name: string;
   location: Location;
 }
 
 export interface ASExprString {
-  type: "string";
+  tag: "string";
   value: string;
   location: Location;
 }
@@ -22,19 +22,19 @@ export interface ASExprString {
 export interface SExprArray extends Array<ASExpr> {}
 
 export interface ASExprList {
-  type: "list";
+  tag: "list";
   elements: SExprArray;
   location: Location;
 }
 
 export interface ASExprVector {
-  type: "vector";
+  tag: "vector";
   elements: SExprArray;
   location: Location;
 }
 
 export interface ASExprMap {
-  type: "map";
+  tag: "map";
   fields: Array<{
     label: ASExprSymbol;
     value: ASExpr;

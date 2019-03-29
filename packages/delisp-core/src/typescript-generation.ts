@@ -66,7 +66,7 @@ const generateTApps: { [name: string]: TAppHandler } = {
 };
 
 export function generateTSMonotype(t: Monotype, mapping: TSMapping): string {
-  switch (t.type) {
+  switch (t.tag) {
     case "void":
       return "void";
     case "boolean":
@@ -122,7 +122,7 @@ function generateTSType(t: Type): string {
 export function generateTSDeclaration(
   s: SDefinition<Typed> | STypeAlias<Typed>
 ): string {
-  switch (s.type) {
+  switch (s.tag) {
     case "definition": {
       const varname = identifierToJS(s.variable);
       const typ = generateTSType(generalize(s.value.info.type, []));
@@ -150,7 +150,7 @@ export function generateTSModuleDeclaration(m: Module<Typed>): string {
   function isGenerable(
     x: Syntax<Typed>
   ): x is SDefinition<Typed> | STypeAlias<Typed> {
-    return x.type === "definition" || x.type === "type-alias";
+    return x.tag === "definition" || x.tag === "type-alias";
   }
 
   const declarations = m.body.filter(isGenerable);
@@ -158,7 +158,7 @@ export function generateTSModuleDeclaration(m: Module<Typed>): string {
     declarations
       .map(d => {
         const tstype = generateTSDeclaration(d);
-        const active = d.type === "definition" && isExported(d.variable, m);
+        const active = d.tag === "definition" && isExported(d.variable, m);
         return exportIf(active, tstype);
       })
       .join("\n") +

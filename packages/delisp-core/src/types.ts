@@ -3,43 +3,43 @@
 //
 
 interface TVoid {
-  type: "void";
+  tag: "void";
 }
 
 interface TBoolean {
-  type: "boolean";
+  tag: "boolean";
 }
 interface TNumber {
-  type: "number";
+  tag: "number";
 }
 
 interface TString {
-  type: "string";
+  tag: "string";
 }
 
 export interface TApplication {
-  type: "application";
+  tag: "application";
   op: string;
   args: Monotype[];
 }
 
 export interface TVar {
-  type: "type-variable";
+  tag: "type-variable";
   name: string;
   userSpecified: boolean;
 }
 
 export interface TUserDefined {
-  type: "user-defined-type";
+  tag: "user-defined-type";
   name: string;
 }
 
 export interface REmpty {
-  type: "empty-row";
+  tag: "empty-row";
 }
 
 export interface RExtension {
-  type: "row-extension";
+  tag: "row-extension";
   label: string;
   labelType: Monotype;
   // TODO: Implement kind system!
@@ -59,7 +59,7 @@ export type Monotype =
   | TUserDefined;
 
 export interface Type {
-  type: "type";
+  tag: "type";
   tvars: string[];
   mono: Monotype;
 }
@@ -69,24 +69,24 @@ export interface Type {
 //
 
 export const tVoid: TVoid = {
-  type: "void"
+  tag: "void"
 };
 
 export const tBoolean: TBoolean = {
-  type: "boolean"
+  tag: "boolean"
 };
 
 export const tNumber: TNumber = {
-  type: "number"
+  tag: "number"
 };
 
 export const tString: TString = {
-  type: "string"
+  tag: "string"
 };
 
 export function tVar(name: string, userSpecified = false): TVar {
   return {
-    type: "type-variable",
+    tag: "type-variable",
     name,
     userSpecified
   };
@@ -94,14 +94,14 @@ export function tVar(name: string, userSpecified = false): TVar {
 
 export function tUserDefined(name: string): TUserDefined {
   return {
-    type: "user-defined-type",
+    tag: "user-defined-type",
     name
   };
 }
 
 export function tApp(op: string, ...args: Monotype[]): Monotype {
   return {
-    type: "application",
+    tag: "application",
     op,
     args
   };
@@ -115,14 +115,14 @@ export function tFn(args: Monotype[], out: Monotype): Monotype {
   return tApp("->", ...args, out);
 }
 
-export const emptyRow: REmpty = { type: "empty-row" };
+export const emptyRow: REmpty = { tag: "empty-row" };
 
 export const tRowExtension = (
   label: string,
   labelType: Monotype,
   row: Monotype
 ): RExtension => ({
-  type: "row-extension",
+  tag: "row-extension",
   label,
   labelType,
   extends: row

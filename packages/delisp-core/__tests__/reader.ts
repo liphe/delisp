@@ -2,7 +2,7 @@ import { readAllFromString, readFromString } from "../src/reader";
 import { ASExpr } from "../src/sexpr";
 
 function removeLocation(x: ASExpr): object {
-  switch (x.type) {
+  switch (x.tag) {
     case "number":
     case "symbol":
     case "string": {
@@ -33,27 +33,27 @@ function removeLocation(x: ASExpr): object {
 describe("Reader", () => {
   it("should read numbers", () => {
     expect(readFromString("12")).toMatchObject({
-      type: "number",
+      tag: "number",
       value: 12,
       location: { start: 0, end: 2 }
     });
     expect(readFromString("  12  ")).toMatchObject({
-      type: "number",
+      tag: "number",
       value: 12,
       location: { start: 2, end: 4 }
     });
     expect(readFromString("  -12  ")).toMatchObject({
-      type: "number",
+      tag: "number",
       value: -12,
       location: { start: 2, end: 5 }
     });
     expect(readFromString("  0.05  ")).toMatchObject({
-      type: "number",
+      tag: "number",
       value: 0.05,
       location: { start: 2, end: 6 }
     });
     expect(readFromString("  -0.9  ")).toMatchObject({
-      type: "number",
+      tag: "number",
       value: -0.9,
       location: { start: 2, end: 6 }
     });
@@ -61,13 +61,13 @@ describe("Reader", () => {
 
   it("should read strings", () => {
     expect(readFromString('  "xyz"  ')).toMatchObject({
-      type: "string",
+      tag: "string",
       value: "xyz",
       location: { start: 2, end: 7 }
     });
 
     expect(readFromString('  "a\\nb"  ')).toMatchObject({
-      type: "string",
+      tag: "string",
       value: "a\nb",
       location: { start: 2, end: 8 }
     });
@@ -75,25 +75,25 @@ describe("Reader", () => {
 
   it("should read symbols", () => {
     expect(readFromString("  xyz  ")).toMatchObject({
-      type: "symbol",
+      tag: "symbol",
       name: "xyz",
       location: { start: 2, end: 5 }
     });
 
     expect(readFromString("  a2  ")).toMatchObject({
-      type: "symbol",
+      tag: "symbol",
       name: "a2",
       location: { start: 2, end: 4 }
     });
 
     expect(readFromString("  3d  ")).toMatchObject({
-      type: "symbol",
+      tag: "symbol",
       name: "3d",
       location: { start: 2, end: 4 }
     });
 
     expect(readFromString("  $bc  ")).toMatchObject({
-      type: "symbol",
+      tag: "symbol",
       name: "$bc",
       location: { start: 2, end: 5 }
     });
@@ -101,30 +101,30 @@ describe("Reader", () => {
 
   it("should read lists", () => {
     expect(readFromString("()")).toMatchObject({
-      type: "list",
+      tag: "list",
       elements: [],
       location: { start: 0, end: 2 }
     });
     expect(readFromString("(  )")).toMatchObject({
-      type: "list",
+      tag: "list",
       elements: [],
       location: { start: 0, end: 4 }
     });
     expect(readFromString("(1 2 3)")).toMatchObject({
-      type: "list",
+      tag: "list",
       elements: [
         {
-          type: "number",
+          tag: "number",
           value: 1,
           location: { start: 1, end: 2 }
         },
         {
-          type: "number",
+          tag: "number",
           value: 2,
           location: { start: 3, end: 4 }
         },
         {
-          type: "number",
+          tag: "number",
           value: 3,
           location: { start: 5, end: 6 }
         }
@@ -133,18 +133,18 @@ describe("Reader", () => {
     });
 
     expect(readFromString(" (1 ( 2 ) 3) ")).toMatchObject({
-      type: "list",
+      tag: "list",
       elements: [
         {
-          type: "number",
+          tag: "number",
           value: 1,
           location: { start: 2, end: 3 }
         },
         {
-          type: "list",
+          tag: "list",
           elements: [
             {
-              type: "number",
+              tag: "number",
               value: 2,
               location: { start: 6, end: 7 }
             }
@@ -152,7 +152,7 @@ describe("Reader", () => {
           location: { start: 4, end: 9 }
         },
         {
-          type: "number",
+          tag: "number",
           value: 3,
           location: { start: 10, end: 11 }
         }
@@ -163,30 +163,30 @@ describe("Reader", () => {
 
   it("should read vectors with square bracket notation", () => {
     expect(readFromString("[]")).toMatchObject({
-      type: "vector",
+      tag: "vector",
       elements: [],
       location: { start: 0, end: 2 }
     });
     expect(readFromString("[  ]")).toMatchObject({
-      type: "vector",
+      tag: "vector",
       elements: [],
       location: { start: 0, end: 4 }
     });
     expect(readFromString("[1 2 3]")).toMatchObject({
-      type: "vector",
+      tag: "vector",
       elements: [
         {
-          type: "number",
+          tag: "number",
           value: 1,
           location: { start: 1, end: 2 }
         },
         {
-          type: "number",
+          tag: "number",
           value: 2,
           location: { start: 3, end: 4 }
         },
         {
-          type: "number",
+          tag: "number",
           value: 3,
           location: { start: 5, end: 6 }
         }
@@ -195,18 +195,18 @@ describe("Reader", () => {
     });
 
     expect(readFromString(" [1 [ 2 ] 3] ")).toMatchObject({
-      type: "vector",
+      tag: "vector",
       elements: [
         {
-          type: "number",
+          tag: "number",
           value: 1,
           location: { start: 2, end: 3 }
         },
         {
-          type: "vector",
+          tag: "vector",
           elements: [
             {
-              type: "number",
+              tag: "number",
               value: 2,
               location: { start: 6, end: 7 }
             }
@@ -214,7 +214,7 @@ describe("Reader", () => {
           location: { start: 4, end: 9 }
         },
         {
-          type: "number",
+          tag: "number",
           value: 3,
           location: { start: 10, end: 11 }
         }
@@ -225,13 +225,13 @@ describe("Reader", () => {
 
   it("should read multiple S-expressions", () => {
     expect(readAllFromString("(x 1 2)(y 3)")).toMatchObject([
-      { type: "list" },
-      { type: "list" }
+      { tag: "list" },
+      { tag: "list" }
     ]);
 
     expect(readAllFromString(" (x 1 2) (y 3) ")).toMatchObject([
-      { type: "list" },
-      { type: "list" }
+      { tag: "list" },
+      { tag: "list" }
     ]);
 
     expect(
@@ -239,7 +239,7 @@ describe("Reader", () => {
       (x 1 2)
       (y 3)
     `)
-    ).toMatchObject([{ type: "list" }, { type: "list" }]);
+    ).toMatchObject([{ tag: "list" }, { tag: "list" }]);
   });
 
   describe("Error messages", () => {

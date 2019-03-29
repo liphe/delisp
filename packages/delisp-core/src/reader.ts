@@ -106,7 +106,7 @@ const stringP: Parser<ASExprString> = delimitedMany(
 )
   .map(
     (chars, location): ASExprString => ({
-      type: "string",
+      tag: "string",
       value: chars.join(""),
       location
     })
@@ -121,7 +121,7 @@ const symbol: Parser<ASExprSymbol> = atLeastOne(
   alternatives(alphanumeric, specialChar)
 ).map(
   (chars, location): ASExprSymbol => ({
-    type: "symbol",
+    tag: "symbol",
     name: chars.join(""),
     location
   })
@@ -139,13 +139,13 @@ const numberOrSymbol: Parser<ASExprSymbol | ASExprNumber> = atLeastOne(
       const str = chars.join("");
       if (/^\-?[0-9]+(\.[0-9]+)?$/.test(str)) {
         return {
-          type: "number",
+          tag: "number",
           value: parseFloat(str),
           location
         };
       } else {
         return {
-          type: "symbol",
+          tag: "symbol",
           name: str,
           location
         };
@@ -170,7 +170,7 @@ function list(x: Parser<ASExpr>): Parser<ASExpr> {
   return delimitedMany(leftParen, x, spaces.then(rightParen))
     .map(
       (elements, location): ASExpr => ({
-        type: "list",
+        tag: "list",
         elements,
         location
       })
@@ -185,7 +185,7 @@ function vector(x: Parser<ASExpr>): Parser<ASExpr> {
   return delimitedMany(leftBracket, x, spaces.then(rightBracket))
     .map(
       (elements, location): ASExpr => ({
-        type: "vector",
+        tag: "vector",
         elements,
         location
       })
@@ -217,7 +217,7 @@ const atExprBodyConstitutent: Parser<ASExpr> = lazy(() => {
       })
     ).map(
       (chars, location): ASExpr => ({
-        type: "string",
+        tag: "string",
         value: chars.join(""),
         location
       })
@@ -236,7 +236,7 @@ const atExpr = lazy(() => {
     return sexpr.chain(headValue => {
       return atExprBody.map(
         (bodyValue): ASExpr => ({
-          type: "list",
+          tag: "list",
           elements: [headValue, ...bodyValue],
           location
         })
@@ -260,7 +260,7 @@ const mapFields = (
 const mapP = (x: Parser<ASExpr>): Parser<ASExpr> =>
   delimitedMany(leftCurly, mapFields(x), rightCurly).map(
     (fields, location): ASExprMap => ({
-      type: "map",
+      tag: "map",
       fields,
       location
     })

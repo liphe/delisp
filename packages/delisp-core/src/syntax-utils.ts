@@ -5,7 +5,7 @@ export function transformRecurExpr<I>(
   s: Expression<I>,
   fn: (node: Expression<I>) => Expression<I>
 ): Expression<I> {
-  switch (s.type) {
+  switch (s.tag) {
     case "string":
     case "number":
     case "variable-reference":
@@ -59,7 +59,7 @@ export function transformRecurExpr<I>(
 }
 
 function expressionChildren<I>(e: Expression<I>): Array<Expression<I>> {
-  switch (e.type) {
+  switch (e.tag) {
     case "string":
     case "number":
     case "variable-reference":
@@ -82,7 +82,7 @@ function expressionChildren<I>(e: Expression<I>): Array<Expression<I>> {
 }
 
 function syntaxChildren<I>(s: Syntax<I>): Array<Expression<I>> {
-  switch (s.type) {
+  switch (s.tag) {
     case "definition":
       return [s.value];
     case "export":

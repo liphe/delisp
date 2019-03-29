@@ -175,7 +175,7 @@ function infer(
   // Known type aliases that must be expanded
   internalTypes: InternalTypeEnvironment
 ): InferResult<Expression<Typed>> {
-  switch (expr.type) {
+  switch (expr.tag) {
     case "number":
       return {
         result: { ...expr, info: { type: tNumber } },
@@ -453,7 +453,7 @@ function inferSyntax(
   syntax: Syntax,
   internalTypes: InternalTypeEnvironment
 ): InferResult<Syntax<Typed>> {
-  if (syntax.type === "definition") {
+  if (syntax.tag === "definition") {
     const { result, assumptions, constraints } = infer(
       syntax.value,
       [],
@@ -467,7 +467,7 @@ function inferSyntax(
       assumptions,
       constraints
     };
-  } else if (syntax.type === "export") {
+  } else if (syntax.tag === "export") {
     const { result, assumptions, constraints } = infer(
       syntax.value,
       [],
@@ -481,7 +481,7 @@ function inferSyntax(
       assumptions,
       constraints
     };
-  } else if (syntax.type === "type-alias") {
+  } else if (syntax.tag === "type-alias") {
     return {
       result: {
         ...syntax
@@ -610,7 +610,7 @@ function removeSubstitution(s: Substitution, removeVars: string[]) {
 // from the polytype.
 function applySubstitutionToPolytype(t: Type, s: Substitution): Type {
   return {
-    type: "type",
+    tag: "type",
     tvars: t.tvars,
     mono: applySubstitution(t.mono, removeSubstitution(s, t.tvars))
   };
@@ -660,17 +660,17 @@ function applySubstitutionToSyntax(
   s: Syntax<Typed>,
   env: Substitution
 ): Syntax<Typed> {
-  if (s.type === "definition") {
+  if (s.tag === "definition") {
     return {
       ...s,
       value: applySubstitutionToExpr(s.value, env)
     };
-  } else if (s.type === "export") {
+  } else if (s.tag === "export") {
     return {
       ...s,
       value: applySubstitutionToExpr(s.value, env) as SVariableReference<Typed>
     };
-  } else if (s.type === "type-alias") {
+  } else if (s.tag === "type-alias") {
     return s;
   } else {
     return applySubstitutionToExpr(s, env);
@@ -896,7 +896,7 @@ function expandTypeAliases(
   t: Monotype,
   env: InternalTypeEnvironment
 ): Monotype {
-  switch (t.type) {
+  switch (t.tag) {
     case "void":
     case "boolean":
     case "number":
@@ -933,7 +933,7 @@ export function inferModule(
 } {
   checkCircularTypes(m.body.filter(isTypeAlias));
   const internalTypes: InternalTypeEnvironment = m.body.reduce((env, s) => {
-    if (s.type === "type-alias") {
+    if (s.tag === "type-alias") {
       return { ...env, [s.name]: s.definition };
     } else {
       return env;
@@ -945,7 +945,7 @@ export function inferModule(
 
   const internalEnv: InternalEnvironment = {
     variables: body.reduce((env, s) => {
-      if (s.type === "definition") {
+      if (s.tag === "definition") {
         return { ...env, [s.variable]: s.value.info.type };
       } else {
         return env;

@@ -144,7 +144,7 @@ function compileFunctionCall(
 ): JS.Expression {
   const compiledArgs = funcall.args.map(arg => compile(arg, env));
   if (
-    funcall.fn.type === "variable-reference" &&
+    funcall.fn.tag === "variable-reference" &&
     isInlinePrimitive(funcall.fn.name)
   ) {
     return compileInlinePrimitive(funcall.fn.name, compiledArgs, "funcall");
@@ -300,7 +300,7 @@ function compileNumber(value: number): JS.Expression {
 }
 
 export function compile(expr: Expression, env: Environment): JS.Expression {
-  switch (expr.type) {
+  switch (expr.tag) {
     case "number":
       return compileNumber(expr.value);
     case "string":
@@ -439,7 +439,7 @@ function compileModule(
 }
 
 export function compileToString(syntax: Syntax, env: Environment): string {
-  const ast = compileModule({ type: "module", body: [syntax] }, false, env);
+  const ast = compileModule({ tag: "module", body: [syntax] }, false, env);
   const code = escodegen.generate(ast, { comment: true });
   debug("jscode:", code);
   return code;

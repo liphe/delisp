@@ -54,7 +54,7 @@ function success(s: Substitution): UnifyResult {
 
 function occurCheck(v: TVar, rootT: Monotype): UnifyOccurCheckError | null {
   function check(t: Monotype): UnifyOccurCheckError | null {
-    if (t.type === "type-variable" && t.name === v.name) {
+    if (t.tag === "type-variable" && t.name === v.name) {
       const err: UnifyOccurCheckError = {
         type: "unify-occur-check-error",
         variable: v,
@@ -62,7 +62,7 @@ function occurCheck(v: TVar, rootT: Monotype): UnifyOccurCheckError | null {
       };
       return err;
     }
-    if (t.type === "application") {
+    if (t.tag === "application") {
       const errors = t.args.map(check).filter(r => r !== null);
       return errors.length > 0 ? errors[0] : null;
     }
@@ -77,7 +77,7 @@ function unifyVariable(v: TVar, t: Monotype, ctx: Substitution): UnifyResult {
   if (v.name in ctx) {
     return unify(ctx[v.name], t, ctx);
   }
-  if (t.type === "type-variable") {
+  if (t.tag === "type-variable") {
     if (v.name === t.name) {
       return success(ctx);
     } else if (t.name in ctx) {
@@ -134,7 +134,7 @@ function rewriteRowForLabel(
   label: string,
   ctx: Substitution
 ): { row: RExtension; substitution: Substitution } {
-  if (row.type === "type-variable") {
+  if (row.tag === "type-variable") {
     // RULE (row-var)
     //
     // If `row` is a variable. We create a fresh row extension
@@ -149,7 +149,7 @@ function rewriteRowForLabel(
       row: theta,
       substitution: { ...ctx, [row.name]: theta }
     };
-  } else if (row.type === "row-extension") {
+  } else if (row.tag === "row-extension") {
     // RULE (row-head)
     //
     // If the `row` is already a row extension starting with the same
@@ -198,7 +198,7 @@ function unifyRow(
     ctx
   );
 
-  if (row1.extends.type === "type-variable" && subs[row1.extends.name]) {
+  if (row1.extends.tag === "type-variable" && subs[row1.extends.name]) {
     return {
       type: "unify-mismatch-error",
       t1: row1,
@@ -226,16 +226,13 @@ export function unify(
   ctx: Substitution
 ): UnifyResult {
   // RULE (uni-const)
-  if (t1.type === "string" && t2.type === "string") {
+  if (t1.tag === "string" && t2.tag === "string") {
     return success(ctx);
-  } else if (t1.type === "number" && t2.type === "number") {
+  } else if (t1.tag === "number" && t2.tag === "number") {
     return success(ctx);
-  } else if (t1.type === "boolean" && t2.type === "boolean") {
+  } else if (t1.tag === "boolean" && t2.tag === "boolean") {
     return success(ctx);
-  } else if (
-    t1.type === "user-defined-type" &&
-    t2.type === "user-defined-type"
-  ) {
+  } else if (t1.tag === "user-defined-type" && t2.tag === "user-defined-type") {
     return t1.name === t2.name
       ? success(ctx)
       : {
@@ -244,9 +241,9 @@ export function unify(
           t2
         };
   } else if (
-    t1.type === "type-variable" &&
+    t1.tag === "type-variable" &&
     t1.userSpecified &&
-    t2.type === "type-variable" &&
+    t2.tag === "type-variable" &&
     t2.userSpecified
   ) {
     return t1 === t2
@@ -257,8 +254,8 @@ export function unify(
           t2
         };
   } else if (
-    t1.type === "application" &&
-    t2.type === "application" &&
+    t1.tag === "application" &&
+    t2.tag === "application" &&
     t1.op === t2.op
   ) {
     // RULE: (uni-app)
@@ -272,16 +269,16 @@ export function unify(
     } else {
       return argResult;
     }
-  } else if (t1.type === "type-variable" && !t1.userSpecified) {
+  } else if (t1.tag === "type-variable" && !t1.userSpecified) {
     // RULE: (uni-varl)
     return unifyVariable(t1, t2, ctx);
-  } else if (t2.type === "type-variable" && !t2.userSpecified) {
+  } else if (t2.tag === "type-variable" && !t2.userSpecified) {
     // RULE: (uni-varr)
     return unifyVariable(t2, t1, ctx);
-  } else if (t1.type === "empty-row" && t2.type === "empty-row") {
+  } else if (t1.tag === "empty-row" && t2.tag === "empty-row") {
     // RULE (uni-const)
     return success(ctx);
-  } else if (t1.type === "row-extension" && t2.type === "row-extension") {
+  } else if (t1.tag === "row-extension" && t2.tag === "row-extension") {
     // RULE: (uni-row)
     return unifyRow(t1, t2, ctx);
   } else {

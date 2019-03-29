@@ -14,29 +14,29 @@ interface Node<I> {
 }
 
 export interface SNumber<I = {}> extends Node<I> {
-  type: "number";
+  tag: "number";
   value: number;
 }
 
 export interface SString<I = {}> extends Node<I> {
-  type: "string";
+  tag: "string";
   value: string;
 }
 
 export interface SVariableReference<I = {}> extends Node<I> {
-  type: "variable-reference";
+  tag: "variable-reference";
   name: SVar;
 }
 
 export interface SConditional<I = {}> extends Node<I> {
-  type: "conditional";
+  tag: "conditional";
   condition: Expression<I>;
   consequent: Expression<I>;
   alternative: Expression<I>;
 }
 
 export interface SFunctionCall<I = {}> extends Node<I> {
-  type: "function-call";
+  tag: "function-call";
   fn: Expression<I>;
   args: Array<Expression<I>>;
 }
@@ -47,13 +47,13 @@ export interface LambdaList {
 }
 
 export interface SFunction<I = {}> extends Node<I> {
-  type: "function";
+  tag: "function";
   lambdaList: LambdaList;
   body: Array<Expression<I>>;
 }
 
 export interface SVectorConstructor<I = {}> extends Node<I> {
-  type: "vector";
+  tag: "vector";
   values: Array<Expression<I>>;
 }
 
@@ -64,13 +64,13 @@ export interface SLetBinding<I = {}> {
 }
 
 export interface SLet<I = {}> extends Node<I> {
-  type: "let-bindings";
+  tag: "let-bindings";
   bindings: Array<SLetBinding<I>>;
   body: Array<Expression<I>>;
 }
 
 export interface SRecord<I = {}> extends Node<I> {
-  type: "record";
+  tag: "record";
   fields: Array<{
     label: string;
     labelLocation: Location;
@@ -80,7 +80,7 @@ export interface SRecord<I = {}> extends Node<I> {
 }
 
 export interface STypeAnnotation<I = {}> extends Node<I> {
-  type: "type-annotation";
+  tag: "type-annotation";
   value: Expression<I>;
   valueType: TypeWithWildcards;
 }
@@ -102,20 +102,20 @@ export type Expression<I = {}> =
 //
 
 export interface SDefinition<I = {}> {
-  type: "definition";
+  tag: "definition";
   variable: SVar;
   value: Expression<I>;
   location: Location;
 }
 
 export interface SExport<I = {}> {
-  type: "export";
+  tag: "export";
   value: SVariableReference<I>;
   location: Location;
 }
 
 export interface STypeAlias<_I = {}> {
-  type: "type-alias";
+  tag: "type-alias";
   name: SVar;
   definition: Monotype;
   location: Location;
@@ -126,9 +126,9 @@ export type Syntax<I = {}> = Expression<I> | Declaration<I>;
 
 export function isDeclaration<I>(syntax: Syntax<I>): syntax is Declaration<I> {
   return (
-    syntax.type === "definition" ||
-    syntax.type === "export" ||
-    syntax.type === "type-alias"
+    syntax.tag === "definition" ||
+    syntax.tag === "export" ||
+    syntax.tag === "type-alias"
   );
 }
 
@@ -137,19 +137,19 @@ export function isExpression<I>(syntax: Syntax<I>): syntax is Expression<I> {
 }
 
 export function isDefinition<I>(syntax: Syntax<I>): syntax is SDefinition<I> {
-  return syntax.type === "definition";
+  return syntax.tag === "definition";
 }
 
 export function isExport<I>(syntax: Syntax<I>): syntax is SExport<I> {
-  return syntax.type === "export";
+  return syntax.tag === "export";
 }
 
 export function isTypeAlias<I>(syntax: Syntax<I>): syntax is STypeAlias<I> {
-  return syntax.type === "type-alias";
+  return syntax.tag === "type-alias";
 }
 
 export interface Module<I = {}> {
-  type: "module";
+  tag: "module";
   body: Array<Syntax<I>>;
 }
 
