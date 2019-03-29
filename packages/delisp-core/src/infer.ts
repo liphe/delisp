@@ -681,8 +681,7 @@ function applySubstitutionToSyntax(
 // can be applied to the temporary types to get the principal type of the expression.
 function solve(
   constraints: TConstraint[],
-  solution: Substitution,
-  typeEnvironment: InternalTypeEnvironment
+  solution: Substitution
 ): Substitution {
   if (constraints.length === 0) {
     return solution;
@@ -730,11 +729,7 @@ function solve(
       switch (result.type) {
         case "unify-success": {
           const s = result.substitution;
-          return solve(
-            rest.map(c => applySubstitutionToConstraint(c, s)),
-            s,
-            typeEnvironment
-          );
+          return solve(rest.map(c => applySubstitutionToConstraint(c, s)), s);
         }
         case "unify-occur-check-error":
           throw new Error(
@@ -788,16 +783,14 @@ ${printType(applySubstitution(constraint.t, solution))}
     case "explicit-instance-constraint": {
       return solve(
         [constEqual(constraint.expr, instantiate(constraint.t)), ...rest],
-        solution,
-        typeEnvironment
+        solution
       );
     }
     case "implicit-instance-constraint": {
       const t = generalize(constraint.t, constraint.monovars);
       return solve(
         [constExplicitInstance(constraint.expr, t), ...rest],
-        solution,
-        typeEnvironment
+        solution
       );
     }
   }
@@ -821,8 +814,7 @@ export function inferType(
 
   const s = solve(
     [...constraints, ...assumptionsToConstraints(assumptions, env)],
-    {},
-    env.types
+    {}
   );
 
   return applySubstitutionToExpr(tmpExpr, s);
@@ -979,7 +971,7 @@ export function inferModule(
     )
   ];
 
-  const solution = solve(constraints, {}, internalEnv.types);
+  const solution = solve(constraints, {});
 
   return {
     typedModule: {
