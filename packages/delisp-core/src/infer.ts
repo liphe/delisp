@@ -433,10 +433,7 @@ function infer(
 
     case "type-annotation": {
       const inferred = infer(expr.value, monovars, internalTypes);
-      const t = expandTypeAliases(
-        instantiate(expr.valueType, true),
-        internalTypes
-      );
+      const t = expandTypeAliases(expr.valueType.instantiate(), internalTypes);
 
       return {
         result: {

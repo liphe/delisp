@@ -53,7 +53,7 @@ eee
     );
   });
 
-  it.skip("should retain partial type annotations", () => {
+  it("should retain partial type annotations", () => {
     prettySimilar(
       `(the (-> string number _) (lambda (name age) {:name name :age age}))`
     );
