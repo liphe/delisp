@@ -53,7 +53,7 @@ export function dynamicDefinition(container: string): DefinitionBackend {
             computed: true,
             object: {
               type: "Identifier",
-              name: "env"
+              name: container
             },
             property: {
               type: "Literal",
