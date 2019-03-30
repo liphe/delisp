@@ -209,9 +209,8 @@ function infer(
     }
 
     case "record": {
-      const inferred = expr.fields.map(({ label, labelLocation, value }) => ({
+      const inferred = expr.fields.map(({ label, value }) => ({
         label,
-        labelLocation,
         ...infer(value, monovars, internalTypes)
       }));
 
@@ -222,15 +221,17 @@ function infer(
       return {
         result: {
           ...expr,
-          fields: inferred.map(({ label, labelLocation, result: value }) => ({
+          fields: inferred.map(({ label, result: value }) => ({
             label,
-            labelLocation,
             value
           })),
           extends: tailInferred && tailInferred.result,
           info: {
             type: tRecord(
-              inferred.map(i => ({ label: i.label, type: i.result.info.type })),
+              inferred.map(i => ({
+                label: i.label.name,
+                type: i.result.info.type
+              })),
               tailInferred ? tailRowType : emptyRow
             )
           }
@@ -248,7 +249,7 @@ function infer(
                   tailInferred.result,
                   tRecord(
                     inferred.map(i => ({
-                      label: i.label,
+                      label: i.label.name,
                       type: generateUniqueTVar()
                     })),
                     tailRowType

@@ -358,8 +358,7 @@ function convertMap(map: ASExprMap): Expression {
   return {
     tag: "record",
     fields: fields.map(f => ({
-      label: f.label.name,
-      labelLocation: f.label.location,
+      label: convertSymbol(f.label),
       value: convertExpr(f.value)
     })),
     extends: tail && convertExpr(tail),
