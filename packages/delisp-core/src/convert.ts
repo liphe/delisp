@@ -38,7 +38,10 @@ function defineToplevel(name: string, fn: (expr: ASExprList) => Declaration) {
   toplevelConversions.set(name, fn);
 }
 
-function parseBody(anchor: ASExpr, exprs: ASExpr[]): { expr: Expression }[] {
+function parseBody(
+  anchor: ASExpr,
+  exprs: ASExpr[]
+): Array<{ expr: Expression }> {
   if (exprs.length === 0) {
     throw new Error(
       printHighlightedExpr(`body can't be empty`, anchor.location, true)
