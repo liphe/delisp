@@ -383,7 +383,7 @@ function infer(
       //
 
       // Variables showing up in the bindings
-      const vars = new Set(expr.bindings.map(b => b.var));
+      const vars = new Set(expr.bindings.map(b => b.variable.name));
       const toBeBound = (vname: string) => vars.has(vname);
 
       const bindingsInfo = expr.bindings.map(b => {
@@ -418,7 +418,9 @@ function infer(
             .map(v => {
               // We just filter the assumptions to the variables
               // that are bound, so we know it must is defined.
-              const bInfo = bindingsInfo.find(bi => bi.binding.var === v.name)!;
+              const bInfo = bindingsInfo.find(
+                bi => bi.binding.variable.name === v.name
+              )!;
               return constImplicitInstance(
                 v,
                 monovars,

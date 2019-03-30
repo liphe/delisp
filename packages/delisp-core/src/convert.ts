@@ -154,9 +154,8 @@ function parseLetBindings(bindings: ASExpr): SLetBinding[] {
   }
 
   return bindings.fields.map(field => ({
-    var: field.label.name,
-    value: convertExpr(field.value),
-    location: field.label.location
+    variable: parseIdentifier(field.label),
+    value: convertExpr(field.value)
   }));
 }
 
