@@ -51,15 +51,6 @@ function parseBody(anchor: ASExpr, exprs: ASExpr[]): Expression[] {
 // The format of lambda lists are (a b c ... &rest z)
 //
 
-function parseIdentifier(s: ASExprSymbol): SIdentifier {
-  return {
-    tag: "identifier",
-    name: s.name,
-    location: s.location,
-    info: {}
-  };
-}
-
 function parseLambdaList(ll: ASExpr): LambdaList {
   if (ll.tag !== "list") {
     throw new Error(
@@ -94,7 +85,7 @@ function parseLambdaList(ll: ASExpr): LambdaList {
   });
 
   return {
-    positionalArgs: symbols.map(parseIdentifier),
+    positionalArgs: symbols.map(convertSymbol),
     location: ll.location
   };
 }
@@ -154,7 +145,7 @@ function parseLetBindings(bindings: ASExpr): SLetBinding[] {
   }
 
   return bindings.fields.map(field => ({
-    variable: parseIdentifier(field.label),
+    variable: convertSymbol(field.label),
     value: convertExpr(field.value)
   }));
 }
@@ -252,7 +243,7 @@ defineToplevel("define", expr => {
 
   return {
     tag: "definition",
-    variable: parseIdentifier(variable),
+    variable: convertSymbol(variable),
     value: convertExpr(value),
     location: expr.location
   };
@@ -320,7 +311,7 @@ defineToplevel("type", expr => {
 
   return {
     tag: "type-alias",
-    alias: parseIdentifier(name),
+    alias: convertSymbol(name),
     definition: definitionType,
     location: expr.location
   };
