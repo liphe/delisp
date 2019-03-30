@@ -42,7 +42,7 @@ export interface SFunctionCall<I = {}> extends Node<I> {
 }
 
 export interface LambdaList {
-  positionalArgs: Array<{ variable: SVar; location: Location }>;
+  positionalArgs: SIdentifier[];
   location: Location;
 }
 
