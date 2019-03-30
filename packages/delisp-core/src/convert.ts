@@ -38,13 +38,13 @@ function defineToplevel(name: string, fn: (expr: ASExprList) => Declaration) {
   toplevelConversions.set(name, fn);
 }
 
-function parseBody(anchor: ASExpr, exprs: ASExpr[]): Expression[] {
+function parseBody(anchor: ASExpr, exprs: ASExpr[]): { expr: Expression }[] {
   if (exprs.length === 0) {
     throw new Error(
       printHighlightedExpr(`body can't be empty`, anchor.location, true)
     );
   }
-  return exprs.map(convertExpr);
+  return exprs.map(e => ({ expr: convertExpr(e) }));
 }
 
 //
@@ -146,7 +146,7 @@ function parseLetBindings(bindings: ASExpr): SLetBinding[] {
 
   return bindings.fields.map(field => ({
     variable: convertSymbol(field.label),
-    value: convertExpr(field.value)
+    value: { expr: convertExpr(field.value) }
   }));
 }
 

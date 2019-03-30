@@ -121,8 +121,8 @@ function compileLambda(
   const implicitReturn = fn.body.length === 1;
 
   const body: JS.Expression | JS.Statement = implicitReturn
-    ? compile(fn.body[0], newEnv)
-    : compileBody(fn.body, newEnv);
+    ? compile(fn.body[0].expr, newEnv)
+    : compileBody(fn.body.map(e => e.expr), newEnv);
 
   return {
     type: "ArrowFunctionExpression",
@@ -223,9 +223,9 @@ function compileLetBindings(expr: SLet, env: Environment): JS.Expression {
           name: lookupBinding(b.variable.name, newenv).jsname
         })
       ),
-      body: compileBody(expr.body, newenv)
+      body: compileBody(expr.body.map(e => e.expr), newenv)
     },
-    arguments: expr.bindings.map(b => compile(b.value, env))
+    arguments: expr.bindings.map(b => compile(b.value.expr, env))
   };
 }
 

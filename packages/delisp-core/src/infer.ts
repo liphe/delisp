@@ -313,7 +313,7 @@ function infer(
       const argtypes = fnargs.map(_ => generateUniqueTVar());
 
       const { result: typedBody, constraints, assumptions } = inferMany(
-        expr.body,
+        expr.body.map(e => e.expr),
         [...monovars, ...argtypes.map(v => v.name)],
         internalTypes
       );
@@ -332,7 +332,7 @@ function infer(
       return {
         result: {
           ...expr,
-          body: typedBody,
+          body: typedBody.map(e => ({ expr: e })),
           info: {
             type: tFn(argtypes, last(typedBody)!.info.type)
           }
@@ -394,18 +394,22 @@ function infer(
       const bindingsInfo = expr.bindings.map(b => {
         return {
           binding: b,
-          inference: infer(b.value, monovars, internalTypes)
+          inference: infer(b.value.expr, monovars, internalTypes)
         };
       });
-      const bodyInference = inferMany(expr.body, monovars, internalTypes);
+      const bodyInference = inferMany(
+        expr.body.map(e => e.expr),
+        monovars,
+        internalTypes
+      );
       return {
         result: {
           ...expr,
           bindings: bindingsInfo.map(b => ({
             ...b.binding,
-            value: b.inference.result
+            value: { expr: b.inference.result }
           })),
-          body: bodyInference.result,
+          body: bodyInference.result.map(e => ({ expr: e })),
           info: {
             type: last(bodyInference.result)!.info.type
           }

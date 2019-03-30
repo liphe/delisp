@@ -97,7 +97,7 @@ function print(sexpr: Syntax): Doc {
         text("lambda"),
         space,
         group(list(align(...argNames.map(printIdentifier)))),
-        indent(printBody(sexpr.body))
+        indent(printBody(sexpr.body.map(e => e.expr)))
       );
       return singleBody ? group(doc) : doc;
 
@@ -131,11 +131,11 @@ function print(sexpr: Syntax): Doc {
         map(
           align(
             ...sexpr.bindings.map(b =>
-              concat(text(b.variable.name), space, print(b.value))
+              concat(text(b.variable.name), space, print(b.value.expr))
             )
           )
         ),
-        indent(printBody(sexpr.body))
+        indent(printBody(sexpr.body.map(e => e.expr)))
       );
 
     case "type-annotation":

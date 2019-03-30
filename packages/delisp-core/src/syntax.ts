@@ -48,7 +48,7 @@ export interface LambdaList {
 export interface SFunction<I = {}> extends Node<I> {
   tag: "function";
   lambdaList: LambdaList;
-  body: Array<Expression<I>>;
+  body: Array<{ expr: Expression<I> }>;
 }
 
 export interface SVectorConstructor<I = {}> extends Node<I> {
@@ -58,13 +58,13 @@ export interface SVectorConstructor<I = {}> extends Node<I> {
 
 export interface SLetBinding<I = {}> {
   variable: SIdentifier;
-  value: Expression<I>;
+  value: { expr: Expression<I> };
 }
 
 export interface SLet<I = {}> extends Node<I> {
   tag: "let-bindings";
   bindings: Array<SLetBinding<I>>;
-  body: Array<Expression<I>>;
+  body: Array<{ expr: Expression<I> }>;
 }
 
 export interface SRecord<I = {}> extends Node<I> {
