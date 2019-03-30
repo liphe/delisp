@@ -8,7 +8,7 @@ export function transformRecurExpr<I>(
   switch (s.tag) {
     case "string":
     case "number":
-    case "variable-reference":
+    case "identifier":
       return fn(s);
     case "vector":
       return fn({
@@ -62,7 +62,7 @@ function expressionChildren<I>(e: Expression<I>): Array<Expression<I>> {
   switch (e.tag) {
     case "string":
     case "number":
-    case "variable-reference":
+    case "identifier":
       return [];
     case "conditional":
       return [e.condition, e.consequent, e.alternative];

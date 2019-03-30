@@ -8,7 +8,7 @@ describe("ReadModule", () => {
         {
           tag: "function-call",
           fn: {
-            tag: "variable-reference",
+            tag: "identifier",
             name: "sum"
           },
           args: [
@@ -20,7 +20,7 @@ describe("ReadModule", () => {
         {
           tag: "function-call",
           fn: {
-            tag: "variable-reference",
+            tag: "identifier",
             name: "+"
           },
           args: [{ tag: "number", value: 4 }, { tag: "number", value: 5 }]
@@ -28,7 +28,7 @@ describe("ReadModule", () => {
         {
           tag: "function-call",
           fn: {
-            tag: "variable-reference",
+            tag: "identifier",
             name: "inc"
           },
           args: [{ tag: "number", value: 6 }]

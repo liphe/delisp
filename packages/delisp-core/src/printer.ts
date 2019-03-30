@@ -24,7 +24,7 @@ function printString(str: string): Doc {
   return text(`"${escaped}"`);
 }
 
-function printVariable(name: string): Doc {
+function printIdentifier(name: string): Doc {
   return text(name);
 }
 
@@ -68,8 +68,8 @@ function print(sexpr: Syntax): Doc {
         )
       );
     }
-    case "variable-reference":
-      return printVariable(sexpr.name);
+    case "identifier":
+      return printIdentifier(sexpr.name);
 
     case "conditional":
       return group(
@@ -96,7 +96,7 @@ function print(sexpr: Syntax): Doc {
       const doc = list(
         text("lambda"),
         space,
-        group(list(align(...argNames.map(printVariable)))),
+        group(list(align(...argNames.map(printIdentifier)))),
         indent(printBody(sexpr.body))
       );
       return singleBody ? group(doc) : doc;
@@ -116,7 +116,7 @@ function print(sexpr: Syntax): Doc {
         list(
           text("define"),
           space,
-          printVariable(sexpr.variable),
+          printIdentifier(sexpr.variable),
           indent(concat(line, print(sexpr.value)))
         )
       );

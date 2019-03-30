@@ -23,8 +23,8 @@ export interface SString<I = {}> extends Node<I> {
   value: string;
 }
 
-export interface SVariableReference<I = {}> extends Node<I> {
-  tag: "variable-reference";
+export interface SIdentifier<I = {}> extends Node<I> {
+  tag: "identifier";
   name: SVar;
 }
 
@@ -88,7 +88,7 @@ export interface STypeAnnotation<I = {}> extends Node<I> {
 export type Expression<I = {}> =
   | SNumber<I>
   | SString<I>
-  | SVariableReference<I>
+  | SIdentifier<I>
   | SConditional<I>
   | SFunctionCall<I>
   | SFunction<I>
@@ -110,7 +110,7 @@ export interface SDefinition<I = {}> {
 
 export interface SExport<I = {}> {
   tag: "export";
-  value: SVariableReference<I>;
+  value: SIdentifier<I>;
   location: Location;
 }
 

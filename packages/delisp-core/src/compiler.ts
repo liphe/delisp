@@ -10,9 +10,9 @@ import {
   SExport,
   SFunction,
   SFunctionCall,
+  SIdentifier,
   SLet,
   SRecord,
-  SVariableReference,
   SVectorConstructor,
   Syntax
 } from "./syntax";
@@ -143,10 +143,7 @@ function compileFunctionCall(
   env: Environment
 ): JS.Expression {
   const compiledArgs = funcall.args.map(arg => compile(arg, env));
-  if (
-    funcall.fn.tag === "variable-reference" &&
-    isInlinePrimitive(funcall.fn.name)
-  ) {
+  if (funcall.fn.tag === "identifier" && isInlinePrimitive(funcall.fn.name)) {
     return compileInlinePrimitive(funcall.fn.name, compiledArgs, "funcall");
   } else {
     return {
@@ -157,10 +154,7 @@ function compileFunctionCall(
   }
 }
 
-function compileVariable(
-  ref: SVariableReference,
-  env: Environment
-): JS.Expression {
+function compileIdentifier(ref: SIdentifier, env: Environment): JS.Expression {
   const binding = lookupBinding(ref.name, env);
 
   if (!binding) {
@@ -309,8 +303,8 @@ export function compile(expr: Expression, env: Environment): JS.Expression {
       return compileVector(expr, env);
     case "record":
       return compileRecord(expr, env);
-    case "variable-reference":
-      return compileVariable(expr, env);
+    case "identifier":
+      return compileIdentifier(expr, env);
     case "conditional":
       return compileConditional(expr, env);
     case "function":
