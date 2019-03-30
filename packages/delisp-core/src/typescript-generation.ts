@@ -67,14 +67,21 @@ const generateTApps: { [name: string]: TAppHandler } = {
 
 export function generateTSMonotype(t: Type, mapping: TSMapping): string {
   switch (t.tag) {
-    case "void":
-      return "void";
-    case "boolean":
-      return "boolean";
-    case "number":
-      return "number";
-    case "string":
-      return "string";
+    case "constant": {
+      switch (t.name) {
+        case "void":
+          return "void";
+        case "boolean":
+          return "boolean";
+        case "number":
+          return "number";
+        case "string":
+          return "string";
+        default:
+          throw new Error(`Unknown constant type`);
+      }
+    }
+
     case "application": {
       const handler = generateTApps[t.op];
       if (!handler) {

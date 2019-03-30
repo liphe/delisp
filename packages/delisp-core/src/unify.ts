@@ -218,12 +218,14 @@ function unifyRow(
  */
 export function unify(t1: Type, t2: Type, ctx: Substitution): UnifyResult {
   // RULE (uni-const)
-  if (t1.tag === "string" && t2.tag === "string") {
-    return success(ctx);
-  } else if (t1.tag === "number" && t2.tag === "number") {
-    return success(ctx);
-  } else if (t1.tag === "boolean" && t2.tag === "boolean") {
-    return success(ctx);
+  if (t1.tag === "constant" && t2.tag === "constant") {
+    return t1.name === t2.name
+      ? success(ctx)
+      : {
+          tag: "unify-mismatch-error",
+          t1,
+          t2
+        };
   } else if (t1.tag === "user-defined-type" && t2.tag === "user-defined-type") {
     return t1.name === t2.name
       ? success(ctx)

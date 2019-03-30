@@ -2,19 +2,9 @@
 // Types
 //
 
-interface TVoid {
-  tag: "void";
-}
-
-interface TBoolean {
-  tag: "boolean";
-}
-interface TNumber {
-  tag: "number";
-}
-
-interface TString {
-  tag: "string";
+interface TConstant {
+  tag: "constant";
+  name: string;
 }
 
 export interface TApplication {
@@ -48,15 +38,7 @@ export interface RExtension {
 
 export type Row = REmpty | RExtension;
 
-export type Type =
-  | TBoolean
-  | TNumber
-  | TString
-  | TApplication
-  | TVar
-  | Row
-  | TVoid
-  | TUserDefined;
+export type Type = TConstant | TApplication | TVar | Row | TUserDefined;
 
 export interface TypeSchema {
   tag: "type";
@@ -68,21 +50,14 @@ export interface TypeSchema {
 // Constructor helpers
 //
 
-export const tVoid: TVoid = {
-  tag: "void"
-};
+function tConstant(name: string): TConstant {
+  return { tag: "constant", name };
+}
 
-export const tBoolean: TBoolean = {
-  tag: "boolean"
-};
-
-export const tNumber: TNumber = {
-  tag: "number"
-};
-
-export const tString: TString = {
-  tag: "string"
-};
+export const tVoid = tConstant("void");
+export const tBoolean = tConstant("boolean");
+export const tNumber = tConstant("number");
+export const tString = tConstant("string");
 
 export function tVar(name: string, userSpecified = false): TVar {
   return {

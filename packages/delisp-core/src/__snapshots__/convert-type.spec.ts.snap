@@ -54,13 +54,15 @@ Object {
         },
         "label": ":y",
         "labelType": Object {
-          "tag": "number",
+          "name": "number",
+          "tag": "constant",
         },
         "tag": "row-extension",
       },
       "label": ":x",
       "labelType": Object {
-        "tag": "number",
+        "name": "number",
+        "tag": "constant",
       },
       "tag": "row-extension",
     },

@@ -900,10 +900,8 @@ function checkCircularTypes(allTypeAliases: STypeAlias[]) {
 /** Expand known type aliases from a monotype. */
 function expandTypeAliases(t: Type, env: InternalTypeEnvironment): Type {
   switch (t.tag) {
-    case "void":
-    case "boolean":
-    case "number":
-    case "string":
+    case "constant":
+      return t;
     case "type-variable":
     case "empty-row":
       return t;

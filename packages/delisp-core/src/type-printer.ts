@@ -51,16 +51,10 @@ function printApplicationType(type: TApplication): string {
 
 function _printType(type: Type): string {
   switch (type.tag) {
+    case "constant":
+      return type.name;
     case "application":
       return printApplicationType(type);
-    case "void":
-      return "void";
-    case "boolean":
-      return "boolean";
-    case "number":
-      return "number";
-    case "string":
-      return "string";
     case "type-variable":
       return type.name;
     case "user-defined-type":

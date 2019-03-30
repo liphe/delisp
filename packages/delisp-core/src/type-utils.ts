@@ -16,10 +16,7 @@ import { flatMap, unique } from "./utils";
 
 export function transformRecurType(t: Type, fn: (t1: Type) => Type): Type {
   switch (t.tag) {
-    case "void":
-    case "boolean":
-    case "number":
-    case "string":
+    case "constant":
     case "type-variable":
     case "user-defined-type":
     case "empty-row":
@@ -57,10 +54,7 @@ export function applySubstitution(t: Type, env: Substitution): Type {
 // Return user defined types
 export function listUserDefinedReferences(t: Type): TUserDefined[] {
   switch (t.tag) {
-    case "void":
-    case "boolean":
-    case "string":
-    case "number":
+    case "constant":
     case "empty-row":
     case "type-variable":
       return [];
@@ -79,10 +73,7 @@ export function listUserDefinedReferences(t: Type): TUserDefined[] {
 // Return the list of type variables in the order they show up
 export function listTypeVariables(t: Type): string[] {
   switch (t.tag) {
-    case "void":
-    case "boolean":
-    case "string":
-    case "number":
+    case "constant":
     case "user-defined-type":
     case "empty-row":
       return [];
