@@ -140,7 +140,7 @@ export function generateTSDeclaration(
       return `declare const ${varname}: ${typ};`;
     }
     case "type-alias": {
-      const typename = identifierToJS(s.name);
+      const typename = identifierToJS(s.alias.name);
       const typ = generateTSType(generalize(s.definition, []));
       return `type ${typename} = ${typ};`;
     }

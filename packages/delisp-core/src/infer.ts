@@ -866,7 +866,7 @@ function checkCircularTypes(allTypeAliases: STypeAlias[]) {
     if (index < 0) {
       listTypeConstants(typeAlias.definition)
         .map(ud => {
-          return allTypeAliases.find(x => x.name === ud.name);
+          return allTypeAliases.find(x => x.alias.name === ud.name);
         })
         .forEach(dep => {
           if (!dep) {
@@ -889,7 +889,7 @@ function checkCircularTypes(allTypeAliases: STypeAlias[]) {
         throw new Error(
           printHighlightedExpr(
             `Cicular dependency in type aliases found
-  ${cycle.map(s => s.name).join(" -> ")}
+  ${cycle.map(s => s.alias.name).join(" -> ")}
 `,
             typeAlias.location
           )
@@ -928,7 +928,7 @@ export function inferModule(
   checkCircularTypes(m.body.filter(isTypeAlias));
   const internalTypes: InternalTypeEnvironment = m.body.reduce((env, s) => {
     if (s.tag === "type-alias") {
-      return { ...env, [s.name]: s.definition };
+      return { ...env, [s.alias.name]: s.definition };
     } else {
       return env;
     }

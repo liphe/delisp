@@ -115,7 +115,7 @@ export interface SExport<I = {}> {
 
 export interface STypeAlias<_I = {}> {
   tag: "type-alias";
-  name: SVar;
+  alias: SIdentifier;
   definition: Type;
   location: Location;
 }
