@@ -7,10 +7,10 @@ export interface TConstant {
   name: string;
 }
 
-export interface TApplication {
+export interface TApplication<T = TypeNode> {
   tag: "application";
-  op: { type: Type };
-  args: Array<{ type: Type }>;
+  op: T;
+  args: T[];
 }
 
 export interface TVar {
@@ -23,17 +23,21 @@ export interface REmpty {
   tag: "empty-row";
 }
 
-export interface RExtension {
+export interface RExtension<T = TypeNode> {
   tag: "row-extension";
   label: string;
-  labelType: { type: Type };
+  labelType: T;
   // TODO: Implement kind system!
-  extends: { type: Type };
+  extends: T;
 }
 
-export type Row = REmpty | RExtension;
+export type Row<T = TypeNode> = REmpty | RExtension<T>;
 
-export type Type = TConstant | TApplication | TVar | Row;
+export type Type<T = TypeNode> = TConstant | TApplication<T> | TVar | Row<T>;
+
+interface TypeNode {
+  type: Type<TypeNode>;
+}
 
 export interface TypeSchema {
   tag: "type";
