@@ -1,5 +1,6 @@
 import { Module, SDefinition } from "./syntax";
 import { traverseModule } from "./syntax-utils";
+import { printHighlightedExpr } from "./error-report";
 
 function noUnusedVars(m: Module): void {
   const variables: Map<string, SDefinition> = new Map();
@@ -15,9 +16,10 @@ function noUnusedVars(m: Module): void {
 
   variables.forEach((def, name) => {
     console.warn(
-      `[file:${
-        def.location.start
-      }] WARNING "${name}" is defined but never used (no-unused-vars)`
+      printHighlightedExpr(
+        `"${name}" is defined but never used (no-unused-vars)`,
+        def.location
+      )
     );
   });
 }
