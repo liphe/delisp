@@ -153,7 +153,7 @@ function print(sexpr: Syntax): Doc {
         list(
           text("type"),
           space,
-          text(sexpr.name),
+          text(sexpr.alias.name),
           indent(concat(line, text(printType(sexpr.definition, false))))
         )
       );

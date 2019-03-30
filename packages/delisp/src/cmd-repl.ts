@@ -119,7 +119,10 @@ const delispEval = (syntax: Syntax) => {
     previousModule = addToModule(previousModule, syntax);
     m = previousModule;
   } else if (syntax.tag === "type-alias") {
-    previousModule = removeModuleTypeDefinition(previousModule, syntax.name);
+    previousModule = removeModuleTypeDefinition(
+      previousModule,
+      syntax.alias.name
+    );
     previousModule = addToModule(previousModule, syntax);
     m = previousModule;
   } else if (isExpression(syntax)) {

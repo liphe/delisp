@@ -36,7 +36,7 @@ export function removeModuleTypeDefinition(m: Module, name: string): Module {
   return {
     tag: "module",
     body: m.body.filter(d => {
-      return d.tag === "type-alias" ? d.name !== name : true;
+      return d.tag === "type-alias" ? d.alias.name !== name : true;
     })
   };
 }

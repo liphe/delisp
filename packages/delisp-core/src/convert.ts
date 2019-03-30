@@ -320,7 +320,7 @@ defineToplevel("type", expr => {
 
   return {
     tag: "type-alias",
-    name: name.name,
+    alias: parseIdentifier(name),
     definition: definitionType,
     location: expr.location
   };
