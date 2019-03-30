@@ -344,15 +344,19 @@ function infer(
     }
 
     case "function-call": {
-      const ifn = infer(expr.fn, monovars, internalTypes);
-      const iargs = inferMany(expr.args, monovars, internalTypes);
+      const ifn = infer(expr.fn.expr, monovars, internalTypes);
+      const iargs = inferMany(
+        expr.args.map(a => a.expr),
+        monovars,
+        internalTypes
+      );
       const tTo = generateUniqueTVar();
       const tfn: Type = tFn(iargs.result.map(a => a.info.type), tTo);
       return {
         result: {
           ...expr,
-          fn: ifn.result,
-          args: iargs.result,
+          fn: { expr: ifn.result },
+          args: iargs.result.map(a => ({ expr: a })),
           info: { type: tTo }
         },
 

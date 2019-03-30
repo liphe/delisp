@@ -36,8 +36,8 @@ export interface SConditional<I = {}> extends Node<I> {
 
 export interface SFunctionCall<I = {}> extends Node<I> {
   tag: "function-call";
-  fn: Expression<I>;
-  args: Array<Expression<I>>;
+  fn: { expr: Expression<I> };
+  args: Array<{ expr: Expression<I> }>;
 }
 
 export interface LambdaList {

@@ -8,30 +8,39 @@ describe("ReadModule", () => {
         {
           tag: "function-call",
           fn: {
-            tag: "identifier",
-            name: "sum"
+            expr: {
+              tag: "identifier",
+              name: "sum"
+            }
           },
           args: [
-            { tag: "number", value: 1 },
-            { tag: "number", value: 2 },
-            { tag: "number", value: 3 }
+            { expr: { tag: "number", value: 1 } },
+            { expr: { tag: "number", value: 2 } },
+            { expr: { tag: "number", value: 3 } }
           ]
         },
         {
           tag: "function-call",
           fn: {
-            tag: "identifier",
-            name: "+"
+            expr: {
+              tag: "identifier",
+              name: "+"
+            }
           },
-          args: [{ tag: "number", value: 4 }, { tag: "number", value: 5 }]
+          args: [
+            { expr: { tag: "number", value: 4 } },
+            { expr: { tag: "number", value: 5 } }
+          ]
         },
         {
           tag: "function-call",
           fn: {
-            tag: "identifier",
-            name: "inc"
+            expr: {
+              tag: "identifier",
+              name: "inc"
+            }
           },
-          args: [{ tag: "number", value: 6 }]
+          args: [{ expr: { tag: "number", value: 6 } }]
         }
       ]
     });

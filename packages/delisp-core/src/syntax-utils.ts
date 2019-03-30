@@ -26,8 +26,8 @@ export function transformRecurExpr<I>(
     case "function-call":
       return fn({
         ...s,
-        fn: transformRecurExpr(s.fn, fn),
-        args: s.args.map(a => transformRecurExpr(a, fn))
+        fn: { expr: transformRecurExpr(s.fn.expr, fn) },
+        args: s.args.map(a => ({ expr: transformRecurExpr(a.expr, fn) }))
       });
     case "conditional":
       return fn({
@@ -67,7 +67,7 @@ function expressionChildren<I>(e: Expression<I>): Array<Expression<I>> {
     case "conditional":
       return [e.condition.expr, e.consequent.expr, e.alternative.expr];
     case "function-call":
-      return [e.fn, ...e.args];
+      return [e.fn.expr, ...e.args.map(a => a.expr)];
     case "function":
       return e.body;
     case "vector":

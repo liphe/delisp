@@ -335,8 +335,8 @@ function convertList(list: ASExprList): Expression {
     const [fn, ...args] = list.elements;
     return {
       tag: "function-call",
-      fn: convertExpr(fn),
-      args: args.map(convertExpr),
+      fn: { expr: convertExpr(fn) },
+      args: args.map(a => ({ expr: convertExpr(a) })),
       location: list.location,
       info: {}
     };

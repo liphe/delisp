@@ -102,8 +102,8 @@ function print(sexpr: Syntax): Doc {
       return singleBody ? group(doc) : doc;
 
     case "function-call": {
-      const fn = print(sexpr.fn);
-      const args = sexpr.args.map(print);
+      const fn = print(sexpr.fn.expr);
+      const args = sexpr.args.map(a => print(a.expr));
       if (args.length === 0) {
         return group(list(fn));
       } else {

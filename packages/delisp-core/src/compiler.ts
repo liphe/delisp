@@ -142,13 +142,20 @@ function compileFunctionCall(
   funcall: SFunctionCall,
   env: Environment
 ): JS.Expression {
-  const compiledArgs = funcall.args.map(arg => compile(arg, env));
-  if (funcall.fn.tag === "identifier" && isInlinePrimitive(funcall.fn.name)) {
-    return compileInlinePrimitive(funcall.fn.name, compiledArgs, "funcall");
+  const compiledArgs = funcall.args.map(arg => compile(arg.expr, env));
+  if (
+    funcall.fn.expr.tag === "identifier" &&
+    isInlinePrimitive(funcall.fn.expr.name)
+  ) {
+    return compileInlinePrimitive(
+      funcall.fn.expr.name,
+      compiledArgs,
+      "funcall"
+    );
   } else {
     return {
       type: "CallExpression",
-      callee: compile(funcall.fn, env),
+      callee: compile(funcall.fn.expr, env),
       arguments: compiledArgs
     };
   }
