@@ -1,5 +1,6 @@
 import {
   tFn,
+  tApp,
   tNumber,
   tRecord,
   tUserDefined,
@@ -28,6 +29,12 @@ describe("Unification", () => {
       const t2 = tFn([], tNumber);
       const result = unify(t1, t2, {});
       expect(result.tag).toBe("unify-mismatch-error");
+    });
+    it("should unify the operator", () => {
+      const t1 = tVar("r");
+      const t2 = tVar("r");
+      const result = unify(tApp(t1), tApp(t2), {});
+      expect(result.tag).toBe("unify-success");
     });
   });
 

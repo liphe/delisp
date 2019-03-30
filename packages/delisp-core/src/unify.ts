@@ -15,7 +15,6 @@
 import { generateUniqueTVar } from "./type-generate";
 import { Substitution } from "./type-utils";
 import { Type, RExtension, tRowExtension, TVar } from "./types";
-import { last } from "./utils";
 
 interface UnifySuccess {
   tag: "unify-success";
@@ -239,22 +238,9 @@ export function unify(t1: Type, t2: Type, ctx: Substitution): UnifyResult {
           t1,
           t2
         };
-  } else if (
-    t1.tag === "application" &&
-    t2.tag === "application" &&
-    t1.op === t2.op
-  ) {
+  } else if (t1.tag === "application" && t2.tag === "application") {
     // RULE: (uni-app)
-    const argResult = unifyArray(
-      t1.args.slice(0, t1.args.length - 1),
-      t2.args.slice(0, t2.args.length - 1),
-      ctx
-    );
-    if (argResult.tag === "unify-success") {
-      return unify(last(t1.args)!, last(t2.args)!, argResult.substitution);
-    } else {
-      return argResult;
-    }
+    return unifyArray([t1.op, ...t1.args], [t2.op, ...t2.args], ctx);
   } else if (t1.tag === "type-variable" && !t1.userSpecified) {
     // RULE: (uni-varl)
     return unifyVariable(t1, t2, ctx);
