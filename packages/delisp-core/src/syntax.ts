@@ -58,9 +58,8 @@ export interface SVectorConstructor<I = {}> extends Node<I> {
 }
 
 export interface SLetBinding<I = {}> {
-  var: SVar;
+  variable: SIdentifier;
   value: Expression<I>;
-  location: Location;
 }
 
 export interface SLet<I = {}> extends Node<I> {

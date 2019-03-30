@@ -131,7 +131,7 @@ function print(sexpr: Syntax): Doc {
         map(
           align(
             ...sexpr.bindings.map(b =>
-              concat(text(b.var), space, print(b.value))
+              concat(text(b.variable.name), space, print(b.value))
             )
           )
         ),

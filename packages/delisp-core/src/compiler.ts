@@ -202,7 +202,7 @@ function compileConditional(
 
 function compileLetBindings(expr: SLet, env: Environment): JS.Expression {
   const newenv = expr.bindings.reduce(
-    (e, binding) => addBinding(binding.var, e),
+    (e, binding) => addBinding(binding.variable.name, e),
     env
   );
 
@@ -213,7 +213,7 @@ function compileLetBindings(expr: SLet, env: Environment): JS.Expression {
       params: expr.bindings.map(
         (b): JS.Pattern => ({
           type: "Identifier",
-          name: lookupBinding(b.var, newenv).jsname
+          name: lookupBinding(b.variable.name, newenv).jsname
         })
       ),
       body: compileBody(expr.body, newenv)
