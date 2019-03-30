@@ -27,7 +27,7 @@ export function removeModuleDefinition(m: Module, name: string): Module {
   return {
     tag: "module",
     body: m.body.filter(d => {
-      return d.tag === "definition" ? d.variable !== name : true;
+      return d.tag === "definition" ? d.variable.name !== name : true;
     })
   };
 }

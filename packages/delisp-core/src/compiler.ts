@@ -134,7 +134,7 @@ function compileLambda(
 
 function compileDefinition(def: SDefinition, env: Environment): JS.Statement {
   const value = compile(def.value, env);
-  const name = lookupBinding(def.variable, env).jsname;
+  const name = lookupBinding(def.variable.name, env).jsname;
   return env.defs.define(name, value);
 }
 
@@ -388,7 +388,7 @@ export function moduleEnvironment(
 ): Environment {
   const moduleDefinitions = m.body
     .filter(isDefinition)
-    .map(decl => decl.variable);
+    .map(decl => decl.variable.name);
   const moduleBindings = moduleDefinitions.reduce(
     (d, decl) => ({
       ...d,

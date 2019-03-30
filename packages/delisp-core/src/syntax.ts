@@ -102,7 +102,7 @@ export type Expression<I = {}> =
 
 export interface SDefinition<I = {}> {
   tag: "definition";
-  variable: SVar;
+  variable: SIdentifier;
   value: Expression<I>;
   location: Location;
 }
