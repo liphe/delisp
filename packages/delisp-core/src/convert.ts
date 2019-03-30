@@ -10,8 +10,8 @@ import {
   Declaration,
   Expression,
   LambdaList,
+  SIdentifier,
   SLetBinding,
-  SVariableReference,
   Syntax
 } from "./syntax";
 import { last } from "./utils";
@@ -372,9 +372,9 @@ function convertMap(map: ASExprMap): Expression {
   };
 }
 
-function convertSymbol(expr: ASExprSymbol): SVariableReference {
+function convertSymbol(expr: ASExprSymbol): SIdentifier {
   return {
-    tag: "variable-reference",
+    tag: "identifier",
     name: expr.name,
     location: expr.location,
     info: {}

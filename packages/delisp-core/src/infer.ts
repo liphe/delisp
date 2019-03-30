@@ -15,8 +15,8 @@ import {
   Expression,
   isTypeAlias,
   Module,
+  SIdentifier,
   STypeAlias,
-  SVariableReference,
   Syntax,
   Typed
 } from "./syntax";
@@ -81,7 +81,7 @@ import primitives from "./primitives";
 // is normal to have multiple assumptions (instances) for the same
 // variable. Assumptions will be converted to additional constraints
 // at the end of the inference process.
-type TAssumption = SVariableReference<Typed>;
+type TAssumption = SIdentifier<Typed>;
 
 // Constraints impose which types should be equal (unified) and which
 // types are instances of other types.
@@ -259,7 +259,7 @@ function infer(
         ]
       };
     }
-    case "variable-reference": {
+    case "identifier": {
       // as we found a variable, and because we lack an
       // 'environment/context', we generate a new type and add an
       // assumption for this variable.
@@ -481,7 +481,7 @@ function inferSyntax(
     return {
       result: {
         ...syntax,
-        value: result as SVariableReference<Typed>
+        value: result as SIdentifier<Typed>
       },
       assumptions,
       constraints
@@ -676,7 +676,7 @@ function applySubstitutionToSyntax(
   } else if (s.tag === "export") {
     return {
       ...s,
-      value: applySubstitutionToExpr(s.value, env) as SVariableReference<Typed>
+      value: applySubstitutionToExpr(s.value, env) as SIdentifier<Typed>
     };
   } else if (s.tag === "type-alias") {
     return s;
@@ -972,9 +972,7 @@ export function inferModule(
     },
     unknowns: assumptions.unknowns.map(
       (v): TAssumption => {
-        return applySubstitutionToExpr(v, solution) as SVariableReference<
-          Typed
-        >;
+        return applySubstitutionToExpr(v, solution) as SIdentifier<Typed>;
       }
     )
   };

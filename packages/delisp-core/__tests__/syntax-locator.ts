@@ -25,9 +25,9 @@ describe("findSyntaxByOffset", () => {
     expect(s.tag.name).toBe("abcdef");
   });
 
-  it("should give the right location in a variable reference", () => {
+  it("should give the right location in an identifier", () => {
     const s = cursorAt(`(define x a_|_ms)`) as any;
-    expect(s.tag).toBe("variable-reference");
+    expect(s.tag).toBe("identifier");
     expect(s.name).toBe("ams");
   });
 
