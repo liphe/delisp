@@ -23,7 +23,11 @@ import {
 
 import { transformRecurExpr } from "./syntax-utils";
 
-import { applySubstitution, Substitution } from "./type-utils";
+import {
+  applySubstitution,
+  Substitution,
+  transformRecurType
+} from "./type-utils";
 import { printType } from "./type-printer";
 
 import { printHighlightedExpr } from "./error-report";
@@ -39,12 +43,10 @@ import {
 import {
   emptyRow,
   Type,
-  tApp,
   tBoolean,
   tFn,
   tNumber,
   tRecord,
-  tRow,
   tString,
   tVar,
   tVector,
@@ -898,25 +900,13 @@ function checkCircularTypes(allTypeAliases: STypeAlias[]) {
 }
 
 /** Expand known type aliases from a monotype. */
-function expandTypeAliases(t: Type, env: InternalTypeEnvironment): Type {
-  switch (t.tag) {
-    case "constant":
+function expandTypeAliases(type: Type, env: InternalTypeEnvironment): Type {
+  return transformRecurType(type, t => {
+    if (t.tag == "constant") {
       const def = env[t.name];
       return def ? expandTypeAliases(def, env) : t;
-    case "type-variable":
-    case "empty-row":
-      return t;
-    case "row-extension":
-      return tRow(
-        [{ label: t.label, type: expandTypeAliases(t.labelType, env) }],
-        expandTypeAliases(t.extends, env)
-      );
-    case "application":
-      return tApp(
-        expandTypeAliases(t.op, env),
-        ...t.args.map(t1 => expandTypeAliases(t1, env))
-      );
-  }
+    } else return t;
+  });
 }
 
 /** Run the type inference on a module.
