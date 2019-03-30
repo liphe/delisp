@@ -135,7 +135,7 @@ export function generateTSDeclaration(
 ): string {
   switch (s.tag) {
     case "definition": {
-      const varname = identifierToJS(s.variable);
+      const varname = identifierToJS(s.variable.name);
       const typ = generateTSType(generalize(s.value.info.type, []));
       return `declare const ${varname}: ${typ};`;
     }
@@ -169,7 +169,7 @@ export function generateTSModuleDeclaration(m: Module<Typed>): string {
     declarations
       .map(d => {
         const tstype = generateTSDeclaration(d);
-        const active = d.tag === "definition" && isExported(d.variable, m);
+        const active = d.tag === "definition" && isExported(d.variable.name, m);
         return exportIf(active, tstype);
       })
       .join("\n") +

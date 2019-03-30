@@ -99,7 +99,7 @@ function handleLine(line: string) {
 
 function completer(input: string): [string[], string] {
   const defs = previousModule.body.filter(isDefinition);
-  const completions = defs.map(d => d.variable);
+  const completions = defs.map(d => d.variable.name);
   return [completions, input];
 }
 
@@ -112,7 +112,10 @@ const delispEval = (syntax: Syntax) => {
   let m;
 
   if (isDefinition(syntax)) {
-    previousModule = removeModuleDefinition(previousModule, syntax.variable);
+    previousModule = removeModuleDefinition(
+      previousModule,
+      syntax.variable.name
+    );
     previousModule = addToModule(previousModule, syntax);
     m = previousModule;
   } else if (syntax.tag === "type-alias") {
@@ -161,7 +164,7 @@ const delispEval = (syntax: Syntax) => {
         : null;
 
     if (isDefinition(syntax)) {
-      return { type, name: syntax.variable };
+      return { type, name: syntax.variable.name };
     } else {
       return { type };
     }

@@ -252,7 +252,7 @@ defineToplevel("define", expr => {
 
   return {
     tag: "definition",
-    variable: variable.name,
+    variable: parseIdentifier(variable),
     value: convertExpr(value),
     location: expr.location
   };

@@ -940,7 +940,7 @@ export function inferModule(
   const internalEnv: InternalEnvironment = {
     variables: body.reduce((env, s) => {
       if (s.tag === "definition") {
-        return { ...env, [s.variable]: s.value.info.type };
+        return { ...env, [s.variable.name]: s.value.info.type };
       } else {
         return env;
       }
