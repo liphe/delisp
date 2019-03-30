@@ -35,7 +35,7 @@ export type Row<T = TypeNode> = REmpty | RExtension<T>;
 
 export type Type<T = TypeNode> = TConstant | TApplication<T> | TVar | Row<T>;
 
-interface TypeNode {
+export interface TypeNode {
   type: Type<TypeNode>;
 }
 

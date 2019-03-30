@@ -23,6 +23,28 @@ export function isFunctionType(t: Type): t is TApplication {
   );
 }
 
+export function foldType<A>(type: Type, fn: (t: Type<A>) => A): A {
+  switch (type.tag) {
+    case "constant":
+    case "type-variable":
+    case "empty-row":
+      return fn(type);
+    case "application":
+      return fn({
+        tag: "application",
+        op: foldType(type.op.type, fn),
+        args: type.args.map(a => foldType(a.type, fn))
+      });
+    case "row-extension":
+      return fn({
+        tag: "row-extension",
+        label: type.label,
+        labelType: foldType(type.labelType.type, fn),
+        extends: foldType(type.extends.type, fn)
+      });
+  }
+}
+
 export function transformRecurType(t: Type, fn: (t1: Type) => Type): Type {
   switch (t.tag) {
     case "constant":
