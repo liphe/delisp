@@ -9,8 +9,8 @@ import {
   tApp,
   tRowExtension,
   emptyRow,
-  TUserDefined,
-  TypeSchema
+  TypeSchema,
+  TConstant
 } from "./types";
 import { flatMap, unique } from "./utils";
 
@@ -18,7 +18,6 @@ export function transformRecurType(t: Type, fn: (t1: Type) => Type): Type {
   switch (t.tag) {
     case "constant":
     case "type-variable":
-    case "user-defined-type":
     case "empty-row":
       return fn(t);
     case "application":
@@ -52,20 +51,19 @@ export function applySubstitution(t: Type, env: Substitution): Type {
 }
 
 // Return user defined types
-export function listUserDefinedReferences(t: Type): TUserDefined[] {
+export function listTypeConstants(t: Type): TConstant[] {
   switch (t.tag) {
     case "constant":
+      return [t];
     case "empty-row":
     case "type-variable":
       return [];
-    case "user-defined-type":
-      return [t];
     case "application":
-      return flatMap(listUserDefinedReferences, t.args);
+      return flatMap(listTypeConstants, t.args);
     case "row-extension":
       return [
-        ...listUserDefinedReferences(t.labelType),
-        ...listUserDefinedReferences(t.extends)
+        ...listTypeConstants(t.labelType),
+        ...listTypeConstants(t.extends)
       ];
   }
 }
@@ -74,7 +72,6 @@ export function listUserDefinedReferences(t: Type): TUserDefined[] {
 export function listTypeVariables(t: Type): string[] {
   switch (t.tag) {
     case "constant":
-    case "user-defined-type":
     case "empty-row":
       return [];
     case "application":

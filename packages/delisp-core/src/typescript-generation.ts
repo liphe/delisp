@@ -78,7 +78,7 @@ export function generateTSMonotype(t: Type, mapping: TSMapping): string {
         case "string":
           return "string";
         default:
-          throw new Error(`Unknown constant type`);
+          return identifierToJS(t.name);
       }
     }
 
@@ -97,9 +97,6 @@ export function generateTSMonotype(t: Type, mapping: TSMapping): string {
       throw new InvariantViolation(
         `Row types can't be converted directly to Typescript. Only records can.`
       );
-
-    case "user-defined-type":
-      return identifierToJS(t.name);
 
     case "type-variable":
       const entry = mapping.find(e => e.delispName === t.name);

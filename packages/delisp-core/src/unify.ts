@@ -226,14 +226,6 @@ export function unify(t1: Type, t2: Type, ctx: Substitution): UnifyResult {
           t1,
           t2
         };
-  } else if (t1.tag === "user-defined-type" && t2.tag === "user-defined-type") {
-    return t1.name === t2.name
-      ? success(ctx)
-      : {
-          tag: "unify-mismatch-error",
-          t1,
-          t2
-        };
   } else if (
     t1.tag === "type-variable" &&
     t1.userSpecified &&

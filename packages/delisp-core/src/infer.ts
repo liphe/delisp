@@ -33,7 +33,7 @@ import {
   generalize,
   instantiate,
   listTypeVariables,
-  listUserDefinedReferences
+  listTypeConstants
 } from "./type-utils";
 
 import {
@@ -860,7 +860,7 @@ function checkCircularTypes(allTypeAliases: STypeAlias[]) {
   function visit(typeAlias: STypeAlias, path: STypeAlias[]) {
     const index = path.indexOf(typeAlias);
     if (index < 0) {
-      listUserDefinedReferences(typeAlias.definition)
+      listTypeConstants(typeAlias.definition)
         .map(ud => {
           return allTypeAliases.find(x => x.name === ud.name);
         })
@@ -901,7 +901,8 @@ function checkCircularTypes(allTypeAliases: STypeAlias[]) {
 function expandTypeAliases(t: Type, env: InternalTypeEnvironment): Type {
   switch (t.tag) {
     case "constant":
-      return t;
+      const def = env[t.name];
+      return def ? expandTypeAliases(def, env) : t;
     case "type-variable":
     case "empty-row":
       return t;
@@ -912,9 +913,6 @@ function expandTypeAliases(t: Type, env: InternalTypeEnvironment): Type {
       );
     case "application":
       return tApp(t.op, ...t.args.map(t1 => expandTypeAliases(t1, env)));
-    case "user-defined-type":
-      const def = env[t.name];
-      return def ? expandTypeAliases(def, env) : t;
   }
 }
 

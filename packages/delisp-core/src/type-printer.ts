@@ -57,8 +57,6 @@ function _printType(type: Type): string {
       return printApplicationType(type);
     case "type-variable":
       return type.name;
-    case "user-defined-type":
-      return type.name;
     case "empty-row":
     case "row-extension":
       throw new InvariantViolation(`Can't print ${type.tag} types`);

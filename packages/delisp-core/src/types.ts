@@ -2,7 +2,7 @@
 // Types
 //
 
-interface TConstant {
+export interface TConstant {
   tag: "constant";
   name: string;
 }
@@ -19,11 +19,6 @@ export interface TVar {
   userSpecified: boolean;
 }
 
-export interface TUserDefined {
-  tag: "user-defined-type";
-  name: string;
-}
-
 export interface REmpty {
   tag: "empty-row";
 }
@@ -38,7 +33,7 @@ export interface RExtension {
 
 export type Row = REmpty | RExtension;
 
-export type Type = TConstant | TApplication | TVar | Row | TUserDefined;
+export type Type = TConstant | TApplication | TVar | Row;
 
 export interface TypeSchema {
   tag: "type";
@@ -67,9 +62,9 @@ export function tVar(name: string, userSpecified = false): TVar {
   };
 }
 
-export function tUserDefined(name: string): TUserDefined {
+export function tUserDefined(name: string): TConstant {
   return {
-    tag: "user-defined-type",
+    tag: "constant",
     name
   };
 }
