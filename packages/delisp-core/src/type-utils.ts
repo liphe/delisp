@@ -28,7 +28,12 @@ export function transformRecurType(t: Type, fn: (t1: Type) => Type): Type {
     case "empty-row":
       return fn(t);
     case "application":
-      return fn(tApp(t.op, ...t.args.map(t1 => transformRecurType(t1, fn))));
+      return fn(
+        tApp(
+          transformRecurType(t.op, fn),
+          ...t.args.map(t1 => transformRecurType(t1, fn))
+        )
+      );
     case "row-extension":
       return tRowExtension(
         t.label,
@@ -66,7 +71,7 @@ export function listTypeConstants(t: Type): TConstant[] {
     case "type-variable":
       return [];
     case "application":
-      return flatMap(listTypeConstants, t.args);
+      return flatMap(listTypeConstants, [t.op, ...t.args]);
     case "row-extension":
       return [
         ...listTypeConstants(t.labelType),
@@ -82,7 +87,7 @@ export function listTypeVariables(t: Type): string[] {
     case "empty-row":
       return [];
     case "application":
-      return unique(flatMap(listTypeVariables, t.args));
+      return unique(flatMap(listTypeVariables, [t.op, ...t.args]));
     case "row-extension":
       return unique([
         ...listTypeVariables(t.labelType),
