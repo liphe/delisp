@@ -8,7 +8,7 @@ import {
 } from "./sexpr";
 import {
   Declaration,
-  Expression,
+  ExpressionF,
   LambdaList,
   SIdentifier,
   SLetBinding,
@@ -24,13 +24,13 @@ import { parseRecord } from "./convert-utils";
 import { listTypeVariables } from "./type-utils";
 import { TypeWithWildcards } from "./type-wildcards";
 
-const conversions: Map<string, (expr: ASExprList) => Expression> = new Map();
+const conversions: Map<string, (expr: ASExprList) => ExpressionF> = new Map();
 const toplevelConversions: Map<
   string,
   (expr: ASExprList) => Declaration
 > = new Map();
 
-function defineConversion(name: string, fn: (expr: ASExprList) => Expression) {
+function defineConversion(name: string, fn: (expr: ASExprList) => ExpressionF) {
   conversions.set(name, fn);
 }
 
@@ -41,13 +41,13 @@ function defineToplevel(name: string, fn: (expr: ASExprList) => Declaration) {
 function parseBody(
   anchor: ASExpr,
   exprs: ASExpr[]
-): Array<{ expr: Expression }> {
+): Array<{ node: ExpressionF }> {
   if (exprs.length === 0) {
     throw new Error(
       printHighlightedExpr(`body can't be empty`, anchor.location, true)
     );
   }
-  return exprs.map(e => ({ expr: convertExpr(e) }));
+  return exprs.map(e => ({ node: convertExpr(e) }));
 }
 
 //
@@ -132,9 +132,9 @@ defineConversion("if", expr => {
   const [, conditionForm, consequentForm, alternativeForm] = expr.elements;
   return {
     tag: "conditional",
-    condition: { expr: convertExpr(conditionForm) },
-    consequent: { expr: convertExpr(consequentForm) },
-    alternative: { expr: convertExpr(alternativeForm) },
+    condition: { node: convertExpr(conditionForm) },
+    consequent: { node: convertExpr(consequentForm) },
+    alternative: { node: convertExpr(alternativeForm) },
     location: expr.location,
     info: {}
   };
@@ -149,7 +149,7 @@ function parseLetBindings(bindings: ASExpr): SLetBinding[] {
 
   return bindings.fields.map(field => ({
     variable: convertSymbol(field.label),
-    value: { expr: convertExpr(field.value) }
+    value: { node: convertExpr(field.value) }
   }));
 }
 
@@ -216,7 +216,7 @@ defineConversion("the", expr => {
   return {
     tag: "type-annotation",
     typeWithWildcards: new TypeWithWildcards(convertType(t)),
-    value: { expr: convertExpr(value) },
+    value: { node: convertExpr(value) },
     location: expr.location,
     info: {}
   };
@@ -320,7 +320,7 @@ defineToplevel("type", expr => {
   };
 });
 
-function convertList(list: ASExprList): Expression {
+function convertList(list: ASExprList): ExpressionF {
   if (list.elements.length === 0) {
     throw new Error(
       printHighlightedExpr("Empty list is not a function call", list.location)
@@ -338,33 +338,33 @@ function convertList(list: ASExprList): Expression {
     const [fn, ...args] = list.elements;
     return {
       tag: "function-call",
-      fn: { expr: convertExpr(fn) },
-      args: args.map(a => ({ expr: convertExpr(a) })),
+      fn: { node: convertExpr(fn) },
+      args: args.map(a => ({ node: convertExpr(a) })),
       location: list.location,
       info: {}
     };
   }
 }
 
-function convertVector(list: ASExprVector): Expression {
+function convertVector(list: ASExprVector): ExpressionF {
   return {
     tag: "vector",
-    values: list.elements.map(a => ({ expr: convertExpr(a) })),
+    values: list.elements.map(a => ({ node: convertExpr(a) })),
     location: list.location,
     info: {}
   };
 }
 
-function convertMap(map: ASExprMap): Expression {
+function convertMap(map: ASExprMap): ExpressionF {
   const { fields, tail } = parseRecord(map);
 
   return {
     tag: "record",
     fields: fields.map(f => ({
       label: convertSymbol(f.label),
-      value: { expr: convertExpr(f.value) }
+      value: { node: convertExpr(f.value) }
     })),
-    extends: tail && { expr: convertExpr(tail) },
+    extends: tail && { node: convertExpr(tail) },
     location: map.location,
     info: {}
   };
@@ -379,7 +379,7 @@ function convertSymbol(expr: ASExprSymbol): SIdentifier {
   };
 }
 
-export function convertExpr(expr: ASExpr): Expression {
+export function convertExpr(expr: ASExpr): ExpressionF {
   switch (expr.tag) {
     case "number":
       return { ...expr, info: {} };

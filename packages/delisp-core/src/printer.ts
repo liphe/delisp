@@ -51,7 +51,7 @@ function print(sexpr: Syntax): Doc {
     case "number":
       return text(String(sexpr.value));
     case "vector": {
-      const args = sexpr.values.map(v => print(v.expr));
+      const args = sexpr.values.map(v => print(v.node));
       return group(vector(align(...args)));
     }
     case "record": {
@@ -60,7 +60,7 @@ function print(sexpr: Syntax): Doc {
           align(
             join(
               sexpr.fields.map(({ label, value }) =>
-                concat(text(label.name), space, print(value.expr))
+                concat(text(label.name), space, print(value.node))
               ),
               line
             )
@@ -78,9 +78,9 @@ function print(sexpr: Syntax): Doc {
             text("if"),
             space,
             align(
-              print(sexpr.condition.expr),
-              print(sexpr.consequent.expr),
-              print(sexpr.alternative.expr)
+              print(sexpr.condition.node),
+              print(sexpr.consequent.node),
+              print(sexpr.alternative.node)
             )
           )
         ),
@@ -97,13 +97,13 @@ function print(sexpr: Syntax): Doc {
         text("lambda"),
         space,
         group(list(align(...argNames.map(printIdentifier)))),
-        indent(printBody(sexpr.body.map(e => e.expr)))
+        indent(printBody(sexpr.body.map(e => e.node)))
       );
       return singleBody ? group(doc) : doc;
 
     case "function-call": {
-      const fn = print(sexpr.fn.expr);
-      const args = sexpr.args.map(a => print(a.expr));
+      const fn = print(sexpr.fn.node);
+      const args = sexpr.args.map(a => print(a.node));
       if (args.length === 0) {
         return group(list(fn));
       } else {
@@ -131,11 +131,11 @@ function print(sexpr: Syntax): Doc {
         map(
           align(
             ...sexpr.bindings.map(b =>
-              concat(text(b.variable.name), space, print(b.value.expr))
+              concat(text(b.variable.name), space, print(b.value.node))
             )
           )
         ),
-        indent(printBody(sexpr.body.map(e => e.expr)))
+        indent(printBody(sexpr.body.map(e => e.node)))
       );
 
     case "type-annotation":
@@ -144,7 +144,7 @@ function print(sexpr: Syntax): Doc {
           text("the"),
           space,
           text(sexpr.typeWithWildcards.print()),
-          indent(concat(line, print(sexpr.value.expr)))
+          indent(concat(line, print(sexpr.value.node)))
         )
       );
 

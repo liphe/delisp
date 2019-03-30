@@ -12,7 +12,7 @@
 import { InvariantViolation } from "./invariant";
 
 import {
-  Expression,
+  ExpressionF,
   isTypeAlias,
   Module,
   SIdentifier,
@@ -94,10 +94,10 @@ type TConstraint =
 // given type.
 interface TConstraintEqual {
   tag: "equal-constraint";
-  expr: Expression<Typed>;
+  expr: ExpressionF<Typed>;
   t: Type;
 }
-function constEqual(expr: Expression<Typed>, t: Type): TConstraintEqual {
+function constEqual(expr: ExpressionF<Typed>, t: Type): TConstraintEqual {
   return { tag: "equal-constraint", expr, t };
 }
 
@@ -107,11 +107,11 @@ function constEqual(expr: Expression<Typed>, t: Type): TConstraintEqual {
 // provided some type annotations.
 interface TConstraintExplicitInstance {
   tag: "explicit-instance-constraint";
-  expr: Expression<Typed>;
+  expr: ExpressionF<Typed>;
   t: TypeSchema;
 }
 function constExplicitInstance(
-  expr: Expression<Typed>,
+  expr: ExpressionF<Typed>,
   t: TypeSchema
 ): TConstraintExplicitInstance {
   return { tag: "explicit-instance-constraint", expr, t };
@@ -134,13 +134,13 @@ function constExplicitInstance(
 //
 interface TConstraintImplicitInstance {
   tag: "implicit-instance-constraint";
-  expr: Expression<Typed>;
+  expr: ExpressionF<Typed>;
   t: Type;
   monovars: string[];
 }
 
 function constImplicitInstance(
-  expr: Expression<Typed>,
+  expr: ExpressionF<Typed>,
   monovars: string[],
   t: Type
 ): TConstraintImplicitInstance {
@@ -154,10 +154,10 @@ interface InferResult<A> {
 }
 
 function inferMany(
-  exprs: Expression[],
+  exprs: ExpressionF[],
   monovars: string[],
   internalTypes: InternalTypeEnvironment
-): InferResult<Array<Expression<Typed>>> {
+): InferResult<Array<ExpressionF<Typed>>> {
   const results = exprs.map(e => infer(e, monovars, internalTypes));
   return {
     result: results.map(r => r.result),
@@ -169,14 +169,14 @@ function inferMany(
 // Generate new types for an expression an all its subexpressions,
 // returning and a set of constraints and assumptions between them.
 function infer(
-  expr: Expression,
+  expr: ExpressionF,
   // A set of type variables names whose type is monomorphic. That is
   // to say, all instances should have the same type. That is the set
   // of type variables introduced by lambda.
   monovars: string[],
   // Known type aliases that must be expanded
   internalTypes: InternalTypeEnvironment
-): InferResult<Expression<Typed>> {
+): InferResult<ExpressionF<Typed>> {
   switch (expr.tag) {
     case "number":
       return {
@@ -192,7 +192,7 @@ function infer(
       };
     case "vector": {
       const inferredValues = inferMany(
-        expr.values.map(v => v.expr),
+        expr.values.map(v => v.node),
         monovars,
         internalTypes
       );
@@ -201,7 +201,7 @@ function infer(
       return {
         result: {
           ...expr,
-          values: inferredValues.result.map(e => ({ expr: e })),
+          values: inferredValues.result.map(e => ({ node: e })),
           info: { type: tVector(t) }
         },
         assumptions: inferredValues.assumptions,
@@ -215,11 +215,11 @@ function infer(
     case "record": {
       const inferred = expr.fields.map(({ label, value }) => ({
         label,
-        ...infer(value.expr, monovars, internalTypes)
+        ...infer(value.node, monovars, internalTypes)
       }));
 
       const tailInferred =
-        expr.extends && infer(expr.extends.expr, monovars, internalTypes);
+        expr.extends && infer(expr.extends.node, monovars, internalTypes);
       const tailRowType = generateUniqueTVar();
 
       return {
@@ -227,9 +227,9 @@ function infer(
           ...expr,
           fields: inferred.map(({ label, result: value }) => ({
             label,
-            value: { expr: value }
+            value: { node: value }
           })),
-          extends: tailInferred && { expr: tailInferred.result },
+          extends: tailInferred && { node: tailInferred.result },
           info: {
             type: tRecord(
               inferred.map(i => ({
@@ -282,17 +282,17 @@ function infer(
       };
     }
     case "conditional": {
-      const condition = infer(expr.condition.expr, monovars, internalTypes);
-      const consequent = infer(expr.consequent.expr, monovars, internalTypes);
-      const alternative = infer(expr.alternative.expr, monovars, internalTypes);
+      const condition = infer(expr.condition.node, monovars, internalTypes);
+      const consequent = infer(expr.consequent.node, monovars, internalTypes);
+      const alternative = infer(expr.alternative.node, monovars, internalTypes);
       const t = generateUniqueTVar();
 
       return {
         result: {
           ...expr,
-          condition: { expr: condition.result },
-          consequent: { expr: consequent.result },
-          alternative: { expr: alternative.result },
+          condition: { node: condition.result },
+          consequent: { node: consequent.result },
+          alternative: { node: alternative.result },
           info: {
             type: t
           }
@@ -317,7 +317,7 @@ function infer(
       const argtypes = fnargs.map(_ => generateUniqueTVar());
 
       const { result: typedBody, constraints, assumptions } = inferMany(
-        expr.body.map(e => e.expr),
+        expr.body.map(e => e.node),
         [...monovars, ...argtypes.map(v => v.name)],
         internalTypes
       );
@@ -336,7 +336,7 @@ function infer(
       return {
         result: {
           ...expr,
-          body: typedBody.map(e => ({ expr: e })),
+          body: typedBody.map(e => ({ node: e })),
           info: {
             type: tFn(argtypes, last(typedBody)!.info.type)
           }
@@ -348,9 +348,9 @@ function infer(
     }
 
     case "function-call": {
-      const ifn = infer(expr.fn.expr, monovars, internalTypes);
+      const ifn = infer(expr.fn.node, monovars, internalTypes);
       const iargs = inferMany(
-        expr.args.map(a => a.expr),
+        expr.args.map(a => a.node),
         monovars,
         internalTypes
       );
@@ -359,8 +359,8 @@ function infer(
       return {
         result: {
           ...expr,
-          fn: { expr: ifn.result },
-          args: iargs.result.map(a => ({ expr: a })),
+          fn: { node: ifn.result },
+          args: iargs.result.map(a => ({ node: a })),
           info: { type: tTo }
         },
 
@@ -398,11 +398,11 @@ function infer(
       const bindingsInfo = expr.bindings.map(b => {
         return {
           binding: b,
-          inference: infer(b.value.expr, monovars, internalTypes)
+          inference: infer(b.value.node, monovars, internalTypes)
         };
       });
       const bodyInference = inferMany(
-        expr.body.map(e => e.expr),
+        expr.body.map(e => e.node),
         monovars,
         internalTypes
       );
@@ -411,9 +411,9 @@ function infer(
           ...expr,
           bindings: bindingsInfo.map(b => ({
             ...b.binding,
-            value: { expr: b.inference.result }
+            value: { node: b.inference.result }
           })),
-          body: bodyInference.result.map(e => ({ expr: e })),
+          body: bodyInference.result.map(e => ({ node: e })),
           info: {
             type: last(bodyInference.result)!.info.type
           }
@@ -449,7 +449,7 @@ function infer(
     }
 
     case "type-annotation": {
-      const inferred = infer(expr.value.expr, monovars, internalTypes);
+      const inferred = infer(expr.value.node, monovars, internalTypes);
       const t = expandTypeAliases(
         expr.typeWithWildcards.instantiate(),
         internalTypes
@@ -667,9 +667,9 @@ function applySubstitutionToConstraint(
 }
 
 function applySubstitutionToExpr(
-  s: Expression<Typed>,
+  s: ExpressionF<Typed>,
   env: Substitution
-): Expression<Typed> {
+): ExpressionF<Typed> {
   return transformRecurExpr(s, expr => ({
     ...expr,
     info: {
@@ -825,10 +825,10 @@ const defaultEnvironment: ExternalEnvironment = {
 };
 
 export function inferType(
-  expr: Expression,
+  expr: ExpressionF,
   env: ExternalEnvironment = defaultEnvironment,
   internalTypes: InternalTypeEnvironment
-): Expression<Typed> {
+): ExpressionF<Typed> {
   const { result: tmpExpr, constraints, assumptions } = infer(
     expr,
     [],

@@ -1,6 +1,6 @@
 import runtime from "@delisp/runtime";
 import {
-  Expression,
+  ExpressionF,
   isDefinition,
   isExport,
   isTypeAlias,
@@ -77,7 +77,7 @@ function lookupBinding(varName: string, env: Environment) {
   return env.bindings[varName];
 }
 
-function compileBody(body: Expression[], env: Environment): JS.BlockStatement {
+function compileBody(body: ExpressionF[], env: Environment): JS.BlockStatement {
   const middleForms = body.slice(0, -1);
   const lastForm = last(body)!;
 
@@ -121,8 +121,8 @@ function compileLambda(
   const implicitReturn = fn.body.length === 1;
 
   const body: JS.Expression | JS.Statement = implicitReturn
-    ? compile(fn.body[0].expr, newEnv)
-    : compileBody(fn.body.map(e => e.expr), newEnv);
+    ? compile(fn.body[0].node, newEnv)
+    : compileBody(fn.body.map(e => e.node), newEnv);
 
   return {
     type: "ArrowFunctionExpression",
@@ -142,20 +142,20 @@ function compileFunctionCall(
   funcall: SFunctionCall,
   env: Environment
 ): JS.Expression {
-  const compiledArgs = funcall.args.map(arg => compile(arg.expr, env));
+  const compiledArgs = funcall.args.map(arg => compile(arg.node, env));
   if (
-    funcall.fn.expr.tag === "identifier" &&
-    isInlinePrimitive(funcall.fn.expr.name)
+    funcall.fn.node.tag === "identifier" &&
+    isInlinePrimitive(funcall.fn.node.name)
   ) {
     return compileInlinePrimitive(
-      funcall.fn.expr.name,
+      funcall.fn.node.name,
       compiledArgs,
       "funcall"
     );
   } else {
     return {
       type: "CallExpression",
-      callee: compile(funcall.fn.expr, env),
+      callee: compile(funcall.fn.node, env),
       arguments: compiledArgs
     };
   }
@@ -201,9 +201,9 @@ function compileConditional(
 ): JS.Expression {
   return {
     type: "ConditionalExpression",
-    test: compile(expr.condition.expr, env),
-    consequent: compile(expr.consequent.expr, env),
-    alternate: compile(expr.alternative.expr, env)
+    test: compile(expr.condition.node, env),
+    consequent: compile(expr.consequent.node, env),
+    alternate: compile(expr.alternative.node, env)
   };
 }
 
@@ -223,9 +223,9 @@ function compileLetBindings(expr: SLet, env: Environment): JS.Expression {
           name: lookupBinding(b.variable.name, newenv).jsname
         })
       ),
-      body: compileBody(expr.body.map(e => e.expr), newenv)
+      body: compileBody(expr.body.map(e => e.node), newenv)
     },
-    arguments: expr.bindings.map(b => compile(b.value.expr, env))
+    arguments: expr.bindings.map(b => compile(b.value.node, env))
   };
 }
 
@@ -249,7 +249,7 @@ function compileVector(
 ): JS.Expression {
   return {
     type: "ArrayExpression",
-    elements: expr.values.map(e => compile(e.expr, env))
+    elements: expr.values.map(e => compile(e.node, env))
   };
 }
 
@@ -267,7 +267,7 @@ function compileRecord(expr: SRecord, env: Environment): JS.Expression {
         return {
           type: "Property",
           key: isValidJSIdentifierName(name) ? identifier(name) : literal(name),
-          value: compile(value.expr, env),
+          value: compile(value.node, env),
           kind: "init",
           method: false,
           shorthand: false,
@@ -279,7 +279,7 @@ function compileRecord(expr: SRecord, env: Environment): JS.Expression {
   if (expr.extends) {
     return methodCall({ type: "Identifier", name: "Object" }, "assign", [
       { type: "ObjectExpression", properties: [] },
-      compile(expr.extends.expr, env),
+      compile(expr.extends.node, env),
       newObj
     ]);
   } else {
@@ -300,7 +300,7 @@ function compileNumber(value: number): JS.Expression {
   }
 }
 
-export function compile(expr: Expression, env: Environment): JS.Expression {
+export function compile(expr: ExpressionF, env: Environment): JS.Expression {
   switch (expr.tag) {
     case "number":
       return compileNumber(expr.value);
@@ -321,7 +321,7 @@ export function compile(expr: Expression, env: Environment): JS.Expression {
     case "let-bindings":
       return compileLetBindings(expr, env);
     case "type-annotation":
-      return compile(expr.value.expr, env);
+      return compile(expr.value.node, env);
   }
 }
 

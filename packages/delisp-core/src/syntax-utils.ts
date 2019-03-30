@@ -1,10 +1,10 @@
 import { InvariantViolation } from "./invariant";
-import { Expression, Module, Syntax } from "./syntax";
+import { ExpressionF, Module, Syntax } from "./syntax";
 
 export function transformRecurExpr<I>(
-  s: Expression<I>,
-  fn: (node: Expression<I>) => Expression<I>
-): Expression<I> {
+  s: ExpressionF<I>,
+  fn: (node: ExpressionF<I>) => ExpressionF<I>
+): ExpressionF<I> {
   switch (s.tag) {
     case "string":
     case "number":
@@ -13,34 +13,34 @@ export function transformRecurExpr<I>(
     case "vector":
       return fn({
         ...s,
-        values: s.values.map(s1 => ({ expr: transformRecurExpr(s1.expr, fn) }))
+        values: s.values.map(s1 => ({ node: transformRecurExpr(s1.node, fn) }))
       });
     case "record":
       return fn({
         ...s,
         fields: s.fields.map(f => ({
           ...f,
-          value: { expr: transformRecurExpr(f.value.expr, fn) }
+          value: { node: transformRecurExpr(f.value.node, fn) }
         }))
       });
     case "function-call":
       return fn({
         ...s,
-        fn: { expr: transformRecurExpr(s.fn.expr, fn) },
-        args: s.args.map(a => ({ expr: transformRecurExpr(a.expr, fn) }))
+        fn: { node: transformRecurExpr(s.fn.node, fn) },
+        args: s.args.map(a => ({ node: transformRecurExpr(a.node, fn) }))
       });
     case "conditional":
       return fn({
         ...s,
-        condition: { expr: transformRecurExpr(s.condition.expr, fn) },
-        consequent: { expr: transformRecurExpr(s.consequent.expr, fn) },
-        alternative: { expr: transformRecurExpr(s.alternative.expr, fn) }
+        condition: { node: transformRecurExpr(s.condition.node, fn) },
+        consequent: { node: transformRecurExpr(s.consequent.node, fn) },
+        alternative: { node: transformRecurExpr(s.alternative.node, fn) }
       });
     case "function":
       return fn({
         ...s,
         body: s.body.map(b => ({
-          expr: transformRecurExpr(b.expr, fn)
+          node: transformRecurExpr(b.node, fn)
         }))
       });
     case "let-bindings":
@@ -48,42 +48,42 @@ export function transformRecurExpr<I>(
         ...s,
         bindings: s.bindings.map(b => ({
           ...b,
-          value: { expr: transformRecurExpr(b.value.expr, fn) }
+          value: { node: transformRecurExpr(b.value.node, fn) }
         })),
-        body: s.body.map(e => ({ expr: transformRecurExpr(e.expr, fn) }))
+        body: s.body.map(e => ({ node: transformRecurExpr(e.node, fn) }))
       });
     case "type-annotation":
       return fn({
         ...s,
-        value: { expr: transformRecurExpr(s.value.expr, fn) }
+        value: { node: transformRecurExpr(s.value.node, fn) }
       });
   }
 }
 
-function expressionChildren<I>(e: Expression<I>): Array<Expression<I>> {
+function expressionChildren<I>(e: ExpressionF<I>): Array<ExpressionF<I>> {
   switch (e.tag) {
     case "string":
     case "number":
     case "identifier":
       return [];
     case "conditional":
-      return [e.condition.expr, e.consequent.expr, e.alternative.expr];
+      return [e.condition.node, e.consequent.node, e.alternative.node];
     case "function-call":
-      return [e.fn.expr, ...e.args.map(a => a.expr)];
+      return [e.fn.node, ...e.args.map(a => a.node)];
     case "function":
-      return e.body.map(e => e.expr);
+      return e.body.map(e => e.node);
     case "vector":
-      return e.values.map(e1 => e1.expr);
+      return e.values.map(e1 => e1.node);
     case "let-bindings":
-      return [...e.bindings.map(b => b.value.expr), ...e.body.map(e => e.expr)];
+      return [...e.bindings.map(b => b.value.node), ...e.body.map(e => e.node)];
     case "record":
-      return [...e.fields.map(f => f.value.expr)];
+      return [...e.fields.map(f => f.value.node)];
     case "type-annotation":
-      return [e.value.expr];
+      return [e.value.node];
   }
 }
 
-function syntaxChildren<I>(s: Syntax<I>): Array<Expression<I>> {
+function syntaxChildren<I>(s: Syntax<I>): Array<ExpressionF<I>> {
   switch (s.tag) {
     case "definition":
       return [s.value];
