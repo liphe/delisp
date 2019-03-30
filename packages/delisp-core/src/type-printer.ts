@@ -43,7 +43,7 @@ function printApplicationType(type: TApplication): string {
       row.extends.tag !== "empty-row" ? ` | ${_printType(row.extends)}` : "";
     return `{${fields}${extension}}`;
   } else {
-    return `(${_printType(type.op)} ${type.args.map(_printType).join(" ")})`;
+    return "(" + [type.op, ...type.args].map(_printType).join(" ") + ")";
   }
 }
 

@@ -226,4 +226,8 @@ eee
       )
     ).toMatchSnapshot();
   });
+
+  it("should pretty print type type applications", () => {
+    expect(pprintSource(`(the (a) 10)`)).toMatchSnapshot();
+  });
 });
