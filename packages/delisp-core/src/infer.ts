@@ -912,7 +912,10 @@ function expandTypeAliases(t: Type, env: InternalTypeEnvironment): Type {
         expandTypeAliases(t.extends, env)
       );
     case "application":
-      return tApp(t.op, ...t.args.map(t1 => expandTypeAliases(t1, env)));
+      return tApp(
+        expandTypeAliases(t.op, env),
+        ...t.args.map(t1 => expandTypeAliases(t1, env))
+      );
   }
 }
 
