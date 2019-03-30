@@ -51,6 +51,15 @@ function parseBody(anchor: ASExpr, exprs: ASExpr[]): Expression[] {
 // The format of lambda lists are (a b c ... &rest z)
 //
 
+function parseIdentifier(s: ASExprSymbol): SIdentifier {
+  return {
+    tag: "identifier",
+    name: s.name,
+    location: s.location,
+    info: {}
+  };
+}
+
 function parseLambdaList(ll: ASExpr): LambdaList {
   if (ll.tag !== "list") {
     throw new Error(
@@ -85,10 +94,7 @@ function parseLambdaList(ll: ASExpr): LambdaList {
   });
 
   return {
-    positionalArgs: symbols.map(arg => ({
-      variable: arg.name,
-      location: arg.location
-    })),
+    positionalArgs: symbols.map(parseIdentifier),
     location: ll.location
   };
 }

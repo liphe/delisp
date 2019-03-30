@@ -107,14 +107,14 @@ function compileLambda(
   env: Environment
 ): JS.ArrowFunctionExpression {
   const newEnv = fn.lambdaList.positionalArgs.reduce(
-    (e, param) => addBinding(param.variable, e),
+    (e, param) => addBinding(param.name, e),
     env
   );
 
   const jsargs = fn.lambdaList.positionalArgs.map(
     (param): JS.Pattern => ({
       type: "Identifier",
-      name: lookupBinding(param.variable, newEnv).jsname
+      name: lookupBinding(param.name, newEnv).jsname
     })
   );
 

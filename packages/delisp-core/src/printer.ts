@@ -91,7 +91,7 @@ function print(sexpr: Syntax): Doc {
       );
 
     case "function":
-      const argNames = sexpr.lambdaList.positionalArgs.map(x => x.variable);
+      const argNames = sexpr.lambdaList.positionalArgs.map(x => x.name);
       const singleBody = sexpr.body.length === 1;
       const doc = list(
         text("lambda"),

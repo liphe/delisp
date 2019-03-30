@@ -308,7 +308,7 @@ function infer(
       };
     }
     case "function": {
-      const fnargs = expr.lambdaList.positionalArgs.map(a => a.variable);
+      const fnargs = expr.lambdaList.positionalArgs.map(a => a.name);
       const argtypes = fnargs.map(_ => generateUniqueTVar());
 
       const { result: typedBody, constraints, assumptions } = inferMany(
