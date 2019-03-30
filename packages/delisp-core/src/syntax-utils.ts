@@ -1,5 +1,5 @@
 import { InvariantViolation } from "./invariant";
-import { Expression, Module, Syntax } from "./syntax";
+import { Expression, isDefinition, Module, Syntax } from "./syntax";
 
 export function transformRecurExpr<I>(
   s: Expression<I>,
@@ -94,6 +94,33 @@ function syntaxChildren<I>(s: Syntax<I>): Array<Expression<I>> {
   }
 }
 
+function expressionBindings<I>(e: Expression<I>): string[] {
+  switch (e.tag) {
+    case "function":
+      return e.lambdaList.positionalArgs.map(l => l.name);
+    case "let-bindings":
+      return e.bindings.map(b => b.variable.name);
+    default:
+      return [];
+  }
+}
+
+function syntaxBindings<I>(s: Syntax<I>): string[] {
+  switch (s.tag) {
+    case "definition":
+      return [s.variable.name];
+    case "export":
+    case "type-alias":
+      return [];
+    default:
+      return expressionBindings(s);
+  }
+}
+
+function moduleBindings<I>(m: Module<I>): string[] {
+  return m.body.filter(isDefinition).map(d => d.variable.name);
+}
+
 function syntaxPathFromRange<I>(
   s: Syntax<I>,
   start: number,
@@ -132,21 +159,29 @@ export function findSyntaxByOffset<I>(
   return findSyntaxByRange(m, offset, offset);
 }
 
-type VisitorFn<I> = (s: Syntax<I>) => void;
+type Scope = Map<string, symbol>;
+function createScope(bindings: string[], parentScope?: Scope): Scope {
+  const scope = parentScope ? new Map(parentScope) : new Map();
+  bindings.forEach(b => scope.set(b, Symbol(b)));
+  return scope;
+}
 
+type VisitorFn<I> = (s: Syntax<I>, scope: Scope) => void;
 function traverse<I>(
   s: Syntax<I>,
+  scope: Scope,
   onEnter?: VisitorFn<I>,
   onExit?: VisitorFn<I>
-): any {
+): void {
   if (onEnter) {
-    onEnter(s);
+    onEnter(s, scope);
   }
+  const newScope = createScope(syntaxBindings(s), scope);
   syntaxChildren(s).forEach(c => {
-    traverse(c, onEnter, onExit);
+    traverse(c, newScope, onEnter, onExit);
   });
   if (onExit) {
-    onExit(s);
+    onExit(s, scope);
   }
 }
 
@@ -155,5 +190,8 @@ export function traverseModule<I>(
   onEnter?: VisitorFn<I>,
   onExit?: VisitorFn<I>
 ): void {
-  m.body.forEach(s => traverse(s, onEnter, onExit));
+  const globalScope = createScope(moduleBindings(m));
+  m.body.forEach(s => {
+    traverse(s, globalScope, onEnter, onExit);
+  });
 }
