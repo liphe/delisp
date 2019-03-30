@@ -1,6 +1,6 @@
 import runtime from "@delisp/runtime";
 import {
-  ExpressionF,
+  Expression,
   isDefinition,
   isExport,
   isTypeAlias,
@@ -77,7 +77,7 @@ function lookupBinding(varName: string, env: Environment) {
   return env.bindings[varName];
 }
 
-function compileBody(body: ExpressionF[], env: Environment): JS.BlockStatement {
+function compileBody(body: Expression[], env: Environment): JS.BlockStatement {
   const middleForms = body.slice(0, -1);
   const lastForm = last(body)!;
 
@@ -121,8 +121,8 @@ function compileLambda(
   const implicitReturn = fn.body.length === 1;
 
   const body: JS.Expression | JS.Statement = implicitReturn
-    ? compile(fn.body[0].node, newEnv)
-    : compileBody(fn.body.map(e => e.node), newEnv);
+    ? compile(fn.body[0], newEnv)
+    : compileBody(fn.body, newEnv);
 
   return {
     type: "ArrowFunctionExpression",
@@ -133,7 +133,7 @@ function compileLambda(
 }
 
 function compileDefinition(def: SDefinition, env: Environment): JS.Statement {
-  const value = compile(def.value, env);
+  const value = compile({ node: def.value }, env);
   const name = lookupBinding(def.variable.name, env).jsname;
   return env.defs.define(name, value);
 }
@@ -142,7 +142,7 @@ function compileFunctionCall(
   funcall: SFunctionCall,
   env: Environment
 ): JS.Expression {
-  const compiledArgs = funcall.args.map(arg => compile(arg.node, env));
+  const compiledArgs = funcall.args.map(arg => compile(arg, env));
   if (
     funcall.fn.node.tag === "identifier" &&
     isInlinePrimitive(funcall.fn.node.name)
@@ -155,7 +155,7 @@ function compileFunctionCall(
   } else {
     return {
       type: "CallExpression",
-      callee: compile(funcall.fn.node, env),
+      callee: compile(funcall.fn, env),
       arguments: compiledArgs
     };
   }
@@ -201,9 +201,9 @@ function compileConditional(
 ): JS.Expression {
   return {
     type: "ConditionalExpression",
-    test: compile(expr.condition.node, env),
-    consequent: compile(expr.consequent.node, env),
-    alternate: compile(expr.alternative.node, env)
+    test: compile(expr.condition, env),
+    consequent: compile(expr.consequent, env),
+    alternate: compile(expr.alternative, env)
   };
 }
 
@@ -223,9 +223,9 @@ function compileLetBindings(expr: SLet, env: Environment): JS.Expression {
           name: lookupBinding(b.variable.name, newenv).jsname
         })
       ),
-      body: compileBody(expr.body.map(e => e.node), newenv)
+      body: compileBody(expr.body, newenv)
     },
-    arguments: expr.bindings.map(b => compile(b.value.node, env))
+    arguments: expr.bindings.map(b => compile(b.value, env))
   };
 }
 
@@ -249,7 +249,7 @@ function compileVector(
 ): JS.Expression {
   return {
     type: "ArrayExpression",
-    elements: expr.values.map(e => compile(e.node, env))
+    elements: expr.values.map(e => compile(e, env))
   };
 }
 
@@ -267,7 +267,7 @@ function compileRecord(expr: SRecord, env: Environment): JS.Expression {
         return {
           type: "Property",
           key: isValidJSIdentifierName(name) ? identifier(name) : literal(name),
-          value: compile(value.node, env),
+          value: compile(value, env),
           kind: "init",
           method: false,
           shorthand: false,
@@ -279,7 +279,7 @@ function compileRecord(expr: SRecord, env: Environment): JS.Expression {
   if (expr.extends) {
     return methodCall({ type: "Identifier", name: "Object" }, "assign", [
       { type: "ObjectExpression", properties: [] },
-      compile(expr.extends.node, env),
+      compile(expr.extends, env),
       newObj
     ]);
   } else {
@@ -300,28 +300,29 @@ function compileNumber(value: number): JS.Expression {
   }
 }
 
-export function compile(expr: ExpressionF, env: Environment): JS.Expression {
-  switch (expr.tag) {
+export function compile(expr: Expression, env: Environment): JS.Expression {
+  const { node } = expr;
+  switch (node.tag) {
     case "number":
-      return compileNumber(expr.value);
+      return compileNumber(node.value);
     case "string":
-      return literal(expr.value);
+      return literal(node.value);
     case "vector":
-      return compileVector(expr, env);
+      return compileVector(node, env);
     case "record":
-      return compileRecord(expr, env);
+      return compileRecord(node, env);
     case "identifier":
-      return compileIdentifier(expr, env);
+      return compileIdentifier(node, env);
     case "conditional":
-      return compileConditional(expr, env);
+      return compileConditional(node, env);
     case "function":
-      return compileLambda(expr, env);
+      return compileLambda(node, env);
     case "function-call":
-      return compileFunctionCall(expr, env);
+      return compileFunctionCall(node, env);
     case "let-bindings":
-      return compileLetBindings(expr, env);
+      return compileLetBindings(node, env);
     case "type-annotation":
-      return compile(expr.value.node, env);
+      return compile(node.value, env);
   }
 }
 
@@ -341,7 +342,7 @@ function compileTopLevel(
   } else {
     js = {
       type: "ExpressionStatement",
-      expression: compile(syntax, env)
+      expression: compile({ node: syntax }, env)
     };
   }
 

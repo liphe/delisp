@@ -9,6 +9,7 @@ import {
 import {
   Declaration,
   ExpressionF,
+  Expression,
   LambdaList,
   SIdentifier,
   SLetBinding,
@@ -38,16 +39,13 @@ function defineToplevel(name: string, fn: (expr: ASExprList) => Declaration) {
   toplevelConversions.set(name, fn);
 }
 
-function parseBody(
-  anchor: ASExpr,
-  exprs: ASExpr[]
-): Array<{ node: ExpressionF }> {
+function parseBody(anchor: ASExpr, exprs: ASExpr[]): Array<Expression> {
   if (exprs.length === 0) {
     throw new Error(
       printHighlightedExpr(`body can't be empty`, anchor.location, true)
     );
   }
-  return exprs.map(e => ({ node: convertExpr(e) }));
+  return exprs.map(convertExpr);
 }
 
 //
@@ -132,9 +130,9 @@ defineConversion("if", expr => {
   const [, conditionForm, consequentForm, alternativeForm] = expr.elements;
   return {
     tag: "conditional",
-    condition: { node: convertExpr(conditionForm) },
-    consequent: { node: convertExpr(consequentForm) },
-    alternative: { node: convertExpr(alternativeForm) },
+    condition: convertExpr(conditionForm),
+    consequent: convertExpr(consequentForm),
+    alternative: convertExpr(alternativeForm),
     location: expr.location,
     info: {}
   };
@@ -149,7 +147,7 @@ function parseLetBindings(bindings: ASExpr): SLetBinding[] {
 
   return bindings.fields.map(field => ({
     variable: convertSymbol(field.label),
-    value: { node: convertExpr(field.value) }
+    value: convertExpr(field.value)
   }));
 }
 
@@ -216,7 +214,7 @@ defineConversion("the", expr => {
   return {
     tag: "type-annotation",
     typeWithWildcards: new TypeWithWildcards(convertType(t)),
-    value: { node: convertExpr(value) },
+    value: convertExpr(value),
     location: expr.location,
     info: {}
   };
@@ -247,7 +245,7 @@ defineToplevel("define", expr => {
   return {
     tag: "definition",
     variable: convertSymbol(variable),
-    value: convertExpr(value),
+    value: convertExpr(value).node,
     location: expr.location
   };
 });
@@ -338,8 +336,8 @@ function convertList(list: ASExprList): ExpressionF {
     const [fn, ...args] = list.elements;
     return {
       tag: "function-call",
-      fn: { node: convertExpr(fn) },
-      args: args.map(a => ({ node: convertExpr(a) })),
+      fn: convertExpr(fn),
+      args: args.map(convertExpr),
       location: list.location,
       info: {}
     };
@@ -349,7 +347,7 @@ function convertList(list: ASExprList): ExpressionF {
 function convertVector(list: ASExprVector): ExpressionF {
   return {
     tag: "vector",
-    values: list.elements.map(a => ({ node: convertExpr(a) })),
+    values: list.elements.map(convertExpr),
     location: list.location,
     info: {}
   };
@@ -362,9 +360,9 @@ function convertMap(map: ASExprMap): ExpressionF {
     tag: "record",
     fields: fields.map(f => ({
       label: convertSymbol(f.label),
-      value: { node: convertExpr(f.value) }
+      value: convertExpr(f.value)
     })),
-    extends: tail && { node: convertExpr(tail) },
+    extends: tail && convertExpr(tail),
     location: map.location,
     info: {}
   };
@@ -379,20 +377,23 @@ function convertSymbol(expr: ASExprSymbol): SIdentifier {
   };
 }
 
-export function convertExpr(expr: ASExpr): ExpressionF {
+export function convertExpr(expr: ASExpr): Expression {
+  function node(node: ExpressionF): Expression {
+    return { node };
+  }
   switch (expr.tag) {
     case "number":
-      return { ...expr, info: {} };
+      return node({ ...expr, info: {} });
     case "string":
-      return { ...expr, info: {} };
+      return node({ ...expr, info: {} });
     case "symbol":
-      return convertSymbol(expr);
+      return node(convertSymbol(expr));
     case "list":
-      return convertList(expr);
+      return node(convertList(expr));
     case "vector":
-      return convertVector(expr);
+      return node(convertVector(expr));
     case "map":
-      return convertMap(expr);
+      return node(convertMap(expr));
   }
 }
 
@@ -413,5 +414,5 @@ export function convert(expr: ASExpr): Syntax {
     }
   }
 
-  return convertExpr(expr);
+  return convertExpr(expr).node;
 }

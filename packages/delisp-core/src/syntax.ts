@@ -94,7 +94,7 @@ export type ExpressionF<I = {}, E = Expression<I>> =
   | SRecord<I, E>
   | STypeAnnotation<I, E>;
 
-export interface Expression<I> {
+export interface Expression<I = {}> {
   node: ExpressionF<I, Expression<I>>;
 }
 
