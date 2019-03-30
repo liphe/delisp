@@ -129,9 +129,9 @@ defineConversion("if", expr => {
   const [, conditionForm, consequentForm, alternativeForm] = expr.elements;
   return {
     tag: "conditional",
-    condition: convertExpr(conditionForm),
-    consequent: convertExpr(consequentForm),
-    alternative: convertExpr(alternativeForm),
+    condition: { expr: convertExpr(conditionForm) },
+    consequent: { expr: convertExpr(consequentForm) },
+    alternative: { expr: convertExpr(alternativeForm) },
     location: expr.location,
     info: {}
   };

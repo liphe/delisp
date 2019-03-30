@@ -29,9 +29,9 @@ export interface SIdentifier<I = {}> extends Node<I> {
 
 export interface SConditional<I = {}> extends Node<I> {
   tag: "conditional";
-  condition: Expression<I>;
-  consequent: Expression<I>;
-  alternative: Expression<I>;
+  condition: { expr: Expression<I> };
+  consequent: { expr: Expression<I> };
+  alternative: { expr: Expression<I> };
 }
 
 export interface SFunctionCall<I = {}> extends Node<I> {

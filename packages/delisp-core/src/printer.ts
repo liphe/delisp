@@ -78,9 +78,9 @@ function print(sexpr: Syntax): Doc {
             text("if"),
             space,
             align(
-              print(sexpr.condition),
-              print(sexpr.consequent),
-              print(sexpr.alternative)
+              print(sexpr.condition.expr),
+              print(sexpr.consequent.expr),
+              print(sexpr.alternative.expr)
             )
           )
         ),

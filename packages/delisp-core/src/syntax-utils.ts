@@ -32,9 +32,9 @@ export function transformRecurExpr<I>(
     case "conditional":
       return fn({
         ...s,
-        condition: transformRecurExpr(s.condition, fn),
-        consequent: transformRecurExpr(s.consequent, fn),
-        alternative: transformRecurExpr(s.alternative, fn)
+        condition: { expr: transformRecurExpr(s.condition.expr, fn) },
+        consequent: { expr: transformRecurExpr(s.consequent.expr, fn) },
+        alternative: { expr: transformRecurExpr(s.alternative.expr, fn) }
       });
     case "function":
       return fn({
@@ -65,7 +65,7 @@ function expressionChildren<I>(e: Expression<I>): Array<Expression<I>> {
     case "identifier":
       return [];
     case "conditional":
-      return [e.condition, e.consequent, e.alternative];
+      return [e.condition.expr, e.consequent.expr, e.alternative.expr];
     case "function-call":
       return [e.fn, ...e.args];
     case "function":

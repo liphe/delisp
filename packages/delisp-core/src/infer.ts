@@ -278,17 +278,17 @@ function infer(
       };
     }
     case "conditional": {
-      const condition = infer(expr.condition, monovars, internalTypes);
-      const consequent = infer(expr.consequent, monovars, internalTypes);
-      const alternative = infer(expr.alternative, monovars, internalTypes);
+      const condition = infer(expr.condition.expr, monovars, internalTypes);
+      const consequent = infer(expr.consequent.expr, monovars, internalTypes);
+      const alternative = infer(expr.alternative.expr, monovars, internalTypes);
       const t = generateUniqueTVar();
 
       return {
         result: {
           ...expr,
-          condition: condition.result,
-          consequent: consequent.result,
-          alternative: alternative.result,
+          condition: { expr: condition.result },
+          consequent: { expr: consequent.result },
+          alternative: { expr: alternative.result },
           info: {
             type: t
           }

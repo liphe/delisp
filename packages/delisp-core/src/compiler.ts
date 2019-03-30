@@ -194,9 +194,9 @@ function compileConditional(
 ): JS.Expression {
   return {
     type: "ConditionalExpression",
-    test: compile(expr.condition, env),
-    consequent: compile(expr.consequent, env),
-    alternate: compile(expr.alternative, env)
+    test: compile(expr.condition.expr, env),
+    consequent: compile(expr.consequent.expr, env),
+    alternate: compile(expr.alternative.expr, env)
   };
 }
 
