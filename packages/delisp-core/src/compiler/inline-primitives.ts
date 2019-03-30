@@ -1,7 +1,7 @@
 import * as JS from "estree";
 import { InvariantViolation } from "../invariant";
 import { generateUniqueTVar } from "../type-generate";
-import { generalize, readType } from "../type-utils";
+import { isFunctionType, generalize, readType } from "../type-utils";
 import { tFn, tRecord, TypeSchema } from "../types";
 import { range } from "../utils";
 import { member, methodCall } from "./estree-utils";
@@ -65,7 +65,7 @@ export function findInlinePrimitive(name: string): InlinePrim {
 
 function primitiveArity(prim: InlinePrim): number {
   const type = prim.type.mono;
-  if (type.tag === "application" && type.op === "->") {
+  if (isFunctionType(type)) {
     return type.args.length - 1;
   } else {
     return 0;

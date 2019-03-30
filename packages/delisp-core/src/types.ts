@@ -9,7 +9,7 @@ export interface TConstant {
 
 export interface TApplication {
   tag: "application";
-  op: string;
+  op: Type;
   args: Type[];
 }
 
@@ -49,6 +49,13 @@ function tConstant(name: string): TConstant {
   return { tag: "constant", name };
 }
 
+// * -> * -> *
+export const tcArrow = tConstant("->");
+// * -> *
+export const tcVector = tConstant("vector");
+// row -> *
+export const tcRecord = tConstant("record");
+// *
 export const tVoid = tConstant("void");
 export const tBoolean = tConstant("boolean");
 export const tNumber = tConstant("number");
@@ -69,7 +76,7 @@ export function tUserDefined(name: string): TConstant {
   };
 }
 
-export function tApp(op: string, ...args: Type[]): Type {
+export function tApp(op: Type, ...args: Type[]): Type {
   return {
     tag: "application",
     op,
@@ -78,11 +85,11 @@ export function tApp(op: string, ...args: Type[]): Type {
 }
 
 export function tVector(t: Type): Type {
-  return tApp("vector", t);
+  return tApp(tcVector, t);
 }
 
 export function tFn(args: Type[], out: Type): Type {
-  return tApp("->", ...args, out);
+  return tApp(tcArrow, ...args, out);
 }
 
 export const emptyRow: REmpty = { tag: "empty-row" };
@@ -112,5 +119,5 @@ export function tRecord(
   fields: Array<{ label: string; type: Type }>,
   extending: Type = emptyRow
 ): Type {
-  return tApp("record", tRow(fields, extending));
+  return tApp(tcRecord, tRow(fields, extending));
 }

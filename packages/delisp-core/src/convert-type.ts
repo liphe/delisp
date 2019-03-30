@@ -20,7 +20,8 @@ import {
   tUserDefined,
   tVar,
   tVector,
-  tVoid
+  tVoid,
+  tcArrow
 } from "./types";
 
 /** Return true if a symbol is a valid name for a user defined type, false otherwise. */
@@ -46,6 +47,8 @@ export function checkUserDefinedTypeName(expr: ASExprSymbol): void {
 
 function convertSymbol(expr: ASExprSymbol): Type {
   switch (expr.name) {
+    case "->":
+      return tcArrow;
     case "boolean":
       return tBoolean;
     case "number":
@@ -61,32 +64,8 @@ function convertSymbol(expr: ASExprSymbol): Type {
 
 function convertList(expr: ASExprList): Type {
   const [op, ...args] = expr.elements;
-
-  if (op.tag !== "symbol") {
-    throw new Error(
-      printHighlightedExpr("Expected symbol as operator", expr.location)
-    );
-  }
-
-  switch (op.name) {
-    case "->":
-      if (args.length < 1) {
-        throw new Error(
-          printHighlightedExpr(
-            "Expected at least 1 argument",
-            op.location,
-            true
-          )
-        );
-      }
-      break;
-    default:
-      throw new Error(
-        printHighlightedExpr("Unknown type constructor", op.location)
-      );
-  }
-
-  return tApp(op.name, ...args.map(convert));
+  const opType = convert(op);
+  return tApp(opType, ...args.map(convert));
 }
 
 function convertVector(expr: ASExprVector): Type {

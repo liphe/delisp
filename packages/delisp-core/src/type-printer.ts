@@ -31,21 +31,19 @@ function normalizeType(t: Type): Type {
 }
 
 function printApplicationType(type: TApplication): string {
-  switch (type.op) {
-    case "vector":
-      return `[${_printType(type.args[0])}]`;
-    case "record":
-      const arg = type.args[0];
-      const row = normalizeRow(arg);
-      const fields = row.fields
-        .map(f => `${f.label} ${_printType(f.labelType)}`)
-        .join(" ");
-      const extension =
-        row.extends.tag !== "empty-row" ? ` | ${_printType(row.extends)}` : "";
-      return `{${fields}${extension}}`;
-
-    default:
-      return `(${type.op} ${type.args.map(_printType).join(" ")})`;
+  if (type.op.tag === "constant" && type.op.name === "vector") {
+    return `[${_printType(type.args[0])}]`;
+  } else if (type.op.tag === "constant" && type.op.name === "record") {
+    const arg = type.args[0];
+    const row = normalizeRow(arg);
+    const fields = row.fields
+      .map(f => `${f.label} ${_printType(f.labelType)}`)
+      .join(" ");
+    const extension =
+      row.extends.tag !== "empty-row" ? ` | ${_printType(row.extends)}` : "";
+    return `{${fields}${extension}}`;
+  } else {
+    return `(${_printType(type.op)} ${type.args.map(_printType).join(" ")})`;
   }
 }
 

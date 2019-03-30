@@ -16,30 +16,16 @@ file:1:1: Not a valid type
 
 exports[`convertType should detect incorrect types 3`] = `
 "
-file:1:2: Unknown type constructor
-(fn)
+file:1:2: Not a valid type
+(1 2 3)
 -^"
 `;
 
 exports[`convertType should detect incorrect types 4`] = `
 "
-file:1:2: Unknown type constructor
-(fn a)
--^"
-`;
-
-exports[`convertType should detect incorrect types 5`] = `
-"
-file:1:1: Expected symbol as operator
-(1 2 3)
-^"
-`;
-
-exports[`convertType should detect incorrect types 6`] = `
-"
-file:1:1: Expected symbol as operator
+file:1:2: Not a valid type
 (\\"hello\\" \\"world\\")
-^"
+-^"
 `;
 
 exports[`convertType should read extensible record 1`] = `
@@ -67,7 +53,10 @@ Object {
       "tag": "row-extension",
     },
   ],
-  "op": "record",
+  "op": Object {
+    "name": "record",
+    "tag": "constant",
+  },
   "tag": "application",
 }
 `;

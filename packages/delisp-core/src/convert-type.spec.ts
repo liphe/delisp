@@ -1,6 +1,7 @@
 import { readFromString } from "../src/reader";
 import { convert } from "./convert-type";
-import { tFn, tNumber, tString, tVar } from "./types";
+import { tFn, tNumber, tString, tVar, Type } from "./types";
+import { printType } from "./type-printer";
 
 describe("convertType", () => {
   it("should convert to numbers", () => {
@@ -48,23 +49,28 @@ describe("convertType", () => {
 
   it("should detect incorrect types", () => {
     function failedType(x: string) {
-      let result: string | undefined;
+      let result: Type | string;
+
       try {
-        convert(readFromString(x));
+        result = convert(readFromString(x));
       } catch (err) {
         result = `\n${err.message}`;
       }
-      if (result) {
+
+      if (typeof result === "string") {
         return result;
       } else {
-        throw new Error(`The type is expected to fail`);
+        throw new Error(
+          `The type is expected to fail, but returned ${printType(
+            result,
+            false
+          )}`
+        );
       }
     }
 
     expect(failedType("1")).toMatchSnapshot();
     expect(failedType(`"hello"`)).toMatchSnapshot();
-    expect(failedType(`(fn)`)).toMatchSnapshot();
-    expect(failedType(`(fn a)`)).toMatchSnapshot();
     expect(failedType("(1 2 3)")).toMatchSnapshot();
     expect(failedType(`("hello" "world")`)).toMatchSnapshot();
   });

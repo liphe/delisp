@@ -10,9 +10,16 @@ import {
   tRowExtension,
   emptyRow,
   TypeSchema,
-  TConstant
+  TConstant,
+  TApplication
 } from "./types";
 import { flatMap, unique } from "./utils";
+
+export function isFunctionType(t: Type): t is TApplication {
+  return (
+    t.tag === "application" && t.op.tag === "constant" && t.op.name === "->"
+  );
+}
 
 export function transformRecurType(t: Type, fn: (t1: Type) => Type): Type {
   switch (t.tag) {
