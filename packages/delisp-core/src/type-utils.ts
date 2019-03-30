@@ -3,17 +3,17 @@ import { InvariantViolation } from "./invariant";
 import { convert as convertType } from "./convert-type";
 import { readFromString } from "./reader";
 import { generateUniqueTVar } from "./type-generate";
+import { flatten } from "./utils";
 
 import {
   Type,
-  tApp,
-  tRowExtension,
+  TypeNode,
   emptyRow,
   TypeSchema,
   TConstant,
   TApplication
 } from "./types";
-import { flatMap, unique } from "./utils";
+import { unique } from "./utils";
 
 export function isFunctionType(t: Type): t is TApplication {
   return (
@@ -21,6 +21,19 @@ export function isFunctionType(t: Type): t is TApplication {
     t.op.type.tag === "constant" &&
     t.op.type.name === "->"
   );
+}
+
+export function typeChildren<A>(type: Type<A[]>): A[] {
+  switch (type.tag) {
+    case "constant":
+    case "type-variable":
+    case "empty-row":
+      return [];
+    case "application":
+      return flatten([type.op, ...type.args]);
+    case "row-extension":
+      return [...type.labelType, ...type.extends];
+  }
 }
 
 export function foldType<A>(type: Type, fn: (t: Type<A>) => A): A {
@@ -45,26 +58,9 @@ export function foldType<A>(type: Type, fn: (t: Type<A>) => A): A {
   }
 }
 
-export function transformRecurType(t: Type, fn: (t1: Type) => Type): Type {
-  switch (t.tag) {
-    case "constant":
-    case "type-variable":
-    case "empty-row":
-      return fn(t);
-    case "application":
-      return fn(
-        tApp(
-          transformRecurType(t.op.type, fn),
-          ...t.args.map(t1 => transformRecurType(t1.type, fn))
-        )
-      );
-    case "row-extension":
-      return tRowExtension(
-        t.label,
-        transformRecurType(t.labelType.type, fn),
-        transformRecurType(t.extends.type, fn)
-      );
-  }
+export function transformRecurType(type: Type, fn: (t: Type) => Type): Type {
+  const node = foldType(type, (t: Type): TypeNode => ({ type: fn(t) }));
+  return node.type;
 }
 
 export interface Substitution {
@@ -87,44 +83,17 @@ export function applySubstitution(t: Type, env: Substitution): Type {
 }
 
 // Return user defined types
-export function listTypeConstants(t: Type): TConstant[] {
-  switch (t.tag) {
-    case "constant":
-      return [t];
-    case "empty-row":
-    case "type-variable":
-      return [];
-    case "application":
-      return flatMap(listTypeConstants, [
-        t.op.type,
-        ...t.args.map(a => a.type)
-      ]);
-    case "row-extension":
-      return [
-        ...listTypeConstants(t.labelType.type),
-        ...listTypeConstants(t.extends.type)
-      ];
-  }
+export function listTypeConstants(type: Type): TConstant[] {
+  return foldType(type, t => {
+    return t.tag === "constant" ? [t] : typeChildren(t);
+  });
 }
 
 // Return the list of type variables in the order they show up
-export function listTypeVariables(t: Type): string[] {
-  switch (t.tag) {
-    case "constant":
-    case "empty-row":
-      return [];
-    case "application":
-      return unique(
-        flatMap(listTypeVariables, [t.op.type, ...t.args.map(a => a.type)])
-      );
-    case "row-extension":
-      return unique([
-        ...listTypeVariables(t.labelType.type),
-        ...listTypeVariables(t.extends.type)
-      ]);
-    case "type-variable":
-      return [t.name];
-  }
+export function listTypeVariables(type: Type): string[] {
+  return foldType(type, t => {
+    return t.tag === "type-variable" ? [t.name] : unique(typeChildren(t));
+  });
 }
 
 export function generalize(t: Type, monovars: string[]): TypeSchema {
