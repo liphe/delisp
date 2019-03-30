@@ -251,11 +251,11 @@ function compileRecord(expr: SRecord, env: Environment): JS.Expression {
     type: "ObjectExpression",
     properties: expr.fields.map(
       ({ label, value }): JS.Property => {
-        if (!label.startsWith(":")) {
+        if (!label.name.startsWith(":")) {
           throw new InvariantViolation(`Invalid record ${label}`);
         }
 
-        const name = label.replace(/^:/, "");
+        const name = label.name.replace(/^:/, "");
 
         return {
           type: "Property",
