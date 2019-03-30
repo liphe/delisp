@@ -6,8 +6,6 @@ import { TypeWithWildcards } from "./type-wildcards";
 // Expressions
 //
 
-export type SVar = string;
-
 interface Node<I> {
   location: Location;
   info: I;
@@ -23,6 +21,7 @@ export interface SString<I = {}> extends Node<I> {
   value: string;
 }
 
+type SVar = string;
 export interface SIdentifier<I = {}> extends Node<I> {
   tag: "identifier";
   name: SVar;
