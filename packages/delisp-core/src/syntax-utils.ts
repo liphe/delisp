@@ -13,14 +13,14 @@ export function transformRecurExpr<I>(
     case "vector":
       return fn({
         ...s,
-        values: s.values.map(s1 => transformRecurExpr(s1, fn))
+        values: s.values.map(s1 => ({ expr: transformRecurExpr(s1.expr, fn) }))
       });
     case "record":
       return fn({
         ...s,
         fields: s.fields.map(f => ({
           ...f,
-          value: transformRecurExpr(f.value, fn)
+          value: { expr: transformRecurExpr(f.value.expr, fn) }
         }))
       });
     case "function-call":
@@ -55,7 +55,7 @@ export function transformRecurExpr<I>(
     case "type-annotation":
       return fn({
         ...s,
-        value: transformRecurExpr(s.value, fn)
+        value: { expr: transformRecurExpr(s.value.expr, fn) }
       });
   }
 }
@@ -73,13 +73,13 @@ function expressionChildren<I>(e: Expression<I>): Array<Expression<I>> {
     case "function":
       return e.body.map(e => e.expr);
     case "vector":
-      return e.values;
+      return e.values.map(e1 => e1.expr);
     case "let-bindings":
       return [...e.bindings.map(b => b.value.expr), ...e.body.map(e => e.expr)];
     case "record":
-      return [...e.fields.map(f => f.value)];
+      return [...e.fields.map(f => f.value.expr)];
     case "type-annotation":
-      return [e.value];
+      return [e.value.expr];
   }
 }
 

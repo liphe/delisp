@@ -53,7 +53,7 @@ export interface SFunction<I = {}> extends Node<I> {
 
 export interface SVectorConstructor<I = {}> extends Node<I> {
   tag: "vector";
-  values: Array<Expression<I>>;
+  values: Array<{ expr: Expression<I> }>;
 }
 
 export interface SLetBinding<I = {}> {
@@ -71,14 +71,14 @@ export interface SRecord<I = {}> extends Node<I> {
   tag: "record";
   fields: Array<{
     label: SIdentifier;
-    value: Expression<I>;
+    value: { expr: Expression<I> };
   }>;
-  extends?: Expression<I>;
+  extends?: { expr: Expression<I> };
 }
 
 export interface STypeAnnotation<I = {}> extends Node<I> {
   tag: "type-annotation";
-  value: Expression<I>;
+  value: { expr: Expression<I> };
   typeWithWildcards: TypeWithWildcards;
 }
 

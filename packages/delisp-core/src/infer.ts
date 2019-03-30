@@ -191,13 +191,17 @@ function infer(
         assumptions: []
       };
     case "vector": {
-      const inferredValues = inferMany(expr.values, monovars, internalTypes);
+      const inferredValues = inferMany(
+        expr.values.map(v => v.expr),
+        monovars,
+        internalTypes
+      );
       const t = generateUniqueTVar();
 
       return {
         result: {
           ...expr,
-          values: inferredValues.result,
+          values: inferredValues.result.map(e => ({ expr: e })),
           info: { type: tVector(t) }
         },
         assumptions: inferredValues.assumptions,
@@ -211,11 +215,11 @@ function infer(
     case "record": {
       const inferred = expr.fields.map(({ label, value }) => ({
         label,
-        ...infer(value, monovars, internalTypes)
+        ...infer(value.expr, monovars, internalTypes)
       }));
 
       const tailInferred =
-        expr.extends && infer(expr.extends, monovars, internalTypes);
+        expr.extends && infer(expr.extends.expr, monovars, internalTypes);
       const tailRowType = generateUniqueTVar();
 
       return {
@@ -223,9 +227,9 @@ function infer(
           ...expr,
           fields: inferred.map(({ label, result: value }) => ({
             label,
-            value
+            value: { expr: value }
           })),
-          extends: tailInferred && tailInferred.result,
+          extends: tailInferred && { expr: tailInferred.result },
           info: {
             type: tRecord(
               inferred.map(i => ({
@@ -445,7 +449,7 @@ function infer(
     }
 
     case "type-annotation": {
-      const inferred = infer(expr.value, monovars, internalTypes);
+      const inferred = infer(expr.value.expr, monovars, internalTypes);
       const t = expandTypeAliases(
         expr.typeWithWildcards.instantiate(),
         internalTypes

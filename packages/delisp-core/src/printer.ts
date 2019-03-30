@@ -51,7 +51,7 @@ function print(sexpr: Syntax): Doc {
     case "number":
       return text(String(sexpr.value));
     case "vector": {
-      const args = sexpr.values.map(print);
+      const args = sexpr.values.map(v => print(v.expr));
       return group(vector(align(...args)));
     }
     case "record": {
@@ -60,7 +60,7 @@ function print(sexpr: Syntax): Doc {
           align(
             join(
               sexpr.fields.map(({ label, value }) =>
-                concat(text(label.name), space, print(value))
+                concat(text(label.name), space, print(value.expr))
               ),
               line
             )
@@ -144,7 +144,7 @@ function print(sexpr: Syntax): Doc {
           text("the"),
           space,
           text(sexpr.typeWithWildcards.print()),
-          indent(concat(line, print(sexpr.value)))
+          indent(concat(line, print(sexpr.value.expr)))
         )
       );
 

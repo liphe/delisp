@@ -249,7 +249,7 @@ function compileVector(
 ): JS.Expression {
   return {
     type: "ArrayExpression",
-    elements: expr.values.map(e => compile(e, env))
+    elements: expr.values.map(e => compile(e.expr, env))
   };
 }
 
@@ -267,7 +267,7 @@ function compileRecord(expr: SRecord, env: Environment): JS.Expression {
         return {
           type: "Property",
           key: isValidJSIdentifierName(name) ? identifier(name) : literal(name),
-          value: compile(value, env),
+          value: compile(value.expr, env),
           kind: "init",
           method: false,
           shorthand: false,
@@ -279,7 +279,7 @@ function compileRecord(expr: SRecord, env: Environment): JS.Expression {
   if (expr.extends) {
     return methodCall({ type: "Identifier", name: "Object" }, "assign", [
       { type: "ObjectExpression", properties: [] },
-      compile(expr.extends, env),
+      compile(expr.extends.expr, env),
       newObj
     ]);
   } else {
@@ -321,7 +321,7 @@ export function compile(expr: Expression, env: Environment): JS.Expression {
     case "let-bindings":
       return compileLetBindings(expr, env);
     case "type-annotation":
-      return compile(expr.value, env);
+      return compile(expr.value.expr, env);
   }
 }
 

@@ -213,7 +213,7 @@ defineConversion("the", expr => {
   return {
     tag: "type-annotation",
     typeWithWildcards: new TypeWithWildcards(convertType(t)),
-    value: convertExpr(value),
+    value: { expr: convertExpr(value) },
     location: expr.location,
     info: {}
   };
@@ -346,7 +346,7 @@ function convertList(list: ASExprList): Expression {
 function convertVector(list: ASExprVector): Expression {
   return {
     tag: "vector",
-    values: list.elements.map(a => convertExpr(a)),
+    values: list.elements.map(a => ({ expr: convertExpr(a) })),
     location: list.location,
     info: {}
   };
@@ -359,9 +359,9 @@ function convertMap(map: ASExprMap): Expression {
     tag: "record",
     fields: fields.map(f => ({
       label: convertSymbol(f.label),
-      value: convertExpr(f.value)
+      value: { expr: convertExpr(f.value) }
     })),
-    extends: tail && convertExpr(tail),
+    extends: tail && { expr: convertExpr(tail) },
     location: map.location,
     info: {}
   };
