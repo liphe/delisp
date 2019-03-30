@@ -27,17 +27,17 @@ export interface SIdentifier<I = {}> extends Node<I> {
   name: SVar;
 }
 
-export interface SConditional<I = {}> extends Node<I> {
+export interface SConditional<I = {}, E = ExpressionNode<I>> extends Node<I> {
   tag: "conditional";
-  condition: { expr: Expression<I> };
-  consequent: { expr: Expression<I> };
-  alternative: { expr: Expression<I> };
+  condition: E;
+  consequent: E;
+  alternative: E;
 }
 
-export interface SFunctionCall<I = {}> extends Node<I> {
+export interface SFunctionCall<I = {}, E = ExpressionNode<I>> extends Node<I> {
   tag: "function-call";
-  fn: { expr: Expression<I> };
-  args: Array<{ expr: Expression<I> }>;
+  fn: E;
+  args: E[];
 }
 
 export interface LambdaList {
@@ -45,54 +45,60 @@ export interface LambdaList {
   location: Location;
 }
 
-export interface SFunction<I = {}> extends Node<I> {
+export interface SFunction<I = {}, E = ExpressionNode<I>> extends Node<I> {
   tag: "function";
   lambdaList: LambdaList;
-  body: Array<{ expr: Expression<I> }>;
+  body: E[];
 }
 
-export interface SVectorConstructor<I = {}> extends Node<I> {
+export interface SVectorConstructor<I = {}, E = ExpressionNode<I>>
+  extends Node<I> {
   tag: "vector";
-  values: Array<{ expr: Expression<I> }>;
+  values: E[];
 }
 
-export interface SLetBinding<I = {}> {
+export interface SLetBinding<I = {}, E = ExpressionNode<I>> {
   variable: SIdentifier;
-  value: { expr: Expression<I> };
+  value: E;
 }
 
-export interface SLet<I = {}> extends Node<I> {
+export interface SLet<I = {}, E = ExpressionNode<I>> extends Node<I> {
   tag: "let-bindings";
-  bindings: Array<SLetBinding<I>>;
-  body: Array<{ expr: Expression<I> }>;
+  bindings: Array<SLetBinding<I, E>>;
+  body: E[];
 }
 
-export interface SRecord<I = {}> extends Node<I> {
+export interface SRecord<I = {}, E = ExpressionNode<I>> extends Node<I> {
   tag: "record";
   fields: Array<{
     label: SIdentifier;
-    value: { expr: Expression<I> };
+    value: E;
   }>;
-  extends?: { expr: Expression<I> };
+  extends?: E;
 }
 
-export interface STypeAnnotation<I = {}> extends Node<I> {
+export interface STypeAnnotation<I = {}, E = ExpressionNode<I>>
+  extends Node<I> {
   tag: "type-annotation";
-  value: { expr: Expression<I> };
+  value: E;
   typeWithWildcards: TypeWithWildcards;
 }
 
-export type Expression<I = {}> =
+export type Expression<I = {}, E = ExpressionNode<I>> =
   | SNumber<I>
   | SString<I>
   | SIdentifier<I>
-  | SConditional<I>
-  | SFunctionCall<I>
-  | SFunction<I>
-  | SVectorConstructor<I>
-  | SLet<I>
-  | SRecord<I>
-  | STypeAnnotation<I>;
+  | SConditional<I, E>
+  | SFunctionCall<I, E>
+  | SFunction<I, E>
+  | SVectorConstructor<I, E>
+  | SLet<I, E>
+  | SRecord<I, E>
+  | STypeAnnotation<I, E>;
+
+interface ExpressionNode<I> {
+  expr: Expression<I, ExpressionNode<I>>;
+}
 
 //
 // Declarations
