@@ -28,6 +28,22 @@ function noUnusedVars(m: Module): void {
   });
 }
 
+function noEmptyLet(m: Module): void {
+  traverseModule(m, s => {
+    if (s.tag === "let-bindings") {
+      if (s.bindings.length === 0) {
+        console.warn(
+          printHighlightedExpr(
+            `no variables bound in let expression (no-empty-let)`,
+            s.location
+          )
+        );
+      }
+    }
+  });
+}
+
 export function lintModule(m: Module) {
   noUnusedVars(m);
+  noEmptyLet(m);
 }
