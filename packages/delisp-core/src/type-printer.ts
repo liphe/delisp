@@ -31,10 +31,13 @@ function normalizeType(t: Type): Type {
 }
 
 function printApplicationType(type: TApplication): string {
-  if (type.op.tag === "constant" && type.op.name === "vector") {
-    return `[${_printType(type.args[0])}]`;
-  } else if (type.op.tag === "constant" && type.op.name === "record") {
-    const arg = type.args[0];
+  if (type.op.type.tag === "constant" && type.op.type.name === "vector") {
+    return `[${_printType(type.args[0].type)}]`;
+  } else if (
+    type.op.type.tag === "constant" &&
+    type.op.type.name === "record"
+  ) {
+    const arg = type.args[0].type;
     const row = normalizeRow(arg);
     const fields = row.fields
       .map(f => `${f.label} ${_printType(f.labelType)}`)
@@ -43,7 +46,9 @@ function printApplicationType(type: TApplication): string {
       row.extends.tag !== "empty-row" ? ` | ${_printType(row.extends)}` : "";
     return `{${fields}${extension}}`;
   } else {
-    return "(" + [type.op, ...type.args].map(_printType).join(" ") + ")";
+    return (
+      "(" + [type.op, ...type.args].map(e => _printType(e.type)).join(" ") + ")"
+    );
   }
 }
 

@@ -83,20 +83,20 @@ export function generateTSMonotype(t: Type, mapping: TSMapping): string {
     }
 
     case "application": {
-      if (t.op.tag !== "constant") {
+      if (t.op.type.tag !== "constant") {
         throw new Error(
           `Cannot generate a Typescript for a type application to ${printType(
-            t.op
+            t.op.type
           )}`
         );
       }
-      const handler = generateTApps[t.op.name];
+      const handler = generateTApps[t.op.type.name];
       if (!handler) {
         throw new Error(
           `Doesn't know how to generate Typescript type for ${printType(t)}`
         );
       }
-      return handler(t.args, mapping);
+      return handler(t.args.map(a => a.type), mapping);
     }
 
     case "empty-row":

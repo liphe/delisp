@@ -62,7 +62,7 @@ function occurCheck(v: TVar, rootT: Type): UnifyOccurCheckError | null {
       return err;
     }
     if (t.tag === "application") {
-      const errors = t.args.map(check).filter(r => r !== null);
+      const errors = t.args.map(a => check(a.type)).filter(r => r !== null);
       return errors.length > 0 ? errors[0] : null;
     }
     return null;
@@ -161,7 +161,7 @@ function rewriteRowForLabel(
       // Firstly, we recursively rewrite the tail of the row extension
       // to start with `label.`
       const { row: newRow, substitution: subs } = rewriteRowForLabel(
-        row.extends,
+        row.extends.type,
         label,
         ctx
       );
@@ -171,8 +171,8 @@ function rewriteRowForLabel(
       return {
         row: tRowExtension(
           label,
-          newRow.labelType,
-          tRowExtension(row.label, row.labelType, newRow.extends)
+          newRow.labelType.type,
+          tRowExtension(row.label, row.labelType.type, newRow.extends.type)
         ),
         substitution: subs
       };
@@ -193,7 +193,10 @@ function unifyRow(
     ctx
   );
 
-  if (row1.extends.tag === "type-variable" && subs[row1.extends.name]) {
+  if (
+    row1.extends.type.tag === "type-variable" &&
+    subs[row1.extends.type.name]
+  ) {
     return {
       tag: "unify-mismatch-error",
       t1: row1,
@@ -202,8 +205,8 @@ function unifyRow(
   }
 
   return unifyArray(
-    [row1.labelType, row1.extends],
-    [row3.labelType, row3.extends],
+    [row1.labelType.type, row1.extends.type],
+    [row3.labelType.type, row3.extends.type],
     subs
   );
 }
@@ -240,7 +243,11 @@ export function unify(t1: Type, t2: Type, ctx: Substitution): UnifyResult {
         };
   } else if (t1.tag === "application" && t2.tag === "application") {
     // RULE: (uni-app)
-    return unifyArray([t1.op, ...t1.args], [t2.op, ...t2.args], ctx);
+    return unifyArray(
+      [t1.op.type, ...t1.args.map(a => a.type)],
+      [t2.op.type, ...t2.args.map(a => a.type)],
+      ctx
+    );
   } else if (t1.tag === "type-variable" && !t1.userSpecified) {
     // RULE: (uni-varl)
     return unifyVariable(t1, t2, ctx);

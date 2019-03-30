@@ -9,8 +9,8 @@ export interface TConstant {
 
 export interface TApplication {
   tag: "application";
-  op: Type;
-  args: Type[];
+  op: { type: Type };
+  args: Array<{ type: Type }>;
 }
 
 export interface TVar {
@@ -26,9 +26,9 @@ export interface REmpty {
 export interface RExtension {
   tag: "row-extension";
   label: string;
-  labelType: Type;
+  labelType: { type: Type };
   // TODO: Implement kind system!
-  extends: Type;
+  extends: { type: Type };
 }
 
 export type Row = REmpty | RExtension;
@@ -79,8 +79,8 @@ export function tUserDefined(name: string): TConstant {
 export function tApp(op: Type, ...args: Type[]): Type {
   return {
     tag: "application",
-    op,
-    args
+    op: { type: op },
+    args: args.map(a => ({ type: a }))
   };
 }
 
@@ -101,8 +101,8 @@ export const tRowExtension = (
 ): RExtension => ({
   tag: "row-extension",
   label,
-  labelType,
-  extends: row
+  labelType: { type: labelType },
+  extends: { type: row }
 });
 
 export function tRow(

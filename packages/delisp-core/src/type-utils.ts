@@ -17,7 +17,9 @@ import { flatMap, unique } from "./utils";
 
 export function isFunctionType(t: Type): t is TApplication {
   return (
-    t.tag === "application" && t.op.tag === "constant" && t.op.name === "->"
+    t.tag === "application" &&
+    t.op.type.tag === "constant" &&
+    t.op.type.name === "->"
   );
 }
 
@@ -30,15 +32,15 @@ export function transformRecurType(t: Type, fn: (t1: Type) => Type): Type {
     case "application":
       return fn(
         tApp(
-          transformRecurType(t.op, fn),
-          ...t.args.map(t1 => transformRecurType(t1, fn))
+          transformRecurType(t.op.type, fn),
+          ...t.args.map(t1 => transformRecurType(t1.type, fn))
         )
       );
     case "row-extension":
       return tRowExtension(
         t.label,
-        transformRecurType(t.labelType, fn),
-        transformRecurType(t.extends, fn)
+        transformRecurType(t.labelType.type, fn),
+        transformRecurType(t.extends.type, fn)
       );
   }
 }
@@ -71,11 +73,14 @@ export function listTypeConstants(t: Type): TConstant[] {
     case "type-variable":
       return [];
     case "application":
-      return flatMap(listTypeConstants, [t.op, ...t.args]);
+      return flatMap(listTypeConstants, [
+        t.op.type,
+        ...t.args.map(a => a.type)
+      ]);
     case "row-extension":
       return [
-        ...listTypeConstants(t.labelType),
-        ...listTypeConstants(t.extends)
+        ...listTypeConstants(t.labelType.type),
+        ...listTypeConstants(t.extends.type)
       ];
   }
 }
@@ -87,11 +92,13 @@ export function listTypeVariables(t: Type): string[] {
     case "empty-row":
       return [];
     case "application":
-      return unique(flatMap(listTypeVariables, [t.op, ...t.args]));
+      return unique(
+        flatMap(listTypeVariables, [t.op.type, ...t.args.map(a => a.type)])
+      );
     case "row-extension":
       return unique([
-        ...listTypeVariables(t.labelType),
-        ...listTypeVariables(t.extends)
+        ...listTypeVariables(t.labelType.type),
+        ...listTypeVariables(t.extends.type)
       ]);
     case "type-variable":
       return [t.name];
@@ -149,9 +156,12 @@ export function normalizeRow(
     case "type-variable":
       return { fields: [], extends: type };
     case "row-extension":
-      const { fields, extends: row } = normalizeRow(type.extends);
+      const { fields, extends: row } = normalizeRow(type.extends.type);
       return {
-        fields: [{ label: type.label, labelType: type.labelType }, ...fields],
+        fields: [
+          { label: type.label, labelType: type.labelType.type },
+          ...fields
+        ],
         extends: row
       };
   }
