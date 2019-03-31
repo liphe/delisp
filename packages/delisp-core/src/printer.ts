@@ -14,6 +14,7 @@ import {
   text
 } from "./prettier";
 import { isExpression, Expression, Module, Syntax } from "./syntax";
+import { foldExpr } from "./syntax-utils";
 
 import { printType } from "./type-printer";
 
@@ -42,101 +43,98 @@ function map(...docs: Doc[]): Doc {
   return concat(text("{"), ...docs, text("}"));
 }
 
-function printBody(ss: Syntax[]): Doc {
-  return concat(line, join(ss.map(print), line));
+function lines(...docs: Doc[]): Doc {
+  return concat(line, join(docs, line));
 }
 
 function printExpr(expr: Expression): Doc {
-  switch (expr.node.tag) {
-    case "string":
-      return printString(expr.node.value);
-    case "number":
-      return text(String(expr.node.value));
-    case "vector": {
-      const args = expr.node.values.map(v => print(v));
-      return group(vector(align(...args)));
-    }
-    case "record": {
-      return group(
-        map(
-          align(
-            join(
-              expr.node.fields.map(({ label, value }) =>
-                concat(text(label.name), space, print(value))
-              ),
-              line
-            )
-          )
-        )
-      );
-    }
-    case "variable-reference":
-      return printIdentifier(expr.node.name);
-
-    case "conditional":
-      return group(
-        list(
-          concat(
-            text("if"),
-            space,
-            align(
-              print(expr.node.condition),
-              print(expr.node.consequent),
-              print(expr.node.alternative)
-            )
-          )
-        ),
-        // NOTE: We don't want conditionals to be too long. We use a
-        // much lower value here, we'll only group them if they are
-        // realluy short.
-        30
-      );
-
-    case "function":
-      const argNames = expr.node.lambdaList.positionalArgs.map(x => x.name);
-      const singleBody = expr.node.body.length === 1;
-      const doc = list(
-        text("lambda"),
-        space,
-        group(list(align(...argNames.map(printIdentifier)))),
-        indent(printBody(expr.node.body))
-      );
-      return singleBody ? group(doc) : doc;
-
-    case "function-call": {
-      const fn = print(expr.node.fn);
-      const args = expr.node.args.map(print);
-      if (args.length === 0) {
-        return group(list(fn));
-      } else {
-        return group(list(groupalign(fn, align(...args))));
+  return foldExpr(expr, e => {
+    switch (e.node.tag) {
+      case "string":
+        return printString(e.node.value);
+      case "number":
+        return text(String(e.node.value));
+      case "vector": {
+        return group(vector(align(...e.node.values)));
       }
-    }
-
-    case "let-bindings":
-      return list(
-        text("let"),
-        space,
-        map(
-          align(
-            ...expr.node.bindings.map(b =>
-              concat(text(b.variable.name), space, print(b.value))
+      case "record": {
+        return group(
+          map(
+            align(
+              join(
+                e.node.fields.map(({ label, value }) =>
+                  concat(text(label.name), space, value)
+                ),
+                line
+              )
             )
           )
-        ),
-        indent(printBody(expr.node.body))
-      );
+        );
+      }
+      case "variable-reference":
+        return printIdentifier(e.node.name);
 
-    case "type-annotation":
-      return group(
-        list(
-          text("the"),
+      case "conditional":
+        return group(
+          list(
+            concat(
+              text("if"),
+              space,
+              align(e.node.condition, e.node.consequent, e.node.alternative)
+            )
+          ),
+          // NOTE: We don't want conditionals to be too long. We use a
+          // much lower value here, we'll only group them if they are
+          // realluy short.
+          30
+        );
+
+      case "function":
+        const argNames = e.node.lambdaList.positionalArgs.map(x => x.name);
+        const singleBody = e.node.body.length === 1;
+        const doc = list(
+          text("lambda"),
           space,
-          text(expr.node.typeWithWildcards.print()),
-          indent(concat(line, print(expr.node.value)))
-        )
-      );
-  }
+          group(list(align(...argNames.map(printIdentifier)))),
+          indent(lines(...e.node.body))
+        );
+        return singleBody ? group(doc) : doc;
+
+      case "function-call": {
+        const fn = e.node.fn;
+        const args = e.node.args;
+        if (args.length === 0) {
+          return group(list(fn));
+        } else {
+          return group(list(groupalign(fn, align(...args))));
+        }
+      }
+
+      case "let-bindings":
+        return list(
+          text("let"),
+          space,
+          map(
+            align(
+              ...e.node.bindings.map(b =>
+                concat(text(b.variable.name), space, b.value)
+              )
+            )
+          ),
+          indent(lines(...e.node.body))
+        );
+
+      case "type-annotation":
+        return group(
+          list(
+            text("the"),
+            space,
+            text(e.node.typeWithWildcards.print()),
+            indent(concat(line, e.node.value))
+          )
+        );
+    }
+  });
 }
 
 function print(form: Syntax): Doc {
