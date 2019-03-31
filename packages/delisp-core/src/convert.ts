@@ -10,9 +10,9 @@ import {
   Declaration,
   Expression,
   ExpressionF,
+  SLetBindingF,
   LambdaList,
   SIdentifier,
-  SLetBinding,
   Syntax
 } from "./syntax";
 import { last } from "./utils";
@@ -138,13 +138,14 @@ defineConversion("if", expr => {
   };
 });
 
-function parseLetBindings(bindings: ASExpr): SLetBinding[] {
+function parseLetBindings(
+  bindings: ASExpr
+): Array<SLetBindingF<{}, Expression>> {
   if (bindings.tag !== "map") {
     throw new Error(
       printHighlightedExpr(`'let' bindings should be a map`, bindings.location)
     );
   }
-
   return bindings.fields.map(field => ({
     variable: convertSymbol(field.label),
     value: convertExpr(field.value)

@@ -106,23 +106,23 @@ function compileLambda(
   fn: SFunction,
   env: Environment
 ): JS.ArrowFunctionExpression {
-  const newEnv = fn.lambdaList.positionalArgs.reduce(
+  const newEnv = fn.node.lambdaList.positionalArgs.reduce(
     (e, param) => addBinding(param.name, e),
     env
   );
 
-  const jsargs = fn.lambdaList.positionalArgs.map(
+  const jsargs = fn.node.lambdaList.positionalArgs.map(
     (param): JS.Pattern => ({
       type: "Identifier",
       name: lookupBinding(param.name, newEnv).jsname
     })
   );
 
-  const implicitReturn = fn.body.length === 1;
+  const implicitReturn = fn.node.body.length === 1;
 
   const body: JS.Expression | JS.Statement = implicitReturn
-    ? compile(fn.body[0], newEnv)
-    : compileBody(fn.body, newEnv);
+    ? compile(fn.node.body[0], newEnv)
+    : compileBody(fn.node.body, newEnv);
 
   return {
     type: "ArrowFunctionExpression",
@@ -142,20 +142,20 @@ function compileFunctionCall(
   funcall: SFunctionCall,
   env: Environment
 ): JS.Expression {
-  const compiledArgs = funcall.args.map(arg => compile(arg, env));
+  const compiledArgs = funcall.node.args.map(arg => compile(arg, env));
   if (
-    funcall.fn.node.tag === "identifier" &&
-    isInlinePrimitive(funcall.fn.node.name)
+    funcall.node.fn.node.tag === "identifier" &&
+    isInlinePrimitive(funcall.node.fn.node.name)
   ) {
     return compileInlinePrimitive(
-      funcall.fn.node.name,
+      funcall.node.fn.node.name,
       compiledArgs,
       "funcall"
     );
   } else {
     return {
       type: "CallExpression",
-      callee: compile(funcall.fn, env),
+      callee: compile(funcall.node.fn, env),
       arguments: compiledArgs
     };
   }
@@ -201,14 +201,14 @@ function compileConditional(
 ): JS.Expression {
   return {
     type: "ConditionalExpression",
-    test: compile(expr.condition, env),
-    consequent: compile(expr.consequent, env),
-    alternate: compile(expr.alternative, env)
+    test: compile(expr.node.condition, env),
+    consequent: compile(expr.node.consequent, env),
+    alternate: compile(expr.node.alternative, env)
   };
 }
 
 function compileLetBindings(expr: SLet, env: Environment): JS.Expression {
-  const newenv = expr.bindings.reduce(
+  const newenv = expr.node.bindings.reduce(
     (e, binding) => addBinding(binding.variable.name, e),
     env
   );
@@ -217,15 +217,15 @@ function compileLetBindings(expr: SLet, env: Environment): JS.Expression {
     type: "CallExpression",
     callee: {
       type: "FunctionExpression",
-      params: expr.bindings.map(
+      params: expr.node.bindings.map(
         (b): JS.Pattern => ({
           type: "Identifier",
           name: lookupBinding(b.variable.name, newenv).jsname
         })
       ),
-      body: compileBody(expr.body, newenv)
+      body: compileBody(expr.node.body, newenv)
     },
-    arguments: expr.bindings.map(b => compile(b.value, env))
+    arguments: expr.node.bindings.map(b => compile(b.value, env))
   };
 }
 
@@ -249,14 +249,14 @@ function compileVector(
 ): JS.Expression {
   return {
     type: "ArrayExpression",
-    elements: expr.values.map(e => compile(e, env))
+    elements: expr.node.values.map(e => compile(e, env))
   };
 }
 
 function compileRecord(expr: SRecord, env: Environment): JS.Expression {
   const newObj: JS.ObjectExpression = {
     type: "ObjectExpression",
-    properties: expr.fields.map(
+    properties: expr.node.fields.map(
       ({ label, value }): JS.Property => {
         if (!label.name.startsWith(":")) {
           throw new InvariantViolation(`Invalid record ${label}`);
@@ -276,10 +276,10 @@ function compileRecord(expr: SRecord, env: Environment): JS.Expression {
       }
     )
   };
-  if (expr.extends) {
+  if (expr.node.extends) {
     return methodCall({ type: "Identifier", name: "Object" }, "assign", [
       { type: "ObjectExpression", properties: [] },
-      compile(expr.extends, env),
+      compile(expr.node.extends, env),
       newObj
     ]);
   } else {
@@ -308,19 +308,19 @@ export function compile(expr: Expression, env: Environment): JS.Expression {
     case "string":
       return literal(node.value);
     case "vector":
-      return compileVector(node, env);
+      return compileVector({ node }, env);
     case "record":
-      return compileRecord(node, env);
+      return compileRecord({ node }, env);
     case "identifier":
       return compileIdentifier(node, env);
     case "conditional":
-      return compileConditional(node, env);
+      return compileConditional({ node }, env);
     case "function":
-      return compileLambda(node, env);
+      return compileLambda({ node }, env);
     case "function-call":
-      return compileFunctionCall(node, env);
+      return compileFunctionCall({ node }, env);
     case "let-bindings":
-      return compileLetBindings(node, env);
+      return compileLetBindings({ node }, env);
     case "type-annotation":
       return compile(node.value, env);
   }
