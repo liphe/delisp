@@ -191,10 +191,6 @@ function compileVariable(
         type: "Identifier",
         name: binding.jsname
       };
-    default:
-      throw new InvariantViolation(
-        "This switch-statement should be exhaustive but TS doesn't detect it somehow."
-      );
   }
 }
 

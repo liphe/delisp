@@ -1,4 +1,4 @@
-import { InvariantViolation } from "./invariant";
+import { assertNever, InvariantViolation } from "./invariant";
 import {
   isExpression,
   ExpressionF,
@@ -131,7 +131,7 @@ function syntaxChildren<I>(s: Syntax<I>): Array<Expression<I>> {
       case "type-alias":
         return [];
       default:
-        throw new InvariantViolation(`syntaxChildren() of unknown syntax`);
+        return assertNever(s.node);
     }
   }
 }

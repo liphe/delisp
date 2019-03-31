@@ -1,4 +1,4 @@
-import { InvariantViolation } from "./invariant";
+import { assertNever } from "./invariant";
 
 import {
   align,
@@ -166,7 +166,7 @@ function print(form: Syntax): Doc {
         );
 
       default:
-        throw new InvariantViolation(`Can't print this syntax.`);
+        return assertNever(form.node);
     }
   }
 }

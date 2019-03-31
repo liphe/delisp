@@ -9,7 +9,7 @@
 //   https://pdfs.semanticscholar.org/8983/233b3dff2c5b94efb31235f62bddc22dc899.pdf
 //
 
-import { InvariantViolation } from "./invariant";
+import { assertNever } from "./invariant";
 
 import {
   Expression,
@@ -546,9 +546,7 @@ function inferSyntax(
       constraints: []
     };
   } else {
-    throw new InvariantViolation(
-      `Can't infer the type for an unknown syntax node.`
-    );
+    return assertNever(syntax.node);
   }
 }
 
@@ -727,7 +725,7 @@ function applySubstitutionToSyntax(
   } else if (s.node.tag === "type-alias") {
     return s;
   } else {
-    throw new InvariantViolation(`Can't apply substitution to unknown syntax.`);
+    return assertNever(s.node);
   }
 }
 
@@ -827,11 +825,7 @@ ${printType(applySubstitution(constraint.t, solution))}
             )
           );
         default:
-          // Adding a default clause here makes Typescript detects
-          // that this case won't fall through to the next one.
-          throw new InvariantViolation(
-            `This should never happen. Typescript doesnt detect the exhaustiveness of this function.`
-          );
+          return assertNever(result);
       }
     }
     case "explicit-instance-constraint": {
