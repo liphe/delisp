@@ -138,7 +138,7 @@ const delispEval = (syntax: Syntax) => {
     result.unknowns.forEach(v => {
       console.warn(
         chalk.yellowBright(
-          `Unknown variable ${v.name} expected with type ${printType(
+          `Unknown variable ${v.node.name} expected with type ${printType(
             v.info.type
           )}`
         )
@@ -163,7 +163,7 @@ const delispEval = (syntax: Syntax) => {
   if (isDeclaration(syntax)) {
     const type =
       typedSyntax && isDefinition(typedSyntax)
-        ? typedSyntax.node.value.node.info.type
+        ? typedSyntax.node.value.info.type
         : null;
 
     if (isDefinition(syntax)) {
@@ -173,9 +173,7 @@ const delispEval = (syntax: Syntax) => {
     }
   } else {
     const type =
-      typedSyntax && !isDeclaration(typedSyntax)
-        ? typedSyntax.node.info.type
-        : null;
+      typedSyntax && !isDeclaration(typedSyntax) ? typedSyntax.info.type : null;
     return { value, type };
   }
 };
