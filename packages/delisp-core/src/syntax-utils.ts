@@ -1,5 +1,11 @@
 import { InvariantViolation } from "./invariant";
-import { Expression, isDefinition, Module, Syntax } from "./syntax";
+import {
+  Expression,
+  isDefinition,
+  Module,
+  SIdentifier,
+  Syntax
+} from "./syntax";
 
 export function transformRecurExpr<I>(
   s: Expression<I>,
@@ -94,21 +100,21 @@ function syntaxChildren<I>(s: Syntax<I>): Array<Expression<I>> {
   }
 }
 
-function expressionBindings<I>(e: Expression<I>): string[] {
+function expressionBindings<I>(e: Expression<I>): SIdentifier[] {
   switch (e.tag) {
     case "function":
-      return e.lambdaList.positionalArgs.map(l => l.name);
+      return e.lambdaList.positionalArgs;
     case "let-bindings":
-      return e.bindings.map(b => b.variable.name);
+      return e.bindings.map(b => b.variable);
     default:
       return [];
   }
 }
 
-function syntaxBindings<I>(s: Syntax<I>): string[] {
+export function syntaxBindings<I>(s: Syntax<I>): SIdentifier[] {
   switch (s.tag) {
     case "definition":
-      return [s.variable.name];
+      return [s.variable];
     case "export":
     case "type-alias":
       return [];
@@ -117,8 +123,8 @@ function syntaxBindings<I>(s: Syntax<I>): string[] {
   }
 }
 
-function moduleBindings<I>(m: Module<I>): string[] {
-  return m.body.filter(isDefinition).map(d => d.variable.name);
+function moduleBindings<I>(m: Module<I>): SIdentifier[] {
+  return m.body.filter(isDefinition).map(d => d.variable);
 }
 
 function syntaxPathFromRange<I>(
@@ -159,26 +165,26 @@ export function findSyntaxByOffset<I>(
   return findSyntaxByRange(m, offset, offset);
 }
 
-type Scope = Map<string, symbol>;
-function createScope(bindings: string[], parentScope?: Scope): Scope {
+type Scope = Map<string, SIdentifier>;
+function createScope(bindings: SIdentifier[], parentScope?: Scope): Scope {
   const scope = parentScope ? new Map(parentScope) : new Map();
-  bindings.forEach(b => scope.set(b, Symbol(b)));
+  bindings.forEach(b => scope.set(b.name, b));
   return scope;
 }
 
-type VisitorFn<I> = (s: Syntax<I>, scope: Scope) => void;
+export type Visitor<I = {}> = (s: Syntax<I>, scope: Scope) => void;
 function traverse<I>(
   s: Syntax<I>,
   scope: Scope,
-  onEnter?: VisitorFn<I>,
-  onExit?: VisitorFn<I>
+  onEnter?: Visitor<I>,
+  onExit?: Visitor<I>
 ): void {
   if (onEnter) {
     onEnter(s, scope);
   }
-  const newScope = createScope(syntaxBindings(s), scope);
+  const innerScope = createScope(syntaxBindings(s), scope);
   syntaxChildren(s).forEach(c => {
-    traverse(c, newScope, onEnter, onExit);
+    traverse(c, innerScope, onEnter, onExit);
   });
   if (onExit) {
     onExit(s, scope);
@@ -187,8 +193,8 @@ function traverse<I>(
 
 export function traverseModule<I>(
   m: Module<I>,
-  onEnter?: VisitorFn<I>,
-  onExit?: VisitorFn<I>
+  onEnter?: Visitor<I>,
+  onExit?: Visitor<I>
 ): void {
   const globalScope = createScope(moduleBindings(m));
   m.body.forEach(s => {

@@ -1,28 +1,63 @@
-import { Module, SIdentifier } from "./syntax";
-import { traverseModule } from "./syntax-utils";
+import { Module, SIdentifier, SDefinition } from "./syntax";
+import { traverseModule, syntaxBindings, Visitor } from "./syntax-utils";
 import { printHighlightedExpr } from "./error-report";
 
 function noUnusedVars(m: Module): void {
-  const variables: Map<symbol, SIdentifier> = new Map();
+  const globals: Map<SIdentifier, SDefinition> = new Map();
+  const used: Set<SIdentifier> = new Set();
 
-  traverseModule(m, (s, refs) => {
+  const enterNode: Visitor = (s, refs) => {
+    // list global definitions
+    // TODO: this should be moved to a `module:exit`
     if (s.tag === "definition") {
       if (refs.has(s.variable.name)) {
-        variables.set(refs.get(s.variable.name)!, s.variable);
+        globals.set(refs.get(s.variable.name)!, s);
       }
     }
+
+    // mark identifier as used
     if (s.tag === "identifier") {
       if (refs.has(s.name)) {
-        variables.delete(refs.get(s.name)!);
+        used.add(refs.get(s.name)!);
       }
     }
-  });
+  };
 
-  variables.forEach(v => {
+  const exitNode: Visitor = s => {
+    if (s.tag === "definition") {
+      // definitions are global and can be used
+      // outside of the definition node
+      return;
+    }
+
+    // lookup all indentifiers that exists only within
+    // the context of this node and warn for unused ones
+    syntaxBindings(s)
+      .filter(i => !used.has(i))
+      .forEach(i => {
+        console.warn(
+          printHighlightedExpr(
+            `"${i.name}" is defined but never used locally (no-unused-vars)`,
+            i.location
+          )
+        );
+      });
+  };
+
+  traverseModule(m, enterNode, exitNode);
+
+  // check for unused definitions
+  // @TODO should be handled like in exitNode
+  globals.forEach((def, sym) => {
+    if (used.has(sym)) {
+      return;
+    }
     console.warn(
       printHighlightedExpr(
-        `"${v.name}" is defined but never used (no-unused-vars)`,
-        v.location
+        `"${
+          def.variable.name
+        }" is defined but never used globally (no-unused-vars)`,
+        def.variable.location
       )
     );
   });
