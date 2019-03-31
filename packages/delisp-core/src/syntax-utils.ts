@@ -100,6 +100,18 @@ function syntaxChildren<I>(s: Syntax<I>): Array<Expression<I>> {
   }
 }
 
+function moduleChildren<I>(m: Module<I>): Array<Syntax<I>> {
+  return m.body;
+}
+
+function nodeChildren<I>(node: Syntax<I> | Module<I>): Array<Syntax<I>> {
+  if (node.tag === "module") {
+    return moduleChildren(node);
+  } else {
+    return syntaxChildren(node);
+  }
+}
+
 function expressionBindings<I>(e: Expression<I>): SIdentifier[] {
   switch (e.tag) {
     case "function":
@@ -111,7 +123,7 @@ function expressionBindings<I>(e: Expression<I>): SIdentifier[] {
   }
 }
 
-export function syntaxBindings<I>(s: Syntax<I>): SIdentifier[] {
+function syntaxBindings<I>(s: Syntax<I>): SIdentifier[] {
   switch (s.tag) {
     case "definition":
       return [s.variable];
@@ -125,6 +137,14 @@ export function syntaxBindings<I>(s: Syntax<I>): SIdentifier[] {
 
 function moduleBindings<I>(m: Module<I>): SIdentifier[] {
   return m.body.filter(isDefinition).map(d => d.variable);
+}
+
+export function nodeBindings<I>(node: Syntax<I> | Module<I>): SIdentifier[] {
+  if (node.tag === "module") {
+    return moduleBindings(node);
+  } else {
+    return syntaxBindings(node);
+  }
 }
 
 function syntaxPathFromRange<I>(
@@ -172,22 +192,25 @@ function createScope(bindings: SIdentifier[], parentScope?: Scope): Scope {
   return scope;
 }
 
-export type Visitor<I = {}> = (s: Syntax<I>, scope: Scope) => void;
+export type Visitor<I = {}> = (
+  node: Syntax<I> | Module<I>,
+  scope: Scope
+) => void;
 function traverse<I>(
-  s: Syntax<I>,
+  node: Syntax<I> | Module<I>,
   scope: Scope,
   onEnter?: Visitor<I>,
   onExit?: Visitor<I>
 ): void {
   if (onEnter) {
-    onEnter(s, scope);
+    onEnter(node, scope);
   }
-  const innerScope = createScope(syntaxBindings(s), scope);
-  syntaxChildren(s).forEach(c => {
+  const innerScope = createScope(nodeBindings(node), scope);
+  nodeChildren(node).forEach(c => {
     traverse(c, innerScope, onEnter, onExit);
   });
   if (onExit) {
-    onExit(s, scope);
+    onExit(node, scope);
   }
 }
 
@@ -196,8 +219,5 @@ export function traverseModule<I>(
   onEnter?: Visitor<I>,
   onExit?: Visitor<I>
 ): void {
-  const globalScope = createScope(moduleBindings(m));
-  m.body.forEach(s => {
-    traverse(s, globalScope, onEnter, onExit);
-  });
+  traverse(m, createScope([]), onEnter, onExit);
 }
