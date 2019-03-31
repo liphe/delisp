@@ -1,63 +1,74 @@
 import { InvariantViolation } from "./invariant";
-import { ExpressionF, Module, Syntax } from "./syntax";
+import { ExpressionF, Expression, Module, Syntax } from "./syntax";
+
+export function foldExpr<I, A>(
+  expr: Expression<I>,
+  fn: (e: ExpressionF<I, A>) => A
+): A {
+  switch (expr.node.tag) {
+    case "string":
+    case "number":
+    case "identifier":
+      return fn(expr.node);
+    case "vector":
+      return fn({
+        ...expr.node,
+        values: expr.node.values.map(s1 => foldExpr(s1, fn))
+      });
+    case "record":
+      return fn({
+        ...expr.node,
+        fields: expr.node.fields.map(f => ({
+          ...f,
+          value: foldExpr(f.value, fn)
+        })),
+        extends: expr.node.extends && foldExpr(expr.node.extends, fn)
+      });
+    case "function-call":
+      return fn({
+        ...expr.node,
+        fn: foldExpr(expr.node.fn, fn),
+        args: expr.node.args.map(a => foldExpr(a, fn))
+      });
+    case "conditional":
+      return fn({
+        ...expr.node,
+        condition: foldExpr(expr.node.condition, fn),
+        consequent: foldExpr(expr.node.consequent, fn),
+        alternative: foldExpr(expr.node.alternative, fn)
+      });
+    case "function":
+      return fn({
+        ...expr.node,
+        body: expr.node.body.map(b => foldExpr(b, fn))
+      });
+    case "let-bindings":
+      return fn({
+        ...expr.node,
+        bindings: expr.node.bindings.map(b => ({
+          ...b,
+          value: foldExpr(b.value, fn)
+        })),
+        body: expr.node.body.map(e => foldExpr(e, fn))
+      });
+    case "type-annotation":
+      return fn({
+        ...expr.node,
+        value: foldExpr(expr.node.value, fn)
+      });
+  }
+}
 
 export function transformRecurExpr<I>(
   s: ExpressionF<I>,
   fn: (node: ExpressionF<I>) => ExpressionF<I>
 ): ExpressionF<I> {
-  switch (s.tag) {
-    case "string":
-    case "number":
-    case "identifier":
-      return fn(s);
-    case "vector":
-      return fn({
-        ...s,
-        values: s.values.map(s1 => ({ node: transformRecurExpr(s1.node, fn) }))
-      });
-    case "record":
-      return fn({
-        ...s,
-        fields: s.fields.map(f => ({
-          ...f,
-          value: { node: transformRecurExpr(f.value.node, fn) }
-        }))
-      });
-    case "function-call":
-      return fn({
-        ...s,
-        fn: { node: transformRecurExpr(s.fn.node, fn) },
-        args: s.args.map(a => ({ node: transformRecurExpr(a.node, fn) }))
-      });
-    case "conditional":
-      return fn({
-        ...s,
-        condition: { node: transformRecurExpr(s.condition.node, fn) },
-        consequent: { node: transformRecurExpr(s.consequent.node, fn) },
-        alternative: { node: transformRecurExpr(s.alternative.node, fn) }
-      });
-    case "function":
-      return fn({
-        ...s,
-        body: s.body.map(b => ({
-          node: transformRecurExpr(b.node, fn)
-        }))
-      });
-    case "let-bindings":
-      return fn({
-        ...s,
-        bindings: s.bindings.map(b => ({
-          ...b,
-          value: { node: transformRecurExpr(b.value.node, fn) }
-        })),
-        body: s.body.map(e => ({ node: transformRecurExpr(e.node, fn) }))
-      });
-    case "type-annotation":
-      return fn({
-        ...s,
-        value: { node: transformRecurExpr(s.value.node, fn) }
-      });
-  }
+  return foldExpr(
+    { node: s },
+    (n: ExpressionF<I>): Expression<I> => ({
+      node: fn(n)
+    })
+  ).node;
 }
 
 function expressionChildren<I>(e: ExpressionF<I>): Array<ExpressionF<I>> {
