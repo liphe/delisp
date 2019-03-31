@@ -15,12 +15,6 @@ function noUnusedVars(m: Module): void {
   };
 
   const exitNode: Visitor = node => {
-    if (node.tag === "definition") {
-      // definitions are global and can be used
-      // outside of the definition node
-      return;
-    }
-
     // lookup all indentifiers that exists only within
     // the context of this node and warn for unused ones
     nodeBindings(node)

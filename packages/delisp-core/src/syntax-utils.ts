@@ -126,7 +126,6 @@ function expressionBindings<I>(e: Expression<I>): SIdentifier[] {
 function syntaxBindings<I>(s: Syntax<I>): SIdentifier[] {
   switch (s.tag) {
     case "definition":
-      return [s.variable];
     case "export":
     case "type-alias":
       return [];
