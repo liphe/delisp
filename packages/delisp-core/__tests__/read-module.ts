@@ -10,7 +10,7 @@ describe("ReadModule", () => {
             tag: "function-call",
             fn: {
               node: {
-                tag: "identifier",
+                tag: "variable-reference",
                 name: "sum"
               }
             },
@@ -26,7 +26,7 @@ describe("ReadModule", () => {
             tag: "function-call",
             fn: {
               node: {
-                tag: "identifier",
+                tag: "variable-reference",
                 name: "+"
               }
             },
@@ -41,7 +41,7 @@ describe("ReadModule", () => {
             tag: "function-call",
             fn: {
               node: {
-                tag: "identifier",
+                tag: "variable-reference",
                 name: "inc"
               }
             },

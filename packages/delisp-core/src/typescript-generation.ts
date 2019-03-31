@@ -137,7 +137,7 @@ export function generateTSDeclaration(
   switch (s.node.tag) {
     case "definition": {
       const varname = identifierToJS(s.node.variable.name);
-      const typ = generateTSType(generalize(s.node.value.node.info.type, []));
+      const typ = generateTSType(generalize(s.node.value.info.type, []));
       return `declare const ${varname}: ${typ};`;
     }
     case "type-alias": {

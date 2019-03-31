@@ -68,7 +68,7 @@ function print(sexpr: Syntax): Doc {
         )
       );
     }
-    case "identifier":
+    case "variable-reference":
       return printIdentifier(sexpr.node.name);
 
     case "conditional":
@@ -169,9 +169,9 @@ export function pprintModule(m: Module, lineWidth: number): string {
     .map((s, i) => {
       let newlines;
       if (i > 0) {
-        const end = m.body[i - 1].node.location.end;
-        const start = s.node.location.start;
-        const between = s.node.location.input.toString().slice(end, start);
+        const end = m.body[i - 1].location.end;
+        const start = s.location.start;
+        const between = s.location.input.toString().slice(end, start);
         newlines = between.split("\n").length - 1;
       } else {
         newlines = 0;

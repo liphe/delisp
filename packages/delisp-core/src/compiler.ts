@@ -10,7 +10,7 @@ import {
   SExport,
   SFunction,
   SFunctionCall,
-  SIdentifier,
+  SVariableReference,
   SLet,
   SRecord,
   SVectorConstructor,
@@ -144,7 +144,7 @@ function compileFunctionCall(
 ): JS.Expression {
   const compiledArgs = funcall.node.args.map(arg => compile(arg, env));
   if (
-    funcall.node.fn.node.tag === "identifier" &&
+    funcall.node.fn.node.tag === "variable-reference" &&
     isInlinePrimitive(funcall.node.fn.node.name)
   ) {
     return compileInlinePrimitive(
@@ -161,14 +161,17 @@ function compileFunctionCall(
   }
 }
 
-function compileIdentifier(ref: SIdentifier, env: Environment): JS.Expression {
-  const binding = lookupBinding(ref.name, env);
+function compileVariable(
+  ref: SVariableReference,
+  env: Environment
+): JS.Expression {
+  const binding = lookupBinding(ref.node.name, env);
 
   if (!binding) {
-    if (isInlinePrimitive(ref.name)) {
-      return compileInlinePrimitive(ref.name, [], "value");
+    if (isInlinePrimitive(ref.node.name)) {
+      return compileInlinePrimitive(ref.node.name, [], "value");
     } else {
-      return env.defs.access(identifierToJS(ref.name));
+      return env.defs.access(identifierToJS(ref.node.name));
     }
   }
 
@@ -301,28 +304,27 @@ function compileNumber(value: number): JS.Expression {
 }
 
 export function compile(expr: Expression, env: Environment): JS.Expression {
-  const { node } = expr;
-  switch (node.tag) {
+  switch (expr.node.tag) {
     case "number":
-      return compileNumber(node.value);
+      return compileNumber(expr.node.value);
     case "string":
-      return literal(node.value);
+      return literal(expr.node.value);
     case "vector":
-      return compileVector({ node }, env);
+      return compileVector({ ...expr, node: expr.node }, env);
     case "record":
-      return compileRecord({ node }, env);
-    case "identifier":
-      return compileIdentifier(node, env);
+      return compileRecord({ ...expr, node: expr.node }, env);
+    case "variable-reference":
+      return compileVariable({ ...expr, node: expr.node }, env);
     case "conditional":
-      return compileConditional({ node }, env);
+      return compileConditional({ ...expr, node: expr.node }, env);
     case "function":
-      return compileLambda({ node }, env);
+      return compileLambda({ ...expr, node: expr.node }, env);
     case "function-call":
-      return compileFunctionCall({ node }, env);
+      return compileFunctionCall({ ...expr, node: expr.node }, env);
     case "let-bindings":
-      return compileLetBindings({ node }, env);
+      return compileLetBindings({ ...expr, node: expr.node }, env);
     case "type-annotation":
-      return compile(node.value, env);
+      return compile(expr.node.value, env);
   }
 }
 

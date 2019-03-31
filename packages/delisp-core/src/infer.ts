@@ -13,9 +13,10 @@ import { InvariantViolation } from "./invariant";
 
 import {
   Expression,
+  isExpression,
   isTypeAlias,
   Module,
-  SIdentifier,
+  SVariableReference,
   STypeAlias,
   Syntax,
   Typed
@@ -81,7 +82,7 @@ import primitives from "./primitives";
 // is normal to have multiple assumptions (instances) for the same
 // variable. Assumptions will be converted to additional constraints
 // at the end of the inference process.
-type TAssumption = SIdentifier<Typed>;
+type TAssumption = SVariableReference<Typed>;
 
 // Constraints impose which types should be equal (unified) and which
 // types are instances of other types.
@@ -180,13 +181,21 @@ function infer(
   switch (expr.node.tag) {
     case "number":
       return {
-        result: { node: { ...expr.node, info: { type: tNumber } } },
+        result: {
+          ...expr,
+          node: expr.node,
+          info: { type: tNumber }
+        },
         constraints: [],
         assumptions: []
       };
     case "string":
       return {
-        result: { node: { ...expr.node, info: { type: tString } } },
+        result: {
+          ...expr,
+          node: expr.node,
+          info: { type: tString }
+        },
         constraints: [],
         assumptions: []
       };
@@ -200,11 +209,12 @@ function infer(
 
       return {
         result: {
+          ...expr,
           node: {
             ...expr.node,
-            values: inferredValues.result,
-            info: { type: tVector(t) }
-          }
+            values: inferredValues.result
+          },
+          info: { type: tVector(t) }
         },
         assumptions: inferredValues.assumptions,
         constraints: [
@@ -226,22 +236,23 @@ function infer(
 
       return {
         result: {
+          ...expr,
           node: {
             ...expr.node,
             fields: inferred.map(({ label, result: value }) => ({
               label,
               value
             })),
-            extends: tailInferred && tailInferred.result,
-            info: {
-              type: tRecord(
-                inferred.map(i => ({
-                  label: i.label.name,
-                  type: i.result.node.info.type
-                })),
-                tailInferred ? tailRowType : emptyRow
-              )
-            }
+            extends: tailInferred && tailInferred.result
+          },
+          info: {
+            type: tRecord(
+              inferred.map(i => ({
+                label: i.label.name,
+                type: i.result.info.type
+              })),
+              tailInferred ? tailRowType : emptyRow
+            )
           }
         },
         assumptions: [
@@ -268,23 +279,24 @@ function infer(
         ]
       };
     }
-    case "identifier": {
+    case "variable-reference": {
       // as we found a variable, and because we lack an
       // 'environment/context', we generate a new type and add an
       // assumption for this variable.
       const t = generateUniqueTVar();
       const typedVar = {
+        ...expr,
         node: {
-          ...expr.node,
-          info: {
-            type: t
-          }
+          ...expr.node
+        },
+        info: {
+          type: t
         }
       };
       return {
         result: typedVar,
         constraints: [],
-        assumptions: [typedVar.node]
+        assumptions: [typedVar]
       };
     }
     case "conditional": {
@@ -295,14 +307,15 @@ function infer(
 
       return {
         result: {
+          ...expr,
           node: {
             ...expr.node,
             condition: condition.result,
             consequent: consequent.result,
-            alternative: alternative.result,
-            info: {
-              type: t
-            }
+            alternative: alternative.result
+          },
+          info: {
+            type: t
           }
         },
         assumptions: [
@@ -335,25 +348,26 @@ function infer(
       // the new function type we have created.
       const newConstraints: TConstraint[] = [
         ...assumptions
-          .filter(v => fnargs.includes(v.name))
+          .filter(v => fnargs.includes(v.node.name))
           .map(v => {
-            const varIndex = fnargs.indexOf(v.name);
-            return constEqual({ node: v }, argtypes[varIndex]);
+            const varIndex = fnargs.indexOf(v.node.name);
+            return constEqual(v, argtypes[varIndex]);
           })
       ];
       return {
         result: {
+          ...expr,
           node: {
             ...expr.node,
-            body: typedBody,
-            info: {
-              type: tFn(argtypes, last(typedBody)!.node.info.type)
-            }
+            body: typedBody
+          },
+          info: {
+            type: tFn(argtypes, last(typedBody)!.info.type)
           }
         },
         constraints: [...constraints, ...newConstraints],
         // assumptions have already been used, so they can be deleted.
-        assumptions: assumptions.filter(v => !fnargs.includes(v.name))
+        assumptions: assumptions.filter(v => !fnargs.includes(v.node.name))
       };
     }
 
@@ -361,15 +375,16 @@ function infer(
       const ifn = infer(expr.node.fn, monovars, internalTypes);
       const iargs = inferMany(expr.node.args, monovars, internalTypes);
       const tTo = generateUniqueTVar();
-      const tfn: Type = tFn(iargs.result.map(a => a.node.info.type), tTo);
+      const tfn: Type = tFn(iargs.result.map(a => a.info.type), tTo);
       return {
         result: {
+          ...expr,
           node: {
             ...expr.node,
             fn: ifn.result,
-            args: iargs.result,
-            info: { type: tTo }
-          }
+            args: iargs.result
+          },
+          info: { type: tTo }
         },
 
         constraints: [
@@ -412,16 +427,17 @@ function infer(
       const bodyInference = inferMany(expr.node.body, monovars, internalTypes);
       return {
         result: {
+          ...expr,
           node: {
             ...expr.node,
             bindings: bindingsInfo.map(b => ({
               ...b.binding,
               value: b.inference.result
             })),
-            body: bodyInference.result,
-            info: {
-              type: last(bodyInference.result)!.node.info.type
-            }
+            body: bodyInference.result
+          },
+          info: {
+            type: last(bodyInference.result)!.info.type
           }
         },
         constraints: [
@@ -433,22 +449,22 @@ function infer(
           // the generalized polytype of the value to be bound.
           ...bodyInference.assumptions
             // Consider variables to be bound
-            .filter(v => toBeBound(v.name))
+            .filter(v => toBeBound(v.node.name))
             .map(v => {
               // We just filter the assumptions to the variables
               // that are bound, so we know it must is defined.
               const bInfo = bindingsInfo.find(
-                bi => bi.binding.variable.name === v.name
+                bi => bi.binding.variable.name === v.node.name
               )!;
               return constImplicitInstance(
-                { node: v },
+                v,
                 monovars,
-                bInfo.inference.result.node.info.type
+                bInfo.inference.result.info.type
               );
             })
         ],
         assumptions: [
-          ...bodyInference.assumptions.filter(v => !toBeBound(v.name)),
+          ...bodyInference.assumptions.filter(v => !toBeBound(v.node.name)),
           ...flatMap(bi => bi.inference.assumptions, bindingsInfo)
         ]
       };
@@ -463,11 +479,13 @@ function infer(
 
       return {
         result: {
+          ...expr,
           node: {
-            ...inferred.result.node,
-            info: {
-              type: t
-            }
+            ...expr.node,
+            ...inferred.result.node
+          },
+          info: {
+            type: t
           }
         },
         assumptions: inferred.assumptions,
@@ -481,7 +499,18 @@ function inferSyntax(
   syntax: Syntax,
   internalTypes: InternalTypeEnvironment
 ): InferResult<Syntax<Typed>> {
-  if (syntax.node.tag === "definition") {
+  if (isExpression(syntax)) {
+    const { result, assumptions, constraints } = infer(
+      { ...syntax, node: { ...syntax.node } },
+      [],
+      internalTypes
+    );
+    return {
+      result,
+      assumptions,
+      constraints
+    };
+  } else if (syntax.node.tag === "definition") {
     const { result, assumptions, constraints } = infer(
       syntax.node.value,
       [],
@@ -489,6 +518,7 @@ function inferSyntax(
     );
     return {
       result: {
+        ...syntax,
         node: {
           ...syntax.node,
           value: result
@@ -498,42 +528,27 @@ function inferSyntax(
       constraints
     };
   } else if (syntax.node.tag === "export") {
-    const { result, assumptions, constraints } = infer(
-      { node: syntax.node.value },
-      [],
-      internalTypes
-    );
     return {
       result: {
-        node: {
-          ...syntax.node,
-          value: result.node as SIdentifier<Typed>
-        }
+        ...syntax,
+        node: syntax.node
       },
-      assumptions,
-      constraints
+      assumptions: [],
+      constraints: []
     };
   } else if (syntax.node.tag === "type-alias") {
     return {
       result: {
-        node: {
-          ...syntax.node
-        }
+        ...syntax,
+        node: syntax.node
       },
       assumptions: [],
       constraints: []
     };
   } else {
-    const { result, assumptions, constraints } = infer(
-      { node: syntax.node },
-      [],
-      internalTypes
+    throw new InvariantViolation(
+      `Can't infer the type for an unknown syntax node.`
     );
-    return {
-      result,
-      assumptions,
-      constraints
-    };
   }
 }
 
@@ -593,8 +608,8 @@ function assumptionsToConstraints(
   env: ExternalEnvironment
 ): TConstraint[] {
   return maybeMap(a => {
-    const t = lookupVariableType(a.name, env);
-    return t && constExplicitInstance({ node: a }, t);
+    const t = lookupVariableType(a.node.name, env);
+    return t && constExplicitInstance(a, t);
   }, assumptions);
 }
 
@@ -607,17 +622,17 @@ function activevars(constraints: TConstraint[]): string[] {
     switch (c.tag) {
       case "equal-constraint":
         return union(
-          listTypeVariables(c.expr.node.info.type),
+          listTypeVariables(c.expr.info.type),
           listTypeVariables(c.t)
         );
       case "implicit-instance-constraint":
         return union(
-          listTypeVariables(c.expr.node.info.type),
+          listTypeVariables(c.expr.info.type),
           intersection(listTypeVariables(c.t), c.monovars)
         );
       case "explicit-instance-constraint":
         return union(
-          listTypeVariables(c.expr.node.info.type),
+          listTypeVariables(c.expr.info.type),
           difference(listTypeVariables(c.t.mono), c.t.tvars)
         );
     }
@@ -684,40 +699,35 @@ function applySubstitutionToExpr(
   s: Expression<Typed>,
   env: Substitution
 ): Expression<Typed> {
-  return {
-    node: transformRecurExpr(s.node, expr => ({
-      ...expr,
-      info: {
-        ...expr.info,
-        type: applySubstitution(expr.info.type, env)
-      }
-    }))
-  };
+  return transformRecurExpr(s, expr => ({
+    ...expr,
+    info: {
+      ...expr.info,
+      type: applySubstitution(expr.info.type, env)
+    }
+  }));
 }
 
 function applySubstitutionToSyntax(
   s: Syntax<Typed>,
   env: Substitution
 ): Syntax<Typed> {
-  if (s.node.tag === "definition") {
+  if (isExpression(s)) {
+    return applySubstitutionToExpr(s, env);
+  } else if (s.node.tag === "definition") {
     return {
+      ...s,
       node: {
         ...s.node,
         value: applySubstitutionToExpr(s.node.value, env)
       }
     };
   } else if (s.node.tag === "export") {
-    return {
-      node: {
-        ...s.node,
-        value: applySubstitutionToExpr({ node: s.node.value }, env)
-          .node as SIdentifier<Typed>
-      }
-    };
+    return s;
   } else if (s.node.tag === "type-alias") {
     return s;
   } else {
-    return applySubstitutionToExpr({ node: s.node }, env);
+    throw new InvariantViolation(`Can't apply substitution to unknown syntax.`);
   }
 }
 
@@ -768,11 +778,7 @@ function solve(
 
   switch (constraint.tag) {
     case "equal-constraint": {
-      const result = unify(
-        constraint.expr.node.info.type,
-        constraint.t,
-        solution
-      );
+      const result = unify(constraint.expr.info.type, constraint.t, solution);
 
       switch (result.tag) {
         case "unify-success": {
@@ -783,7 +789,7 @@ function solve(
           throw new Error(
             printHighlightedExpr(
               "Expression would have an infinity type",
-              constraint.expr.node.location
+              constraint.expr.location
             )
           );
         case "unify-mismatch-error":
@@ -795,12 +801,12 @@ Expected ${printType(
                 applySubstitution(result.t2, solution)
               )} instead of ${printType(applySubstitution(result.t1, solution))}
 
-${printType(applySubstitution(constraint.expr.node.info.type, solution))}
+${printType(applySubstitution(constraint.expr.info.type, solution))}
 
 vs.
 
 ${printType(applySubstitution(constraint.t, solution))}`,
-              constraint.expr.node.location
+              constraint.expr.location
             )
           );
         case "unify-missing-value-error":
@@ -810,14 +816,14 @@ ${printType(applySubstitution(constraint.t, solution))}`,
 
 Missing value of type ${printType(applySubstitution(result.t, solution))}
 
-${printType(applySubstitution(constraint.expr.node.info.type, solution))}
+${printType(applySubstitution(constraint.expr.info.type, solution))}
 
 vs.
 
 ${printType(applySubstitution(constraint.t, solution))}
 
 `,
-              constraint.expr.node.location
+              constraint.expr.location
             )
           );
         default:
@@ -883,9 +889,11 @@ function groupAssumptions(
   externals: TAssumption[];
   unknowns: TAssumption[];
 } {
-  const internals = assumptions.filter(v => v.name in internalEnv.variables);
+  const internals = assumptions.filter(
+    v => v.node.name in internalEnv.variables
+  );
   const externals = assumptions.filter(
-    v => lookupVariableType(v.name, externalEnv) !== null
+    v => lookupVariableType(v.node.name, externalEnv) !== null
   );
   return {
     internals,
@@ -920,7 +928,7 @@ function checkCircularTypes(allTypeAliases: STypeAlias[]) {
         throw new Error(
           printHighlightedExpr(
             `Recursive type aliases are not allowed.`,
-            typeAlias.node.location
+            typeAlias.location
           )
         );
       } else {
@@ -929,7 +937,7 @@ function checkCircularTypes(allTypeAliases: STypeAlias[]) {
             `Cicular dependency in type aliases found
   ${cycle.map(s => s.node.alias.name).join(" -> ")}
 `,
-            typeAlias.node.location
+            typeAlias.location
           )
         );
       }
@@ -978,7 +986,7 @@ export function inferModule(
   const internalEnv: InternalEnvironment = {
     variables: body.reduce((env, s) => {
       if (s.node.tag === "definition") {
-        return { ...env, [s.node.variable.name]: s.node.value.node.info.type };
+        return { ...env, [s.node.variable.name]: s.node.value.info.type };
       } else {
         return env;
       }
@@ -999,7 +1007,7 @@ export function inferModule(
     ...assumptionsToConstraints(assumptions.externals, externalEnv),
 
     ...assumptions.internals.map(v =>
-      constImplicitInstance({ node: v }, [], internalEnv.variables[v.name])
+      constImplicitInstance(v, [], internalEnv.variables[v.node.name])
     )
   ];
 
@@ -1012,8 +1020,9 @@ export function inferModule(
     },
     unknowns: assumptions.unknowns.map(
       (v): TAssumption => {
-        return applySubstitutionToExpr({ node: v }, solution)
-          .node as SIdentifier<Typed>;
+        return applySubstitutionToExpr(v, solution) as SVariableReference<
+          Typed
+        >;
       }
     )
   };

@@ -1,5 +1,11 @@
 import { InvariantViolation } from "./invariant";
-import { ExpressionF, Expression, Module, Syntax } from "./syntax";
+import {
+  isExpression,
+  ExpressionF,
+  Expression,
+  Module,
+  Syntax
+} from "./syntax";
 
 export function foldExpr<I, A>(
   expr: Expression<I>,
@@ -8,102 +14,125 @@ export function foldExpr<I, A>(
   switch (expr.node.tag) {
     case "string":
     case "number":
-    case "identifier":
-      return fn(expr.node);
+    case "variable-reference":
+      return fn({ ...expr, node: expr.node });
     case "vector":
       return fn({
-        ...expr.node,
-        values: expr.node.values.map(s1 => foldExpr(s1, fn))
+        ...expr,
+        node: {
+          ...expr.node,
+          values: expr.node.values.map(s1 => foldExpr(s1, fn))
+        }
       });
     case "record":
       return fn({
-        ...expr.node,
-        fields: expr.node.fields.map(f => ({
-          ...f,
-          value: foldExpr(f.value, fn)
-        })),
-        extends: expr.node.extends && foldExpr(expr.node.extends, fn)
+        ...expr,
+        node: {
+          ...expr.node,
+          fields: expr.node.fields.map(f => ({
+            ...f,
+            value: foldExpr(f.value, fn)
+          })),
+          extends: expr.node.extends && foldExpr(expr.node.extends, fn)
+        }
       });
     case "function-call":
       return fn({
-        ...expr.node,
-        fn: foldExpr(expr.node.fn, fn),
-        args: expr.node.args.map(a => foldExpr(a, fn))
+        ...expr,
+        node: {
+          ...expr.node,
+          fn: foldExpr(expr.node.fn, fn),
+          args: expr.node.args.map(a => foldExpr(a, fn))
+        }
       });
     case "conditional":
       return fn({
-        ...expr.node,
-        condition: foldExpr(expr.node.condition, fn),
-        consequent: foldExpr(expr.node.consequent, fn),
-        alternative: foldExpr(expr.node.alternative, fn)
+        ...expr,
+        node: {
+          ...expr.node,
+          condition: foldExpr(expr.node.condition, fn),
+          consequent: foldExpr(expr.node.consequent, fn),
+          alternative: foldExpr(expr.node.alternative, fn)
+        }
       });
     case "function":
       return fn({
-        ...expr.node,
-        body: expr.node.body.map(b => foldExpr(b, fn))
+        ...expr,
+        node: {
+          ...expr.node,
+          body: expr.node.body.map(b => foldExpr(b, fn))
+        }
       });
     case "let-bindings":
       return fn({
-        ...expr.node,
-        bindings: expr.node.bindings.map(b => ({
-          ...b,
-          value: foldExpr(b.value, fn)
-        })),
-        body: expr.node.body.map(e => foldExpr(e, fn))
+        ...expr,
+        node: {
+          ...expr.node,
+          bindings: expr.node.bindings.map(b => ({
+            ...b,
+            value: foldExpr(b.value, fn)
+          })),
+          body: expr.node.body.map(e => foldExpr(e, fn))
+        }
       });
     case "type-annotation":
       return fn({
-        ...expr.node,
-        value: foldExpr(expr.node.value, fn)
+        ...expr,
+        node: {
+          ...expr.node,
+          value: foldExpr(expr.node.value, fn)
+        }
       });
   }
 }
 
 export function transformRecurExpr<I>(
-  s: ExpressionF<I>,
-  fn: (node: ExpressionF<I>) => ExpressionF<I>
-): ExpressionF<I> {
+  s: Expression<I>,
+  fn: (node: Expression<I>) => Expression<I>
+): Expression<I> {
   return foldExpr(
-    { node: s },
-    (n: ExpressionF<I>): Expression<I> => ({
-      node: fn(n)
-    })
-  ).node;
+    s,
+    (n: ExpressionF<I, Expression<I>>): Expression<I> => fn(n)
+  );
 }
 
-function expressionChildren<I>(e: ExpressionF<I>): Array<Expression<I>> {
-  switch (e.tag) {
+function expressionChildren<I>(e: Expression<I>): Array<Expression<I>> {
+  switch (e.node.tag) {
     case "string":
     case "number":
-    case "identifier":
+    case "variable-reference":
       return [];
     case "conditional":
-      return [e.condition, e.consequent, e.alternative];
+      return [e.node.condition, e.node.consequent, e.node.alternative];
     case "function-call":
-      return [e.fn, ...e.args];
+      return [e.node.fn, ...e.node.args];
     case "function":
-      return e.body;
+      return e.node.body;
     case "vector":
-      return e.values;
+      return e.node.values;
     case "let-bindings":
-      return [...e.bindings.map(b => b.value), ...e.body];
+      return [...e.node.bindings.map(b => b.value), ...e.node.body];
     case "record":
-      return [...e.fields.map(f => f.value)];
+      return [...e.node.fields.map(f => f.value)];
     case "type-annotation":
-      return [e.value];
+      return [e.node.value];
   }
 }
 
 function syntaxChildren<I>(s: Syntax<I>): Array<Expression<I>> {
-  switch (s.node.tag) {
-    case "definition":
-      return [s.node.value];
-    case "export":
-      return [{ node: s.node.value }];
-    case "type-alias":
-      return [];
-    default:
-      return expressionChildren(s.node);
+  if (isExpression(s)) {
+    return expressionChildren({ ...s, node: s.node });
+  } else {
+    switch (s.node.tag) {
+      case "definition":
+        return [s.node.value];
+      case "export":
+        return [];
+      case "type-alias":
+        return [];
+      default:
+        throw new InvariantViolation(`syntaxChildren() of unknown syntax`);
+    }
   }
 }
 
@@ -113,11 +142,11 @@ function syntaxPathFromRange<I>(
   end: number
 ): Syntax<I> {
   const children = syntaxChildren(s);
-  if (!(s.node.location.start <= start && end < s.node.location.end)) {
+  if (!(s.location.start <= start && end < s.location.end)) {
     throw new InvariantViolation(`Offset is out of range.`);
   }
   for (const c of children) {
-    if (c.node.location.start <= start && end < c.node.location.end) {
+    if (c.location.start <= start && end < c.location.end) {
       return syntaxPathFromRange(c, start, end);
     }
   }
@@ -130,7 +159,7 @@ export function findSyntaxByRange<I>(
   end: number
 ): Syntax<I> | undefined {
   const child = m.body.find(
-    e => e.node.location.start <= start && end < e.node.location.end
+    e => e.location.start <= start && end < e.location.end
   );
   if (!child) {
     return;

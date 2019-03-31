@@ -6,115 +6,123 @@ import { TypeWithWildcards } from "./type-wildcards";
 // Expressions
 //
 
-interface Info<I> {
-  location: Location;
-  info: I;
-}
-
-interface SNumberF<I> extends Info<I> {
+interface SNumberF {
   tag: "number";
   value: number;
 }
 
-interface SStringF<I> extends Info<I> {
+interface SStringF {
   tag: "string";
   value: string;
 }
 
-type SVar = string;
-export interface SIdentifier<I = {}> extends Info<I> {
+export interface Identifier {
   tag: "identifier";
+  name: SVar;
+  location: Location;
+}
+
+type SVar = string;
+interface SVariableReferenceF {
+  tag: "variable-reference";
   name: SVar;
 }
 
-interface SConditionalF<I, E> extends Info<I> {
+interface SConditionalF<E> {
   tag: "conditional";
   condition: E;
   consequent: E;
   alternative: E;
 }
 
-interface SFunctionCallF<I, E> extends Info<I> {
+interface SFunctionCallF<E> {
   tag: "function-call";
   fn: E;
   args: E[];
 }
 
 export interface LambdaList {
-  positionalArgs: SIdentifier[];
+  positionalArgs: Identifier[];
   location: Location;
 }
 
-interface SFunctionF<I, E> extends Info<I> {
+interface SFunctionF<E> {
   tag: "function";
   lambdaList: LambdaList;
   body: E[];
 }
 
-interface SVectorConstructorF<I, E> extends Info<I> {
+interface SVectorConstructorF<E> {
   tag: "vector";
   values: E[];
 }
 
-export interface SLetBindingF<_I, E> {
-  variable: SIdentifier;
+export interface SLetBindingF<E> {
+  variable: Identifier;
   value: E;
 }
 
-interface SLetF<I, E> extends Info<I> {
+interface SLetF<E> {
   tag: "let-bindings";
-  bindings: Array<SLetBindingF<I, E>>;
+  bindings: Array<SLetBindingF<E>>;
   body: E[];
 }
 
-interface SRecordF<I, E> extends Info<I> {
+interface SRecordF<E> {
   tag: "record";
   fields: Array<{
-    label: SIdentifier;
+    label: Identifier;
     value: E;
   }>;
   extends?: E;
 }
 
-interface STypeAnnotationF<I, E> extends Info<I> {
+interface STypeAnnotationF<E> {
   tag: "type-annotation";
   value: E;
   typeWithWildcards: TypeWithWildcards;
 }
 
-export type ExpressionF<I = {}, E = Expression<I>> =
-  | SNumberF<I>
-  | SStringF<I>
-  | SIdentifier<I>
-  | SConditionalF<I, E>
-  | SFunctionCallF<I, E>
-  | SFunctionF<I, E>
-  | SVectorConstructorF<I, E>
-  | SLetF<I, E>
-  | SRecordF<I, E>
-  | STypeAnnotationF<I, E>;
+type AnyExpressionF<I = {}, E = Expression<I>> =
+  | SNumberF
+  | SStringF
+  | SVariableReferenceF
+  | SConditionalF<E>
+  | SFunctionCallF<E>
+  | SFunctionF<E>
+  | SVectorConstructorF<E>
+  | SLetF<E>
+  | SRecordF<E>
+  | STypeAnnotationF<E>;
 
-interface Node<I> {
-  node: I;
+interface Node<I, E> {
+  node: E;
+  location: Location;
+  info: I;
 }
 
+export interface ExpressionF<I, E> extends Node<I, AnyExpressionF<I, E>> {}
+
 export interface Expression<I = {}>
-  extends Node<ExpressionF<I, Expression<I>>> {}
+  extends Node<I, AnyExpressionF<I, Expression<I>>> {}
+
+export interface SVariableReference<I = {}>
+  extends Node<I, SVariableReferenceF> {}
 
 export interface SConditional<I = {}>
-  extends Node<SConditionalF<I, Expression<I>>> {}
+  extends Node<I, SConditionalF<Expression<I>>> {}
 
 export interface SFunctionCall<I = {}>
-  extends Node<SFunctionCallF<I, Expression<I>>> {}
+  extends Node<I, SFunctionCallF<Expression<I>>> {}
 
-export interface SFunction<I = {}> extends Node<SFunctionF<I, Expression<I>>> {}
+export interface SFunction<I = {}> extends Node<I, SFunctionF<Expression<I>>> {}
 
-export interface SLet<I = {}> extends Node<SLetF<I, Expression<I>>> {}
+export interface SLet<I = {}> extends Node<I, SLetF<Expression<I>>> {}
 
-export interface SRecord<I = {}> extends Node<SRecordF<I, Expression<I>>> {}
+export interface SRecord<I = {}> extends Node<I, SRecordF<Expression<I>>> {}
 
 export interface SVectorConstructor<I = {}>
-  extends Node<SVectorConstructorF<I, Expression<I>>> {}
+  extends Node<I, SVectorConstructorF<Expression<I>>> {}
 
 //
 // Declarations
@@ -123,30 +131,30 @@ export interface SVectorConstructor<I = {}>
 export interface SDefinition<I = {}> {
   node: {
     tag: "definition";
-    variable: SIdentifier;
+    variable: Identifier;
     value: Expression<I>;
-    location: Location;
   };
+  location: Location;
 }
 
-export interface SExport<I = {}> {
+export interface SExport {
   node: {
     tag: "export";
-    value: SIdentifier<I>;
-    location: Location;
+    value: Identifier;
   };
+  location: Location;
 }
 
 export interface STypeAlias<_I = {}> {
   node: {
     tag: "type-alias";
-    alias: SIdentifier;
+    alias: Identifier;
     definition: Type;
-    location: Location;
   };
+  location: Location;
 }
 
-export type Declaration<I = {}> = SDefinition<I> | SExport<I> | STypeAlias<I>;
+export type Declaration<I = {}> = SDefinition<I> | SExport | STypeAlias<I>;
 export type Syntax<I = {}> = Expression<I> | Declaration<I>;
 
 export function isDeclaration<I>(syntax: Syntax<I>): syntax is Declaration<I> {
@@ -165,7 +173,7 @@ export function isDefinition<I>(syntax: Syntax<I>): syntax is SDefinition<I> {
   return syntax.node.tag === "definition";
 }
 
-export function isExport<I>(syntax: Syntax<I>): syntax is SExport<I> {
+export function isExport<I>(syntax: Syntax<I>): syntax is SExport {
   return syntax.node.tag === "export";
 }
 

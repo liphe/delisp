@@ -17,7 +17,7 @@ function typeOf(
     throw new Error(`Not an expression!`);
   }
   const typedExpr = inferType(syntax, externalEnv, internalEnv);
-  return printType(typedExpr.node.info.type);
+  return printType(typedExpr.info.type);
 }
 
 describe("Type inference", () => {
