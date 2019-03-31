@@ -16,7 +16,7 @@ function typeOf(
   if (isDeclaration(syntax)) {
     throw new Error(`Not an expression!`);
   }
-  const typedExpr = inferType({ node: syntax }, externalEnv, internalEnv);
+  const typedExpr = inferType(syntax, externalEnv, internalEnv);
   return printType(typedExpr.node.info.type);
 }
 

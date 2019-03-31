@@ -134,15 +134,15 @@ function generateTSType(t: TypeSchema): string {
 export function generateTSDeclaration(
   s: SDefinition<Typed> | STypeAlias<Typed>
 ): string {
-  switch (s.tag) {
+  switch (s.node.tag) {
     case "definition": {
-      const varname = identifierToJS(s.variable.name);
-      const typ = generateTSType(generalize(s.value.node.info.type, []));
+      const varname = identifierToJS(s.node.variable.name);
+      const typ = generateTSType(generalize(s.node.value.node.info.type, []));
       return `declare const ${varname}: ${typ};`;
     }
     case "type-alias": {
-      const typename = identifierToJS(s.alias.name);
-      const typ = generateTSType(generalize(s.definition, []));
+      const typename = identifierToJS(s.node.alias.name);
+      const typ = generateTSType(generalize(s.node.definition, []));
       return `type ${typename} = ${typ};`;
     }
   }
@@ -154,7 +154,7 @@ function exportIf(flag: boolean, code: string) {
 
 function isExported(name: string, m: Module): boolean {
   const exports = m.body.filter(isExport);
-  return exports.find(e => e.value.name === name) !== undefined;
+  return exports.find(e => e.node.value.name === name) !== undefined;
 }
 
 /** Generate Typescript declaration module for a Delisp module. */
@@ -162,7 +162,7 @@ export function generateTSModuleDeclaration(m: Module<Typed>): string {
   function isGenerable(
     x: Syntax<Typed>
   ): x is SDefinition<Typed> | STypeAlias<Typed> {
-    return x.tag === "definition" || x.tag === "type-alias";
+    return x.node.tag === "definition" || x.node.tag === "type-alias";
   }
 
   const declarations = m.body.filter(isGenerable);
@@ -170,7 +170,8 @@ export function generateTSModuleDeclaration(m: Module<Typed>): string {
     declarations
       .map(d => {
         const tstype = generateTSDeclaration(d);
-        const active = d.tag === "definition" && isExported(d.variable.name, m);
+        const active =
+          d.node.tag === "definition" && isExported(d.node.variable.name, m);
         return exportIf(active, tstype);
       })
       .join("\n") +

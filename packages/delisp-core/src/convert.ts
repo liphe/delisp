@@ -8,8 +8,8 @@ import {
 } from "./sexpr";
 import {
   Declaration,
-  ExpressionF,
   Expression,
+  ExpressionF,
   LambdaList,
   SIdentifier,
   SLetBinding,
@@ -243,10 +243,12 @@ defineToplevel("define", expr => {
   }
 
   return {
-    tag: "definition",
-    variable: convertSymbol(variable),
-    value: convertExpr(value),
-    location: expr.location
+    node: {
+      tag: "definition",
+      variable: convertSymbol(variable),
+      value: convertExpr(value),
+      location: expr.location
+    }
   };
 });
 
@@ -273,9 +275,11 @@ defineToplevel("export", expr => {
   }
 
   return {
-    tag: "export",
-    value: convertSymbol(variable),
-    location: expr.location
+    node: {
+      tag: "export",
+      value: convertSymbol(variable),
+      location: expr.location
+    }
   };
 });
 
@@ -311,10 +315,12 @@ defineToplevel("type", expr => {
   }
 
   return {
-    tag: "type-alias",
-    alias: convertSymbol(name),
-    definition: definitionType,
-    location: expr.location
+    node: {
+      tag: "type-alias",
+      alias: convertSymbol(name),
+      definition: definitionType,
+      location: expr.location
+    }
   };
 });
 
@@ -414,5 +420,5 @@ export function convert(expr: ASExpr): Syntax {
     }
   }
 
-  return convertExpr(expr).node;
+  return convertExpr(expr);
 }

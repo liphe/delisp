@@ -481,50 +481,56 @@ function inferSyntax(
   syntax: Syntax,
   internalTypes: InternalTypeEnvironment
 ): InferResult<Syntax<Typed>> {
-  if (syntax.tag === "definition") {
+  if (syntax.node.tag === "definition") {
     const { result, assumptions, constraints } = infer(
-      syntax.value,
+      syntax.node.value,
       [],
       internalTypes
     );
     return {
       result: {
-        ...syntax,
-        value: result
+        node: {
+          ...syntax.node,
+          value: result
+        }
       },
       assumptions,
       constraints
     };
-  } else if (syntax.tag === "export") {
+  } else if (syntax.node.tag === "export") {
     const { result, assumptions, constraints } = infer(
-      { node: syntax.value },
+      { node: syntax.node.value },
       [],
       internalTypes
     );
     return {
       result: {
-        ...syntax,
-        value: result.node as SIdentifier<Typed>
+        node: {
+          ...syntax.node,
+          value: result.node as SIdentifier<Typed>
+        }
       },
       assumptions,
       constraints
     };
-  } else if (syntax.tag === "type-alias") {
+  } else if (syntax.node.tag === "type-alias") {
     return {
       result: {
-        ...syntax
+        node: {
+          ...syntax.node
+        }
       },
       assumptions: [],
       constraints: []
     };
   } else {
     const { result, assumptions, constraints } = infer(
-      { node: syntax },
+      { node: syntax.node },
       [],
       internalTypes
     );
     return {
-      result: result.node,
+      result,
       assumptions,
       constraints
     };
@@ -693,21 +699,25 @@ function applySubstitutionToSyntax(
   s: Syntax<Typed>,
   env: Substitution
 ): Syntax<Typed> {
-  if (s.tag === "definition") {
+  if (s.node.tag === "definition") {
     return {
-      ...s,
-      value: applySubstitutionToExpr(s.value, env)
+      node: {
+        ...s.node,
+        value: applySubstitutionToExpr(s.node.value, env)
+      }
     };
-  } else if (s.tag === "export") {
+  } else if (s.node.tag === "export") {
     return {
-      ...s,
-      value: applySubstitutionToExpr({ node: s.value }, env)
-        .node as SIdentifier<Typed>
+      node: {
+        ...s.node,
+        value: applySubstitutionToExpr({ node: s.node.value }, env)
+          .node as SIdentifier<Typed>
+      }
     };
-  } else if (s.tag === "type-alias") {
+  } else if (s.node.tag === "type-alias") {
     return s;
   } else {
-    return applySubstitutionToExpr({ node: s }, env).node;
+    return applySubstitutionToExpr({ node: s.node }, env);
   }
 }
 
@@ -892,9 +902,9 @@ function checkCircularTypes(allTypeAliases: STypeAlias[]) {
   function visit(typeAlias: STypeAlias, path: STypeAlias[]) {
     const index = path.indexOf(typeAlias);
     if (index < 0) {
-      listTypeConstants(typeAlias.definition)
+      listTypeConstants(typeAlias.node.definition)
         .map(ud => {
-          return allTypeAliases.find(x => x.alias.name === ud.node.name);
+          return allTypeAliases.find(x => x.node.alias.name === ud.node.name);
         })
         .forEach(dep => {
           if (!dep) {
@@ -910,16 +920,16 @@ function checkCircularTypes(allTypeAliases: STypeAlias[]) {
         throw new Error(
           printHighlightedExpr(
             `Recursive type aliases are not allowed.`,
-            typeAlias.location
+            typeAlias.node.location
           )
         );
       } else {
         throw new Error(
           printHighlightedExpr(
             `Cicular dependency in type aliases found
-  ${cycle.map(s => s.alias.name).join(" -> ")}
+  ${cycle.map(s => s.node.alias.name).join(" -> ")}
 `,
-            typeAlias.location
+            typeAlias.node.location
           )
         );
       }
@@ -955,8 +965,8 @@ export function inferModule(
 } {
   checkCircularTypes(m.body.filter(isTypeAlias));
   const internalTypes: InternalTypeEnvironment = m.body.reduce((env, s) => {
-    if (s.tag === "type-alias") {
-      return { ...env, [s.alias.name]: s.definition };
+    if (s.node.tag === "type-alias") {
+      return { ...env, [s.node.alias.name]: s.node.definition };
     } else {
       return env;
     }
@@ -967,8 +977,8 @@ export function inferModule(
 
   const internalEnv: InternalEnvironment = {
     variables: body.reduce((env, s) => {
-      if (s.tag === "definition") {
-        return { ...env, [s.variable.name]: s.value.node.info.type };
+      if (s.node.tag === "definition") {
+        return { ...env, [s.node.variable.name]: s.node.value.node.info.type };
       } else {
         return env;
       }

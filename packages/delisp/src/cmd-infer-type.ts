@@ -53,13 +53,13 @@ export const cmdInferType: CommandModule = {
 
     if (s) {
       if (isExpression(s)) {
-        console.log(printType(s.info.type));
+        console.log(printType(s.node.info.type));
       } else if (isTypeAlias(s)) {
         console.log(s);
       } else if (isDefinition(s)) {
-        console.log(printType(s.value.info.type));
+        console.log(printType(s.node.value.node.info.type));
       } else if (isExport(s)) {
-        console.log(printType(s.value.info.type));
+        console.log(printType(s.node.value.info.type));
       }
     }
 

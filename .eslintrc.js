@@ -39,6 +39,7 @@ module.exports = {
     "@typescript-eslint/array-type": ["error", "array-simple"],
     "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-empty-interface": "off",
     "import/no-cycle": "error"
   }
 };

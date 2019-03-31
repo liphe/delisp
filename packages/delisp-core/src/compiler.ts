@@ -133,8 +133,8 @@ function compileLambda(
 }
 
 function compileDefinition(def: SDefinition, env: Environment): JS.Statement {
-  const value = compile(def.value, env);
-  const name = lookupBinding(def.variable.name, env).jsname;
+  const value = compile(def.node.value, env);
+  const name = lookupBinding(def.node.variable.name, env).jsname;
   return env.defs.define(name, value);
 }
 
@@ -342,7 +342,7 @@ function compileTopLevel(
   } else {
     js = {
       type: "ExpressionStatement",
-      expression: compile({ node: syntax }, env)
+      expression: compile(syntax, env)
     };
   }
 
@@ -370,12 +370,12 @@ function compileExports(
   env: Environment
 ): Array<JS.Statement | JS.ModuleDeclaration> {
   const exportNames = exps.map(exp => {
-    const binding = lookupBinding(exp.value.name, env);
+    const binding = lookupBinding(exp.node.value.name, env);
     if (!binding || binding.source !== "module") {
       throw new Error(
         printHighlightedExpr(
           "You can only export user definitions",
-          exp.value.location
+          exp.node.value.location
         )
       );
     } else {
@@ -396,7 +396,7 @@ export function moduleEnvironment(
 ): Environment {
   const moduleDefinitions = m.body
     .filter(isDefinition)
-    .map(decl => decl.variable.name);
+    .map(decl => decl.node.variable.name);
   const moduleBindings = moduleDefinitions.reduce(
     (d, decl) => ({
       ...d,

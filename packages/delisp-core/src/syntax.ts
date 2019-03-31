@@ -103,50 +103,56 @@ export interface Expression<I = {}> {
 //
 
 export interface SDefinition<I = {}> {
-  tag: "definition";
-  variable: SIdentifier;
-  value: Expression<I>;
-  location: Location;
+  node: {
+    tag: "definition";
+    variable: SIdentifier;
+    value: Expression<I>;
+    location: Location;
+  };
 }
 
 export interface SExport<I = {}> {
-  tag: "export";
-  value: SIdentifier<I>;
-  location: Location;
+  node: {
+    tag: "export";
+    value: SIdentifier<I>;
+    location: Location;
+  };
 }
 
 export interface STypeAlias<_I = {}> {
-  tag: "type-alias";
-  alias: SIdentifier;
-  definition: Type;
-  location: Location;
+  node: {
+    tag: "type-alias";
+    alias: SIdentifier;
+    definition: Type;
+    location: Location;
+  };
 }
 
 export type Declaration<I = {}> = SDefinition<I> | SExport<I> | STypeAlias<I>;
-export type Syntax<I = {}> = ExpressionF<I> | Declaration<I>;
+export type Syntax<I = {}> = Expression<I> | Declaration<I>;
 
 export function isDeclaration<I>(syntax: Syntax<I>): syntax is Declaration<I> {
   return (
-    syntax.tag === "definition" ||
-    syntax.tag === "export" ||
-    syntax.tag === "type-alias"
+    syntax.node.tag === "definition" ||
+    syntax.node.tag === "export" ||
+    syntax.node.tag === "type-alias"
   );
 }
 
-export function isExpression<I>(syntax: Syntax<I>): syntax is ExpressionF<I> {
+export function isExpression<I>(syntax: Syntax<I>): syntax is Expression<I> {
   return !isDeclaration(syntax);
 }
 
 export function isDefinition<I>(syntax: Syntax<I>): syntax is SDefinition<I> {
-  return syntax.tag === "definition";
+  return syntax.node.tag === "definition";
 }
 
 export function isExport<I>(syntax: Syntax<I>): syntax is SExport<I> {
-  return syntax.tag === "export";
+  return syntax.node.tag === "export";
 }
 
 export function isTypeAlias<I>(syntax: Syntax<I>): syntax is STypeAlias<I> {
-  return syntax.tag === "type-alias";
+  return syntax.node.tag === "type-alias";
 }
 
 export interface Module<I = {}> {

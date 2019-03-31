@@ -45,13 +45,13 @@ function printBody(ss: Syntax[]): Doc {
 }
 
 function print(sexpr: Syntax): Doc {
-  switch (sexpr.tag) {
+  switch (sexpr.node.tag) {
     case "string":
-      return printString(sexpr.value);
+      return printString(sexpr.node.value);
     case "number":
-      return text(String(sexpr.value));
+      return text(String(sexpr.node.value));
     case "vector": {
-      const args = sexpr.values.map(v => print(v.node));
+      const args = sexpr.node.values.map(v => print(v));
       return group(vector(align(...args)));
     }
     case "record": {
@@ -59,8 +59,8 @@ function print(sexpr: Syntax): Doc {
         map(
           align(
             join(
-              sexpr.fields.map(({ label, value }) =>
-                concat(text(label.name), space, print(value.node))
+              sexpr.node.fields.map(({ label, value }) =>
+                concat(text(label.name), space, print(value))
               ),
               line
             )
@@ -69,7 +69,7 @@ function print(sexpr: Syntax): Doc {
       );
     }
     case "identifier":
-      return printIdentifier(sexpr.name);
+      return printIdentifier(sexpr.node.name);
 
     case "conditional":
       return group(
@@ -78,9 +78,9 @@ function print(sexpr: Syntax): Doc {
             text("if"),
             space,
             align(
-              print(sexpr.condition.node),
-              print(sexpr.consequent.node),
-              print(sexpr.alternative.node)
+              print(sexpr.node.condition),
+              print(sexpr.node.consequent),
+              print(sexpr.node.alternative)
             )
           )
         ),
@@ -91,19 +91,19 @@ function print(sexpr: Syntax): Doc {
       );
 
     case "function":
-      const argNames = sexpr.lambdaList.positionalArgs.map(x => x.name);
-      const singleBody = sexpr.body.length === 1;
+      const argNames = sexpr.node.lambdaList.positionalArgs.map(x => x.name);
+      const singleBody = sexpr.node.body.length === 1;
       const doc = list(
         text("lambda"),
         space,
         group(list(align(...argNames.map(printIdentifier)))),
-        indent(printBody(sexpr.body.map(e => e.node)))
+        indent(printBody(sexpr.node.body))
       );
       return singleBody ? group(doc) : doc;
 
     case "function-call": {
-      const fn = print(sexpr.fn.node);
-      const args = sexpr.args.map(a => print(a.node));
+      const fn = print(sexpr.node.fn);
+      const args = sexpr.node.args.map(print);
       if (args.length === 0) {
         return group(list(fn));
       } else {
@@ -116,13 +116,13 @@ function print(sexpr: Syntax): Doc {
         list(
           text("define"),
           space,
-          printIdentifier(sexpr.variable.name),
-          indent(concat(line, print(sexpr.value.node)))
+          printIdentifier(sexpr.node.variable.name),
+          indent(concat(line, print(sexpr.node.value)))
         )
       );
 
     case "export":
-      return list(text("export"), space, text(sexpr.value.name));
+      return list(text("export"), space, text(sexpr.node.value.name));
 
     case "let-bindings":
       return list(
@@ -130,12 +130,12 @@ function print(sexpr: Syntax): Doc {
         space,
         map(
           align(
-            ...sexpr.bindings.map(b =>
-              concat(text(b.variable.name), space, print(b.value.node))
+            ...sexpr.node.bindings.map(b =>
+              concat(text(b.variable.name), space, print(b.value))
             )
           )
         ),
-        indent(printBody(sexpr.body.map(e => e.node)))
+        indent(printBody(sexpr.node.body))
       );
 
     case "type-annotation":
@@ -143,8 +143,8 @@ function print(sexpr: Syntax): Doc {
         list(
           text("the"),
           space,
-          text(sexpr.typeWithWildcards.print()),
-          indent(concat(line, print(sexpr.value.node)))
+          text(sexpr.node.typeWithWildcards.print()),
+          indent(concat(line, print(sexpr.node.value)))
         )
       );
 
@@ -153,8 +153,8 @@ function print(sexpr: Syntax): Doc {
         list(
           text("type"),
           space,
-          text(sexpr.alias.name),
-          indent(concat(line, text(printType(sexpr.definition, false))))
+          text(sexpr.node.alias.name),
+          indent(concat(line, text(printType(sexpr.node.definition, false))))
         )
       );
   }
@@ -169,9 +169,9 @@ export function pprintModule(m: Module, lineWidth: number): string {
     .map((s, i) => {
       let newlines;
       if (i > 0) {
-        const end = m.body[i - 1].location.end;
-        const start = s.location.start;
-        const between = s.location.input.toString().slice(end, start);
+        const end = m.body[i - 1].node.location.end;
+        const start = s.node.location.start;
+        const between = s.node.location.input.toString().slice(end, start);
         newlines = between.split("\n").length - 1;
       } else {
         newlines = 0;

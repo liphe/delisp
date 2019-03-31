@@ -71,39 +71,39 @@ export function transformRecurExpr<I>(
   ).node;
 }
 
-function expressionChildren<I>(e: ExpressionF<I>): Array<ExpressionF<I>> {
+function expressionChildren<I>(e: ExpressionF<I>): Array<Expression<I>> {
   switch (e.tag) {
     case "string":
     case "number":
     case "identifier":
       return [];
     case "conditional":
-      return [e.condition.node, e.consequent.node, e.alternative.node];
+      return [e.condition, e.consequent, e.alternative];
     case "function-call":
-      return [e.fn.node, ...e.args.map(a => a.node)];
+      return [e.fn, ...e.args];
     case "function":
-      return e.body.map(e => e.node);
+      return e.body;
     case "vector":
-      return e.values.map(e1 => e1.node);
+      return e.values;
     case "let-bindings":
-      return [...e.bindings.map(b => b.value.node), ...e.body.map(e => e.node)];
+      return [...e.bindings.map(b => b.value), ...e.body];
     case "record":
-      return [...e.fields.map(f => f.value.node)];
+      return [...e.fields.map(f => f.value)];
     case "type-annotation":
-      return [e.value.node];
+      return [e.value];
   }
 }
 
-function syntaxChildren<I>(s: Syntax<I>): Array<ExpressionF<I>> {
-  switch (s.tag) {
+function syntaxChildren<I>(s: Syntax<I>): Array<Expression<I>> {
+  switch (s.node.tag) {
     case "definition":
-      return [s.value.node];
+      return [s.node.value];
     case "export":
-      return [s.value];
+      return [{ node: s.node.value }];
     case "type-alias":
       return [];
     default:
-      return expressionChildren(s);
+      return expressionChildren(s.node);
   }
 }
 
@@ -113,11 +113,11 @@ function syntaxPathFromRange<I>(
   end: number
 ): Syntax<I> {
   const children = syntaxChildren(s);
-  if (!(s.location.start <= start && end < s.location.end)) {
+  if (!(s.node.location.start <= start && end < s.node.location.end)) {
     throw new InvariantViolation(`Offset is out of range.`);
   }
   for (const c of children) {
-    if (c.location.start <= start && end < c.location.end) {
+    if (c.node.location.start <= start && end < c.node.location.end) {
       return syntaxPathFromRange(c, start, end);
     }
   }
@@ -130,7 +130,7 @@ export function findSyntaxByRange<I>(
   end: number
 ): Syntax<I> | undefined {
   const child = m.body.find(
-    e => e.location.start <= start && end < e.location.end
+    e => e.node.location.start <= start && end < e.node.location.end
   );
   if (!child) {
     return;
