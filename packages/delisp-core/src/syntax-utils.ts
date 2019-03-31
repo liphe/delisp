@@ -86,7 +86,7 @@ function expressionChildren<I>(e: ExpressionF<I>): Array<ExpressionF<I>> {
 function syntaxChildren<I>(s: Syntax<I>): Array<ExpressionF<I>> {
   switch (s.tag) {
     case "definition":
-      return [s.value];
+      return [s.value.node];
     case "export":
       return [s.value];
     case "type-alias":

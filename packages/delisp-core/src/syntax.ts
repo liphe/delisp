@@ -105,7 +105,7 @@ export interface Expression<I = {}> {
 export interface SDefinition<I = {}> {
   tag: "definition";
   variable: SIdentifier;
-  value: ExpressionF<I>;
+  value: Expression<I>;
   location: Location;
 }
 

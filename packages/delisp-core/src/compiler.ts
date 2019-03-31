@@ -133,7 +133,7 @@ function compileLambda(
 }
 
 function compileDefinition(def: SDefinition, env: Environment): JS.Statement {
-  const value = compile({ node: def.value }, env);
+  const value = compile(def.value, env);
   const name = lookupBinding(def.variable.name, env).jsname;
   return env.defs.define(name, value);
 }

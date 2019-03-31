@@ -483,14 +483,14 @@ function inferSyntax(
 ): InferResult<Syntax<Typed>> {
   if (syntax.tag === "definition") {
     const { result, assumptions, constraints } = infer(
-      { node: syntax.value },
+      syntax.value,
       [],
       internalTypes
     );
     return {
       result: {
         ...syntax,
-        value: result.node
+        value: result
       },
       assumptions,
       constraints
@@ -696,7 +696,7 @@ function applySubstitutionToSyntax(
   if (s.tag === "definition") {
     return {
       ...s,
-      value: applySubstitutionToExpr({ node: s.value }, env).node
+      value: applySubstitutionToExpr(s.value, env)
     };
   } else if (s.tag === "export") {
     return {
@@ -968,7 +968,7 @@ export function inferModule(
   const internalEnv: InternalEnvironment = {
     variables: body.reduce((env, s) => {
       if (s.tag === "definition") {
-        return { ...env, [s.variable.name]: s.value.info.type };
+        return { ...env, [s.variable.name]: s.value.node.info.type };
       } else {
         return env;
       }

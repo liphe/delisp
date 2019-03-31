@@ -245,7 +245,7 @@ defineToplevel("define", expr => {
   return {
     tag: "definition",
     variable: convertSymbol(variable),
-    value: convertExpr(value).node,
+    value: convertExpr(value),
     location: expr.location
   };
 });

@@ -117,7 +117,7 @@ function print(sexpr: Syntax): Doc {
           text("define"),
           space,
           printIdentifier(sexpr.variable.name),
-          indent(concat(line, print(sexpr.value)))
+          indent(concat(line, print(sexpr.value.node)))
         )
       );
 
