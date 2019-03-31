@@ -1,3 +1,5 @@
+import { InvariantViolation } from "./invariant";
+
 import {
   align,
   concat,
@@ -11,7 +13,7 @@ import {
   space,
   text
 } from "./prettier";
-import { Module, Syntax } from "./syntax";
+import { isExpression, Expression, Module, Syntax } from "./syntax";
 
 import { printType } from "./type-printer";
 
@@ -44,14 +46,14 @@ function printBody(ss: Syntax[]): Doc {
   return concat(line, join(ss.map(print), line));
 }
 
-function print(sexpr: Syntax): Doc {
-  switch (sexpr.node.tag) {
+function printExpr(expr: Expression): Doc {
+  switch (expr.node.tag) {
     case "string":
-      return printString(sexpr.node.value);
+      return printString(expr.node.value);
     case "number":
-      return text(String(sexpr.node.value));
+      return text(String(expr.node.value));
     case "vector": {
-      const args = sexpr.node.values.map(v => print(v));
+      const args = expr.node.values.map(v => print(v));
       return group(vector(align(...args)));
     }
     case "record": {
@@ -59,7 +61,7 @@ function print(sexpr: Syntax): Doc {
         map(
           align(
             join(
-              sexpr.node.fields.map(({ label, value }) =>
+              expr.node.fields.map(({ label, value }) =>
                 concat(text(label.name), space, print(value))
               ),
               line
@@ -69,7 +71,7 @@ function print(sexpr: Syntax): Doc {
       );
     }
     case "variable-reference":
-      return printIdentifier(sexpr.node.name);
+      return printIdentifier(expr.node.name);
 
     case "conditional":
       return group(
@@ -78,9 +80,9 @@ function print(sexpr: Syntax): Doc {
             text("if"),
             space,
             align(
-              print(sexpr.node.condition),
-              print(sexpr.node.consequent),
-              print(sexpr.node.alternative)
+              print(expr.node.condition),
+              print(expr.node.consequent),
+              print(expr.node.alternative)
             )
           )
         ),
@@ -91,19 +93,19 @@ function print(sexpr: Syntax): Doc {
       );
 
     case "function":
-      const argNames = sexpr.node.lambdaList.positionalArgs.map(x => x.name);
-      const singleBody = sexpr.node.body.length === 1;
+      const argNames = expr.node.lambdaList.positionalArgs.map(x => x.name);
+      const singleBody = expr.node.body.length === 1;
       const doc = list(
         text("lambda"),
         space,
         group(list(align(...argNames.map(printIdentifier)))),
-        indent(printBody(sexpr.node.body))
+        indent(printBody(expr.node.body))
       );
       return singleBody ? group(doc) : doc;
 
     case "function-call": {
-      const fn = print(sexpr.node.fn);
-      const args = sexpr.node.args.map(print);
+      const fn = print(expr.node.fn);
+      const args = expr.node.args.map(print);
       if (args.length === 0) {
         return group(list(fn));
       } else {
@@ -111,31 +113,18 @@ function print(sexpr: Syntax): Doc {
       }
     }
 
-    case "definition":
-      return group(
-        list(
-          text("define"),
-          space,
-          printIdentifier(sexpr.node.variable.name),
-          indent(concat(line, print(sexpr.node.value)))
-        )
-      );
-
-    case "export":
-      return list(text("export"), space, text(sexpr.node.value.name));
-
     case "let-bindings":
       return list(
         text("let"),
         space,
         map(
           align(
-            ...sexpr.node.bindings.map(b =>
+            ...expr.node.bindings.map(b =>
               concat(text(b.variable.name), space, print(b.value))
             )
           )
         ),
-        indent(printBody(sexpr.node.body))
+        indent(printBody(expr.node.body))
       );
 
     case "type-annotation":
@@ -143,25 +132,49 @@ function print(sexpr: Syntax): Doc {
         list(
           text("the"),
           space,
-          text(sexpr.node.typeWithWildcards.print()),
-          indent(concat(line, print(sexpr.node.value)))
-        )
-      );
-
-    case "type-alias":
-      return group(
-        list(
-          text("type"),
-          space,
-          text(sexpr.node.alias.name),
-          indent(concat(line, text(printType(sexpr.node.definition, false))))
+          text(expr.node.typeWithWildcards.print()),
+          indent(concat(line, print(expr.node.value)))
         )
       );
   }
 }
 
-export function pprint(sexpr: Syntax, lineWidth: number): string {
-  return pretty(print(sexpr), lineWidth);
+function print(form: Syntax): Doc {
+  if (isExpression(form)) {
+    return printExpr(form);
+  } else {
+    switch (form.node.tag) {
+      case "definition":
+        return group(
+          list(
+            text("define"),
+            space,
+            printIdentifier(form.node.variable.name),
+            indent(concat(line, print(form.node.value)))
+          )
+        );
+
+      case "export":
+        return list(text("export"), space, text(form.node.value.name));
+
+      case "type-alias":
+        return group(
+          list(
+            text("type"),
+            space,
+            text(form.node.alias.name),
+            indent(concat(line, text(printType(form.node.definition, false))))
+          )
+        );
+
+      default:
+        throw new InvariantViolation(`Can't print this syntax.`);
+    }
+  }
+}
+
+export function pprint(form: Syntax, lineWidth: number): string {
+  return pretty(print(form), lineWidth);
 }
 
 export function pprintModule(m: Module, lineWidth: number): string {
