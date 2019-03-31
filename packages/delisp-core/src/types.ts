@@ -7,7 +7,7 @@ export interface TConstant {
   name: string;
 }
 
-export interface TApplication<T = TypeNode> {
+export interface TApplication<T = Type> {
   tag: "application";
   op: T;
   args: T[];
@@ -23,7 +23,7 @@ export interface REmpty {
   tag: "empty-row";
 }
 
-export interface RExtension<T = TypeNode> {
+export interface RExtension<T = Type> {
   tag: "row-extension";
   label: string;
   labelType: T;
@@ -31,18 +31,18 @@ export interface RExtension<T = TypeNode> {
   extends: T;
 }
 
-export type Row<T = TypeNode> = REmpty | RExtension<T>;
+export type Row<T = Type> = REmpty | RExtension<T>;
 
-export type Type<T = TypeNode> = TConstant | TApplication<T> | TVar | Row<T>;
+export type TypeF<T = Type> = TConstant | TApplication<T> | TVar | Row<T>;
 
-export interface TypeNode {
-  type: Type<TypeNode>;
+export interface Type {
+  node: TypeF<Type>;
 }
 
 export interface TypeSchema {
   tag: "type";
   tvars: string[];
-  mono: Type;
+  mono: TypeF;
 }
 
 //
@@ -80,19 +80,19 @@ export function tUserDefined(name: string): TConstant {
   };
 }
 
-export function tApp(op: Type, ...args: Type[]): Type {
+export function tApp(op: TypeF, ...args: TypeF[]): TypeF {
   return {
     tag: "application",
-    op: { type: op },
-    args: args.map(a => ({ type: a }))
+    op: { node: op },
+    args: args.map(a => ({ node: a }))
   };
 }
 
-export function tVector(t: Type): Type {
+export function tVector(t: TypeF): TypeF {
   return tApp(tcVector, t);
 }
 
-export function tFn(args: Type[], out: Type): Type {
+export function tFn(args: TypeF[], out: TypeF): TypeF {
   return tApp(tcArrow, ...args, out);
 }
 
@@ -100,28 +100,28 @@ export const emptyRow: REmpty = { tag: "empty-row" };
 
 export const tRowExtension = (
   label: string,
-  labelType: Type,
-  row: Type
+  labelType: TypeF,
+  row: TypeF
 ): RExtension => ({
   tag: "row-extension",
   label,
-  labelType: { type: labelType },
-  extends: { type: row }
+  labelType: { node: labelType },
+  extends: { node: row }
 });
 
 export function tRow(
-  fields: Array<{ label: string; type: Type }>,
-  extending: Type = emptyRow
-): Type {
+  fields: Array<{ label: string; type: TypeF }>,
+  extending: TypeF = emptyRow
+): TypeF {
   return fields.reduceRight(
-    (row: Type, { label, type }): Row => tRowExtension(label, type, row),
+    (row: TypeF, { label, type }): Row => tRowExtension(label, type, row),
     extending
   );
 }
 
 export function tRecord(
-  fields: Array<{ label: string; type: Type }>,
-  extending: Type = emptyRow
-): Type {
+  fields: Array<{ label: string; type: TypeF }>,
+  extending: TypeF = emptyRow
+): TypeF {
   return tApp(tcRecord, tRow(fields, extending));
 }

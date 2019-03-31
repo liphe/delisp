@@ -11,12 +11,12 @@ import {
   Module
 } from "./syntax";
 
-import { Type, TypeSchema } from "./types";
+import { TypeF, TypeSchema } from "./types";
 import { generalize, normalizeRow } from "./type-utils";
 import { printType } from "./type-printer";
 
 interface TAppHandler {
-  (args: Type[], mapping: TSMapping): string;
+  (args: TypeF[], mapping: TSMapping): string;
 }
 
 type TSMapping = Array<{
@@ -24,7 +24,7 @@ type TSMapping = Array<{
   tsName: string;
 }>;
 
-function generateFn(args: Type[], mapping: TSMapping): string {
+function generateFn(args: TypeF[], mapping: TSMapping): string {
   const argTypes = args.slice(0, -1);
   const returnType = args[args.length - 1];
   return (
@@ -36,11 +36,11 @@ function generateFn(args: Type[], mapping: TSMapping): string {
   );
 }
 
-function generateVector([arg]: Type[], mapping: TSMapping): string {
+function generateVector([arg]: TypeF[], mapping: TSMapping): string {
   return `Array<${generateTSMonotype(arg, mapping)}>`;
 }
 
-function generateRecord([arg]: Type[], mapping: TSMapping): string {
+function generateRecord([arg]: TypeF[], mapping: TSMapping): string {
   const normalizedRow = normalizeRow(arg);
   return (
     "{" +
@@ -65,7 +65,7 @@ const generateTApps: { [name: string]: TAppHandler } = {
   "->": generateFn
 };
 
-export function generateTSMonotype(t: Type, mapping: TSMapping): string {
+export function generateTSMonotype(t: TypeF, mapping: TSMapping): string {
   switch (t.tag) {
     case "constant": {
       switch (t.name) {
@@ -83,20 +83,20 @@ export function generateTSMonotype(t: Type, mapping: TSMapping): string {
     }
 
     case "application": {
-      if (t.op.type.tag !== "constant") {
+      if (t.op.node.tag !== "constant") {
         throw new Error(
           `Cannot generate a Typescript for a type application to ${printType(
-            t.op.type
+            t.op.node
           )}`
         );
       }
-      const handler = generateTApps[t.op.type.name];
+      const handler = generateTApps[t.op.node.name];
       if (!handler) {
         throw new Error(
           `Doesn't know how to generate Typescript type for ${printType(t)}`
         );
       }
-      return handler(t.args.map(a => a.type), mapping);
+      return handler(t.args.map(a => a.node), mapping);
     }
 
     case "empty-row":

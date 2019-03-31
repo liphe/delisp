@@ -11,7 +11,7 @@ import {
 
 import {
   emptyRow,
-  Type,
+  TypeF,
   tApp,
   tBoolean,
   tNumber,
@@ -45,7 +45,7 @@ export function checkUserDefinedTypeName(expr: ASExprSymbol): void {
   }
 }
 
-function convertSymbol(expr: ASExprSymbol): Type {
+function convertSymbol(expr: ASExprSymbol): TypeF {
   switch (expr.name) {
     case "->":
       return tcArrow;
@@ -62,13 +62,13 @@ function convertSymbol(expr: ASExprSymbol): Type {
   }
 }
 
-function convertList(expr: ASExprList): Type {
+function convertList(expr: ASExprList): TypeF {
   const [op, ...args] = expr.elements;
   const opType = convert(op);
   return tApp(opType, ...args.map(convert));
 }
 
-function convertVector(expr: ASExprVector): Type {
+function convertVector(expr: ASExprVector): TypeF {
   if (expr.elements.length !== 1) {
     throw new Error(
       printHighlightedExpr("Expected exactly 1 argument", expr.location)
@@ -77,7 +77,7 @@ function convertVector(expr: ASExprVector): Type {
   return tVector(convert(expr.elements[0]));
 }
 
-function convertMap(expr: ASExprMap): Type {
+function convertMap(expr: ASExprMap): TypeF {
   const { fields, tail } = parseRecord(expr);
 
   return tRecord(
@@ -90,7 +90,7 @@ function convertMap(expr: ASExprMap): Type {
 }
 
 /* Try to convert a S-Expression into a type. */
-export function convert(expr: ASExpr): Type {
+export function convert(expr: ASExpr): TypeF {
   switch (expr.tag) {
     case "list":
       return convertList(expr);

@@ -1,6 +1,6 @@
 import { readFromString } from "../src/reader";
 import { convert } from "./convert-type";
-import { tFn, tNumber, tString, tVar, Type } from "./types";
+import { tFn, tNumber, tString, tVar, TypeF } from "./types";
 import { printType } from "./type-printer";
 
 describe("convertType", () => {
@@ -49,7 +49,7 @@ describe("convertType", () => {
 
   it("should detect incorrect types", () => {
     function failedType(x: string) {
-      let result: Type | string;
+      let result: TypeF | string;
 
       try {
         result = convert(readFromString(x));

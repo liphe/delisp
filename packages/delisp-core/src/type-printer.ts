@@ -1,7 +1,7 @@
 // TODO: replace with the pretty printer
 
 import { InvariantViolation } from "./invariant";
-import { TApplication, Type, tVar } from "./types";
+import { TApplication, TypeF, tVar } from "./types";
 
 import {
   normalizeRow,
@@ -16,7 +16,7 @@ function typeIndexName(index: number): string {
     : `ω${index - alphabet.length + 1}`;
 }
 
-function normalizeType(t: Type): Type {
+function normalizeType(t: TypeF): TypeF {
   const vars = listTypeVariables(t);
   const substitution = vars.reduce((s, v, i) => {
     const normalizedName = typeIndexName(i);
@@ -31,13 +31,13 @@ function normalizeType(t: Type): Type {
 }
 
 function printApplicationType(type: TApplication): string {
-  if (type.op.type.tag === "constant" && type.op.type.name === "vector") {
-    return `[${_printType(type.args[0].type)}]`;
+  if (type.op.node.tag === "constant" && type.op.node.name === "vector") {
+    return `[${_printType(type.args[0].node)}]`;
   } else if (
-    type.op.type.tag === "constant" &&
-    type.op.type.name === "record"
+    type.op.node.tag === "constant" &&
+    type.op.node.name === "record"
   ) {
-    const arg = type.args[0].type;
+    const arg = type.args[0].node;
     const row = normalizeRow(arg);
     const fields = row.fields
       .map(f => `${f.label} ${_printType(f.labelType)}`)
@@ -47,12 +47,12 @@ function printApplicationType(type: TApplication): string {
     return `{${fields}${extension}}`;
   } else {
     return (
-      "(" + [type.op, ...type.args].map(e => _printType(e.type)).join(" ") + ")"
+      "(" + [type.op, ...type.args].map(e => _printType(e.node)).join(" ") + ")"
     );
   }
 }
 
-function _printType(type: Type): string {
+function _printType(type: TypeF): string {
   switch (type.tag) {
     case "constant":
       return type.name;
@@ -66,7 +66,7 @@ function _printType(type: Type): string {
   }
 }
 
-export function printType(rawType: Type, normalize = true) {
+export function printType(rawType: TypeF, normalize = true) {
   const type = normalize ? normalizeType(rawType) : rawType;
   return _printType(type);
 }

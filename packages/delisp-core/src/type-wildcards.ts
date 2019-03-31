@@ -1,4 +1,4 @@
-import { Type, TypeSchema } from "./types";
+import { TypeF, TypeSchema } from "./types";
 import { generalize, instantiate, transformRecurType } from "./type-utils";
 import { generateUniqueTVar } from "./type-generate";
 import { printType } from "./type-printer";
@@ -21,8 +21,8 @@ import { printType } from "./type-printer";
  *
  **/
 export class TypeWithWildcards {
-  private body: Type;
-  constructor(body: Type) {
+  private body: TypeF;
+  constructor(body: TypeF) {
     this.body = body;
   }
 
@@ -37,7 +37,7 @@ export class TypeWithWildcards {
     return generalize(nowildcards, []);
   }
 
-  instantiate(): Type {
+  instantiate(): TypeF {
     return instantiate(this.generalize(), true);
   }
 

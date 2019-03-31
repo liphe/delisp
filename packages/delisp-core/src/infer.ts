@@ -42,7 +42,7 @@ import {
 
 import {
   emptyRow,
-  Type,
+  TypeF,
   tBoolean,
   tFn,
   tNumber,
@@ -95,9 +95,9 @@ type TConstraint =
 interface TConstraintEqual {
   tag: "equal-constraint";
   expr: Expression<Typed>;
-  t: Type;
+  t: TypeF;
 }
-function constEqual(expr: Expression<Typed>, t: Type): TConstraintEqual {
+function constEqual(expr: Expression<Typed>, t: TypeF): TConstraintEqual {
   return { tag: "equal-constraint", expr, t };
 }
 
@@ -135,14 +135,14 @@ function constExplicitInstance(
 interface TConstraintImplicitInstance {
   tag: "implicit-instance-constraint";
   expr: Expression<Typed>;
-  t: Type;
+  t: TypeF;
   monovars: string[];
 }
 
 function constImplicitInstance(
   expr: Expression<Typed>,
   monovars: string[],
-  t: Type
+  t: TypeF
 ): TConstraintImplicitInstance {
   return { tag: "implicit-instance-constraint", expr, monovars, t };
 }
@@ -361,7 +361,7 @@ function infer(
       const ifn = infer(expr.node.fn, monovars, internalTypes);
       const iargs = inferMany(expr.node.args, monovars, internalTypes);
       const tTo = generateUniqueTVar();
-      const tfn: Type = tFn(iargs.result.map(a => a.node.info.type), tTo);
+      const tfn: TypeF = tFn(iargs.result.map(a => a.node.info.type), tTo);
       return {
         result: {
           node: {
@@ -549,17 +549,17 @@ export interface ExternalEnvironment {
     [v: string]: TypeSchema;
   };
   types: {
-    [t: string]: Type;
+    [t: string]: TypeF;
   };
 }
 
 export interface InternalTypeEnvironment {
-  [t: string]: Type;
+  [t: string]: TypeF;
 }
 
 export interface InternalEnvironment {
   variables: {
-    [v: string]: Type;
+    [v: string]: TypeF;
   };
   types: InternalTypeEnvironment;
 }
@@ -930,7 +930,7 @@ function checkCircularTypes(allTypeAliases: STypeAlias[]) {
 }
 
 /** Expand known type aliases from a monotype. */
-function expandTypeAliases(type: Type, env: InternalTypeEnvironment): Type {
+function expandTypeAliases(type: TypeF, env: InternalTypeEnvironment): TypeF {
   return transformRecurType(type, t => {
     if (t.tag == "constant") {
       const def = env[t.name];

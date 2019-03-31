@@ -14,7 +14,7 @@
 
 import { generateUniqueTVar } from "./type-generate";
 import { Substitution } from "./type-utils";
-import { Type, RExtension, tRowExtension, TVar } from "./types";
+import { TypeF, RExtension, tRowExtension, TVar } from "./types";
 
 interface UnifySuccess {
   tag: "unify-success";
@@ -24,18 +24,18 @@ interface UnifySuccess {
 interface UnifyOccurCheckError {
   tag: "unify-occur-check-error";
   variable: TVar;
-  t: Type;
+  t: TypeF;
 }
 
 interface UnifyMismatchError {
   tag: "unify-mismatch-error";
-  t1: Type;
-  t2: Type;
+  t1: TypeF;
+  t2: TypeF;
 }
 
 interface UnifyMissingValueError {
   tag: "unify-missing-value-error";
-  t: Type;
+  t: TypeF;
 }
 
 type UnifyError =
@@ -51,8 +51,8 @@ function success(s: Substitution): UnifyResult {
   };
 }
 
-function occurCheck(v: TVar, rootT: Type): UnifyOccurCheckError | null {
-  function check(t: Type): UnifyOccurCheckError | null {
+function occurCheck(v: TVar, rootT: TypeF): UnifyOccurCheckError | null {
+  function check(t: TypeF): UnifyOccurCheckError | null {
     if (t.tag === "type-variable" && t.name === v.name) {
       const err: UnifyOccurCheckError = {
         tag: "unify-occur-check-error",
@@ -62,7 +62,7 @@ function occurCheck(v: TVar, rootT: Type): UnifyOccurCheckError | null {
       return err;
     }
     if (t.tag === "application") {
-      const errors = t.args.map(a => check(a.type)).filter(r => r !== null);
+      const errors = t.args.map(a => check(a.node)).filter(r => r !== null);
       return errors.length > 0 ? errors[0] : null;
     }
     return null;
@@ -72,7 +72,7 @@ function occurCheck(v: TVar, rootT: Type): UnifyOccurCheckError | null {
 
 //
 //
-function unifyVariable(v: TVar, t: Type, ctx: Substitution): UnifyResult {
+function unifyVariable(v: TVar, t: TypeF, ctx: Substitution): UnifyResult {
   if (v.name in ctx) {
     return unify(ctx[v.name], t, ctx);
   }
@@ -94,7 +94,11 @@ function unifyVariable(v: TVar, t: Type, ctx: Substitution): UnifyResult {
   }
 }
 
-function unifyArray(t1s: Type[], t2s: Type[], ctx: Substitution): UnifyResult {
+function unifyArray(
+  t1s: TypeF[],
+  t2s: TypeF[],
+  ctx: Substitution
+): UnifyResult {
   if (t1s.length === 0 && t2s.length === 0) {
     return success(ctx);
   } else if (t1s.length === 0) {
@@ -125,7 +129,7 @@ function unifyArray(t1s: Type[], t2s: Type[], ctx: Substitution): UnifyResult {
  * partially unify it with `row` (only the head of the extension).
  */
 function rewriteRowForLabel(
-  row: Type,
+  row: TypeF,
   label: string,
   ctx: Substitution
 ): { row: RExtension; substitution: Substitution } {
@@ -161,7 +165,7 @@ function rewriteRowForLabel(
       // Firstly, we recursively rewrite the tail of the row extension
       // to start with `label.`
       const { row: newRow, substitution: subs } = rewriteRowForLabel(
-        row.extends.type,
+        row.extends.node,
         label,
         ctx
       );
@@ -171,8 +175,8 @@ function rewriteRowForLabel(
       return {
         row: tRowExtension(
           label,
-          newRow.labelType.type,
-          tRowExtension(row.label, row.labelType.type, newRow.extends.type)
+          newRow.labelType.node,
+          tRowExtension(row.label, row.labelType.node, newRow.extends.node)
         ),
         substitution: subs
       };
@@ -194,8 +198,8 @@ function unifyRow(
   );
 
   if (
-    row1.extends.type.tag === "type-variable" &&
-    subs[row1.extends.type.name]
+    row1.extends.node.tag === "type-variable" &&
+    subs[row1.extends.node.name]
   ) {
     return {
       tag: "unify-mismatch-error",
@@ -205,8 +209,8 @@ function unifyRow(
   }
 
   return unifyArray(
-    [row1.labelType.type, row1.extends.type],
-    [row3.labelType.type, row3.extends.type],
+    [row1.labelType.node, row1.extends.node],
+    [row3.labelType.node, row3.extends.node],
     subs
   );
 }
@@ -218,7 +222,7 @@ function unifyRow(
  * the most general one, in the sense that any other substitution can
  * be obtained as a composition of this one with another one.
  */
-export function unify(t1: Type, t2: Type, ctx: Substitution): UnifyResult {
+export function unify(t1: TypeF, t2: TypeF, ctx: Substitution): UnifyResult {
   // RULE (uni-const)
   if (t1.tag === "constant" && t2.tag === "constant") {
     return t1.name === t2.name
@@ -244,8 +248,8 @@ export function unify(t1: Type, t2: Type, ctx: Substitution): UnifyResult {
   } else if (t1.tag === "application" && t2.tag === "application") {
     // RULE: (uni-app)
     return unifyArray(
-      [t1.op.type, ...t1.args.map(a => a.type)],
-      [t2.op.type, ...t2.args.map(a => a.type)],
+      [t1.op.node, ...t1.args.map(a => a.node)],
+      [t2.op.node, ...t2.args.map(a => a.node)],
       ctx
     );
   } else if (t1.tag === "type-variable" && !t1.userSpecified) {

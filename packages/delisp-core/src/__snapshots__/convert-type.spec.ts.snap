@@ -32,11 +32,11 @@ exports[`convertType should read extensible record 1`] = `
 Object {
   "args": Array [
     Object {
-      "type": Object {
+      "node": Object {
         "extends": Object {
-          "type": Object {
+          "node": Object {
             "extends": Object {
-              "type": Object {
+              "node": Object {
                 "name": "a",
                 "tag": "type-variable",
                 "userSpecified": false,
@@ -44,7 +44,7 @@ Object {
             },
             "label": ":y",
             "labelType": Object {
-              "type": Object {
+              "node": Object {
                 "name": "number",
                 "tag": "constant",
               },
@@ -54,7 +54,7 @@ Object {
         },
         "label": ":x",
         "labelType": Object {
-          "type": Object {
+          "node": Object {
             "name": "number",
             "tag": "constant",
           },
@@ -64,7 +64,7 @@ Object {
     },
   ],
   "op": Object {
-    "type": Object {
+    "node": Object {
       "name": "record",
       "tag": "constant",
     },
