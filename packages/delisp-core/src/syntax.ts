@@ -1,5 +1,5 @@
 import { Location } from "./input";
-import { TypeF } from "./types";
+import { Type } from "./types";
 import { TypeWithWildcards } from "./type-wildcards";
 
 //
@@ -118,7 +118,7 @@ export interface SExport<I = {}> {
 export interface STypeAlias<_I = {}> {
   tag: "type-alias";
   alias: SIdentifier;
-  definition: TypeF;
+  definition: Type;
   location: Location;
 }
 
@@ -155,5 +155,5 @@ export interface Module<I = {}> {
 }
 
 export interface Typed {
-  type: TypeF;
+  type: Type;
 }

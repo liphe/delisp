@@ -11,12 +11,12 @@ import {
   Module
 } from "./syntax";
 
-import { TypeF, TypeSchema } from "./types";
+import { Type, TypeSchema } from "./types";
 import { generalize, normalizeRow } from "./type-utils";
 import { printType } from "./type-printer";
 
 interface TAppHandler {
-  (args: TypeF[], mapping: TSMapping): string;
+  (args: Type[], mapping: TSMapping): string;
 }
 
 type TSMapping = Array<{
@@ -24,7 +24,7 @@ type TSMapping = Array<{
   tsName: string;
 }>;
 
-function generateFn(args: TypeF[], mapping: TSMapping): string {
+function generateFn(args: Type[], mapping: TSMapping): string {
   const argTypes = args.slice(0, -1);
   const returnType = args[args.length - 1];
   return (
@@ -36,11 +36,11 @@ function generateFn(args: TypeF[], mapping: TSMapping): string {
   );
 }
 
-function generateVector([arg]: TypeF[], mapping: TSMapping): string {
+function generateVector([arg]: Type[], mapping: TSMapping): string {
   return `Array<${generateTSMonotype(arg, mapping)}>`;
 }
 
-function generateRecord([arg]: TypeF[], mapping: TSMapping): string {
+function generateRecord([arg]: Type[], mapping: TSMapping): string {
   const normalizedRow = normalizeRow(arg);
   return (
     "{" +
@@ -65,10 +65,10 @@ const generateTApps: { [name: string]: TAppHandler } = {
   "->": generateFn
 };
 
-export function generateTSMonotype(t: TypeF, mapping: TSMapping): string {
-  switch (t.tag) {
+export function generateTSMonotype(t: Type, mapping: TSMapping): string {
+  switch (t.node.tag) {
     case "constant": {
-      switch (t.name) {
+      switch (t.node.name) {
         case "void":
           return "void";
         case "boolean":
@@ -78,25 +78,25 @@ export function generateTSMonotype(t: TypeF, mapping: TSMapping): string {
         case "string":
           return "string";
         default:
-          return identifierToJS(t.name);
+          return identifierToJS(t.node.name);
       }
     }
 
     case "application": {
-      if (t.op.node.tag !== "constant") {
+      if (t.node.op.node.tag !== "constant") {
         throw new Error(
           `Cannot generate a Typescript for a type application to ${printType(
-            t.op.node
+            t.node.op
           )}`
         );
       }
-      const handler = generateTApps[t.op.node.name];
+      const handler = generateTApps[t.node.op.node.name];
       if (!handler) {
         throw new Error(
           `Doesn't know how to generate Typescript type for ${printType(t)}`
         );
       }
-      return handler(t.args.map(a => a.node), mapping);
+      return handler(t.node.args, mapping);
     }
 
     case "empty-row":
@@ -106,7 +106,8 @@ export function generateTSMonotype(t: TypeF, mapping: TSMapping): string {
       );
 
     case "type-variable":
-      const entry = mapping.find(e => e.delispName === t.name);
+      const name = t.node.name;
+      const entry = mapping.find(e => e.delispName === name);
       if (!entry) {
         throw new InvariantViolation(
           `Type variable is not in the mapping list.`

@@ -1,7 +1,7 @@
 // TODO: replace with the pretty printer
 
 import { InvariantViolation } from "./invariant";
-import { TApplication, TypeF, tVar } from "./types";
+import { TApplication, Type, tVar } from "./types";
 
 import {
   normalizeRow,
@@ -16,7 +16,7 @@ function typeIndexName(index: number): string {
     : `ω${index - alphabet.length + 1}`;
 }
 
-function normalizeType(t: TypeF): TypeF {
+function normalizeType(t: Type): Type {
   const vars = listTypeVariables(t);
   const substitution = vars.reduce((s, v, i) => {
     const normalizedName = typeIndexName(i);
@@ -31,42 +31,47 @@ function normalizeType(t: TypeF): TypeF {
 }
 
 function printApplicationType(type: TApplication): string {
-  if (type.op.node.tag === "constant" && type.op.node.name === "vector") {
-    return `[${_printType(type.args[0].node)}]`;
-  } else if (
-    type.op.node.tag === "constant" &&
-    type.op.node.name === "record"
+  if (
+    type.node.op.node.tag === "constant" &&
+    type.node.op.node.name === "vector"
   ) {
-    const arg = type.args[0].node;
+    return `[${_printType(type.node.args[0])}]`;
+  } else if (
+    type.node.op.node.tag === "constant" &&
+    type.node.op.node.name === "record"
+  ) {
+    const arg = type.node.args[0];
     const row = normalizeRow(arg);
     const fields = row.fields
       .map(f => `${f.label} ${_printType(f.labelType)}`)
       .join(" ");
     const extension =
-      row.extends.tag !== "empty-row" ? ` | ${_printType(row.extends)}` : "";
+      row.extends.node.tag !== "empty-row"
+        ? ` | ${_printType(row.extends)}`
+        : "";
     return `{${fields}${extension}}`;
   } else {
     return (
-      "(" + [type.op, ...type.args].map(e => _printType(e.node)).join(" ") + ")"
+      "(" + [type.node.op, ...type.node.args].map(_printType).join(" ") + ")"
     );
   }
 }
 
-function _printType(type: TypeF): string {
-  switch (type.tag) {
+function _printType(type: Type): string {
+  switch (type.node.tag) {
     case "constant":
-      return type.name;
+      return type.node.name;
     case "application":
-      return printApplicationType(type);
+      return printApplicationType({ node: type.node });
     case "type-variable":
-      return type.name;
+      return type.node.name;
     case "empty-row":
     case "row-extension":
-      throw new InvariantViolation(`Can't print ${type.tag} types`);
+      throw new InvariantViolation(`Can't print ${type.node.tag} types`);
   }
 }
 
-export function printType(rawType: TypeF, normalize = true) {
+export function printType(rawType: Type, normalize = true) {
   const type = normalize ? normalizeType(rawType) : rawType;
   return _printType(type);
 }

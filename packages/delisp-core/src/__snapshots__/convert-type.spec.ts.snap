@@ -30,45 +30,47 @@ file:1:2: Not a valid type
 
 exports[`convertType should read extensible record 1`] = `
 Object {
-  "args": Array [
-    Object {
+  "node": Object {
+    "args": Array [
+      Object {
+        "node": Object {
+          "extends": Object {
+            "node": Object {
+              "extends": Object {
+                "node": Object {
+                  "name": "a",
+                  "tag": "type-variable",
+                  "userSpecified": false,
+                },
+              },
+              "label": ":y",
+              "labelType": Object {
+                "node": Object {
+                  "name": "number",
+                  "tag": "constant",
+                },
+              },
+              "tag": "row-extension",
+            },
+          },
+          "label": ":x",
+          "labelType": Object {
+            "node": Object {
+              "name": "number",
+              "tag": "constant",
+            },
+          },
+          "tag": "row-extension",
+        },
+      },
+    ],
+    "op": Object {
       "node": Object {
-        "extends": Object {
-          "node": Object {
-            "extends": Object {
-              "node": Object {
-                "name": "a",
-                "tag": "type-variable",
-                "userSpecified": false,
-              },
-            },
-            "label": ":y",
-            "labelType": Object {
-              "node": Object {
-                "name": "number",
-                "tag": "constant",
-              },
-            },
-            "tag": "row-extension",
-          },
-        },
-        "label": ":x",
-        "labelType": Object {
-          "node": Object {
-            "name": "number",
-            "tag": "constant",
-          },
-        },
-        "tag": "row-extension",
+        "name": "record",
+        "tag": "constant",
       },
     },
-  ],
-  "op": Object {
-    "node": Object {
-      "name": "record",
-      "tag": "constant",
-    },
+    "tag": "application",
   },
-  "tag": "application",
 }
 `;

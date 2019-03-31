@@ -2,47 +2,54 @@
 // Types
 //
 
-export interface TConstant {
+interface TConstantF<_T> {
   tag: "constant";
   name: string;
 }
 
-export interface TApplication<T = Type> {
+interface TApplicationF<T> {
   tag: "application";
   op: T;
   args: T[];
 }
 
-export interface TVar {
+interface TVarF<_E> {
   tag: "type-variable";
   name: string;
   userSpecified: boolean;
 }
 
-export interface REmpty {
+interface REmptyF<_T> {
   tag: "empty-row";
 }
 
-export interface RExtension<T = Type> {
+interface RExtensionF<T> {
   tag: "row-extension";
   label: string;
   labelType: T;
-  // TODO: Implement kind system!
   extends: T;
 }
 
-export type Row<T = Type> = REmpty | RExtension<T>;
+type RowF<T> = REmptyF<T> | RExtensionF<T>;
+type AnyTypeF<T = Type> = TConstantF<T> | TApplicationF<T> | TVarF<T> | RowF<T>;
 
-export type TypeF<T = Type> = TConstant | TApplication<T> | TVar | Row<T>;
-
-export interface Type {
-  node: TypeF<Type>;
+interface Node<A> {
+  node: A;
 }
+export interface TConstant extends Node<TConstantF<Type>> {}
+export interface TApplication extends Node<TApplicationF<Type>> {}
+export interface TVar extends Node<TVarF<Type>> {}
+export interface REmpty extends Node<REmptyF<Type>> {}
+export interface RExtension extends Node<RExtensionF<Type>> {}
+export interface Row extends Node<RowF<Type>> {}
+
+export interface Type extends Node<AnyTypeF<Type>> {}
+export type TypeF<A> = Node<AnyTypeF<A>>;
 
 export interface TypeSchema {
   tag: "type";
   tvars: string[];
-  mono: TypeF;
+  mono: Type;
 }
 
 //
@@ -50,7 +57,7 @@ export interface TypeSchema {
 //
 
 function tConstant(name: string): TConstant {
-  return { tag: "constant", name };
+  return { node: { tag: "constant", name } };
 }
 
 // * -> * -> *
@@ -67,61 +74,64 @@ export const tString = tConstant("string");
 
 export function tVar(name: string, userSpecified = false): TVar {
   return {
-    tag: "type-variable",
-    name,
-    userSpecified
+    node: {
+      tag: "type-variable",
+      name,
+      userSpecified
+    }
   };
 }
 
 export function tUserDefined(name: string): TConstant {
+  return { node: { tag: "constant", name } };
+}
+
+export function tApp(op: Type, ...args: Type[]): Type {
   return {
-    tag: "constant",
-    name
+    node: {
+      tag: "application",
+      op,
+      args
+    }
   };
 }
 
-export function tApp(op: TypeF, ...args: TypeF[]): TypeF {
-  return {
-    tag: "application",
-    op: { node: op },
-    args: args.map(a => ({ node: a }))
-  };
-}
-
-export function tVector(t: TypeF): TypeF {
+export function tVector(t: Type): Type {
   return tApp(tcVector, t);
 }
 
-export function tFn(args: TypeF[], out: TypeF): TypeF {
+export function tFn(args: Type[], out: Type): Type {
   return tApp(tcArrow, ...args, out);
 }
 
-export const emptyRow: REmpty = { tag: "empty-row" };
+export const emptyRow: REmpty = { node: { tag: "empty-row" } };
 
 export const tRowExtension = (
   label: string,
-  labelType: TypeF,
-  row: TypeF
+  labelType: Type,
+  row: Type
 ): RExtension => ({
-  tag: "row-extension",
-  label,
-  labelType: { node: labelType },
-  extends: { node: row }
+  node: {
+    tag: "row-extension",
+    label,
+    labelType,
+    extends: row
+  }
 });
 
 export function tRow(
-  fields: Array<{ label: string; type: TypeF }>,
-  extending: TypeF = emptyRow
-): TypeF {
+  fields: Array<{ label: string; type: Type }>,
+  extending: Type = emptyRow
+): Type {
   return fields.reduceRight(
-    (row: TypeF, { label, type }): Row => tRowExtension(label, type, row),
+    (row: Type, { label, type }): Row => tRowExtension(label, type, row),
     extending
   );
 }
 
 export function tRecord(
-  fields: Array<{ label: string; type: TypeF }>,
-  extending: TypeF = emptyRow
-): TypeF {
+  fields: Array<{ label: string; type: Type }>,
+  extending: Type = emptyRow
+): Type {
   return tApp(tcRecord, tRow(fields, extending));
 }

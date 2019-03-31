@@ -42,7 +42,7 @@ import {
 
 import {
   emptyRow,
-  TypeF,
+  Type,
   tBoolean,
   tFn,
   tNumber,
@@ -95,9 +95,9 @@ type TConstraint =
 interface TConstraintEqual {
   tag: "equal-constraint";
   expr: Expression<Typed>;
-  t: TypeF;
+  t: Type;
 }
-function constEqual(expr: Expression<Typed>, t: TypeF): TConstraintEqual {
+function constEqual(expr: Expression<Typed>, t: Type): TConstraintEqual {
   return { tag: "equal-constraint", expr, t };
 }
 
@@ -135,14 +135,14 @@ function constExplicitInstance(
 interface TConstraintImplicitInstance {
   tag: "implicit-instance-constraint";
   expr: Expression<Typed>;
-  t: TypeF;
+  t: Type;
   monovars: string[];
 }
 
 function constImplicitInstance(
   expr: Expression<Typed>,
   monovars: string[],
-  t: TypeF
+  t: Type
 ): TConstraintImplicitInstance {
   return { tag: "implicit-instance-constraint", expr, monovars, t };
 }
@@ -326,7 +326,7 @@ function infer(
 
       const { result: typedBody, constraints, assumptions } = inferMany(
         expr.node.body,
-        [...monovars, ...argtypes.map(v => v.name)],
+        [...monovars, ...argtypes.map(v => v.node.name)],
         internalTypes
       );
 
@@ -361,7 +361,7 @@ function infer(
       const ifn = infer(expr.node.fn, monovars, internalTypes);
       const iargs = inferMany(expr.node.args, monovars, internalTypes);
       const tTo = generateUniqueTVar();
-      const tfn: TypeF = tFn(iargs.result.map(a => a.node.info.type), tTo);
+      const tfn: Type = tFn(iargs.result.map(a => a.node.info.type), tTo);
       return {
         result: {
           node: {
@@ -549,17 +549,17 @@ export interface ExternalEnvironment {
     [v: string]: TypeSchema;
   };
   types: {
-    [t: string]: TypeF;
+    [t: string]: Type;
   };
 }
 
 export interface InternalTypeEnvironment {
-  [t: string]: TypeF;
+  [t: string]: Type;
 }
 
 export interface InternalEnvironment {
   variables: {
-    [v: string]: TypeF;
+    [v: string]: Type;
   };
   types: InternalTypeEnvironment;
 }
@@ -894,7 +894,7 @@ function checkCircularTypes(allTypeAliases: STypeAlias[]) {
     if (index < 0) {
       listTypeConstants(typeAlias.definition)
         .map(ud => {
-          return allTypeAliases.find(x => x.alias.name === ud.name);
+          return allTypeAliases.find(x => x.alias.name === ud.node.name);
         })
         .forEach(dep => {
           if (!dep) {
@@ -930,10 +930,10 @@ function checkCircularTypes(allTypeAliases: STypeAlias[]) {
 }
 
 /** Expand known type aliases from a monotype. */
-function expandTypeAliases(type: TypeF, env: InternalTypeEnvironment): TypeF {
+function expandTypeAliases(type: Type, env: InternalTypeEnvironment): Type {
   return transformRecurType(type, t => {
-    if (t.tag == "constant") {
-      const def = env[t.name];
+    if (t.node.tag == "constant") {
+      const def = env[t.node.name];
       return def ? expandTypeAliases(def, env) : t;
     } else return t;
   });

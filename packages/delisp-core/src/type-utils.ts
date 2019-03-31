@@ -6,8 +6,8 @@ import { generateUniqueTVar } from "./type-generate";
 import { flatten } from "./utils";
 
 import {
-  TypeF,
   Type,
+  TypeF,
   emptyRow,
   TypeSchema,
   TConstant,
@@ -15,66 +15,67 @@ import {
 } from "./types";
 import { unique } from "./utils";
 
-export function isFunctionType(t: TypeF): t is TApplication {
+export function isFunctionType(t: Type): t is TApplication {
   return (
-    t.tag === "application" &&
-    t.op.node.tag === "constant" &&
-    t.op.node.name === "->"
+    t.node.tag === "application" &&
+    t.node.op.node.tag === "constant" &&
+    t.node.op.node.name === "->"
   );
 }
 
 export function typeChildren<A>(type: TypeF<A[]>): A[] {
-  switch (type.tag) {
+  switch (type.node.tag) {
     case "constant":
     case "type-variable":
     case "empty-row":
       return [];
     case "application":
-      return flatten([type.op, ...type.args]);
+      return flatten([type.node.op, ...type.node.args]);
     case "row-extension":
-      return [...type.labelType, ...type.extends];
+      return [...type.node.labelType, ...type.node.extends];
   }
 }
 
-export function foldType<A>(type: TypeF, fn: (t: TypeF<A>) => A): A {
-  switch (type.tag) {
+export function foldType<A>(type: Type, fn: (t: TypeF<A>) => A): A {
+  switch (type.node.tag) {
     case "constant":
     case "type-variable":
     case "empty-row":
-      return fn(type);
+      return fn({ node: type.node });
     case "application":
       return fn({
-        tag: "application",
-        op: foldType(type.op.node, fn),
-        args: type.args.map(a => foldType(a.node, fn))
+        node: {
+          tag: "application",
+          op: foldType(type.node.op, fn),
+          args: type.node.args.map(a => foldType(a, fn))
+        }
       });
     case "row-extension":
       return fn({
-        tag: "row-extension",
-        label: type.label,
-        labelType: foldType(type.labelType.node, fn),
-        extends: foldType(type.extends.node, fn)
+        node: {
+          tag: "row-extension",
+          label: type.node.label,
+          labelType: foldType(type.node.labelType, fn),
+          extends: foldType(type.node.extends, fn)
+        }
       });
   }
 }
 
-export function transformRecurType(
-  type: TypeF,
-  fn: (t: TypeF) => TypeF
-): TypeF {
-  const node = foldType(type, (t: TypeF): Type => ({ node: fn(t) }));
-  return node.node;
+export function transformRecurType(type: Type, fn: (t: Type) => Type): Type {
+  const node = foldType(type, (t: Type): Type => fn(t));
+  return node;
 }
 
 export interface Substitution {
-  [t: string]: TypeF;
+  [t: string]: Type;
 }
 
-export function applySubstitution(t: TypeF, env: Substitution): TypeF {
+export function applySubstitution(t: Type, env: Substitution): Type {
   return transformRecurType(t, t1 => {
-    if (t1.tag === "type-variable") {
-      if (t1.name in env) {
-        const tt = env[t1.name];
+    if (t1.node.tag === "type-variable") {
+      if (t1.node.name in env) {
+        const tt = env[t1.node.name];
         return applySubstitution(tt, env);
       } else {
         return t1;
@@ -86,20 +87,22 @@ export function applySubstitution(t: TypeF, env: Substitution): TypeF {
 }
 
 // Return user defined types
-export function listTypeConstants(type: TypeF): TConstant[] {
+export function listTypeConstants(type: Type): TConstant[] {
   return foldType(type, t => {
-    return t.tag === "constant" ? [t] : typeChildren(t);
+    return t.node.tag === "constant" ? [{ node: t.node }] : typeChildren(t);
   });
 }
 
 // Return the list of type variables in the order they show up
-export function listTypeVariables(type: TypeF): string[] {
+export function listTypeVariables(type: Type): string[] {
   return foldType(type, t => {
-    return t.tag === "type-variable" ? [t.name] : unique(typeChildren(t));
+    return t.node.tag === "type-variable"
+      ? [t.node.name]
+      : unique(typeChildren(t));
   });
 }
 
-export function generalize(t: TypeF, monovars: string[]): TypeSchema {
+export function generalize(t: Type, monovars: string[]): TypeSchema {
   const vars = listTypeVariables(t);
   return {
     tag: "type",
@@ -115,7 +118,7 @@ export function isWildcardTypeVarName(name: string): boolean {
   return name.startsWith("_");
 }
 
-export function instantiate(t: TypeSchema, userSpecified = false): TypeF {
+export function instantiate(t: TypeSchema, userSpecified = false): Type {
   const subst = t.tvars.reduce((s, vname) => {
     return {
       ...s,
@@ -132,28 +135,28 @@ export function readType(source: string): TypeSchema {
 }
 
 export function normalizeRow(
-  type: TypeF
+  type: Type
 ): {
-  fields: Array<{ label: string; labelType: TypeF }>;
-  extends: TypeF;
+  fields: Array<{ label: string; labelType: Type }>;
+  extends: Type;
 } {
   if (
-    type.tag !== "empty-row" &&
-    type.tag !== "row-extension" &&
-    type.tag !== "type-variable"
+    type.node.tag !== "empty-row" &&
+    type.node.tag !== "row-extension" &&
+    type.node.tag !== "type-variable"
   ) {
     throw new InvariantViolation(`Row tail should be a row-kinded type.`);
   }
-  switch (type.tag) {
+  switch (type.node.tag) {
     case "empty-row":
       return { fields: [], extends: emptyRow };
     case "type-variable":
       return { fields: [], extends: type };
     case "row-extension":
-      const { fields, extends: row } = normalizeRow(type.extends.node);
+      const { fields, extends: row } = normalizeRow(type.node.extends);
       return {
         fields: [
-          { label: type.label, labelType: type.labelType.node },
+          { label: type.node.label, labelType: type.node.labelType },
           ...fields
         ],
         extends: row
