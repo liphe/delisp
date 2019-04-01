@@ -36,30 +36,34 @@ export function typeChildren<A>(type: TypeF<A[]>): A[] {
   }
 }
 
-export function foldType<A>(type: Type, fn: (t: TypeF<A>) => A): A {
+export function mapType<A, B>(type: TypeF<A>, fn: (x: A) => B): TypeF<B> {
   switch (type.node.tag) {
     case "constant":
     case "type-variable":
     case "empty-row":
-      return fn({ node: type.node });
+      return { node: type.node };
     case "application":
-      return fn({
+      return {
         node: {
           tag: "application",
-          op: foldType(type.node.op, fn),
-          args: type.node.args.map(a => foldType(a, fn))
+          op: fn(type.node.op),
+          args: type.node.args.map(fn)
         }
-      });
+      };
     case "row-extension":
-      return fn({
+      return {
         node: {
           tag: "row-extension",
           label: type.node.label,
-          labelType: foldType(type.node.labelType, fn),
-          extends: foldType(type.node.extends, fn)
+          labelType: fn(type.node.labelType),
+          extends: fn(type.node.extends)
         }
-      });
+      };
   }
+}
+
+export function foldType<A>(type: Type, fn: (t: TypeF<A>) => A): A {
+  return fn(mapType(type, t => foldType(t, fn)));
 }
 
 export function transformRecurType(type: Type, fn: (t: Type) => Type): Type {
