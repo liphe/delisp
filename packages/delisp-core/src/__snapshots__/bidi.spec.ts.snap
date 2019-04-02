@@ -1,9 +1,21 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Bidirectional typing Error messages ambiguous conditional 1`] = `
+"file:1:12: Expected type number, but found string.
+(if true 1 \\"foo\\")
+-----------^"
+`;
+
 exports[`Bidirectional typing Error messages annotating a string as a number 1`] = `
 "file:1:13: Expected type number, but found string.
 (the number \\"foo\\")
 ------------^"
+`;
+
+exports[`Bidirectional typing Error messages non-boolean conditional 1`] = `
+"file:1:5: Expected type boolean, but found number.
+(if 1 \\"abc\\" \\"foo\\")
+----^"
 `;
 
 exports[`Bidirectional typing Error messages wrong argument 1`] = `

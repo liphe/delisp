@@ -1,6 +1,6 @@
 import { InvariantViolation, assertNever } from "./invariant";
 import { Expression } from "./syntax";
-import { Type, tString, tNumber } from "./types";
+import { Type, tString, tNumber, tBoolean } from "./types";
 import { unify } from "./unify";
 import { printType } from "./type-printer";
 import { last } from "./utils";
@@ -80,12 +80,27 @@ export function infer(expr: Expression, env: Environment): Type | null {
       return outType;
     }
 
+    case "conditional":
+      const consequentType = infer(expr.node.consequent, env);
+      if (consequentType) {
+        check(expr.node.condition, tBoolean, env);
+        check(expr.node.alternative, consequentType, env);
+        return consequentType;
+      }
+      const alternativeType = infer(expr.node.alternative, env);
+      if (alternativeType) {
+        check(expr.node.condition, tBoolean, env);
+        check(expr.node.alternative, alternativeType, env);
+        return alternativeType;
+      }
+      return null;
+
     default:
       return null;
   }
 }
 
-export function check(expr: Expression, type: Type, env: Environment) {
+export function check(expr: Expression, type: Type, env: Environment): void {
   switch (expr.node.tag) {
     case "string":
     case "number":
@@ -148,6 +163,11 @@ export function check(expr: Expression, type: Type, env: Environment) {
       return;
     }
     case "conditional":
+      check(expr.node.condition, tBoolean, env);
+      check(expr.node.consequent, type, env);
+      check(expr.node.alternative, type, env);
+      return;
+
     case "let-bindings":
     case "record":
     case "vector":

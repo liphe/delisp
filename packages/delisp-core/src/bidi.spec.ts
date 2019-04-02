@@ -24,7 +24,11 @@ function typeError(str: string, env: Environment = {}) {
   throw new Error(`Did not fail`);
 }
 
-const env = { "+": type("(-> number number number)") };
+const env = {
+  true: type("boolean"),
+  false: type("boolean"),
+  "+": type("(-> number number number)")
+};
 
 describe("Bidirectional typing", () => {
   test("number types are infered", () => {
@@ -45,6 +49,12 @@ describe("Bidirectional typing", () => {
     expect(() => infer(expr(`(+ 2 3)`), env)).not.toThrow();
   });
 
+  test("conditionals are infered", () => {
+    expect(() =>
+      check(expr("(if true 1 2)"), type("number"), env)
+    ).not.toThrow();
+  });
+
   describe("Error messages", () => {
     test("annotating a string as a number", () => {
       expect(typeError(`(the number "foo")`)).toMatchSnapshot();
@@ -58,6 +68,12 @@ describe("Bidirectional typing", () => {
 
     test("wrong argument", () => {
       expect(typeError(`(+ 2 "foo")`, env)).toMatchSnapshot();
+    });
+    test("ambiguous conditional", () => {
+      expect(typeError(`(if true 1 "foo")`, env)).toMatchSnapshot();
+    });
+    test("non-boolean conditional", () => {
+      expect(typeError(`(if 1 "abc" "foo")`, env)).toMatchSnapshot();
     });
   });
 });
