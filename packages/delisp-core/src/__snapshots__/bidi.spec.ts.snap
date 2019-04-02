@@ -1,0 +1,19 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Bidirectional typing Error messages annotating a string as a number 1`] = `
+"file:1:13: Expected type number, but found string.
+(the number \\"foo\\")
+------------^"
+`;
+
+exports[`Bidirectional typing Error messages wrong argument 1`] = `
+"file:1:6: Expected type number, but found string.
+(+ 2 \\"foo\\")
+-----^"
+`;
+
+exports[`Bidirectional typing Error messages wrong number of declared arguments 1`] = `
+"file:1:40: Wrong number of arguments. Expected 2 but found 1
+(the (-> number number number) (lambda (x) x))
+---------------------------------------^"
+`;
