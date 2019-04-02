@@ -27,7 +27,7 @@ export function removeModuleDefinition(m: Module, name: string): Module {
   return {
     tag: "module",
     body: m.body.filter(d => {
-      return d.tag === "definition" ? d.variable.name !== name : true;
+      return d.node.tag === "definition" ? d.node.variable.name !== name : true;
     })
   };
 }
@@ -36,7 +36,7 @@ export function removeModuleTypeDefinition(m: Module, name: string): Module {
   return {
     tag: "module",
     body: m.body.filter(d => {
-      return d.tag === "type-alias" ? d.alias.name !== name : true;
+      return d.node.tag === "type-alias" ? d.node.alias.name !== name : true;
     })
   };
 }

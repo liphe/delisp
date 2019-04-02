@@ -31,33 +31,43 @@ function normalizeType(t: Type): Type {
 }
 
 function printApplicationType(type: TApplication): string {
-  if (type.op.tag === "constant" && type.op.name === "vector") {
-    return `[${_printType(type.args[0])}]`;
-  } else if (type.op.tag === "constant" && type.op.name === "record") {
-    const arg = type.args[0];
+  if (
+    type.node.op.node.tag === "constant" &&
+    type.node.op.node.name === "vector"
+  ) {
+    return `[${_printType(type.node.args[0])}]`;
+  } else if (
+    type.node.op.node.tag === "constant" &&
+    type.node.op.node.name === "record"
+  ) {
+    const arg = type.node.args[0];
     const row = normalizeRow(arg);
     const fields = row.fields
       .map(f => `${f.label} ${_printType(f.labelType)}`)
       .join(" ");
     const extension =
-      row.extends.tag !== "empty-row" ? ` | ${_printType(row.extends)}` : "";
+      row.extends.node.tag !== "empty-row"
+        ? ` | ${_printType(row.extends)}`
+        : "";
     return `{${fields}${extension}}`;
   } else {
-    return "(" + [type.op, ...type.args].map(_printType).join(" ") + ")";
+    return (
+      "(" + [type.node.op, ...type.node.args].map(_printType).join(" ") + ")"
+    );
   }
 }
 
 function _printType(type: Type): string {
-  switch (type.tag) {
+  switch (type.node.tag) {
     case "constant":
-      return type.name;
+      return type.node.name;
     case "application":
-      return printApplicationType(type);
+      return printApplicationType({ node: type.node });
     case "type-variable":
-      return type.name;
+      return type.node.name;
     case "empty-row":
     case "row-extension":
-      throw new InvariantViolation(`Can't print ${type.tag} types`);
+      throw new InvariantViolation(`Can't print ${type.node.tag} types`);
   }
 }
 

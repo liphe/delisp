@@ -46,7 +46,7 @@ async function compileFile(
   if (inferResult.unknowns.length > 0) {
     const unknowns = inferResult.unknowns.map(u =>
       printHighlightedExpr(
-        `Unknown variable ${u.name} of type ${printType(u.info.type)}`,
+        `Unknown variable ${u.node.name} of type ${printType(u.info.type)}`,
         u.location
       )
     );

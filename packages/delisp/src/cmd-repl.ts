@@ -99,7 +99,7 @@ function handleLine(line: string) {
 
 function completer(input: string): [string[], string] {
   const defs = previousModule.body.filter(isDefinition);
-  const completions = defs.map(d => d.variable.name);
+  const completions = defs.map(d => d.node.variable.name);
   return [completions, input];
 }
 
@@ -114,14 +114,14 @@ const delispEval = (syntax: Syntax) => {
   if (isDefinition(syntax)) {
     previousModule = removeModuleDefinition(
       previousModule,
-      syntax.variable.name
+      syntax.node.variable.name
     );
     previousModule = addToModule(previousModule, syntax);
     m = previousModule;
-  } else if (syntax.tag === "type-alias") {
+  } else if (syntax.node.tag === "type-alias") {
     previousModule = removeModuleTypeDefinition(
       previousModule,
-      syntax.alias.name
+      syntax.node.alias.name
     );
     previousModule = addToModule(previousModule, syntax);
     m = previousModule;
@@ -138,7 +138,7 @@ const delispEval = (syntax: Syntax) => {
     result.unknowns.forEach(v => {
       console.warn(
         chalk.yellowBright(
-          `Unknown variable ${v.name} expected with type ${printType(
+          `Unknown variable ${v.node.name} expected with type ${printType(
             v.info.type
           )}`
         )
@@ -163,11 +163,11 @@ const delispEval = (syntax: Syntax) => {
   if (isDeclaration(syntax)) {
     const type =
       typedSyntax && isDefinition(typedSyntax)
-        ? typedSyntax.value.info.type
+        ? typedSyntax.node.value.info.type
         : null;
 
     if (isDefinition(syntax)) {
-      return { type, name: syntax.variable.name };
+      return { type, name: syntax.node.variable.name };
     } else {
       return { type };
     }

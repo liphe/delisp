@@ -57,9 +57,9 @@ export const cmdInferType: CommandModule = {
       } else if (isTypeAlias(s)) {
         console.log(s);
       } else if (isDefinition(s)) {
-        console.log(printType(s.value.info.type));
+        console.log(printType(s.node.value.info.type));
       } else if (isExport(s)) {
-        console.log(printType(s.value.info.type));
+        console.log();
       }
     }
 

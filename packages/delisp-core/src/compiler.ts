@@ -10,7 +10,7 @@ import {
   SExport,
   SFunction,
   SFunctionCall,
-  SIdentifier,
+  SVariableReference,
   SLet,
   SRecord,
   SVectorConstructor,
@@ -106,23 +106,23 @@ function compileLambda(
   fn: SFunction,
   env: Environment
 ): JS.ArrowFunctionExpression {
-  const newEnv = fn.lambdaList.positionalArgs.reduce(
+  const newEnv = fn.node.lambdaList.positionalArgs.reduce(
     (e, param) => addBinding(param.name, e),
     env
   );
 
-  const jsargs = fn.lambdaList.positionalArgs.map(
+  const jsargs = fn.node.lambdaList.positionalArgs.map(
     (param): JS.Pattern => ({
       type: "Identifier",
       name: lookupBinding(param.name, newEnv).jsname
     })
   );
 
-  const implicitReturn = fn.body.length === 1;
+  const implicitReturn = fn.node.body.length === 1;
 
   const body: JS.Expression | JS.Statement = implicitReturn
-    ? compile(fn.body[0], newEnv)
-    : compileBody(fn.body, newEnv);
+    ? compile(fn.node.body[0], newEnv)
+    : compileBody(fn.node.body, newEnv);
 
   return {
     type: "ArrowFunctionExpression",
@@ -133,8 +133,8 @@ function compileLambda(
 }
 
 function compileDefinition(def: SDefinition, env: Environment): JS.Statement {
-  const value = compile(def.value, env);
-  const name = lookupBinding(def.variable.name, env).jsname;
+  const value = compile(def.node.value, env);
+  const name = lookupBinding(def.node.variable.name, env).jsname;
   return env.defs.define(name, value);
 }
 
@@ -142,26 +142,36 @@ function compileFunctionCall(
   funcall: SFunctionCall,
   env: Environment
 ): JS.Expression {
-  const compiledArgs = funcall.args.map(arg => compile(arg, env));
-  if (funcall.fn.tag === "identifier" && isInlinePrimitive(funcall.fn.name)) {
-    return compileInlinePrimitive(funcall.fn.name, compiledArgs, "funcall");
+  const compiledArgs = funcall.node.args.map(arg => compile(arg, env));
+  if (
+    funcall.node.fn.node.tag === "variable-reference" &&
+    isInlinePrimitive(funcall.node.fn.node.name)
+  ) {
+    return compileInlinePrimitive(
+      funcall.node.fn.node.name,
+      compiledArgs,
+      "funcall"
+    );
   } else {
     return {
       type: "CallExpression",
-      callee: compile(funcall.fn, env),
+      callee: compile(funcall.node.fn, env),
       arguments: compiledArgs
     };
   }
 }
 
-function compileIdentifier(ref: SIdentifier, env: Environment): JS.Expression {
-  const binding = lookupBinding(ref.name, env);
+function compileVariable(
+  ref: SVariableReference,
+  env: Environment
+): JS.Expression {
+  const binding = lookupBinding(ref.node.name, env);
 
   if (!binding) {
-    if (isInlinePrimitive(ref.name)) {
-      return compileInlinePrimitive(ref.name, [], "value");
+    if (isInlinePrimitive(ref.node.name)) {
+      return compileInlinePrimitive(ref.node.name, [], "value");
     } else {
-      return env.defs.access(identifierToJS(ref.name));
+      return env.defs.access(identifierToJS(ref.node.name));
     }
   }
 
@@ -181,10 +191,6 @@ function compileIdentifier(ref: SIdentifier, env: Environment): JS.Expression {
         type: "Identifier",
         name: binding.jsname
       };
-    default:
-      throw new InvariantViolation(
-        "This switch-statement should be exhaustive but TS doesn't detect it somehow."
-      );
   }
 }
 
@@ -194,14 +200,14 @@ function compileConditional(
 ): JS.Expression {
   return {
     type: "ConditionalExpression",
-    test: compile(expr.condition, env),
-    consequent: compile(expr.consequent, env),
-    alternate: compile(expr.alternative, env)
+    test: compile(expr.node.condition, env),
+    consequent: compile(expr.node.consequent, env),
+    alternate: compile(expr.node.alternative, env)
   };
 }
 
 function compileLetBindings(expr: SLet, env: Environment): JS.Expression {
-  const newenv = expr.bindings.reduce(
+  const newenv = expr.node.bindings.reduce(
     (e, binding) => addBinding(binding.variable.name, e),
     env
   );
@@ -210,15 +216,15 @@ function compileLetBindings(expr: SLet, env: Environment): JS.Expression {
     type: "CallExpression",
     callee: {
       type: "FunctionExpression",
-      params: expr.bindings.map(
+      params: expr.node.bindings.map(
         (b): JS.Pattern => ({
           type: "Identifier",
           name: lookupBinding(b.variable.name, newenv).jsname
         })
       ),
-      body: compileBody(expr.body, newenv)
+      body: compileBody(expr.node.body, newenv)
     },
-    arguments: expr.bindings.map(b => compile(b.value, env))
+    arguments: expr.node.bindings.map(b => compile(b.value, env))
   };
 }
 
@@ -242,14 +248,14 @@ function compileVector(
 ): JS.Expression {
   return {
     type: "ArrayExpression",
-    elements: expr.values.map(e => compile(e, env))
+    elements: expr.node.values.map(e => compile(e, env))
   };
 }
 
 function compileRecord(expr: SRecord, env: Environment): JS.Expression {
   const newObj: JS.ObjectExpression = {
     type: "ObjectExpression",
-    properties: expr.fields.map(
+    properties: expr.node.fields.map(
       ({ label, value }): JS.Property => {
         if (!label.name.startsWith(":")) {
           throw new InvariantViolation(`Invalid record ${label}`);
@@ -269,10 +275,10 @@ function compileRecord(expr: SRecord, env: Environment): JS.Expression {
       }
     )
   };
-  if (expr.extends) {
+  if (expr.node.extends) {
     return methodCall({ type: "Identifier", name: "Object" }, "assign", [
       { type: "ObjectExpression", properties: [] },
-      compile(expr.extends, env),
+      compile(expr.node.extends, env),
       newObj
     ]);
   } else {
@@ -294,27 +300,27 @@ function compileNumber(value: number): JS.Expression {
 }
 
 export function compile(expr: Expression, env: Environment): JS.Expression {
-  switch (expr.tag) {
+  switch (expr.node.tag) {
     case "number":
-      return compileNumber(expr.value);
+      return compileNumber(expr.node.value);
     case "string":
-      return literal(expr.value);
+      return literal(expr.node.value);
     case "vector":
-      return compileVector(expr, env);
+      return compileVector({ ...expr, node: expr.node }, env);
     case "record":
-      return compileRecord(expr, env);
-    case "identifier":
-      return compileIdentifier(expr, env);
+      return compileRecord({ ...expr, node: expr.node }, env);
+    case "variable-reference":
+      return compileVariable({ ...expr, node: expr.node }, env);
     case "conditional":
-      return compileConditional(expr, env);
+      return compileConditional({ ...expr, node: expr.node }, env);
     case "function":
-      return compileLambda(expr, env);
+      return compileLambda({ ...expr, node: expr.node }, env);
     case "function-call":
-      return compileFunctionCall(expr, env);
+      return compileFunctionCall({ ...expr, node: expr.node }, env);
     case "let-bindings":
-      return compileLetBindings(expr, env);
+      return compileLetBindings({ ...expr, node: expr.node }, env);
     case "type-annotation":
-      return compile(expr.value, env);
+      return compile(expr.node.value, env);
   }
 }
 
@@ -362,12 +368,12 @@ function compileExports(
   env: Environment
 ): Array<JS.Statement | JS.ModuleDeclaration> {
   const exportNames = exps.map(exp => {
-    const binding = lookupBinding(exp.value.name, env);
+    const binding = lookupBinding(exp.node.value.name, env);
     if (!binding || binding.source !== "module") {
       throw new Error(
         printHighlightedExpr(
           "You can only export user definitions",
-          exp.value.location
+          exp.node.value.location
         )
       );
     } else {
@@ -388,7 +394,7 @@ export function moduleEnvironment(
 ): Environment {
   const moduleDefinitions = m.body
     .filter(isDefinition)
-    .map(decl => decl.variable.name);
+    .map(decl => decl.node.variable.name);
   const moduleBindings = moduleDefinitions.reduce(
     (d, decl) => ({
       ...d,
