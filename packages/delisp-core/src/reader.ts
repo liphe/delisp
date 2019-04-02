@@ -1,5 +1,5 @@
 //
-// reader.ts --- The reader for Deisp
+// reader.ts --- The reader for Delisp
 //
 
 //
