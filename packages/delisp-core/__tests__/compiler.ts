@@ -91,5 +91,9 @@ describe("Compiler", () => {
       expect(compileError("(export (+ 1 2))")).toMatchSnapshot();
       expect(compileError("(export 1 2 3)")).toMatchSnapshot();
     });
+
+    it("generate nice errors for do-blocks", () => {
+      expect(compileError("(do)")).toMatchSnapshot();
+    });
   });
 });

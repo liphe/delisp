@@ -230,4 +230,10 @@ eee
   it("should pretty print type type applications", () => {
     expect(pprintSource(`(the (a) 10)`)).toMatchSnapshot();
   });
+
+  it("should pretty print do blocks", () => {
+    expect(
+      pprintSource(`(do (print "hello") (print "bye bye!"))`)
+    ).toMatchSnapshot();
+  });
 });

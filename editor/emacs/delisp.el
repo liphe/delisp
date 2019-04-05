@@ -100,7 +100,7 @@
        (t
         (down-list)
         (case (symbol-at-point)
-          ((define lambda let the)
+          ((define lambda let the do)
            (* delisp-indent-level level))
           (t
            (forward-sexp 2)
@@ -168,7 +168,7 @@
          '(2 font-lock-variable-name-face))
 
    (list
-    (concat "(" (regexp-opt '("if" "lambda" "let" "export" "and" "or" "the") t) "\\>")
+    (concat "(" (regexp-opt '("if" "lambda" "let" "export" "and" "or" "the" "do") t) "\\>")
     '(1 font-lock-keyword-face))
 
    (list

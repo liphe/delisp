@@ -128,4 +128,11 @@ describe("Evaluation", () => {
       expect(evaluateString("{:x 3 | {:x 1 :y 2}}")).toEqual({ x: 3, y: 2 });
     });
   });
+
+  describe("Do blocks", () => {
+    it("should evaluate to the last form", () => {
+      expect(evaluateString(`(do 1)`)).toBe(1);
+      expect(evaluateString(`(do 1 2)`)).toBe(2);
+    });
+  });
 });

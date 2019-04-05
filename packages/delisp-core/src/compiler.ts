@@ -14,7 +14,8 @@ import {
   SLet,
   SRecord,
   SVectorConstructor,
-  Syntax
+  Syntax,
+  SDoBlock
 } from "./syntax";
 
 import { methodCall } from "./compiler/estree-utils";
@@ -299,6 +300,15 @@ function compileNumber(value: number): JS.Expression {
   }
 }
 
+function compileDoBlock(expr: SDoBlock, env: Environment): JS.Expression {
+  return {
+    type: "SequenceExpression",
+    expressions: [...expr.node.body, expr.node.returning].map(e =>
+      compile(e, env)
+    )
+  };
+}
+
 export function compile(expr: Expression, env: Environment): JS.Expression {
   switch (expr.node.tag) {
     case "number":
@@ -321,6 +331,8 @@ export function compile(expr: Expression, env: Environment): JS.Expression {
       return compileLetBindings({ ...expr, node: expr.node }, env);
     case "type-annotation":
       return compile(expr.node.value, env);
+    case "do-block":
+      return compileDoBlock({ ...expr, node: expr.node }, env);
   }
 }
 

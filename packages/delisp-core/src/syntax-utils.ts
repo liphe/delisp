@@ -83,6 +83,15 @@ export function mapExpr<I, A, B>(
           value: fn(expr.node.value)
         }
       };
+    case "do-block":
+      return {
+        ...expr,
+        node: {
+          ...expr.node,
+          body: expr.node.body.map(fn),
+          returning: fn(expr.node.returning)
+        }
+      };
   }
 }
 
@@ -123,6 +132,8 @@ function expressionChildren<I>(e: Expression<I>): Array<Expression<I>> {
       return [...e.node.fields.map(f => f.value)];
     case "type-annotation":
       return [e.node.value];
+    case "do-block":
+      return [...e.node.body, e.node.returning];
   }
 }
 

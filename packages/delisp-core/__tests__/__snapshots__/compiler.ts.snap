@@ -239,3 +239,9 @@ exports[`Compiler Error messages generate nice error messages for invalid export
 (export 1 2 3)
 ------------^"
 `;
+
+exports[`Compiler Error messages generate nice errors for do-blocks 1`] = `
+"file:1:3: empty body
+(do)
+--^"
+`;

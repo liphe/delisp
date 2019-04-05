@@ -219,5 +219,14 @@ describe("Type inference", () => {
         );
       });
     });
+
+    describe("Do blocks", () => {
+      it("type is the type of the last form", () => {
+        expect(typeOf("(do 1 2 3)")).toBe("number");
+      });
+      it("constraint types properly", () => {
+        expect(typeOf("(lambda (x) (print x) x)")).toBe("(-> string string)");
+      });
+    });
   });
 });

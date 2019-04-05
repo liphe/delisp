@@ -227,6 +227,28 @@ defineConversion("the", expr => {
   };
 });
 
+defineConversion("do", expr => {
+  const [_do, ...args] = expr.elements;
+  const lastExpr = last([_do, ...args]) as ASExpr; // we know it is not empty!
+
+  if (args.length === 0) {
+    throw new Error(
+      printHighlightedExpr(`empty body`, lastExpr.location, true)
+    );
+  }
+  const middleForms = args.slice(0, -1);
+  const lastForm = last(args)!;
+  return {
+    node: {
+      tag: "do-block",
+      body: middleForms.map(convertExpr),
+      returning: convertExpr(lastForm)
+    },
+    location: expr.location,
+    info: {}
+  };
+});
+
 defineToplevel("define", expr => {
   const [define, ...args] = expr.elements;
 
