@@ -139,6 +139,13 @@ exports[`Pretty Printer should pretty print a combination of lambda and function
                       ttt))))"
 `;
 
+exports[`Pretty Printer should pretty print do blocks 1`] = `
+"
+(do
+  (print \\"hello\\")
+  (print \\"bye bye!\\"))"
+`;
+
 exports[`Pretty Printer should pretty print type declarations 1`] = `
 "
 (type Person {:name string :age number :books [{:name string :author string}]})"

@@ -492,6 +492,26 @@ function infer(
         constraints: [...inferred.constraints, constEqual(inferred.result, t)]
       };
     }
+
+    case "do-block": {
+      const body = inferMany(expr.node.body, monovars, internalTypes);
+      const returning = infer(expr.node.returning, monovars, internalTypes);
+
+      return {
+        result: {
+          ...expr,
+          node: {
+            ...expr.node,
+            body: body.result,
+            returning: returning.result
+          },
+          info: { type: returning.result.info.type }
+        },
+
+        constraints: [...body.constraints, ...returning.constraints],
+        assumptions: [...body.assumptions, ...returning.assumptions]
+      };
+    }
   }
 }
 

@@ -133,6 +133,14 @@ function printExpr(expr: Expression): Doc {
             indent(concat(line, e.node.value))
           )
         );
+
+      case "do-block":
+        return list(
+          concat(
+            text("do"),
+            indent(concat(line, join([...e.node.body, e.node.returning], line)))
+          )
+        );
     }
   });
 }

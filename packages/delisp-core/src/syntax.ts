@@ -83,6 +83,12 @@ interface STypeAnnotationF<E> {
   typeWithWildcards: TypeWithWildcards;
 }
 
+interface SDoBlockF<E> {
+  tag: "do-block";
+  body: E[];
+  returning: E;
+}
+
 type AnyExpressionF<I = {}, E = Expression<I>> =
   | SNumberF
   | SStringF
@@ -93,7 +99,8 @@ type AnyExpressionF<I = {}, E = Expression<I>> =
   | SVectorConstructorF<E>
   | SLetF<E>
   | SRecordF<E>
-  | STypeAnnotationF<E>;
+  | STypeAnnotationF<E>
+  | SDoBlockF<E>;
 
 interface Node<I, E> {
   node: E;
@@ -123,6 +130,8 @@ export interface SRecord<I = {}> extends Node<I, SRecordF<Expression<I>>> {}
 
 export interface SVectorConstructor<I = {}>
   extends Node<I, SVectorConstructorF<Expression<I>>> {}
+
+export interface SDoBlock<I = {}> extends Node<I, SDoBlockF<Expression<I>>> {}
 
 //
 // Declarations
