@@ -1,6 +1,8 @@
 import { assertNever, InvariantViolation } from "./invariant";
 import {
+  isDefinition,
   isExpression,
+  Identifier,
   ExpressionF,
   Expression,
   Module,
@@ -152,6 +154,106 @@ function syntaxChildren<I>(s: Syntax<I>): Array<Expression<I>> {
         return assertNever(s.node);
     }
   }
+}
+
+function moduleChildren<I>(m: Module<I>): Array<Syntax<I>> {
+  return m.body;
+}
+
+function expressionBindings<I>(e: Expression<I>): Identifier[] {
+  switch (e.node.tag) {
+    case "function":
+      return e.node.lambdaList.positionalArgs;
+    case "let-bindings":
+      return e.node.bindings.map(b => b.variable);
+    default:
+      return [];
+  }
+}
+
+function syntaxBindings<I>(s: Syntax<I>): Identifier[] {
+  if (isExpression(s)) {
+    return expressionBindings(s);
+  } else {
+    switch (s.node.tag) {
+      case "definition":
+      case "export":
+      case "type-alias":
+        return [];
+      default:
+        return assertNever(s.node);
+    }
+  }
+}
+
+function moduleBindings<I>(m: Module<I>): Identifier[] {
+  return moduleChildren(m)
+    .filter(isDefinition)
+    .map(d => d.node.variable);
+}
+
+type ASTNode<I> = Module<I> | Syntax<I>;
+export function isModule<I>(x: ASTNode<I>): x is Module<I> {
+  return "tag" in x && x.tag === "module";
+}
+
+export interface Scope<I> {
+  [varName: string]: {
+    node: ASTNode<I>;
+    identifier: Identifier;
+  };
+}
+type Visitor<I> = (node: ASTNode<I>, scope: Scope<I>) => void;
+
+function createSyntaxScope<I>(
+  s: Syntax<I>,
+  parentScope: Scope<I> = {}
+): Scope<I> {
+  return syntaxBindings(s).reduce(
+    (scope, binding) => ({
+      ...scope,
+      [binding.name]: { node: s, identifier: binding }
+    }),
+    parentScope
+  );
+}
+
+function createModuleScope<I>(m: Module<I>): Scope<I> {
+  return moduleBindings(m).reduce(
+    (scope, binding) => ({
+      ...scope,
+      [binding.name]: { node: m, identifier: binding }
+    }),
+    {}
+  );
+}
+
+function traverseSyntax<I>(
+  s: Syntax<I>,
+  parentScope: Scope<I>,
+  onEnter: Visitor<I>,
+  onExit: Visitor<I>
+): void {
+  const scope = createSyntaxScope(s, parentScope);
+  onEnter(s, scope);
+  syntaxChildren(s).forEach(c => {
+    traverseSyntax(c, scope, onEnter, onExit);
+  });
+  onExit(s, scope);
+}
+
+const noop = () => {};
+export function traverseModule<I>(
+  m: Module<I>,
+  onEnter: Visitor<I> = noop,
+  onExit: Visitor<I> = noop
+): void {
+  const moduleScope = createModuleScope(m);
+  onEnter(m, moduleScope);
+  moduleChildren(m).forEach(s => {
+    traverseSyntax(s, moduleScope, onEnter, onExit);
+  });
+  onExit(m, moduleScope);
 }
 
 function syntaxPathFromRange<I>(

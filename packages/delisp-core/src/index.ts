@@ -28,6 +28,8 @@ export function readSyntax(source: string): Syntax {
   return convertSyntax(readFromString(source));
 }
 
+export { lintModule } from "./linter";
+
 export { findSyntaxByOffset, findSyntaxByRange } from "./syntax-utils";
 
 export {

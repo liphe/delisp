@@ -2,11 +2,12 @@ import { CommandModule } from "yargs";
 
 import * as fs from "./fs-helpers";
 
-import { readModule } from "@delisp/core";
+import { lintModule, readModule } from "@delisp/core";
 
 async function lintFile(file: string): Promise<void> {
   const content = await fs.readFile(file, "utf8");
-  readModule(content);
+  const m = readModule(content);
+  lintModule(m);
 }
 
 export const cmdLint: CommandModule = {
