@@ -43,6 +43,10 @@ describe("Compiler", () => {
       expect(compileError("(let {a b c} x)")).toMatchSnapshot();
     });
 
+    it.skip("generate nice error message for invalid let expressions with duplicated variable names", () => {
+      expect(compileError("(let {x 10 x 20} x)")).toMatchSnapshot();
+    });
+
     it("generate nice error message for invalid definitions", () => {
       expect(compileError("(define)")).toMatchSnapshot();
       expect(compileError("(define 5)")).toMatchSnapshot();
