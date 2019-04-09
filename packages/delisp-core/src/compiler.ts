@@ -15,7 +15,8 @@ import {
   SRecord,
   SVectorConstructor,
   Syntax,
-  SDoBlock
+  SDoBlock,
+  SUnknown
 } from "./syntax";
 
 import { methodCall } from "./compiler/estree-utils";
@@ -177,6 +178,22 @@ function compileFunctionCall(
   }
 }
 
+function compilePrimitive(name: string, env: Environment): JS.Expression {
+  const binding = lookupBindingOrError(name, env);
+  switch (binding.source) {
+    case "primitive":
+      return member(
+        {
+          type: "Identifier",
+          name: "env"
+        },
+        binding.jsname
+      );
+    default:
+      throw new Error(`${name} is not a valid primitive`);
+  }
+}
+
 function compileVariable(
   ref: SVariableReference,
   env: Environment
@@ -324,8 +341,23 @@ function compileDoBlock(expr: SDoBlock, env: Environment): JS.Expression {
   };
 }
 
+function compileUnknown(_expr: SUnknown, env: Environment): JS.Expression {
+  const unknownFn = compilePrimitive("unknown", env);
+  const message = literal("Reached code that did not compile properly.");
+  const file = literal("file");
+  const line = literal(1);
+  const column = literal(1);
+  return {
+    type: "CallExpression",
+    callee: unknownFn,
+    arguments: [message, file, line, column]
+  };
+}
+
 export function compile(expr: Expression, env: Environment): JS.Expression {
   switch (expr.node.tag) {
+    case "unknown":
+      return compileUnknown({ ...expr, node: expr.node }, env);
     case "number":
       return compileNumber(expr.node.value);
     case "string":

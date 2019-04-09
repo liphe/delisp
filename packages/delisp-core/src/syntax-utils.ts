@@ -15,6 +15,7 @@ export function mapExpr<I, A, B>(
     case "string":
     case "number":
     case "variable-reference":
+    case "unknown":
       return { ...expr, node: expr.node };
     case "vector":
       return {
@@ -117,6 +118,7 @@ function expressionChildren<I>(e: Expression<I>): Array<Expression<I>> {
     case "string":
     case "number":
     case "variable-reference":
+    case "unknown":
       return [];
     case "conditional":
       return [e.node.condition, e.node.consequent, e.node.alternative];

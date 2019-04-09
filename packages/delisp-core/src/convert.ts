@@ -120,24 +120,39 @@ defineConversion("lambda", expr => {
   };
 });
 
+function missingFrom(expr: ASExpr): Expression {
+  return {
+    node: {
+      tag: "unknown"
+    },
+    info: {},
+    location: {
+      ...expr.location,
+      start: expr.location.end,
+      end: expr.location.end
+    }
+  };
+}
+
 defineConversion("if", expr => {
-  if (expr.elements.length !== 4) {
-    const lastExpr = last(expr.elements) as ASExpr; // we know it is not empty!
-    throw new Error(
-      printHighlightedExpr(
-        `'if' needs exactly 3 arguments, got ${expr.elements.length}`,
-        lastExpr.location,
-        true
-      )
-    );
-  }
   const [, conditionForm, consequentForm, alternativeForm] = expr.elements;
+
+  const condition = conditionForm
+    ? convertExpr(conditionForm)
+    : missingFrom(expr);
+  const consequent = consequentForm
+    ? convertExpr(consequentForm)
+    : missingFrom(expr);
+  const alternative = alternativeForm
+    ? convertExpr(alternativeForm)
+    : missingFrom(expr);
+
   return {
     node: {
       tag: "conditional",
-      condition: convertExpr(conditionForm),
-      consequent: convertExpr(consequentForm),
-      alternative: convertExpr(alternativeForm)
+      condition,
+      consequent,
+      alternative
     },
     location: expr.location,
     info: {}

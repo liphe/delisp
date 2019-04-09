@@ -10,6 +10,18 @@ const prims: Primitives = {
     value: (a: number, b: number) => a < b
   },
 
+  unknown: {
+    type: "(-> string string number number a)",
+    value: (
+      message: string,
+      file: string,
+      line: number,
+      column: number
+    ): never => {
+      throw new Error(`ERROR:${file}:${line}$:${column}: ${message}.`);
+    }
+  },
+
   ...booleanPrims,
   ...vectorPrims,
   ...stringPrims

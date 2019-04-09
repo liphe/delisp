@@ -179,6 +179,17 @@ function infer(
   internalTypes: InternalTypeEnvironment
 ): InferResult<Expression<Typed>> {
   switch (expr.node.tag) {
+    case "unknown":
+      return {
+        result: {
+          ...expr,
+          node: expr.node,
+          info: { type: generateUniqueTVar() }
+        },
+        constraints: [],
+        assumptions: []
+      };
+
     case "number":
       return {
         result: {

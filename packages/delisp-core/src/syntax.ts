@@ -89,6 +89,10 @@ interface SDoBlockF<E> {
   returning: E;
 }
 
+interface SUnknownF<_E> {
+  tag: "unknown";
+}
+
 type AnyExpressionF<I = {}, E = Expression<I>> =
   | SNumberF
   | SStringF
@@ -100,7 +104,8 @@ type AnyExpressionF<I = {}, E = Expression<I>> =
   | SLetF<E>
   | SRecordF<E>
   | STypeAnnotationF<E>
-  | SDoBlockF<E>;
+  | SDoBlockF<E>
+  | SUnknownF<E>;
 
 interface Node<I, E> {
   node: E;
@@ -132,6 +137,8 @@ export interface SVectorConstructor<I = {}>
   extends Node<I, SVectorConstructorF<Expression<I>>> {}
 
 export interface SDoBlock<I = {}> extends Node<I, SDoBlockF<Expression<I>>> {}
+
+export interface SUnknown<I = {}> extends Node<I, SUnknownF<Expression<I>>> {}
 
 //
 // Declarations
