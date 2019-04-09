@@ -74,8 +74,23 @@ function addBinding(varName: string, env: Environment): Environment {
   };
 }
 
-function lookupBinding(varName: string, env: Environment) {
-  return env.bindings[varName];
+function lookupBinding(
+  varName: string,
+  env: Environment
+): EnvironmentBinding | null {
+  const binding = env.bindings[varName];
+  return binding;
+}
+
+function lookupBindingOrError(
+  varName: string,
+  env: Environment
+): EnvironmentBinding {
+  const binding = lookupBinding(varName, env);
+  if (!binding) {
+    throw new Error(`Could not find binding for ${varName}.`);
+  }
+  return binding;
 }
 
 function compileBody(body: Expression[], env: Environment): JS.BlockStatement {
@@ -115,7 +130,7 @@ function compileLambda(
   const jsargs = fn.node.lambdaList.positionalArgs.map(
     (param): JS.Pattern => ({
       type: "Identifier",
-      name: lookupBinding(param.name, newEnv).jsname
+      name: lookupBindingOrError(param.name, newEnv).jsname
     })
   );
 
@@ -135,7 +150,7 @@ function compileLambda(
 
 function compileDefinition(def: SDefinition, env: Environment): JS.Statement {
   const value = compile(def.node.value, env);
-  const name = lookupBinding(def.node.variable.name, env).jsname;
+  const name = lookupBindingOrError(def.node.variable.name, env).jsname;
   return env.defs.define(name, value);
 }
 
@@ -220,7 +235,7 @@ function compileLetBindings(expr: SLet, env: Environment): JS.Expression {
       params: expr.node.bindings.map(
         (b): JS.Pattern => ({
           type: "Identifier",
-          name: lookupBinding(b.variable.name, newenv).jsname
+          name: lookupBindingOrError(b.variable.name, newenv).jsname
         })
       ),
       body: compileBody(expr.node.body, newenv)
@@ -380,7 +395,7 @@ function compileExports(
   env: Environment
 ): Array<JS.Statement | JS.ModuleDeclaration> {
   const exportNames = exps.map(exp => {
-    const binding = lookupBinding(exp.node.value.name, env);
+    const binding = lookupBindingOrError(exp.node.value.name, env);
     if (!binding || binding.source !== "module") {
       throw new Error(
         printHighlightedExpr(
