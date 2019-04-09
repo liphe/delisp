@@ -107,11 +107,7 @@ function printExpr(expr: Expression): Doc {
       case "function-call": {
         const fn = e.node.fn;
         const args = e.node.args;
-        if (args.length === 0) {
-          return group(list(fn));
-        } else {
-          return group(list(groupalign(fn, align(...args))));
-        }
+        return group(list(groupalign(fn, align(...args))));
       }
 
       case "let-bindings":
