@@ -25,6 +25,8 @@ import { parseRecord } from "./convert-utils";
 import { listTypeVariables } from "./type-utils";
 import { TypeWithWildcards } from "./type-wildcards";
 
+class ConvertError extends Error {}
+
 const conversions: Map<string, (expr: ASExprList) => Expression> = new Map();
 const toplevelConversions: Map<
   string,
@@ -41,7 +43,7 @@ function defineToplevel(name: string, fn: (expr: ASExprList) => Declaration) {
 
 function parseBody(anchor: ASExpr, exprs: ASExpr[]): Expression[] {
   if (exprs.length === 0) {
-    throw new Error(
+    throw new ConvertError(
       printHighlightedExpr(`body can't be empty`, anchor.location, true)
     );
   }
@@ -54,14 +56,14 @@ function parseBody(anchor: ASExpr, exprs: ASExpr[]): Expression[] {
 
 function parseLambdaList(ll: ASExpr): LambdaList {
   if (ll.tag !== "list") {
-    throw new Error(
+    throw new ConvertError(
       printHighlightedExpr("Expected a list of arguments", ll.location)
     );
   }
 
   ll.elements.forEach(arg => {
     if (arg.tag !== "symbol") {
-      throw new Error(
+      throw new ConvertError(
         printHighlightedExpr(
           "A list of arguments should be made of symbols",
           arg.location
@@ -76,7 +78,7 @@ function parseLambdaList(ll: ASExpr): LambdaList {
   symbols.forEach((arg, i) => {
     const duplicated = symbols.slice(i + 1).find(a => a.name === arg.name);
     if (duplicated) {
-      throw new Error(
+      throw new ConvertError(
         printHighlightedExpr(
           "There is another argument with the same name",
           duplicated.location
@@ -96,7 +98,7 @@ defineConversion("lambda", expr => {
   const lastExpr = last([lambda, ...args]) as ASExpr; // we kj
 
   if (args.length === 0) {
-    throw new Error(
+    throw new ConvertError(
       printHighlightedExpr(
         `'lambda' is missing the argument list`,
         lastExpr.location,
@@ -144,7 +146,7 @@ defineConversion("if", expr => {
 
 function parseLetBindings(bindings: ASExpr): Array<SLetBindingF<Expression>> {
   if (bindings.tag !== "map") {
-    throw new Error(
+    throw new ConvertError(
       printHighlightedExpr(`'let' bindings should be a map`, bindings.location)
     );
   }
@@ -159,7 +161,7 @@ defineConversion("let", expr => {
   const lastExpr = last([_let, ...args]) as ASExpr; // we know it is not empty!
 
   if (args.length === 0) {
-    throw new Error(
+    throw new ConvertError(
       printHighlightedExpr(
         `'let' is missing the bindings`,
         lastExpr.location,
@@ -186,7 +188,7 @@ defineConversion("the", expr => {
   const lastExpr = last([_the, ...args]) as ASExpr; // we know it is not empty!
 
   if (args.length === 0) {
-    throw new Error(
+    throw new ConvertError(
       printHighlightedExpr(
         `'the' is missing the type and value`,
         lastExpr.location,
@@ -195,7 +197,7 @@ defineConversion("the", expr => {
     );
   }
   if (args.length === 1) {
-    throw new Error(
+    throw new ConvertError(
       printHighlightedExpr(
         `'the' is missing the expression`,
         lastExpr.location,
@@ -205,7 +207,7 @@ defineConversion("the", expr => {
   }
 
   if (args.length > 2) {
-    throw new Error(
+    throw new ConvertError(
       printHighlightedExpr(
         `Too many arguments. 'the' should take two arguments.`,
         args[2].location,
@@ -232,7 +234,7 @@ defineConversion("do", expr => {
   const lastExpr = last([_do, ...args]) as ASExpr; // we know it is not empty!
 
   if (args.length === 0) {
-    throw new Error(
+    throw new ConvertError(
       printHighlightedExpr(`empty body`, lastExpr.location, true)
     );
   }
@@ -254,7 +256,7 @@ defineToplevel("define", expr => {
 
   if (args.length !== 2) {
     const lastExpr = last([define, ...args]) as ASExpr;
-    throw new Error(
+    throw new ConvertError(
       printHighlightedExpr(
         `'define' needs exactly 2 arguments, got ${args.length}`,
         lastExpr.location,
@@ -266,7 +268,7 @@ defineToplevel("define", expr => {
   const [variable, value] = args;
 
   if (variable.tag !== "symbol") {
-    throw new Error(
+    throw new ConvertError(
       printHighlightedExpr("'define' expected a symbol", variable.location)
     );
   }
@@ -286,7 +288,7 @@ defineToplevel("export", expr => {
 
   if (args.length !== 1) {
     const lastExpr = last([exp, ...args]) as ASExpr;
-    throw new Error(
+    throw new ConvertError(
       printHighlightedExpr(
         `'export' needs exactly 1 arguments, got ${args.length}`,
         lastExpr.location,
@@ -298,7 +300,7 @@ defineToplevel("export", expr => {
   const [variable] = args;
 
   if (variable.tag !== "symbol") {
-    throw new Error(
+    throw new ConvertError(
       printHighlightedExpr("'export' expected a symbol", variable.location)
     );
   }
@@ -317,7 +319,7 @@ defineToplevel("type", expr => {
 
   if (args.length !== 2) {
     const lastExpr = last([typeOp, ...args]) as ASExpr;
-    throw new Error(
+    throw new ConvertError(
       printHighlightedExpr(
         `'type' needs exactly 2 arguments, got ${args.length}`,
         lastExpr.location,
@@ -329,7 +331,7 @@ defineToplevel("type", expr => {
   const [name, definition] = args;
 
   if (name.tag !== "symbol") {
-    throw new Error(
+    throw new ConvertError(
       printHighlightedExpr("'type' expected a symbol as a name", name.location)
     );
   }
@@ -338,7 +340,7 @@ defineToplevel("type", expr => {
 
   const definitionType = convertType(definition);
   if (listTypeVariables(definitionType).length > 0) {
-    throw new Error(
+    throw new ConvertError(
       printHighlightedExpr("Type variable out of scope", definition.location)
     );
   }
@@ -355,7 +357,7 @@ defineToplevel("type", expr => {
 
 function convertList(list: ASExprList): Expression {
   if (list.elements.length === 0) {
-    throw new Error(
+    throw new ConvertError(
       printHighlightedExpr("Empty list is not a function call", list.location)
     );
   }
@@ -457,7 +459,7 @@ export function convertExpr(expr: ASExpr): Expression {
 export function convert(expr: ASExpr): Syntax {
   if (expr.tag === "list") {
     if (expr.elements.length === 0) {
-      throw new Error(
+      throw new ConvertError(
         printHighlightedExpr("Empty list is not a function call", expr.location)
       );
     }
