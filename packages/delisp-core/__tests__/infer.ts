@@ -228,5 +228,43 @@ describe("Type inference", () => {
         expect(typeOf("(lambda (x) (print x) x)")).toBe("(-> string string)");
       });
     });
+
+    describe("Recursion", () => {
+      it("type is inferred for simple functions", () => {
+        expect(
+          typeOf(`
+(let {f (lambda (n)
+          (if (= n 0)
+              1
+              (* n (f (- n 1)))))}
+  f)
+`)
+        ).toBe("(-> number number)");
+      });
+
+      it("basic polymorphic function on lists should work", () => {
+        const env = {
+          variables: {
+            "empty?": readType("(-> [a] boolean)"),
+            "+": readType("(-> number number number)"),
+            rest: readType("(-> [a] [a])")
+          },
+          types: {}
+        };
+
+        expect(
+          typeOf(
+            `
+(let {f (lambda (l)
+          (if (empty? l)
+              0
+              (+ 1 (f (rest l)))))}
+  f)
+`,
+            env
+          )
+        ).toBe("(-> [α] number)");
+      });
+    });
   });
 });
