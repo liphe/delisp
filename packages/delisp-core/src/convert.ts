@@ -147,16 +147,29 @@ defineConversion("lambda", expr => {
 });
 
 function missingFrom(expr: ASExpr): ExpressionWithErrors {
-  return success(
-    {
-      tag: "unknown"
-    },
-    {
-      ...expr.location,
-      start: expr.location.end,
-      end: expr.location.end
-    }
-  );
+  const location = {
+    ...expr.location,
+    start: expr.location.end,
+    end: expr.location.end
+  };
+  return success({ tag: "unknown" }, location);
+}
+
+function exactArguments(
+  args: ASExpr[],
+  options: {
+    required: number;
+    fewArguments: string;
+    manyArguments: string;
+  }
+): string[] {
+  if (args.length < options.required) {
+    return [options.fewArguments];
+  }
+  if (args.length > options.required) {
+    return [options.manyArguments];
+  }
+  return [];
 }
 
 defineConversion("if", expr => {
@@ -172,14 +185,21 @@ defineConversion("if", expr => {
     ? convertExpr(alternativeForm)
     : missingFrom(expr);
 
-  return success(
+  const errors = exactArguments(expr.elements, {
+    required: 4,
+    fewArguments: "too few arguments",
+    manyArguments: "too many arguments"
+  });
+
+  return result(
     {
       tag: "conditional",
       condition,
       consequent,
       alternative
     },
-    expr.location
+    expr.location,
+    errors
   );
 });
 
