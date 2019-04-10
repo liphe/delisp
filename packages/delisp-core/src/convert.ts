@@ -1,3 +1,4 @@
+import { Location } from "./input";
 import { printHighlightedExpr } from "./error-report";
 import {
   ASExpr,
@@ -12,7 +13,6 @@ import {
   Expression,
   SLetBindingF,
   LambdaList,
-  SVariableReference,
   Syntax
 } from "./syntax";
 import { last } from "./utils";
@@ -27,13 +27,40 @@ import { TypeWithWildcards } from "./type-wildcards";
 
 class ConvertError extends Error {}
 
-const conversions: Map<string, (expr: ASExprList) => Expression> = new Map();
+type WithErrors = {
+  errors: string[];
+};
+
+type ExpressionWithErrors = Expression<WithErrors>;
+
+function result(
+  node: ExpressionWithErrors["node"],
+  location: Location,
+  errors: string[]
+): ExpressionWithErrors {
+  return { node, info: { errors }, location };
+}
+
+function success(
+  node: ExpressionWithErrors["node"],
+  location: Location
+): ExpressionWithErrors {
+  return result(node, location, []);
+}
+
+const conversions: Map<
+  string,
+  (expr: ASExprList) => ExpressionWithErrors
+> = new Map();
 const toplevelConversions: Map<
   string,
   (expr: ASExprList) => Declaration
 > = new Map();
 
-function defineConversion(name: string, fn: (expr: ASExprList) => Expression) {
+function defineConversion(
+  name: string,
+  fn: (expr: ASExprList) => ExpressionWithErrors
+) {
   conversions.set(name, fn);
 }
 
@@ -41,7 +68,7 @@ function defineToplevel(name: string, fn: (expr: ASExprList) => Declaration) {
   toplevelConversions.set(name, fn);
 }
 
-function parseBody(anchor: ASExpr, exprs: ASExpr[]): Expression[] {
+function parseBody(anchor: ASExpr, exprs: ASExpr[]): ExpressionWithErrors[] {
   if (exprs.length === 0) {
     throw new ConvertError(
       printHighlightedExpr(`body can't be empty`, anchor.location, true)
@@ -109,29 +136,27 @@ defineConversion("lambda", expr => {
 
   const body = parseBody(lastExpr, args.slice(1));
 
-  return {
-    node: {
+  return success(
+    {
       tag: "function",
       lambdaList: parseLambdaList(args[0]),
       body
     },
-    location: expr.location,
-    info: {}
-  };
+    expr.location
+  );
 });
 
-function missingFrom(expr: ASExpr): Expression {
-  return {
-    node: {
+function missingFrom(expr: ASExpr): ExpressionWithErrors {
+  return success(
+    {
       tag: "unknown"
     },
-    info: {},
-    location: {
+    {
       ...expr.location,
       start: expr.location.end,
       end: expr.location.end
     }
-  };
+  );
 }
 
 defineConversion("if", expr => {
@@ -147,19 +172,20 @@ defineConversion("if", expr => {
     ? convertExpr(alternativeForm)
     : missingFrom(expr);
 
-  return {
-    node: {
+  return success(
+    {
       tag: "conditional",
       condition,
       consequent,
       alternative
     },
-    location: expr.location,
-    info: {}
-  };
+    expr.location
+  );
 });
 
-function parseLetBindings(bindings: ASExpr): Array<SLetBindingF<Expression>> {
+function parseLetBindings(
+  bindings: ASExpr
+): Array<SLetBindingF<ExpressionWithErrors>> {
   if (bindings.tag !== "map") {
     throw new ConvertError(
       printHighlightedExpr(`'let' bindings should be a map`, bindings.location)
@@ -187,15 +213,14 @@ defineConversion("let", expr => {
 
   const [rawBindings, ...rawBody] = args;
 
-  return {
-    node: {
+  return success(
+    {
       tag: "let-bindings",
       bindings: parseLetBindings(rawBindings),
       body: parseBody(lastExpr, rawBody)
     },
-    location: expr.location,
-    info: {}
-  };
+    expr.location
+  );
 });
 
 defineConversion("the", expr => {
@@ -233,15 +258,14 @@ defineConversion("the", expr => {
 
   const [t, value] = args;
 
-  return {
-    node: {
+  return success(
+    {
       tag: "type-annotation",
       typeWithWildcards: new TypeWithWildcards(convertType(t)),
       value: convertExpr(value)
     },
-    location: expr.location,
-    info: {}
-  };
+    expr.location
+  );
 });
 
 defineConversion("do", expr => {
@@ -255,15 +279,14 @@ defineConversion("do", expr => {
   }
   const middleForms = args.slice(0, -1);
   const lastForm = last(args)!;
-  return {
-    node: {
+  return success(
+    {
       tag: "do-block",
       body: middleForms.map(convertExpr),
       returning: convertExpr(lastForm)
     },
-    location: expr.location,
-    info: {}
-  };
+    expr.location
+  );
 });
 
 defineToplevel("define", expr => {
@@ -370,7 +393,7 @@ defineToplevel("type", expr => {
   };
 });
 
-function convertList(list: ASExprList): Expression {
+function convertList(list: ASExprList): ExpressionWithErrors {
   if (list.elements.length === 0) {
     throw new ConvertError(
       printHighlightedExpr("Empty list is not a function call", list.location)
@@ -386,34 +409,31 @@ function convertList(list: ASExprList): Expression {
     return convertSpecialForm(list);
   } else {
     const [fn, ...args] = list.elements;
-    return {
-      node: {
+    return success(
+      {
         tag: "function-call",
         fn: convertExpr(fn),
         args: args.map(convertExpr)
       },
-      location: list.location,
-      info: {}
-    };
+      list.location
+    );
   }
 }
 
-function convertVector(list: ASExprVector): Expression {
-  return {
-    node: {
+function convertVector(list: ASExprVector): ExpressionWithErrors {
+  return success(
+    {
       tag: "vector",
       values: list.elements.map(convertExpr)
     },
-    location: list.location,
-    info: {}
-  };
+    list.location
+  );
 }
 
-function convertMap(map: ASExprMap): Expression {
+function convertMap(map: ASExprMap): ExpressionWithErrors {
   const { fields, tail } = parseRecord(map);
-
-  return {
-    node: {
+  return success(
+    {
       tag: "record",
       fields: fields.map(f => ({
         label: parseIdentifier(f.label),
@@ -421,9 +441,8 @@ function convertMap(map: ASExprMap): Expression {
       })),
       extends: tail && convertExpr(tail)
     },
-    location: map.location,
-    info: {}
-  };
+    map.location
+  );
 }
 
 function parseIdentifier(expr: ASExprSymbol): Identifier {
@@ -434,32 +453,23 @@ function parseIdentifier(expr: ASExprSymbol): Identifier {
   };
 }
 
-function convertSymbol(expr: ASExprSymbol): SVariableReference {
+function convertSymbol(expr: ASExprSymbol): ExpressionWithErrors {
   const id = parseIdentifier(expr);
-  return {
-    node: {
+  return success(
+    {
       tag: "variable-reference",
       name: id.name
     },
-    info: {},
-    location: id.location
-  };
+    id.location
+  );
 }
 
-export function convertExpr(expr: ASExpr): Expression {
+function convertExprOrError(expr: ASExpr): ExpressionWithErrors {
   switch (expr.tag) {
     case "number":
-      return {
-        node: { tag: "number", value: expr.value },
-        info: {},
-        location: expr.location
-      };
+      return success({ tag: "number", value: expr.value }, expr.location);
     case "string":
-      return {
-        node: { tag: "string", value: expr.value },
-        info: {},
-        location: expr.location
-      };
+      return success({ tag: "string", value: expr.value }, expr.location);
     case "symbol":
       return convertSymbol(expr);
     case "list":
@@ -468,6 +478,18 @@ export function convertExpr(expr: ASExpr): Expression {
       return convertVector(expr);
     case "map":
       return convertMap(expr);
+  }
+}
+
+export function convertExpr(expr: ASExpr): ExpressionWithErrors {
+  try {
+    return convertExprOrError(expr);
+  } catch (err) {
+    if (err instanceof ConvertError) {
+      return result({ tag: "unknown" }, expr.location, [err.message]);
+    } else {
+      throw err;
+    }
   }
 }
 
