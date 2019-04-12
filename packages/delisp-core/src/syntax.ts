@@ -144,37 +144,36 @@ export interface SUnknown<I = {}> extends Node<I, SUnknownF<Expression<I>>> {}
 // Declarations
 //
 
-export interface SDefinition<I = {}> {
-  node: {
-    tag: "definition";
-    variable: Identifier;
-    value: Expression<I>;
-  };
-  location: Location;
-  info: I;
+interface SDefinitionF<E> {
+  tag: "definition";
+  variable: Identifier;
+  value: E;
 }
+export interface SDefinition<EInfo = {}, SInfo = {}>
+  extends Node<SInfo, SDefinitionF<Expression<EInfo>>> {}
 
-export interface SExport<I = {}> {
-  node: {
-    tag: "export";
-    value: Identifier;
-  };
-  location: Location;
-  info: I;
+interface SExportF<_E> {
+  tag: "export";
+  value: Identifier;
 }
+export interface SExport<I = {}> extends Node<I, SExportF<Expression<I>>> {}
 
-export interface STypeAlias<I = {}> {
-  node: {
-    tag: "type-alias";
-    alias: Identifier;
-    definition: Type;
-  };
-  location: Location;
-  info: I;
+interface STypeAliasF<_E> {
+  tag: "type-alias";
+  alias: Identifier;
+  definition: Type;
 }
+export interface STypeAlias<I = {}>
+  extends Node<I, STypeAliasF<Expression<I>>> {}
 
-export type Declaration<I = {}> = SDefinition<I> | SExport<I> | STypeAlias<I>;
-export type Syntax<I = {}> = Expression<I> | Declaration<I>;
+export type Declaration<EInfo = {}, SInfo = {}> =
+  | SDefinition<EInfo, SInfo>
+  | SExport<SInfo>
+  | STypeAlias<SInfo>;
+
+export type Syntax<EInfo = {}, SInfo = {}> =
+  | Expression<EInfo>
+  | Declaration<EInfo, SInfo>;
 
 export function isDeclaration<I>(syntax: Syntax<I>): syntax is Declaration<I> {
   return (
