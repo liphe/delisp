@@ -15,7 +15,8 @@ import {
   LambdaList,
   Syntax
 } from "./syntax";
-import { last } from "./utils";
+import { foldExpr, exprFChildren } from "./syntax-utils";
+import { flatten, last } from "./utils";
 
 import {
   checkUserDefinedTypeName,
@@ -32,6 +33,7 @@ type WithErrors = {
 };
 
 type ExpressionWithErrors = Expression<WithErrors>;
+type SyntaxWithErrors = Syntax<WithErrors>;
 
 function result(
   node: ExpressionWithErrors["node"],
@@ -54,7 +56,7 @@ const conversions: Map<
 > = new Map();
 const toplevelConversions: Map<
   string,
-  (expr: ASExprList) => Declaration
+  (expr: ASExprList) => Declaration<WithErrors>
 > = new Map();
 
 function defineConversion(
@@ -64,7 +66,10 @@ function defineConversion(
   conversions.set(name, fn);
 }
 
-function defineToplevel(name: string, fn: (expr: ASExprList) => Declaration) {
+function defineToplevel(
+  name: string,
+  fn: (expr: ASExprList) => Declaration<WithErrors>
+) {
   toplevelConversions.set(name, fn);
 }
 
@@ -513,7 +518,7 @@ export function convertExpr(expr: ASExpr): ExpressionWithErrors {
   }
 }
 
-export function convert(expr: ASExpr): Syntax {
+export function convert(expr: ASExpr): SyntaxWithErrors {
   if (expr.tag === "list") {
     if (expr.elements.length === 0) {
       throw new ConvertError(
@@ -531,4 +536,8 @@ export function convert(expr: ASExpr): Syntax {
   }
 
   return convertExpr(expr);
+}
+
+export function collectConvertErrors(expr: ExpressionWithErrors): string[] {
+  return foldExpr(expr, e => [...e.info.errors, ...flatten(exprFChildren(e))]);
 }
