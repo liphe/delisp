@@ -1,7 +1,7 @@
 import { convert, collectConvertErrors } from "../src/convert";
 import { readFromString } from "../src/reader";
 
-describe("Compiler", () => {
+describe("Convert", () => {
   describe("Error messages", () => {
     function compileError(str: string): string {
       const sexpr = readFromString(str);
