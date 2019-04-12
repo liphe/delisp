@@ -199,9 +199,9 @@ export function isTypeAlias<I>(syntax: Syntax<I>): syntax is STypeAlias<I> {
   return syntax.node.tag === "type-alias";
 }
 
-export interface Module<I = {}> {
+export interface Module<EInfo = {}, SInfo = {}> {
   tag: "module";
-  body: Array<Syntax<I>>;
+  body: Array<Syntax<EInfo, SInfo>>;
 }
 
 export interface Typed {

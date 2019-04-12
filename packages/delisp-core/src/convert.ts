@@ -28,7 +28,7 @@ import { ConvertError, parseRecord } from "./convert-utils";
 import { listTypeVariables } from "./type-utils";
 import { TypeWithWildcards } from "./type-wildcards";
 
-interface WithErrors {
+export interface WithErrors {
   errors: string[];
 }
 

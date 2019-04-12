@@ -3,6 +3,8 @@ import { convert as convertSyntax } from "./convert";
 import { readFromString } from "./reader";
 import { Syntax } from "./syntax";
 
+export { collectConvertErrors } from "./convert";
+
 export {
   compileToString,
   compileModuleToString,
