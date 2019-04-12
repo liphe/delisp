@@ -33,7 +33,8 @@ type WithErrors = {
 };
 
 type ExpressionWithErrors = Expression<WithErrors>;
-type SyntaxWithErrors = Syntax<WithErrors>;
+type DeclarationWithErrors = Declaration<WithErrors, WithErrors>;
+type SyntaxWithErrors = Syntax<WithErrors, WithErrors>;
 
 function result(
   node: ExpressionWithErrors["node"],
@@ -56,7 +57,7 @@ const conversions: Map<
 > = new Map();
 const toplevelConversions: Map<
   string,
-  (expr: ASExprList) => Declaration<WithErrors>
+  (expr: ASExprList) => DeclarationWithErrors
 > = new Map();
 
 function defineConversion(
@@ -68,7 +69,7 @@ function defineConversion(
 
 function defineToplevel(
   name: string,
-  fn: (expr: ASExprList) => Declaration<WithErrors>
+  fn: (expr: ASExprList) => DeclarationWithErrors
 ) {
   toplevelConversions.set(name, fn);
 }
@@ -169,10 +170,18 @@ function exactArguments(
   }
 ): string[] {
   if (args.length < options.required) {
-    return [options.fewArguments];
+    return [
+      printHighlightedExpr(options.fewArguments, last(args)!.location, true)
+    ];
   }
   if (args.length > options.required) {
-    return [options.manyArguments];
+    return [
+      printHighlightedExpr(
+        options.fewArguments,
+        args[options.required].location,
+        true
+      )
+    ];
   }
   return [];
 }
@@ -529,25 +538,41 @@ function convertExpr(expr: ASExpr): ExpressionWithErrors {
   }
 }
 
-export function convert(expr: ASExpr): SyntaxWithErrors {
-  if (expr.tag === "list") {
-    if (expr.elements.length === 0) {
+function convertOrError(form: ASExpr): SyntaxWithErrors {
+  if (form.tag === "list") {
+    if (form.elements.length === 0) {
       throw new ConvertError(
-        printHighlightedExpr("Empty list is not a function call", expr.location)
+        printHighlightedExpr("Empty list is not a function call", form.location)
       );
     }
 
-    const [first] = expr.elements;
+    const [first] = form.elements;
     const convertDeclaration =
       first.tag === "symbol" ? toplevelConversions.get(first.name) : undefined;
 
     if (convertDeclaration) {
-      return convertDeclaration(expr);
+      return convertDeclaration(form);
     }
   }
 
-  return convertExpr(expr);
+  return convertExpr(form);
 }
+
+export function convert(form: ASExpr): SyntaxWithErrors {
+  try {
+    return convertOrError(form);
+  } catch (err) {
+    if (err instanceof ConvertError) {
+      return result({ tag: "unknown" }, form.location, [err.message]);
+    } else {
+      throw err;
+    }
+  }
+}
+
+//
+// Extracing errors
+//
 
 function collectConvertExprErrors(expr: ExpressionWithErrors): string[] {
   return foldExpr(expr, e => [...e.info.errors, ...flatten(exprFChildren(e))]);
@@ -560,9 +585,12 @@ export function collectConvertErrors(syntax: SyntaxWithErrors): string[] {
     switch (syntax.node.tag) {
       case "export":
       case "type-alias":
-        return [];
+        return syntax.info.errors;
       case "definition":
-        return collectConvertExprErrors(syntax.node.value);
+        return [
+          ...syntax.info.errors,
+          ...collectConvertExprErrors(syntax.node.value)
+        ];
       default:
         return assertNever(syntax.node);
     }
