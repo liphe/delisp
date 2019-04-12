@@ -151,26 +151,29 @@ export interface SDefinition<I = {}> {
     value: Expression<I>;
   };
   location: Location;
+  info: I;
 }
 
-export interface SExport {
+export interface SExport<I = {}> {
   node: {
     tag: "export";
     value: Identifier;
   };
   location: Location;
+  info: I;
 }
 
-export interface STypeAlias<_I = {}> {
+export interface STypeAlias<I = {}> {
   node: {
     tag: "type-alias";
     alias: Identifier;
     definition: Type;
   };
   location: Location;
+  info: I;
 }
 
-export type Declaration<I = {}> = SDefinition<I> | SExport | STypeAlias<I>;
+export type Declaration<I = {}> = SDefinition<I> | SExport<I> | STypeAlias<I>;
 export type Syntax<I = {}> = Expression<I> | Declaration<I>;
 
 export function isDeclaration<I>(syntax: Syntax<I>): syntax is Declaration<I> {
@@ -189,7 +192,7 @@ export function isDefinition<I>(syntax: Syntax<I>): syntax is SDefinition<I> {
   return syntax.node.tag === "definition";
 }
 
-export function isExport<I>(syntax: Syntax<I>): syntax is SExport {
+export function isExport<I>(syntax: Syntax<I>): syntax is SExport<I> {
   return syntax.node.tag === "export";
 }
 

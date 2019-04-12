@@ -2,6 +2,8 @@ import { printHighlightedExpr } from "./error-report";
 import { ASExprMap } from "./sexpr";
 import { duplicatedItemsBy, last } from "./utils";
 
+export class ConvertError extends Error {}
+
 export function parseRecord(expr: ASExprMap) {
   //
   // Destructure a map into fields and tail
@@ -23,7 +25,7 @@ export function parseRecord(expr: ASExprMap) {
     const invalidFields = fields.filter(f => !f.label.name.startsWith(":"));
     if (invalidFields.length > 0) {
       const field = invalidFields[0];
-      throw new Error(
+      throw new ConvertError(
         printHighlightedExpr(
           `'${
             field.label.name
@@ -39,7 +41,7 @@ export function parseRecord(expr: ASExprMap) {
 
   const duplicates = duplicatedItemsBy(fields, f => f.label.name);
   if (duplicates.length > 0) {
-    throw new Error(
+    throw new ConvertError(
       printHighlightedExpr("Duplicated label", duplicates[0].label.location)
     );
   }

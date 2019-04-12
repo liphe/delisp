@@ -1,5 +1,5 @@
 import { capitalize } from "./utils";
-import { parseRecord } from "./convert-utils";
+import { ConvertError, parseRecord } from "./convert-utils";
 import { printHighlightedExpr } from "./error-report";
 import {
   ASExpr,
@@ -32,7 +32,7 @@ export function userDefinedType(expr: ASExprSymbol): boolean {
 /** Check if a symbol is a valid user defined type name or throw a user-friendly error otherwise. */
 export function checkUserDefinedTypeName(expr: ASExprSymbol): void {
   if (!userDefinedType(expr)) {
-    throw new Error(
+    throw new ConvertError(
       printHighlightedExpr(
         `'${
           expr.name
@@ -70,7 +70,7 @@ function convertList(expr: ASExprList): Type {
 
 function convertVector(expr: ASExprVector): Type {
   if (expr.elements.length !== 1) {
-    throw new Error(
+    throw new ConvertError(
       printHighlightedExpr("Expected exactly 1 argument", expr.location)
     );
   }
@@ -101,6 +101,8 @@ export function convert(expr: ASExpr): Type {
     case "map":
       return convertMap(expr);
     default:
-      throw new Error(printHighlightedExpr("Not a valid type", expr.location));
+      throw new ConvertError(
+        printHighlightedExpr("Not a valid type", expr.location)
+      );
   }
 }

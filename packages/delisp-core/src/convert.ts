@@ -1,3 +1,4 @@
+import { assertNever } from "./invariant";
 import { Location } from "./input";
 import { printHighlightedExpr } from "./error-report";
 import {
@@ -8,6 +9,7 @@ import {
   ASExprVector
 } from "./sexpr";
 import {
+  isExpression,
   Identifier,
   Declaration,
   Expression,
@@ -22,11 +24,9 @@ import {
   checkUserDefinedTypeName,
   convert as convertType
 } from "./convert-type";
-import { parseRecord } from "./convert-utils";
+import { ConvertError, parseRecord } from "./convert-utils";
 import { listTypeVariables } from "./type-utils";
 import { TypeWithWildcards } from "./type-wildcards";
-
-class ConvertError extends Error {}
 
 type WithErrors = {
   errors: string[];
@@ -190,10 +190,12 @@ defineConversion("if", expr => {
     ? convertExpr(alternativeForm)
     : missingFrom(expr);
 
+  const receivedArgs = expr.elements.length - 1;
+
   const errors = exactArguments(expr.elements, {
     required: 4,
-    fewArguments: "too few arguments",
-    manyArguments: "too many arguments"
+    fewArguments: `'if' needs exactly 3 arguments, got ${receivedArgs}`,
+    manyArguments: `'if' needs exactly 3 arguments, got ${receivedArgs}`
   });
 
   return result(
@@ -342,7 +344,10 @@ defineToplevel("define", expr => {
       variable: parseIdentifier(variable),
       value: convertExpr(value)
     },
-    location: expr.location
+    location: expr.location,
+    info: {
+      errors: []
+    }
   };
 });
 
@@ -373,7 +378,10 @@ defineToplevel("export", expr => {
       tag: "export",
       value: parseIdentifier(variable)
     },
-    location: expr.location
+    location: expr.location,
+    info: {
+      errors: []
+    }
   };
 });
 
@@ -414,7 +422,10 @@ defineToplevel("type", expr => {
       alias: parseIdentifier(name),
       definition: definitionType
     },
-    location: expr.location
+    location: expr.location,
+    info: {
+      errors: []
+    }
   };
 });
 
@@ -506,7 +517,7 @@ function convertExprOrError(expr: ASExpr): ExpressionWithErrors {
   }
 }
 
-export function convertExpr(expr: ASExpr): ExpressionWithErrors {
+function convertExpr(expr: ASExpr): ExpressionWithErrors {
   try {
     return convertExprOrError(expr);
   } catch (err) {
@@ -538,6 +549,22 @@ export function convert(expr: ASExpr): SyntaxWithErrors {
   return convertExpr(expr);
 }
 
-export function collectConvertErrors(expr: ExpressionWithErrors): string[] {
+function collectConvertExprErrors(expr: ExpressionWithErrors): string[] {
   return foldExpr(expr, e => [...e.info.errors, ...flatten(exprFChildren(e))]);
+}
+
+export function collectConvertErrors(syntax: SyntaxWithErrors): string[] {
+  if (isExpression(syntax)) {
+    return collectConvertExprErrors(syntax);
+  } else {
+    switch (syntax.node.tag) {
+      case "export":
+      case "type-alias":
+        return [];
+      case "definition":
+        return collectConvertExprErrors(syntax.node.value);
+      default:
+        return assertNever(syntax.node);
+    }
+  }
 }

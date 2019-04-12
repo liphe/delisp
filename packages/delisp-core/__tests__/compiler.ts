@@ -1,25 +1,16 @@
-import { compileToString, moduleEnvironment } from "../src/compiler";
-import { convert } from "../src/convert";
-import { createModule } from "../src/module";
+import { convert, collectConvertErrors } from "../src/convert";
 import { readFromString } from "../src/reader";
 
 describe("Compiler", () => {
   describe("Error messages", () => {
     function compileError(str: string): string {
-      let result: string | undefined;
-      try {
-        const sexpr = readFromString(str);
-        const syntax = convert(sexpr);
-        const env = moduleEnvironment(createModule());
-        compileToString(syntax, env);
-      } catch (err) {
-        result = err.message;
-      }
-      if (result) {
-        return result;
-      } else {
+      const sexpr = readFromString(str);
+      const syntax = convert(sexpr);
+      const errors = collectConvertErrors(syntax);
+      if (errors.length === 0) {
         throw new Error(`FATAL: EXPRESSION ${str} DID NOT FAIL TO COMPILE.`);
       }
+      return errors.join("\n\n");
     }
 
     it("generate a nice error for some basic invalid syntax", () => {
