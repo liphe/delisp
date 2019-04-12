@@ -96,7 +96,7 @@ export function mapExpr<I, A, B>(
   }
 }
 
-export function exprFChildren<I, E>(e: ExpressionF<I, E>): Array<E> {
+export function exprFChildren<I, E>(e: ExpressionF<I, E>): E[] {
   switch (e.node.tag) {
     case "string":
     case "number":

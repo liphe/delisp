@@ -28,9 +28,9 @@ import { ConvertError, parseRecord } from "./convert-utils";
 import { listTypeVariables } from "./type-utils";
 import { TypeWithWildcards } from "./type-wildcards";
 
-type WithErrors = {
+interface WithErrors {
   errors: string[];
-};
+}
 
 type ExpressionWithErrors = Expression<WithErrors>;
 type DeclarationWithErrors = Declaration<WithErrors, WithErrors>;
