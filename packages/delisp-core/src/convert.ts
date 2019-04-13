@@ -51,25 +51,32 @@ function success(
   return result(node, location, []);
 }
 
+type ConversionHandler<A> = (
+  id: ASExprSymbol,
+  args: ASExpr[],
+  whole: ASExprList
+) => A;
+
 const conversions: Map<
   string,
-  (expr: ASExprList) => ExpressionWithErrors
+  ConversionHandler<ExpressionWithErrors>
 > = new Map();
+
 const toplevelConversions: Map<
   string,
-  (expr: ASExprList) => DeclarationWithErrors
+  ConversionHandler<DeclarationWithErrors>
 > = new Map();
 
 function defineConversion(
   name: string,
-  fn: (expr: ASExprList) => ExpressionWithErrors
+  fn: ConversionHandler<ExpressionWithErrors>
 ) {
   conversions.set(name, fn);
 }
 
 function defineToplevel(
   name: string,
-  fn: (expr: ASExprList) => DeclarationWithErrors
+  fn: ConversionHandler<DeclarationWithErrors>
 ) {
   toplevelConversions.set(name, fn);
 }
@@ -126,9 +133,8 @@ function parseLambdaList(ll: ASExpr): LambdaList {
   };
 }
 
-defineConversion("lambda", expr => {
-  const [lambda, ...args] = expr.elements;
-  const lastExpr = last([lambda, ...args]) as ASExpr; // we kj
+defineConversion("lambda", (lambda_, args, whole) => {
+  const lastExpr = last([lambda_, ...args]) as ASExpr;
 
   if (args.length === 0) {
     throw new ConvertError(
@@ -148,7 +154,7 @@ defineConversion("lambda", expr => {
       lambdaList: parseLambdaList(args[0]),
       body
     },
-    expr.location
+    whole.location
   );
 });
 
@@ -196,9 +202,7 @@ function checkArguments(
   return [];
 }
 
-defineConversion("if", expr => {
-  const [if_, ...args] = expr.elements;
-
+defineConversion("if", (if_, args, whole) => {
   const errors = checkArguments(if_, args, {
     atLeast: 3,
     atMost: 3,
@@ -210,13 +214,13 @@ defineConversion("if", expr => {
 
   const condition = conditionForm
     ? convertExpr(conditionForm)
-    : missingFrom(expr);
+    : missingFrom(whole);
   const consequent = consequentForm
     ? convertExpr(consequentForm)
-    : missingFrom(expr);
+    : missingFrom(whole);
   const alternative = alternativeForm
     ? convertExpr(alternativeForm)
-    : missingFrom(expr);
+    : missingFrom(whole);
 
   return result(
     {
@@ -225,7 +229,7 @@ defineConversion("if", expr => {
       consequent,
       alternative
     },
-    expr.location,
+    whole.location,
     errors
   );
 });
@@ -244,9 +248,8 @@ function parseLetBindings(
   }));
 }
 
-defineConversion("let", expr => {
-  const [_let, ...args] = expr.elements;
-  const lastExpr = last([_let, ...args]) as ASExpr; // we know it is not empty!
+defineConversion("let", (let_, args, whole) => {
+  const lastExpr = last([let_, ...args]) as ASExpr; // we know it is not empty!
 
   if (args.length === 0) {
     throw new ConvertError(
@@ -266,13 +269,12 @@ defineConversion("let", expr => {
       bindings: parseLetBindings(rawBindings),
       body: parseBody(lastExpr, rawBody)
     },
-    expr.location
+    whole.location
   );
 });
 
-defineConversion("the", expr => {
-  const [_the, ...args] = expr.elements;
-  const lastExpr = last([_the, ...args]) as ASExpr; // we know it is not empty!
+defineConversion("the", (the_, args, whole) => {
+  const lastExpr = last([the_, ...args]) as ASExpr; // we know it is not empty!
 
   if (args.length === 0) {
     throw new ConvertError(
@@ -311,13 +313,12 @@ defineConversion("the", expr => {
       typeWithWildcards: new TypeWithWildcards(convertType(t)),
       value: convertExpr(value)
     },
-    expr.location
+    whole.location
   );
 });
 
-defineConversion("do", expr => {
-  const [_do, ...args] = expr.elements;
-  const lastExpr = last([_do, ...args]) as ASExpr; // we know it is not empty!
+defineConversion("do", (do_, args, whole) => {
+  const lastExpr = last([do_, ...args]) as ASExpr; // we know it is not empty!
 
   if (args.length === 0) {
     throw new ConvertError(
@@ -332,15 +333,13 @@ defineConversion("do", expr => {
       body: middleForms.map(convertExpr),
       returning: convertExpr(lastForm)
     },
-    expr.location
+    whole.location
   );
 });
 
-defineToplevel("define", expr => {
-  const [define, ...args] = expr.elements;
-
+defineToplevel("define", (define_, args, whole) => {
   if (args.length !== 2) {
-    const lastExpr = last([define, ...args]) as ASExpr;
+    const lastExpr = last([define_, ...args]) as ASExpr;
     throw new ConvertError(
       printHighlightedExpr(
         `'define' needs exactly 2 arguments, got ${args.length}`,
@@ -364,18 +363,16 @@ defineToplevel("define", expr => {
       variable: parseIdentifier(variable),
       value: convertExpr(value)
     },
-    location: expr.location,
+    location: whole.location,
     info: {
       errors: []
     }
   };
 });
 
-defineToplevel("export", expr => {
-  const [exp, ...args] = expr.elements;
-
+defineToplevel("export", (export_, args, whole) => {
   if (args.length !== 1) {
-    const lastExpr = last([exp, ...args]) as ASExpr;
+    const lastExpr = last([export_, ...args]) as ASExpr;
     throw new ConvertError(
       printHighlightedExpr(
         `'export' needs exactly 1 arguments, got ${args.length}`,
@@ -398,18 +395,16 @@ defineToplevel("export", expr => {
       tag: "export",
       value: parseIdentifier(variable)
     },
-    location: expr.location,
+    location: whole.location,
     info: {
       errors: []
     }
   };
 });
 
-defineToplevel("type", expr => {
-  const [typeOp, ...args] = expr.elements;
-
+defineToplevel("type", (type_, args, whole) => {
   if (args.length !== 2) {
-    const lastExpr = last([typeOp, ...args]) as ASExpr;
+    const lastExpr = last([type_, ...args]) as ASExpr;
     throw new ConvertError(
       printHighlightedExpr(
         `'type' needs exactly 2 arguments, got ${args.length}`,
@@ -442,7 +437,7 @@ defineToplevel("type", expr => {
       alias: parseIdentifier(name),
       definition: definitionType
     },
-    location: expr.location,
+    location: whole.location,
     info: {
       errors: []
     }
@@ -456,13 +451,13 @@ function convertList(list: ASExprList): ExpressionWithErrors {
     );
   }
 
-  const [first] = list.elements;
+  const [first, ...args] = list.elements;
 
   const convertSpecialForm =
     first.tag === "symbol" ? conversions.get(first.name) : undefined;
 
-  if (convertSpecialForm) {
-    return convertSpecialForm(list);
+  if (first.tag === "symbol" && convertSpecialForm) {
+    return convertSpecialForm(first, args, list);
   } else {
     const [fn, ...args] = list.elements;
     return success(
@@ -557,12 +552,12 @@ function convertOrError(form: ASExpr): SyntaxWithErrors {
       );
     }
 
-    const [first] = form.elements;
+    const [first, ...args] = form.elements;
     const convertDeclaration =
       first.tag === "symbol" ? toplevelConversions.get(first.name) : undefined;
 
-    if (convertDeclaration) {
-      return convertDeclaration(form);
+    if (first.tag === "symbol" && convertDeclaration) {
+      return convertDeclaration(first, args, form);
     }
   }
 
