@@ -51,13 +51,16 @@ function successFrom(
   return result(node, sexpr.location, []);
 }
 
-function missingFrom(expr: ASExpr): ExpressionWithErrors {
+function missingFrom(
+  expr: ASExpr,
+  errors: string[] = []
+): ExpressionWithErrors {
   const location = {
     ...expr.location,
     start: expr.location.end,
     end: expr.location.end
   };
-  return result({ tag: "unknown" }, location, []);
+  return result({ tag: "unknown" }, location, errors);
 }
 
 type ConversionHandler<A> = (
@@ -92,9 +95,7 @@ function defineToplevel(
 
 function parseBody(anchor: ASExpr, exprs: ASExpr[]): ExpressionWithErrors[] {
   if (exprs.length === 0) {
-    throw new ConvertError(
-      printHighlightedExpr(`body can't be empty`, anchor.location, true)
-    );
+    return [missingFrom(anchor, [`body can't be empty`])];
   }
   return exprs.map(convertExpr);
 }
