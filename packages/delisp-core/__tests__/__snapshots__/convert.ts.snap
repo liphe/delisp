@@ -115,7 +115,7 @@ exports[`Convert Error messages generate nice error message for invalid lambda e
 `;
 
 exports[`Convert Error messages generate nice error message for invalid lambda expressions 2`] = `
-"file:1:9: body can't be empty
+"file:1:9: Expected a list of arguments
 (lambda 7)
 --------^"
 `;
