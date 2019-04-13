@@ -24,7 +24,8 @@ import {
 import { Typed } from "@delisp/core/src/syntax";
 import { Module, Syntax } from "@delisp/core/src/syntax";
 
-import chalk from "chalk";
+import * as theme from "./color-theme";
+
 import readline from "readline";
 
 let rl: readline.Interface;
@@ -80,7 +81,7 @@ function handleLine(line: string) {
     const errors = collectConvertErrors(syntax);
     if (errors.length > 0) {
       errors.forEach(err => {
-        console.error(chalk.redBright(`ERROR: ${err}\n`));
+        console.error(theme.error(`ERROR: ${err}\n`));
       });
     }
 
@@ -90,8 +91,8 @@ function handleLine(line: string) {
       const sep = typ.length > 10 ? "\n  " : " ";
       console.log(
         dimBrackets(
-          `(${chalk.dim("the")} ${chalk.blueBright(typ)}${sep}${
-            name ? chalk.magentaBright(name) : printColoredValue(value)
+          `(${theme.dim("the")} ${theme.type(typ)}${sep}${
+            name ? theme.name(name) : printColoredValue(value)
           })`
         )
       );
@@ -99,7 +100,7 @@ function handleLine(line: string) {
       console.log(printColoredValue(value));
     }
   } catch (err) {
-    console.error(chalk.redBright(err.message));
+    console.error(theme.error(err.message));
   } finally {
     rl.prompt();
   }
@@ -145,7 +146,7 @@ const delispEval = (syntax: Syntax) => {
     typedModule = result.typedModule;
     result.unknowns.forEach(v => {
       console.warn(
-        chalk.yellowBright(
+        theme.warn(
           `Unknown variable ${v.node.name} expected with type ${printType(
             v.info.type
           )}`
@@ -153,8 +154,8 @@ const delispEval = (syntax: Syntax) => {
       );
     });
   } catch (err) {
-    console.log(chalk.redBright("TYPE WARNING:"));
-    console.log(chalk.red(err.message));
+    console.log(theme.error("TYPE WARNING:"));
+    console.log(theme.error(err.message));
   }
 
   const typedSyntax: Syntax<Typed> | null = typedModule
@@ -211,16 +212,16 @@ function printValue(value: any): string {
 function printColoredValue(value: any): string {
   const printedValue = printValue(value);
   return printedValue[0] === "#" || printedValue[0] === "?"
-    ? chalk.yellow(printedValue)
-    : chalk.green(printedValue);
+    ? theme.unreadableValue(printedValue)
+    : theme.value(printedValue);
 }
 
 function dimBrackets(str: string): string {
   return str
     .split("(")
-    .join(chalk.dim("("))
+    .join(theme.dim("("))
     .split(")")
-    .join(chalk.dim(")"));
+    .join(theme.dim(")"));
 }
 
 export const cmdREPL: CommandModule = {
