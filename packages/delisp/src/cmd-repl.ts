@@ -17,7 +17,8 @@ import {
   readModule,
   readSyntax,
   removeModuleDefinition,
-  removeModuleTypeDefinition
+  removeModuleTypeDefinition,
+  collectConvertErrors
 } from "@delisp/core";
 
 import { Typed } from "@delisp/core/src/syntax";
@@ -75,6 +76,13 @@ function handleLine(line: string) {
 
     inputBuffer = "";
     rl.setPrompt(PROMPT);
+
+    const errors = collectConvertErrors(syntax);
+    if (errors.length > 0) {
+      errors.forEach(err => {
+        console.error(chalk.redBright(`ERROR: ${err}\n`));
+      });
+    }
 
     const { value, type, name } = delispEval(syntax);
     if (type) {
