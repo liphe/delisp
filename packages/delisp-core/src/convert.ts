@@ -1,4 +1,4 @@
-import { assertNever } from "./invariant";
+import { InvariantViolation, assertNever } from "./invariant";
 import { Location } from "./input";
 import { printHighlightedExpr } from "./error-report";
 import {
@@ -161,33 +161,52 @@ function missingFrom(expr: ASExpr): ExpressionWithErrors {
   return success({ tag: "unknown" }, location);
 }
 
-function exactArguments(
+function checkArguments(
+  anchor: ASExpr,
   args: ASExpr[],
   options: {
-    required: number;
+    atLeast?: number;
+    atMost?: number;
     fewArguments: string;
     manyArguments: string;
   }
 ): string[] {
-  if (args.length < options.required) {
-    return [
-      printHighlightedExpr(options.fewArguments, last(args)!.location, true)
-    ];
+  const atLeast = options.atLeast || 0;
+  const atMost = options.atMost || Infinity;
+
+  if (!(0 <= atLeast && atLeast <= atMost)) {
+    throw new InvariantViolation(`checkArguments: 0 <= atLeast <= atMost`);
   }
-  if (args.length > options.required) {
+
+  if (args.length < atLeast) {
     return [
       printHighlightedExpr(
         options.fewArguments,
-        args[options.required].location,
+        last([anchor, ...args])!.location,
         true
       )
+    ];
+  }
+
+  if (args.length > atMost) {
+    return [
+      printHighlightedExpr(options.fewArguments, args[atMost].location, true)
     ];
   }
   return [];
 }
 
 defineConversion("if", expr => {
-  const [, conditionForm, consequentForm, alternativeForm] = expr.elements;
+  const [if_, ...args] = expr.elements;
+
+  const errors = checkArguments(if_, args, {
+    atLeast: 3,
+    atMost: 3,
+    fewArguments: `'if' needs exactly 3 arguments, got ${args.length}`,
+    manyArguments: `'if' needs exactly 3 arguments, got ${args.length}`
+  });
+
+  const [conditionForm, consequentForm, alternativeForm] = args;
 
   const condition = conditionForm
     ? convertExpr(conditionForm)
@@ -198,14 +217,6 @@ defineConversion("if", expr => {
   const alternative = alternativeForm
     ? convertExpr(alternativeForm)
     : missingFrom(expr);
-
-  const receivedArgs = expr.elements.length - 1;
-
-  const errors = exactArguments(expr.elements, {
-    required: 4,
-    fewArguments: `'if' needs exactly 3 arguments, got ${receivedArgs}`,
-    manyArguments: `'if' needs exactly 3 arguments, got ${receivedArgs}`
-  });
 
   return result(
     {
