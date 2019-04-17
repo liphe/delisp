@@ -132,7 +132,7 @@ function generateTSType(t: TypeSchema): string {
 }
 
 export function generateTSDeclaration(
-  s: SDefinition<Typed> | STypeAlias<Typed>
+  s: SDefinition<Typed> | STypeAlias<{}>
 ): string {
   switch (s.node.tag) {
     case "definition": {
@@ -161,7 +161,7 @@ function isExported(name: string, m: Module): boolean {
 export function generateTSModuleDeclaration(m: Module<Typed>): string {
   function isGenerable(
     x: Syntax<Typed>
-  ): x is SDefinition<Typed> | STypeAlias<Typed> {
+  ): x is SDefinition<Typed, Typed> | STypeAlias<Typed> {
     return x.node.tag === "definition" || x.node.tag === "type-alias";
   }
 

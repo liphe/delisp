@@ -15,6 +15,7 @@ export function mapExpr<I, A, B>(
     case "string":
     case "number":
     case "variable-reference":
+    case "unknown":
       return { ...expr, node: expr.node };
     case "vector":
       return {
@@ -95,28 +96,12 @@ export function mapExpr<I, A, B>(
   }
 }
 
-export function foldExpr<I, A>(
-  expr: Expression<I>,
-  fn: (e: ExpressionF<I, A>) => A
-): A {
-  return fn(mapExpr(expr, e => foldExpr(e, fn)));
-}
-
-export function transformRecurExpr<I>(
-  s: Expression<I>,
-  fn: (node: Expression<I>) => Expression<I>
-): Expression<I> {
-  return foldExpr(
-    s,
-    (n: ExpressionF<I, Expression<I>>): Expression<I> => fn(n)
-  );
-}
-
-function expressionChildren<I>(e: Expression<I>): Array<Expression<I>> {
+export function exprFChildren<I, E>(e: ExpressionF<I, E>): E[] {
   switch (e.node.tag) {
     case "string":
     case "number":
     case "variable-reference":
+    case "unknown":
       return [];
     case "conditional":
       return [e.node.condition, e.node.consequent, e.node.alternative];
@@ -137,7 +122,28 @@ function expressionChildren<I>(e: Expression<I>): Array<Expression<I>> {
   }
 }
 
-function syntaxChildren<I>(s: Syntax<I>): Array<Expression<I>> {
+export function foldExpr<I, A>(
+  expr: Expression<I>,
+  fn: (e: ExpressionF<I, A>) => A
+): A {
+  return fn(mapExpr(expr, e => foldExpr(e, fn)));
+}
+
+export function transformRecurExpr<I>(
+  s: Expression<I>,
+  fn: (node: Expression<I>) => Expression<I>
+): Expression<I> {
+  return foldExpr(
+    s,
+    (n: ExpressionF<I, Expression<I>>): Expression<I> => fn(n)
+  );
+}
+
+export function expressionChildren<I>(e: Expression<I>): Array<Expression<I>> {
+  return exprFChildren(e);
+}
+
+export function syntaxChildren<I>(s: Syntax<I>): Array<Expression<I>> {
   if (isExpression(s)) {
     return expressionChildren({ ...s, node: s.node });
   } else {

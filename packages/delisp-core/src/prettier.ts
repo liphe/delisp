@@ -47,6 +47,7 @@ export type Doc = DocNil | DocText | DocLine | DocUnion | DocAlign | DocIndent;
 /** Empty document. */
 export const nil: Doc = { tag: "nil" };
 
+//
 // Primitive document builders
 //
 
@@ -55,7 +56,11 @@ export function text(content: string): Doc {
   if (content.includes("\n")) {
     throw new Error(`Newline is not allowed in a call to 'text'`);
   }
-  return { tag: "text", content, next: nil };
+  if (content.length === 0) {
+    return nil;
+  } else {
+    return { tag: "text", content, next: nil };
+  }
 }
 
 /** A new line.
@@ -70,10 +75,16 @@ export const line: Doc = {
 
 /** Indent a document by a number of levels. */
 export function indent(doc: Doc, level: number): Doc {
-  return { tag: "indent", doc, next: nil, level };
+  if (doc === nil) {
+    return nil;
+  } else {
+    return { tag: "indent", doc, next: nil, level };
+  }
 }
 
 function union(x: Doc, y: Doc, width?: number): Doc {
+  if (x === nil) return y;
+  if (y === nil) return x;
   // invariant: every first line of x must be longer than than first
   // line of y
   return {
@@ -86,10 +97,11 @@ function union(x: Doc, y: Doc, width?: number): Doc {
 
 /** Pretty print docs vertically aligned with the first one. */
 export function align(...docs: Doc[]): Doc {
-  if (docs.length === 0) {
+  const nonEmptyDocs = docs.filter(x => x !== nil);
+  if (nonEmptyDocs.length === 0) {
     return nil;
   }
-  const [root, ...rest] = docs;
+  const [root, ...rest] = nonEmptyDocs;
   return {
     tag: "align",
     root,
@@ -97,6 +109,10 @@ export function align(...docs: Doc[]): Doc {
     next: nil
   };
 }
+
+//
+// Operations
+//
 
 /**
  * Concatenate two documents, or break them apart in an aligned way
@@ -235,11 +251,21 @@ export const space = text(" ");
 
 /** Concatenate a sequence of documents with a separator.
  * @description
- * Insert `sep` in between each of the documents.
+ * Insert `sep` in between each of the non-nil documents.
  */
 export function join(docs: Doc[], sep: Doc) {
   if (docs.length > 0) {
-    return docs.reduce((a, d) => concat(a, sep, d));
+    return docs.reduce((a, d) => {
+      // Note that we don't insert a separator if the document is nil,
+      // as it would introduce duplicated separators.
+      if (a.tag === "nil") {
+        return d;
+      }
+      if (d.tag === "nil") {
+        return a;
+      }
+      return concat(a, sep, d);
+    });
   } else {
     return nil;
   }

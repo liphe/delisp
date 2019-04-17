@@ -15,7 +15,8 @@ import {
   SRecord,
   SVectorConstructor,
   Syntax,
-  SDoBlock
+  SDoBlock,
+  SUnknown
 } from "./syntax";
 
 import { methodCall } from "./compiler/estree-utils";
@@ -74,8 +75,23 @@ function addBinding(varName: string, env: Environment): Environment {
   };
 }
 
-function lookupBinding(varName: string, env: Environment) {
-  return env.bindings[varName];
+function lookupBinding(
+  varName: string,
+  env: Environment
+): EnvironmentBinding | null {
+  const binding = env.bindings[varName];
+  return binding;
+}
+
+function lookupBindingOrError(
+  varName: string,
+  env: Environment
+): EnvironmentBinding {
+  const binding = lookupBinding(varName, env);
+  if (!binding) {
+    throw new Error(`Could not find binding for ${varName}.`);
+  }
+  return binding;
 }
 
 function compileBody(body: Expression[], env: Environment): JS.BlockStatement {
@@ -115,7 +131,7 @@ function compileLambda(
   const jsargs = fn.node.lambdaList.positionalArgs.map(
     (param): JS.Pattern => ({
       type: "Identifier",
-      name: lookupBinding(param.name, newEnv).jsname
+      name: lookupBindingOrError(param.name, newEnv).jsname
     })
   );
 
@@ -135,7 +151,7 @@ function compileLambda(
 
 function compileDefinition(def: SDefinition, env: Environment): JS.Statement {
   const value = compile(def.node.value, env);
-  const name = lookupBinding(def.node.variable.name, env).jsname;
+  const name = lookupBindingOrError(def.node.variable.name, env).jsname;
   return env.defs.define(name, value);
 }
 
@@ -159,6 +175,22 @@ function compileFunctionCall(
       callee: compile(funcall.node.fn, env),
       arguments: compiledArgs
     };
+  }
+}
+
+function compilePrimitive(name: string, env: Environment): JS.Expression {
+  const binding = lookupBindingOrError(name, env);
+  switch (binding.source) {
+    case "primitive":
+      return member(
+        {
+          type: "Identifier",
+          name: "env"
+        },
+        binding.jsname
+      );
+    default:
+      throw new Error(`${name} is not a valid primitive`);
   }
 }
 
@@ -220,7 +252,7 @@ function compileLetBindings(expr: SLet, env: Environment): JS.Expression {
       params: expr.node.bindings.map(
         (b): JS.Pattern => ({
           type: "Identifier",
-          name: lookupBinding(b.variable.name, newenv).jsname
+          name: lookupBindingOrError(b.variable.name, newenv).jsname
         })
       ),
       body: compileBody(expr.node.body, newenv)
@@ -309,8 +341,23 @@ function compileDoBlock(expr: SDoBlock, env: Environment): JS.Expression {
   };
 }
 
+function compileUnknown(_expr: SUnknown, env: Environment): JS.Expression {
+  const unknownFn = compilePrimitive("unknown", env);
+  const message = literal("Reached code that did not compile properly.");
+  const file = literal("file");
+  const line = literal(1);
+  const column = literal(1);
+  return {
+    type: "CallExpression",
+    callee: unknownFn,
+    arguments: [message, file, line, column]
+  };
+}
+
 export function compile(expr: Expression, env: Environment): JS.Expression {
   switch (expr.node.tag) {
+    case "unknown":
+      return compileUnknown({ ...expr, node: expr.node }, env);
     case "number":
       return compileNumber(expr.node.value);
     case "string":
@@ -380,7 +427,7 @@ function compileExports(
   env: Environment
 ): Array<JS.Statement | JS.ModuleDeclaration> {
   const exportNames = exps.map(exp => {
-    const binding = lookupBinding(exp.node.value.name, env);
+    const binding = lookupBindingOrError(exp.node.value.name, env);
     if (!binding || binding.source !== "module") {
       throw new Error(
         printHighlightedExpr(

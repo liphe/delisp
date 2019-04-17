@@ -1,7 +1,8 @@
 import { convert as convertSyntax } from "./convert";
 
 import { readFromString } from "./reader";
-import { Syntax } from "./syntax";
+
+export { collectConvertErrors } from "./convert";
 
 export {
   compileToString,
@@ -24,7 +25,7 @@ export { default as primitives } from "./primitives";
 
 export { printHighlightedExpr } from "./error-report";
 
-export function readSyntax(source: string): Syntax {
+export function readSyntax(source: string) {
   return convertSyntax(readFromString(source));
 }
 

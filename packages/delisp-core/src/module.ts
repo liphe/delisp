@@ -1,4 +1,4 @@
-import { convert } from "./convert";
+import { WithErrors, convert } from "./convert";
 import { readAllFromString } from "./reader";
 import { Module, Syntax } from "./syntax";
 
@@ -9,7 +9,7 @@ export function createModule(): Module {
   };
 }
 
-export function readModule(str: string): Module {
+export function readModule(str: string): Module<WithErrors, WithErrors> {
   return {
     tag: "module",
     body: readAllFromString(str).map(convert)

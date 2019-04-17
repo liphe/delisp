@@ -50,6 +50,10 @@ function lines(...docs: Doc[]): Doc {
 function printExpr(expr: Expression): Doc {
   return foldExpr(expr, e => {
     switch (e.node.tag) {
+      case "unknown": {
+        const { input, start, end } = e.location;
+        return text(input.toString().slice(start, end));
+      }
       case "string":
         return printString(e.node.value);
       case "number":
@@ -103,11 +107,7 @@ function printExpr(expr: Expression): Doc {
       case "function-call": {
         const fn = e.node.fn;
         const args = e.node.args;
-        if (args.length === 0) {
-          return group(list(fn));
-        } else {
-          return group(list(groupalign(fn, align(...args))));
-        }
+        return group(list(groupalign(fn, align(...args))));
       }
 
       case "let-bindings":

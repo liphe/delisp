@@ -1,25 +1,16 @@
-import { compileToString, moduleEnvironment } from "../src/compiler";
-import { convert } from "../src/convert";
-import { createModule } from "../src/module";
+import { convert, collectConvertErrors } from "../src/convert";
 import { readFromString } from "../src/reader";
 
-describe("Compiler", () => {
+describe("Convert", () => {
   describe("Error messages", () => {
     function compileError(str: string): string {
-      let result: string | undefined;
-      try {
-        const sexpr = readFromString(str);
-        const syntax = convert(sexpr);
-        const env = moduleEnvironment(createModule());
-        compileToString(syntax, env);
-      } catch (err) {
-        result = err.message;
-      }
-      if (result) {
-        return result;
-      } else {
+      const sexpr = readFromString(str);
+      const syntax = convert(sexpr);
+      const errors = collectConvertErrors(syntax);
+      if (errors.length === 0) {
         throw new Error(`FATAL: EXPRESSION ${str} DID NOT FAIL TO COMPILE.`);
       }
+      return errors.join("\n\n");
     }
 
     it("generate a nice error for some basic invalid syntax", () => {
@@ -39,6 +30,12 @@ describe("Compiler", () => {
       expect(compileError("(let)")).toMatchSnapshot();
       expect(compileError("(let x 5)")).toMatchSnapshot();
       expect(compileError("(let (x 5) x)")).toMatchSnapshot();
+    });
+
+    it.skip("generate nice error message a let expression with odd numbrer of elements in the bindings", () => {
+      // Those two tests cases have been commented out because the
+      // error is coming from the reader, not the converter, so they
+      // are not handled very nicely now.
       expect(compileError("(let {x} x)")).toMatchSnapshot();
       expect(compileError("(let {a b c} x)")).toMatchSnapshot();
     });

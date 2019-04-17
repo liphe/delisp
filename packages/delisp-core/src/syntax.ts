@@ -89,6 +89,10 @@ interface SDoBlockF<E> {
   returning: E;
 }
 
+interface SUnknownF<_E> {
+  tag: "unknown";
+}
+
 type AnyExpressionF<I = {}, E = Expression<I>> =
   | SNumberF
   | SStringF
@@ -100,7 +104,8 @@ type AnyExpressionF<I = {}, E = Expression<I>> =
   | SLetF<E>
   | SRecordF<E>
   | STypeAnnotationF<E>
-  | SDoBlockF<E>;
+  | SDoBlockF<E>
+  | SUnknownF<E>;
 
 interface Node<I, E> {
   node: E;
@@ -133,38 +138,42 @@ export interface SVectorConstructor<I = {}>
 
 export interface SDoBlock<I = {}> extends Node<I, SDoBlockF<Expression<I>>> {}
 
+export interface SUnknown<I = {}> extends Node<I, SUnknownF<Expression<I>>> {}
+
 //
 // Declarations
 //
 
-export interface SDefinition<I = {}> {
-  node: {
-    tag: "definition";
-    variable: Identifier;
-    value: Expression<I>;
-  };
-  location: Location;
+interface SDefinitionF<E> {
+  tag: "definition";
+  variable: Identifier;
+  value: E;
 }
+export interface SDefinition<EInfo = {}, SInfo = {}>
+  extends Node<SInfo, SDefinitionF<Expression<EInfo>>> {}
 
-export interface SExport {
-  node: {
-    tag: "export";
-    value: Identifier;
-  };
-  location: Location;
+interface SExportF<_E> {
+  tag: "export";
+  value: Identifier;
 }
+export interface SExport<I = {}> extends Node<I, SExportF<Expression<I>>> {}
 
-export interface STypeAlias<_I = {}> {
-  node: {
-    tag: "type-alias";
-    alias: Identifier;
-    definition: Type;
-  };
-  location: Location;
+interface STypeAliasF<_E> {
+  tag: "type-alias";
+  alias: Identifier;
+  definition: Type;
 }
+export interface STypeAlias<I = {}>
+  extends Node<I, STypeAliasF<Expression<I>>> {}
 
-export type Declaration<I = {}> = SDefinition<I> | SExport | STypeAlias<I>;
-export type Syntax<I = {}> = Expression<I> | Declaration<I>;
+export type Declaration<EInfo = {}, SInfo = {}> =
+  | SDefinition<EInfo, SInfo>
+  | SExport<SInfo>
+  | STypeAlias<SInfo>;
+
+export type Syntax<EInfo = {}, SInfo = {}> =
+  | Expression<EInfo>
+  | Declaration<EInfo, SInfo>;
 
 export function isDeclaration<I>(syntax: Syntax<I>): syntax is Declaration<I> {
   return (
@@ -182,7 +191,7 @@ export function isDefinition<I>(syntax: Syntax<I>): syntax is SDefinition<I> {
   return syntax.node.tag === "definition";
 }
 
-export function isExport<I>(syntax: Syntax<I>): syntax is SExport {
+export function isExport<I>(syntax: Syntax<I>): syntax is SExport<I> {
   return syntax.node.tag === "export";
 }
 
@@ -190,9 +199,9 @@ export function isTypeAlias<I>(syntax: Syntax<I>): syntax is STypeAlias<I> {
   return syntax.node.tag === "type-alias";
 }
 
-export interface Module<I = {}> {
+export interface Module<EInfo = {}, SInfo = {}> {
   tag: "module";
-  body: Array<Syntax<I>>;
+  body: Array<Syntax<EInfo, SInfo>>;
 }
 
 export interface Typed {
