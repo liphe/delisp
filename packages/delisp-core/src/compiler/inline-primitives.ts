@@ -235,7 +235,10 @@ defineMagicPrimitive(
     const a = generateUniqueTVar();
     const r = generateUniqueTVar();
     const jsname = name.replace(/^:/, "");
-    const t = generalize(tFn([tRecord([{ label: name, type: a }], r)], a), []);
+    const t = generalize(
+      tFn([tRecord([{ label: name, type: a }], r)], generateUniqueTVar(), a),
+      []
+    );
     return createInlinePrimitive(t, ([vec]) => member(vec, jsname));
   }
 );
