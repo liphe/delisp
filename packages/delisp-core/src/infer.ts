@@ -422,7 +422,8 @@ function infer(
       const ifn = infer(expr.node.fn, monovars, internalTypes);
       const iargs = inferMany(expr.node.args, monovars, internalTypes);
       const tTo = generateUniqueTVar();
-      const tfn: Type = tFn(iargs.result.map(a => a.info.type), tTo);
+      const effect = generateUniqueTVar();
+      const tfn: Type = tFn(iargs.result.map(a => a.info.type), effect, tTo);
       return {
         result: {
           ...expr,
@@ -431,7 +432,7 @@ function infer(
             fn: ifn.result,
             args: iargs.result
           },
-          info: { type: tTo }
+          info: { type: tTo, effect }
         },
 
         constraints: [
