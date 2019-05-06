@@ -704,13 +704,16 @@ function assumptionsToConstraints(
 // scheme. This is used to decide which _instance constraint_ of the
 // set can be solved first. See `solve`/`solvable` for further info.
 function activevars(constraints: TConstraint[]): string[] {
+  const equal = (t1: Type, t2: Type) => {
+    return union(listTypeVariables(t1), listTypeVariables(t2));
+  };
+
   return flatMap(c => {
     switch (c.tag) {
       case "equal-constraint":
-        return union(
-          listTypeVariables(c.expr.info.type),
-          listTypeVariables(c.t)
-        );
+        return equal(c.expr.info.type, c.t);
+      case "equal-effect-constraint":
+        return equal(c.expr.info.effect, c.effect);
       case "implicit-instance-constraint":
         return union(
           listTypeVariables(c.expr.info.type),
@@ -765,6 +768,12 @@ function applySubstitutionToConstraint(
         expr: applySubstitutionToExpr(c.expr, s),
         t: applySubstitution(c.t, s)
       };
+    case "equal-effect-constraint":
+      return {
+        tag: "equal-effect-constraint",
+        expr: applySubstitutionToExpr(c.expr, s),
+        effect: applySubstitution(c.effect, s)
+      };
     case "implicit-instance-constraint":
       return {
         tag: "implicit-instance-constraint",
@@ -789,7 +798,8 @@ function applySubstitutionToExpr(
     ...expr,
     info: {
       ...expr.info,
-      type: applySubstitution(expr.info.type, env)
+      type: applySubstitution(expr.info.type, env),
+      effect: applySubstitution(expr.info.effect, env)
     }
   }));
 }
@@ -842,6 +852,7 @@ function solve(
   function solvable(c: TConstraint): boolean {
     switch (c.tag) {
       case "equal-constraint":
+      case "equal-effect-constraint":
       case "explicit-instance-constraint":
         return true;
       case "implicit-instance-constraint":
@@ -852,6 +863,8 @@ function solve(
             activevars(others)
           ).length === 0
         );
+      default:
+        return assertNever(c);
     }
   }
 
