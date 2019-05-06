@@ -109,10 +109,10 @@ function constEqual(expr: Expression<Typed>, t: Type): TConstraintEqual {
 interface TConstraintEffect {
   tag: "equal-effect-constraint";
   expr: Expression<Typed>;
-  effect: Type;
+  t: Type;
 }
-function constEffect(expr: Expression<Typed>, effect: Type): TConstraintEffect {
-  return { tag: "equal-effect-constraint", expr, effect };
+function constEffect(expr: Expression<Typed>, t: Type): TConstraintEffect {
+  return { tag: "equal-effect-constraint", expr, t };
 }
 
 // A constriant stating that an expression's type is an instance of
@@ -713,7 +713,7 @@ function activevars(constraints: TConstraint[]): string[] {
       case "equal-constraint":
         return equal(c.expr.info.type, c.t);
       case "equal-effect-constraint":
-        return equal(c.expr.info.effect, c.effect);
+        return equal(c.expr.info.effect, c.t);
       case "implicit-instance-constraint":
         return union(
           listTypeVariables(c.expr.info.type),
@@ -772,7 +772,7 @@ function applySubstitutionToConstraint(
       return {
         tag: "equal-effect-constraint",
         expr: applySubstitutionToExpr(c.expr, s),
-        effect: applySubstitution(c.effect, s)
+        t: applySubstitution(c.t, s)
       };
     case "implicit-instance-constraint":
       return {
@@ -863,8 +863,6 @@ function solve(
             activevars(others)
           ).length === 0
         );
-      default:
-        return assertNever(c);
     }
   }
 
@@ -876,7 +874,8 @@ function solve(
   const rest = constraints.filter(c => c !== constraint);
 
   switch (constraint.tag) {
-    case "equal-constraint": {
+    case "equal-constraint":
+    case "equal-effect-constraint": {
       const result = unify(constraint.expr.info.type, constraint.t, solution);
 
       switch (result.tag) {
