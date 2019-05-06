@@ -100,8 +100,8 @@ export function tVector(t: Type): Type {
   return tApp(tcVector, t);
 }
 
-export function tFn(args: Type[], out: Type): Type {
-  return tApp(tcArrow, ...args, out);
+export function tFn(args: Type[], effect: Type, out: Type): Type {
+  return tApp(tcArrow, ...args, effect, out);
 }
 
 export const emptyRow: REmpty = { node: { tag: "empty-row" } };
