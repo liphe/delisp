@@ -48,6 +48,7 @@ import {
   tFn,
   tNumber,
   tRecord,
+  tRow,
   tString,
   tVar,
   tVector,
@@ -473,6 +474,9 @@ function infer(
         };
       });
       const bodyInference = inferMany(expr.node.body, monovars, internalTypes);
+
+      const effect = generateUniqueTVar();
+
       return {
         result: {
           ...expr,
@@ -485,7 +489,8 @@ function infer(
             body: bodyInference.result
           },
           info: {
-            type: last(bodyInference.result)!.info.type
+            type: last(bodyInference.result)!.info.type,
+            effect
           }
         },
         constraints: [
@@ -509,7 +514,13 @@ function infer(
                 monovars,
                 bInfo.inference.result.info.type
               );
-            })
+            }),
+
+          // We require let-binding values to be free of effects
+          ...bindingsInfo.map(b => constEffect(b.inference.result, tRow([]))),
+          // But we require all forms of the body to have the same
+          // kind of effects.
+          ...bodyInference.result.map(form => constEffect(form, effect))
         ],
         assumptions: [
           ...bodyInference.assumptions.filter(v => !toBeBound(v.node.name)),
