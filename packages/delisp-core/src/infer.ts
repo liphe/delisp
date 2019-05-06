@@ -381,6 +381,8 @@ function infer(
         internalTypes
       );
 
+      const bodyEffect = generateUniqueTVar();
+
       // Generate a constraint for each assumption pending for each
       // argument, stating that they are equal to the argument types
       // the new function type we have created.
@@ -390,8 +392,11 @@ function infer(
           .map(v => {
             const varIndex = fnargs.indexOf(v.node.name);
             return constEqual(v, argtypes[varIndex]);
-          })
+          }),
+
+        ...typedBody.map(form => constEffect(form, bodyEffect))
       ];
+
       return {
         result: {
           ...expr,
@@ -400,7 +405,11 @@ function infer(
             body: typedBody
           },
           info: {
-            type: tFn(argtypes, last(typedBody)!.info.type)
+            type: tFn(argtypes, bodyEffect, last(typedBody)!.info.type),
+            // This is the effect of evaluating the lambda itself, not
+            // calling it, that's why we don't specify any specific
+            // effect.
+            effect: generateUniqueTVar()
           }
         },
         constraints: [...constraints, ...newConstraints],
