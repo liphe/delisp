@@ -123,7 +123,7 @@ defineInlinePrimitive("false", "boolean", () => {
   };
 });
 
-defineInlinePrimitive("print", "(-> string _ void)", args => {
+defineInlinePrimitive("print", "(-> string Console void)", args => {
   return methodCall({ type: "Identifier", name: "console" }, "log", args);
 });
 
