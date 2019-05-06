@@ -3,5 +3,6 @@
     "noEmit": true
   },
   "extends": "./tsconfig.build.json",
-  "include": ["./__tests__", "./src/"]
+  "include": ["./__tests__", "./src/"],
+  "exclude": ["node_modules"]
 }
