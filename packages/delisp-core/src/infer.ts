@@ -88,6 +88,7 @@ type TAssumption = SVariableReference<Typed>;
 // types are instances of other types.
 type TConstraint =
   | TConstraintEqual
+  | TConstraintEffect
   | TConstraintImplicitInstance
   | TConstraintExplicitInstance;
 
@@ -100,6 +101,17 @@ interface TConstraintEqual {
 }
 function constEqual(expr: Expression<Typed>, t: Type): TConstraintEqual {
   return { tag: "equal-constraint", expr, t };
+}
+
+// A constraint stating that an expression's effect should be equal to
+// a given type.
+interface TConstraintEffect {
+  tag: "equal-effect-constraint";
+  expr: Expression<Typed>;
+  effect: Type;
+}
+function constEffect(expr: Expression<Typed>, effect: Type): TConstraintEffect {
+  return { tag: "equal-effect-constraint", expr, effect };
 }
 
 // A constriant stating that an expression's type is an instance of
@@ -184,7 +196,7 @@ function infer(
         result: {
           ...expr,
           node: expr.node,
-          info: { type: generateUniqueTVar() }
+          info: { type: generateUniqueTVar(), effect: generateUniqueTVar() }
         },
         constraints: [],
         assumptions: []
@@ -195,7 +207,7 @@ function infer(
         result: {
           ...expr,
           node: expr.node,
-          info: { type: tNumber }
+          info: { type: tNumber, effect: generateUniqueTVar() }
         },
         constraints: [],
         assumptions: []
@@ -205,7 +217,7 @@ function infer(
         result: {
           ...expr,
           node: expr.node,
-          info: { type: tString }
+          info: { type: tString, effect: generateUniqueTVar() }
         },
         constraints: [],
         assumptions: []
@@ -217,7 +229,7 @@ function infer(
         internalTypes
       );
       const t = generateUniqueTVar();
-
+      const effect = generateUniqueTVar();
       return {
         result: {
           ...expr,
@@ -225,12 +237,13 @@ function infer(
             ...expr.node,
             values: inferredValues.result
           },
-          info: { type: tVector(t) }
+          info: { type: tVector(t), effect }
         },
         assumptions: inferredValues.assumptions,
         constraints: [
           ...inferredValues.constraints,
-          ...inferredValues.result.map(e => constEqual(e, t))
+          ...inferredValues.result.map(e => constEqual(e, t)),
+          ...inferredValues.result.map(e => constEffect(e, effect))
         ]
       };
     }
@@ -244,6 +257,8 @@ function infer(
       const tailInferred =
         expr.node.extends && infer(expr.node.extends, monovars, internalTypes);
       const tailRowType = generateUniqueTVar();
+
+      const effect = generateUniqueTVar();
 
       return {
         result: {
@@ -263,7 +278,8 @@ function infer(
                 type: i.result.info.type
               })),
               tailInferred ? tailRowType : emptyRow
-            )
+            ),
+            effect
           }
         },
         assumptions: [
@@ -286,7 +302,10 @@ function infer(
                   )
                 )
               ]
-            : [])
+            : []),
+
+          ...inferred.map(i => constEffect(i.result, effect)),
+          ...(tailInferred ? [constEffect(tailInferred.result, effect)] : [])
         ]
       };
     }
@@ -295,13 +314,15 @@ function infer(
       // 'environment/context', we generate a new type and add an
       // assumption for this variable.
       const t = generateUniqueTVar();
+      const effect = generateUniqueTVar();
       const typedVar = {
         ...expr,
         node: {
           ...expr.node
         },
         info: {
-          type: t
+          type: t,
+          effect
         }
       };
       return {
@@ -315,6 +336,7 @@ function infer(
       const consequent = infer(expr.node.consequent, monovars, internalTypes);
       const alternative = infer(expr.node.alternative, monovars, internalTypes);
       const t = generateUniqueTVar();
+      const effect = generateUniqueTVar();
 
       return {
         result: {
@@ -326,7 +348,8 @@ function infer(
             alternative: alternative.result
           },
           info: {
-            type: t
+            type: t,
+            effect
           }
         },
         assumptions: [
@@ -340,7 +363,11 @@ function infer(
           ...alternative.constraints,
           constEqual(condition.result, tBoolean),
           constEqual(consequent.result, t),
-          constEqual(alternative.result, t)
+          constEqual(alternative.result, t),
+
+          constEffect(condition.result, effect),
+          constEffect(consequent.result, effect),
+          constEffect(alternative.result, effect)
         ]
       };
     }
