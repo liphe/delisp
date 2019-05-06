@@ -557,6 +557,8 @@ function infer(
       const body = inferMany(expr.node.body, monovars, internalTypes);
       const returning = infer(expr.node.returning, monovars, internalTypes);
 
+      const effect = generateUniqueTVar();
+
       return {
         result: {
           ...expr,
@@ -565,10 +567,16 @@ function infer(
             body: body.result,
             returning: returning.result
           },
-          info: { type: returning.result.info.type }
+          info: { type: returning.result.info.type, effect }
         },
 
-        constraints: [...body.constraints, ...returning.constraints],
+        constraints: [
+          ...body.constraints,
+          ...returning.constraints,
+
+          ...body.result.map(form => constEffect(form, effect)),
+          constEffect(returning.result, effect)
+        ],
         assumptions: [...body.assumptions, ...returning.assumptions]
       };
     }
