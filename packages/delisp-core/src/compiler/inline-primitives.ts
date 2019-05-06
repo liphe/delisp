@@ -123,11 +123,11 @@ defineInlinePrimitive("false", "boolean", () => {
   };
 });
 
-defineInlinePrimitive("print", "(-> string void)", args => {
+defineInlinePrimitive("print", "(-> string _ void)", args => {
   return methodCall({ type: "Identifier", name: "console" }, "log", args);
 });
 
-defineInlinePrimitive("+", "(-> number number number)", args => {
+defineInlinePrimitive("+", "(-> number number _ number)", args => {
   return {
     type: "BinaryExpression",
     operator: "+",
@@ -136,7 +136,7 @@ defineInlinePrimitive("+", "(-> number number number)", args => {
   };
 });
 
-defineInlinePrimitive("-", "(-> number number number)", args => {
+defineInlinePrimitive("-", "(-> number number _ number)", args => {
   return {
     type: "BinaryExpression",
     operator: "-",
@@ -145,7 +145,7 @@ defineInlinePrimitive("-", "(-> number number number)", args => {
   };
 });
 
-defineInlinePrimitive("*", "(-> number number number)", args => {
+defineInlinePrimitive("*", "(-> number number _ number)", args => {
   return {
     type: "BinaryExpression",
     operator: "*",
@@ -154,70 +154,74 @@ defineInlinePrimitive("*", "(-> number number number)", args => {
   };
 });
 
-defineInlinePrimitive("map", "(-> (-> a b) [a] [b])", ([fn, vec]) => {
+defineInlinePrimitive("map", "(-> (-> a _ b) [a] _ [b])", ([fn, vec]) => {
   return methodCall(vec, "map", [fn]);
 });
 
 defineInlinePrimitive(
   "filter",
-  "(-> (-> a boolean) [a] [a])",
+  "(-> (-> a _ boolean) [a] _ [a])",
   ([predicate, vec]) => {
     return methodCall(vec, "filter", [predicate]);
   }
 );
 
-defineInlinePrimitive("fold", "(-> (-> b a b) [a] b b)", ([fn, vec, init]) => {
-  return methodCall(vec, "reduce", [fn, init]);
-});
+defineInlinePrimitive(
+  "fold",
+  "(-> (-> b a _ b) [a] b _ b)",
+  ([fn, vec, init]) => {
+    return methodCall(vec, "reduce", [fn, init]);
+  }
+);
 
-defineInlinePrimitive("append", "(-> [a] [a] [a])", ([vec1, vec2]) => {
+defineInlinePrimitive("append", "(-> [a] [a] _ [a])", ([vec1, vec2]) => {
   return methodCall(vec1, "concat", [vec2]);
 });
 
-defineInlinePrimitive("reverse", "(-> [a] [a])", ([vec]) => {
+defineInlinePrimitive("reverse", "(-> [a] _ [a])", ([vec]) => {
   return methodCall(methodCall(vec, "slice", []), "reverse", []);
 });
 
-defineInlinePrimitive("length", "(-> [a] number)", ([vec]) =>
+defineInlinePrimitive("length", "(-> [a] _ number)", ([vec]) =>
   member(vec, "length")
 );
 
-defineInlinePrimitive("=", "(-> number number boolean)", ([x, y]) => ({
+defineInlinePrimitive("=", "(-> number number _ boolean)", ([x, y]) => ({
   type: "BinaryExpression",
   operator: "===",
   left: x,
   right: y
 }));
 
-defineInlinePrimitive("zero?", "(-> number boolean)", ([x]) => ({
+defineInlinePrimitive("zero?", "(-> number _ boolean)", ([x]) => ({
   type: "BinaryExpression",
   operator: "===",
   left: x,
   right: { type: "Literal", value: 0 }
 }));
 
-defineInlinePrimitive("string=", "(-> string string boolean)", ([x, y]) => ({
+defineInlinePrimitive("string=", "(-> string string _ boolean)", ([x, y]) => ({
   type: "BinaryExpression",
   operator: "===",
   left: x,
   right: y
 }));
 
-defineInlinePrimitive("string-length", "(-> string number)", ([str]) =>
+defineInlinePrimitive("string-length", "(-> string _ number)", ([str]) =>
   member(str, "length")
 );
 
-defineInlinePrimitive("string-upcase", "(-> string string)", ([str]) =>
+defineInlinePrimitive("string-upcase", "(-> string _ string)", ([str]) =>
   methodCall(str, "toUpperCase", [])
 );
 
-defineInlinePrimitive("string-downcase", "(-> string string)", ([str]) =>
+defineInlinePrimitive("string-downcase", "(-> string _ string)", ([str]) =>
   methodCall(str, "toLowerCase", [])
 );
 
 defineInlinePrimitive(
   "string-append",
-  "(-> string string string)",
+  "(-> string string _ string)",
   ([str1, str2]) => {
     return {
       type: "BinaryExpression",
