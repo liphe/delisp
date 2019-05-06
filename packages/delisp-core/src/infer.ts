@@ -873,44 +873,41 @@ function solve(
 
   const rest = constraints.filter(c => c !== constraint);
 
-  switch (constraint.tag) {
-    case "equal-constraint":
-    case "equal-effect-constraint": {
-      const result = unify(constraint.expr.info.type, constraint.t, solution);
-
-      switch (result.tag) {
-        case "unify-success": {
-          const s = result.substitution;
-          return solve(rest.map(c => applySubstitutionToConstraint(c, s)), s);
-        }
-        case "unify-occur-check-error":
-          throw new Error(
-            printHighlightedExpr(
-              "Expression would have an infinity type",
-              constraint.expr.location
-            )
-          );
-        case "unify-mismatch-error":
-          throw new Error(
-            printHighlightedExpr(
-              `Type mismatch
+  const solveEq = (exprType: Type, t: Type) => {
+    const result = unify(exprType, t, solution);
+    switch (result.tag) {
+      case "unify-success": {
+        const s = result.substitution;
+        return solve(rest.map(c => applySubstitutionToConstraint(c, s)), s);
+      }
+      case "unify-occur-check-error":
+        throw new Error(
+          printHighlightedExpr(
+            "Expression would have an infinity type",
+            constraint.expr.location
+          )
+        );
+      case "unify-mismatch-error":
+        throw new Error(
+          printHighlightedExpr(
+            `Type mismatch
 
 Expected ${printType(
-                applySubstitution(result.t2, solution)
-              )} instead of ${printType(applySubstitution(result.t1, solution))}
+              applySubstitution(result.t2, solution)
+            )} instead of ${printType(applySubstitution(result.t1, solution))}
 
 ${printType(applySubstitution(constraint.expr.info.type, solution))}
 
 vs.
 
-${printType(applySubstitution(constraint.t, solution))}`,
-              constraint.expr.location
-            )
-          );
-        case "unify-missing-value-error":
-          throw new Error(
-            printHighlightedExpr(
-              `Type mismatch
+${printType(applySubstitution(exprType, solution))}`,
+            constraint.expr.location
+          )
+        );
+      case "unify-missing-value-error":
+        throw new Error(
+          printHighlightedExpr(
+            `Type mismatch
 
 Missing value of type ${printType(applySubstitution(result.t, solution))}
 
@@ -918,15 +915,23 @@ ${printType(applySubstitution(constraint.expr.info.type, solution))}
 
 vs.
 
-${printType(applySubstitution(constraint.t, solution))}
+${printType(applySubstitution(exprType, solution))}
 
 `,
-              constraint.expr.location
-            )
-          );
-        default:
-          return assertNever(result);
-      }
+            constraint.expr.location
+          )
+        );
+      default:
+        return assertNever(result);
+    }
+  };
+
+  switch (constraint.tag) {
+    case "equal-constraint": {
+      return solveEq(constraint.expr.info.type, constraint.t);
+    }
+    case "equal-effect-constraint": {
+      return solveEq(constraint.expr.info.effect, constraint.t);
     }
     case "explicit-instance-constraint": {
       return solve(
