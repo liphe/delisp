@@ -544,7 +544,8 @@ function infer(
             ...inferred.result.node
           },
           info: {
-            type: t
+            type: t,
+            effect: inferred.result.info.effect
           }
         },
         assumptions: inferred.assumptions,
