@@ -41,6 +41,14 @@ export class TypeWithWildcards {
     return instantiate(this.generalize(), true);
   }
 
+  noWildcards(): Type {
+    // TODO: Note that type definitions should not contain wildcards. We
+    // are instantiating here in order to just get the underlying
+    // type. But we should instead extend TypeWithWildcards with method
+    // to find wildcards
+    return this.body;
+  }
+
   print(): string {
     return printType(this.body, false);
   }

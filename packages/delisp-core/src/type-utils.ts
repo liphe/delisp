@@ -135,7 +135,8 @@ export function instantiate(t: TypeSchema, userSpecified = false): Type {
 }
 
 export function readType(source: string): TypeSchema {
-  return generalize(convertType(readFromString(source)), []);
+  const t = convertType(readFromString(source));
+  return t.generalize();
 }
 
 export function normalizeRow(

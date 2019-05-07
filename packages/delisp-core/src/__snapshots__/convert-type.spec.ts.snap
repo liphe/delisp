@@ -1,147 +1,155 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`convertType Effects should convert effect with multiple labels 1`] = `
-Object {
-  "node": Object {
-    "args": Array [
-      Object {
+TypeWithWildcards {
+  "body": Object {
+    "node": Object {
+      "args": Array [
+        Object {
+          "node": Object {
+            "extends": Object {
+              "node": Object {
+                "extends": Object {
+                  "node": Object {
+                    "tag": "empty-row",
+                  },
+                },
+                "label": "async",
+                "labelType": Object {
+                  "node": Object {
+                    "name": "void",
+                    "tag": "constant",
+                  },
+                },
+                "tag": "row-extension",
+              },
+            },
+            "label": "console",
+            "labelType": Object {
+              "node": Object {
+                "name": "void",
+                "tag": "constant",
+              },
+            },
+            "tag": "row-extension",
+          },
+        },
+      ],
+      "op": Object {
         "node": Object {
-          "extends": Object {
-            "node": Object {
-              "extends": Object {
-                "node": Object {
-                  "tag": "empty-row",
-                },
-              },
-              "label": "async",
-              "labelType": Object {
-                "node": Object {
-                  "name": "void",
-                  "tag": "constant",
-                },
-              },
-              "tag": "row-extension",
-            },
-          },
-          "label": "console",
-          "labelType": Object {
-            "node": Object {
-              "name": "void",
-              "tag": "constant",
-            },
-          },
-          "tag": "row-extension",
+          "name": "effect",
+          "tag": "constant",
         },
       },
-    ],
-    "op": Object {
-      "node": Object {
-        "name": "effect",
-        "tag": "constant",
-      },
+      "tag": "application",
     },
-    "tag": "application",
   },
 }
 `;
 
 exports[`convertType Effects should convert empty effect 1`] = `
-Object {
-  "node": Object {
-    "args": Array [
-      Object {
+TypeWithWildcards {
+  "body": Object {
+    "node": Object {
+      "args": Array [
+        Object {
+          "node": Object {
+            "tag": "empty-row",
+          },
+        },
+      ],
+      "op": Object {
         "node": Object {
-          "tag": "empty-row",
+          "name": "effect",
+          "tag": "constant",
         },
       },
-    ],
-    "op": Object {
-      "node": Object {
-        "name": "effect",
-        "tag": "constant",
-      },
+      "tag": "application",
     },
-    "tag": "application",
   },
 }
 `;
 
 exports[`convertType Effects should convert open effect with multiple labels 1`] = `
-Object {
-  "node": Object {
-    "args": Array [
-      Object {
+TypeWithWildcards {
+  "body": Object {
+    "node": Object {
+      "args": Array [
+        Object {
+          "node": Object {
+            "extends": Object {
+              "node": Object {
+                "extends": Object {
+                  "node": Object {
+                    "name": "a",
+                    "tag": "type-variable",
+                    "userSpecified": false,
+                  },
+                },
+                "label": "async",
+                "labelType": Object {
+                  "node": Object {
+                    "name": "void",
+                    "tag": "constant",
+                  },
+                },
+                "tag": "row-extension",
+              },
+            },
+            "label": "console",
+            "labelType": Object {
+              "node": Object {
+                "name": "void",
+                "tag": "constant",
+              },
+            },
+            "tag": "row-extension",
+          },
+        },
+      ],
+      "op": Object {
         "node": Object {
-          "extends": Object {
-            "node": Object {
-              "extends": Object {
-                "node": Object {
-                  "name": "a",
-                  "tag": "type-variable",
-                  "userSpecified": false,
-                },
-              },
-              "label": "async",
-              "labelType": Object {
-                "node": Object {
-                  "name": "void",
-                  "tag": "constant",
-                },
-              },
-              "tag": "row-extension",
-            },
-          },
-          "label": "console",
-          "labelType": Object {
-            "node": Object {
-              "name": "void",
-              "tag": "constant",
-            },
-          },
-          "tag": "row-extension",
+          "name": "effect",
+          "tag": "constant",
         },
       },
-    ],
-    "op": Object {
-      "node": Object {
-        "name": "effect",
-        "tag": "constant",
-      },
+      "tag": "application",
     },
-    "tag": "application",
   },
 }
 `;
 
 exports[`convertType Effects should convert simple effect with one labrel 1`] = `
-Object {
-  "node": Object {
-    "args": Array [
-      Object {
+TypeWithWildcards {
+  "body": Object {
+    "node": Object {
+      "args": Array [
+        Object {
+          "node": Object {
+            "extends": Object {
+              "node": Object {
+                "tag": "empty-row",
+              },
+            },
+            "label": "console",
+            "labelType": Object {
+              "node": Object {
+                "name": "void",
+                "tag": "constant",
+              },
+            },
+            "tag": "row-extension",
+          },
+        },
+      ],
+      "op": Object {
         "node": Object {
-          "extends": Object {
-            "node": Object {
-              "tag": "empty-row",
-            },
-          },
-          "label": "console",
-          "labelType": Object {
-            "node": Object {
-              "name": "void",
-              "tag": "constant",
-            },
-          },
-          "tag": "row-extension",
+          "name": "effect",
+          "tag": "constant",
         },
       },
-    ],
-    "op": Object {
-      "node": Object {
-        "name": "effect",
-        "tag": "constant",
-      },
+      "tag": "application",
     },
-    "tag": "application",
   },
 }
 `;
@@ -182,48 +190,50 @@ file:1:10: Expected close parenthesis, number or symbol, double quote, list, ope
 `;
 
 exports[`convertType should read extensible record 1`] = `
-Object {
-  "node": Object {
-    "args": Array [
-      Object {
+TypeWithWildcards {
+  "body": Object {
+    "node": Object {
+      "args": Array [
+        Object {
+          "node": Object {
+            "extends": Object {
+              "node": Object {
+                "extends": Object {
+                  "node": Object {
+                    "name": "a",
+                    "tag": "type-variable",
+                    "userSpecified": false,
+                  },
+                },
+                "label": ":y",
+                "labelType": Object {
+                  "node": Object {
+                    "name": "number",
+                    "tag": "constant",
+                  },
+                },
+                "tag": "row-extension",
+              },
+            },
+            "label": ":x",
+            "labelType": Object {
+              "node": Object {
+                "name": "number",
+                "tag": "constant",
+              },
+            },
+            "tag": "row-extension",
+          },
+        },
+      ],
+      "op": Object {
         "node": Object {
-          "extends": Object {
-            "node": Object {
-              "extends": Object {
-                "node": Object {
-                  "name": "a",
-                  "tag": "type-variable",
-                  "userSpecified": false,
-                },
-              },
-              "label": ":y",
-              "labelType": Object {
-                "node": Object {
-                  "name": "number",
-                  "tag": "constant",
-                },
-              },
-              "tag": "row-extension",
-            },
-          },
-          "label": ":x",
-          "labelType": Object {
-            "node": Object {
-              "name": "number",
-              "tag": "constant",
-            },
-          },
-          "tag": "row-extension",
+          "name": "record",
+          "tag": "constant",
         },
       },
-    ],
-    "op": Object {
-      "node": Object {
-        "name": "record",
-        "tag": "constant",
-      },
+      "tag": "application",
     },
-    "tag": "application",
   },
 }
 `;

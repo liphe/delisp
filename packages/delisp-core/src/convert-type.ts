@@ -27,6 +27,8 @@ import {
   tcArrow
 } from "./types";
 
+import { TypeWithWildcards } from "./type-wildcards";
+
 /** Return true if a symbol is a valid name for a user defined type, false otherwise. */
 export function userDefinedType(expr: ASExprSymbol): boolean {
   return /^[A-Z]/.test(expr.name);
@@ -87,8 +89,8 @@ function convertList(expr: ASExprList): Type {
   if (op.tag === "symbol" && op.name === "effect") {
     return convertEffect(args);
   } else {
-    const opType = convert(op);
-    return tApp(opType, ...args.map(convert));
+    const opType = convert_(op);
+    return tApp(opType, ...args.map(convert_));
   }
 }
 
@@ -98,7 +100,7 @@ function convertVector(expr: ASExprVector): Type {
       printHighlightedExpr("Expected exactly 1 argument", expr.location)
     );
   }
-  return tVector(convert(expr.elements[0]));
+  return tVector(convert_(expr.elements[0]));
 }
 
 function convertMap(expr: ASExprMap): Type {
@@ -107,14 +109,14 @@ function convertMap(expr: ASExprMap): Type {
   return tRecord(
     fields.map(({ label, value }) => ({
       label: label.name,
-      type: convert(value)
+      type: convert_(value)
     })),
-    tail ? convert(tail) : emptyRow
+    tail ? convert_(tail) : emptyRow
   );
 }
 
 /* Try to convert a S-Expression into a type. */
-export function convert(expr: ASExpr): Type {
+function convert_(expr: ASExpr): Type {
   switch (expr.tag) {
     case "list":
       return convertList(expr);
@@ -130,3 +132,9 @@ export function convert(expr: ASExpr): Type {
       );
   }
 }
+
+function convertToTypeWithWildcards(expr: ASExpr): TypeWithWildcards {
+  return new TypeWithWildcards(convert_(expr));
+}
+
+export { convertToTypeWithWildcards as convert };
