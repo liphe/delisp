@@ -54,7 +54,7 @@ describe("convertType", () => {
       let result: Type | string;
 
       try {
-        result = convert(readFromString(x));
+        result = convert(readFromString(x)).instantiate();
       } catch (err) {
         result = `\n${err.message}`;
       }

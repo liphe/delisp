@@ -4,5 +4,5 @@
   },
   "extends": "./tsconfig.build.json",
   "include": ["./__tests__", "./src/"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "__tests__/typescript-declaration-fixtures"]
 }
