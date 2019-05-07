@@ -60,7 +60,7 @@ function tConstant(name: string): TConstant {
   return { node: { tag: "constant", name } };
 }
 
-// * -> * -> *
+// row -> effect * -> *
 export const tcArrow = tConstant("->");
 // * -> *
 export const tcVector = tConstant("vector");
@@ -71,6 +71,8 @@ export const tVoid = tConstant("void");
 export const tBoolean = tConstant("boolean");
 export const tNumber = tConstant("number");
 export const tString = tConstant("string");
+
+const tcEffect = tConstant("effect");
 
 export function tVar(name: string, userSpecified = false): TVar {
   return {
@@ -126,6 +128,13 @@ export function tRow(
   return fields.reduceRight(
     (row: Type, { label, type }): Row => tRowExtension(label, type, row),
     extending
+  );
+}
+
+export function tEffect(labels: string[], extending: Type = emptyRow): Type {
+  return tApp(
+    tcEffect,
+    tRow(labels.map(label => ({ label, type: tVoid })), extending)
   );
 }
 

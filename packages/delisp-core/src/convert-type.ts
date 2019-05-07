@@ -11,11 +11,14 @@ import {
 
 import {
   emptyRow,
+  TConstant,
+  TVar,
   Type,
   tApp,
   tBoolean,
   tNumber,
   tRecord,
+  tEffect,
   tString,
   tUserDefined,
   tVar,
@@ -45,7 +48,7 @@ export function checkUserDefinedTypeName(expr: ASExprSymbol): void {
   }
 }
 
-function convertSymbol(expr: ASExprSymbol): Type {
+function convertSymbol(expr: ASExprSymbol): TVar | TConstant {
   switch (expr.name) {
     case "->":
       return tcArrow;
@@ -62,10 +65,31 @@ function convertSymbol(expr: ASExprSymbol): Type {
   }
 }
 
+function convertEffect(effects: ASExpr[]): Type {
+  const labels = effects.map(e => {
+    if (e.tag !== "symbol") {
+      throw new ConvertError(
+        printHighlightedExpr(`not a valid effect`, e.location)
+      );
+    }
+    return e.name;
+  });
+  const last = labels.slice(-2);
+  if (last.length === 2 && last[0] === "|") {
+    return tEffect(labels.slice(0, -2), tVar(last[1]));
+  } else {
+    return tEffect(labels);
+  }
+}
+
 function convertList(expr: ASExprList): Type {
   const [op, ...args] = expr.elements;
-  const opType = convert(op);
-  return tApp(opType, ...args.map(convert));
+  if (op.tag === "symbol" && op.name === "effect") {
+    return convertEffect(args);
+  } else {
+    const opType = convert(op);
+    return tApp(opType, ...args.map(convert));
+  }
 }
 
 function convertVector(expr: ASExprVector): Type {

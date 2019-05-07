@@ -20,13 +20,15 @@ describe("convertType", () => {
   });
 
   it("should convert to functions", () => {
-    expect(convert(readFromString("  (->  string  number)  "))).toMatchObject(
-      tFn([tString], tNumber)
+    expect(convert(readFromString("  (->  string _ number)  "))).toMatchObject(
+      tFn([tString], tVar("_"), tNumber)
     );
 
     expect(
-      convert(readFromString("(-> string (-> string c) c)"))
-    ).toMatchObject(tFn([tString, tFn([tString], tVar("c"))], tVar("c")));
+      convert(readFromString("(-> string (-> string _ c) _ c)"))
+    ).toMatchObject(
+      tFn([tString, tFn([tString], tVar("_"), tVar("c"))], tVar("_"), tVar("c"))
+    );
   });
 
   it("should read extensible record", () => {
@@ -73,5 +75,28 @@ describe("convertType", () => {
     expect(failedType(`"hello"`)).toMatchSnapshot();
     expect(failedType("(1 2 3)")).toMatchSnapshot();
     expect(failedType(`("hello" "world")`)).toMatchSnapshot();
+    expect(failedType(`(effect 1`)).toMatchSnapshot();
+  });
+
+  describe("Effects", () => {
+    it("should convert empty effect", () => {
+      expect(convert(readFromString("(effect)"))).toMatchSnapshot();
+    });
+
+    it("should convert simple effect with one labrel", () => {
+      expect(convert(readFromString("(effect console)"))).toMatchSnapshot();
+    });
+
+    it("should convert effect with multiple labels", () => {
+      expect(
+        convert(readFromString("(effect console async)"))
+      ).toMatchSnapshot();
+    });
+
+    it("should convert open effect with multiple labels", () => {
+      expect(
+        convert(readFromString("(effect console async | a)"))
+      ).toMatchSnapshot();
+    });
   });
 });
