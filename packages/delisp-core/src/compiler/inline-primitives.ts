@@ -154,7 +154,7 @@ defineInlinePrimitive("*", "(-> number number _ number)", args => {
   };
 });
 
-defineInlinePrimitive("map", "(-> (-> a _ b) [a] _ [b])", ([fn, vec]) => {
+defineInlinePrimitive("map", "(-> (-> a e b) [a] e [b])", ([fn, vec]) => {
   return methodCall(vec, "map", [fn]);
 });
 
