@@ -12,7 +12,7 @@ const vectorPrims: Primitives = {
   },
 
   first: {
-    type: "(-> [a] (effect exp) a)",
+    type: "(-> [a] (effect exp | _) a)",
     value: <T>(list: T[]): T => {
       if (list.length > 0) {
         return list[0];
@@ -23,7 +23,7 @@ const vectorPrims: Primitives = {
   },
 
   rest: {
-    type: "(-> [a] (effect exp) [a])",
+    type: "(-> [a] (effect exp | _) [a])",
     value: <T>(list: T[]): T[] => {
       if (list.length > 0) {
         const [, ...rest] = list;
