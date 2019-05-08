@@ -57,6 +57,13 @@ describe("Unification", () => {
       const result = unify(t1, t2, {});
       expect(result.tag).toBe("unify-mismatch-error");
     });
+
+    it("closed rows with different labels dont unify", () => {
+      const t1 = tRecord([{ label: ":x", type: tNumber }]);
+      const t2 = tRecord([{ label: ":z", type: tNumber }]);
+      const result = unify(t1, t2, {});
+      expect(result.tag).toBe("unify-mismatch-error");
+    });
   });
 
   describe("User defined types", () => {
