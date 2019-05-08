@@ -7,12 +7,12 @@ const vectorPrims: Primitives = {
   },
 
   cons: {
-    type: "(-> a [a] [a])",
+    type: "(-> a [a] _ [a])",
     value: <T>(a: T, list: T[]): T[] => [a, ...list]
   },
 
   first: {
-    type: "(-> [a] a)",
+    type: "(-> [a] _ a)",
     value: <T>(list: T[]): T => {
       if (list.length > 0) {
         return list[0];
@@ -23,7 +23,7 @@ const vectorPrims: Primitives = {
   },
 
   rest: {
-    type: "(-> [a] [a])",
+    type: "(-> [a] _ [a])",
     value: <T>(list: T[]): T[] => {
       if (list.length > 0) {
         const [, ...rest] = list;
@@ -35,7 +35,7 @@ const vectorPrims: Primitives = {
   },
 
   "empty?": {
-    type: "(-> [a] boolean)",
+    type: "(-> [a] _ boolean)",
     value: <T>(list: T[]): boolean => list.length === 0
   }
 };
