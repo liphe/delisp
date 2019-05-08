@@ -66,7 +66,7 @@ export function findInlinePrimitive(name: string): InlinePrim {
 function primitiveArity(prim: InlinePrim): number {
   const type = prim.type.mono;
   if (isFunctionType(type)) {
-    return type.node.args.length - 1;
+    return type.node.args.length - 2;
   } else {
     return 0;
   }
