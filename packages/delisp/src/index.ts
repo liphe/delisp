@@ -6,6 +6,8 @@ import { cmdLint } from "./cmd-lint";
 import { cmdInferType } from "./cmd-infer-type";
 import { cmdREPL } from "./cmd-repl";
 
+require("source-map-support").install();
+
 yargs
   .usage("usage: $0 <command>")
   .option("color", {
