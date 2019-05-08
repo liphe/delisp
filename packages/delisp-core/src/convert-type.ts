@@ -1,6 +1,8 @@
 import { capitalize } from "./utils";
 import { ConvertError, parseRecord } from "./convert-utils";
 import { printHighlightedExpr } from "./error-report";
+import { readFromString } from "./reader";
+
 import {
   ASExpr,
   ASExprList,
@@ -24,7 +26,8 @@ import {
   tVar,
   tVector,
   tVoid,
-  tcArrow
+  tcArrow,
+  TypeSchema
 } from "./types";
 
 import { TypeWithWildcards } from "./type-wildcards";
@@ -138,3 +141,8 @@ function convertToTypeWithWildcards(expr: ASExpr): TypeWithWildcards {
 }
 
 export { convertToTypeWithWildcards as convert };
+
+export function readType(source: string): TypeSchema {
+  const t = convertToTypeWithWildcards(readFromString(source));
+  return t.generalize();
+}

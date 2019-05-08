@@ -4,7 +4,7 @@ import {
   inferType,
   InternalTypeEnvironment
 } from "../src/infer";
-import { readType } from "../src/type-utils";
+import { readType } from "../src/convert-type";
 import { printType } from "../src/type-printer";
 
 function typeOf(

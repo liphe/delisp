@@ -1,7 +1,8 @@
 import * as JS from "estree";
 import { InvariantViolation } from "../invariant";
 import { generateUniqueTVar } from "../type-generate";
-import { isFunctionType, generalize, readType } from "../type-utils";
+import { readType } from "../convert-type";
+import { isFunctionType, generalize } from "../type-utils";
 import { tFn, tRecord, TypeSchema } from "../types";
 import { range } from "../utils";
 import { member, methodCall } from "./estree-utils";
