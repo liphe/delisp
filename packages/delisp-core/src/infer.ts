@@ -352,7 +352,10 @@ function infer(
         constraints: [
           constEqual(ifn.result, tfn) as TConstraint,
           ...ifn.constraints,
-          ...iargs.constraints
+          ...iargs.constraints,
+
+          constEffect(ifn.result, effect),
+          ...iargs.result.map(a => constEffect(a, effect))
         ],
 
         assumptions: [...ifn.assumptions, ...iargs.assumptions]
