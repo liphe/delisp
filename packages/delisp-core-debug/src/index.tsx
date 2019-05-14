@@ -9,11 +9,41 @@ const initialState: State = {
   code: ""
 };
 
+type Module = ReturnType<typeof inferModule>["typedModule"];
+
+type ASTResult =
+  | { tag: "success"; module: Module }
+  | { tag: "error"; message: string };
+
+function readModuleOrError(code: string): ASTResult {
+  try {
+    const m = readModule(code);
+    const inferredM = inferModule(m);
+    return { tag: "success", module: inferredM.typedModule };
+  } catch (err) {
+    return { tag: "error", message: err.message };
+  }
+}
+
 function AST(props: { code: string }) {
   const { code } = props;
-  const m = readModule(code);
-  const inferredM = m && inferModule(m);
-  return <pre>{JSON.stringify(inferredM.typedModule, null, 2)}</pre>;
+  const result = readModuleOrError(code);
+  switch (result.tag) {
+    case "success":
+      return <ModuleExplorer module={result.module} />;
+    case "error":
+      return (
+        <div>
+          <span>Something went wrong</span>
+          <pre>{result.message}</pre>
+        </div>
+      );
+  }
+}
+
+function ModuleExplorer(props: { module: Module }) {
+  const m = props.module;
+  return <pre>{JSON.stringify(m, null, 2)}</pre>;
 }
 
 function App() {
@@ -26,7 +56,6 @@ function App() {
         value={state.code}
         onChange={e => dispatch(updateCode(e.target.value))}
       />
-
       <AST code={state.code} />
     </div>
   );
