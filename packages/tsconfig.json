@@ -4,6 +4,7 @@
   "references": [
     { "path": "delisp/" },
     { "path": "delisp-core/tsconfig.build.json" },
+    { "path": "delisp-core-debug/" },
     { "path": "delisp-runtime/" }
   ]
 }
