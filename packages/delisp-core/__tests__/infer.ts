@@ -258,16 +258,30 @@ describe("Type inference", () => {
         expect(
           typeOf(
             `
-(let {f (lambda (l)
-          (if (empty? l)
-              0
-              (+ 1 (f (rest l)))))}
-  f)
-`,
+          (let {f (lambda (l)
+                    (if (empty? l)
+                        0
+                        (+ 1 (f (rest l)))))}
+            f)
+          `,
             env
           )
         ).toBe("(-> [α] (effect exp | β) number)");
       });
+    });
+  });
+
+  describe("Effects", () => {
+    it("should infer the effect with let bindings bounded to some monomorphic function call", () => {
+      expect(
+        typeOf(
+          `
+(lambda (f)
+  (let {x (f)}
+    x))
+`
+        )
+      ).toBe("(-> (-> (effect) α) β α)");
     });
   });
 });

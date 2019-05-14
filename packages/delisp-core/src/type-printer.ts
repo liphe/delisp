@@ -56,13 +56,13 @@ function printApplicationType(type: TApplication): string {
   ) {
     const row = normalizeRow(type.node.args[0]);
 
-    const fields = row.fields.map(f => f.label);
+    const fields = row.fields.map(f => " " + f.label).join("");
     const extending =
       row.extends.node.tag === "empty-row"
         ? ""
         : " | " + _printType(row.extends);
 
-    return `(effect ${fields.join(" ")}${extending})`;
+    return `(effect${fields}${extending})`;
   } else {
     return (
       "(" + [type.node.op, ...type.node.args].map(_printType).join(" ") + ")"

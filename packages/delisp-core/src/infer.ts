@@ -36,7 +36,7 @@ import {
   tFn,
   tNumber,
   tRecord,
-  tRow,
+  tEffect,
   tString,
   tVector,
   TypeSchema
@@ -338,6 +338,7 @@ function infer(
       const tTo = generateUniqueTVar();
       const effect = generateUniqueTVar();
       const tfn: Type = tFn(iargs.result.map(a => a.info.type), effect, tTo);
+
       return {
         result: {
           ...expr,
@@ -433,7 +434,9 @@ function infer(
             }),
 
           // We require let-binding values to be free of effects
-          ...bindingsInfo.map(b => constEffect(b.inference.result, tRow([]))),
+          ...bindingsInfo.map(b =>
+            constEffect(b.inference.result, tEffect([]))
+          ),
           // But we require all forms of the body to have the same
           // kind of effects.
           ...bodyInference.result.map(form => constEffect(form, effect))
