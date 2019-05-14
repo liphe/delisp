@@ -1,0 +1,11 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "jsx": "react"
+  },
+  "include": ["./src/"],
+  "references": [
+    { "path": "../delisp-core/tsconfig.build.json" }
+  ]
+}
