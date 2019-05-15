@@ -9,7 +9,7 @@
     "build": "webpack --mode=production"
   },
   "dependencies": {
-    "@delisp/core": "^0.1.2",
+    "@delisp/core": "^0.2.0",
     "@types/react": "^16.8.17",
     "@types/react-dom": "^16.8.4",
     "react": "^16.8.6",

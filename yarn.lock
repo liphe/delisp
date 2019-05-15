@@ -139,21 +139,6 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
-"@delisp/core@^0.1.2":
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/@delisp/core/-/core-0.1.2.tgz#a69e57a335b6b9148f3baececbfb3b1311cfebc8"
-  integrity sha512-XqEX1mqx/If0RRn6J2F2dGBqjXSwMQpVvrpiySH+wT5/YVKgE0AhTH2JG5gp4h5ZxdIRjroGkysh1472le8Dyw==
-  dependencies:
-    "@delisp/runtime" "^0.1.2"
-    "@types/debug" "^4.1.2"
-    debug "^4.1.0"
-    escodegen "^1.11.1"
-
-"@delisp/runtime@^0.1.2":
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/@delisp/runtime/-/runtime-0.1.2.tgz#42760b9041318e4f5810211e8ee089f22687d45a"
-  integrity sha512-g5nejCrmNrJ9VbG9HXKuaM4ZluTcWEMFkbCcNWQFhZJ5a8fEn9vw476fD6g8dg1wZqO7lPkVtu++UL2amM/iFQ==
-
 "@jest/console@^24.7.1":
   version "24.7.1"
   resolved "https://registry.yarnpkg.com/@jest/console/-/console-24.7.1.tgz#32a9e42535a97aedfe037e725bd67e954b459545"
@@ -1056,11 +1041,6 @@
   integrity sha512-XYVgHF2sQ0YblLRMLNPB3CkFMewzFmlDsH/TneZFHUXDlABQgh88uOxuez7ZcXxayLFrqLwtDH1t+FmlFwNZxw==
   dependencies:
     "@babel/types" "^7.3.0"
-
-"@types/debug@^4.1.2":
-  version "4.1.2"
-  resolved "https://registry.yarnpkg.com/@types/debug/-/debug-4.1.2.tgz#84824e9259fc583dd9385635738359c9582f7f82"
-  integrity sha512-jkf6UiWUjcOqdQbatbvOm54/YbCdjt3JjiAzT/9KS2XtMmOkYHdKsI5u8fulhbuTUuiqNBfa6J5GSDiwjK+zLA==
 
 "@types/debug@^4.1.4":
   version "4.1.4"
