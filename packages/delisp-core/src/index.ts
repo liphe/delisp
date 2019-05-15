@@ -20,6 +20,9 @@ export {
   isTypeAlias,
   Module,
   Declaration,
+  SDefinition,
+  SExport,
+  STypeAlias,
   Expression,
   Syntax,
   Typed
