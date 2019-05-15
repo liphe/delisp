@@ -26,7 +26,6 @@ import {
 } from "./convert-type";
 import { ConvertError, parseRecord } from "./convert-utils";
 import { listTypeVariables } from "./type-utils";
-import { TypeWithWildcards } from "./type-wildcards";
 
 export interface WithErrors {
   errors: string[];
@@ -304,7 +303,7 @@ defineConversion("the", (the_, args, whole) => {
 
   return successFrom(whole, {
     tag: "type-annotation",
-    typeWithWildcards: new TypeWithWildcards(convertType(t)),
+    typeWithWildcards: convertType(t),
     value: convertExpr(value)
   });
 });
@@ -413,7 +412,8 @@ defineToplevel("type", (type_, args, whole) => {
 
   checkUserDefinedTypeName(name);
 
-  const definitionType = convertType(definition);
+  const definitionType = convertType(definition).noWildcards();
+
   if (listTypeVariables(definitionType).length > 0) {
     throw new ConvertError(
       printHighlightedExpr("Type variable out of scope", definition.location)

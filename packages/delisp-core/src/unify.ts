@@ -128,7 +128,7 @@ function rewriteRowForLabel(
   row: Type,
   label: string,
   ctx: Substitution
-): { row: RExtension; substitution: Substitution } {
+): { row: RExtension; substitution: Substitution } | null {
   if (row.node.tag === "type-variable") {
     // RULE (row-var)
     //
@@ -160,11 +160,11 @@ function rewriteRowForLabel(
       //
       // Firstly, we recursively rewrite the tail of the row extension
       // to start with `label.`
-      const { row: newRow, substitution: subs } = rewriteRowForLabel(
-        row.node.extends,
-        label,
-        ctx
-      );
+      const result = rewriteRowForLabel(row.node.extends, label, ctx);
+      if (!result) {
+        return null;
+      }
+      const { row: newRow, substitution: subs } = result;
       //
       // The resulting row, starts with the intended label, and
       // continues with the original label that we found.
@@ -177,6 +177,8 @@ function rewriteRowForLabel(
         substitution: subs
       };
     }
+  } else if (row.node.tag === "empty-row") {
+    return null;
   } else {
     throw new Error("Should not get here");
   }
@@ -187,11 +189,16 @@ function unifyRow(
   row2: RExtension,
   ctx: Substitution
 ): UnifyResult {
-  const { substitution: subs, row: row3 } = rewriteRowForLabel(
-    row2,
-    row1.node.label,
-    ctx
-  );
+  const rewriteResult = rewriteRowForLabel(row2, row1.node.label, ctx);
+  if (!rewriteResult) {
+    return {
+      tag: "unify-mismatch-error",
+      t1: row1,
+      t2: row2
+    };
+  }
+
+  const { substitution: subs, row: row3 } = rewriteResult;
 
   if (
     row1.node.extends.node.tag === "type-variable" &&

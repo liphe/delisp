@@ -50,6 +50,19 @@ function printApplicationType(type: TApplication): string {
         ? ` | ${_printType(row.extends)}`
         : "";
     return `{${fields}${extension}}`;
+  } else if (
+    type.node.op.node.tag === "constant" &&
+    type.node.op.node.name === "effect"
+  ) {
+    const row = normalizeRow(type.node.args[0]);
+
+    const fields = row.fields.map(f => " " + f.label).join("");
+    const extending =
+      row.extends.node.tag === "empty-row"
+        ? ""
+        : " | " + _printType(row.extends);
+
+    return `(effect${fields}${extending})`;
   } else {
     return (
       "(" + [type.node.op, ...type.node.args].map(_printType).join(" ") + ")"
@@ -71,7 +84,9 @@ function _printType(type: Type): string {
   }
 }
 
-export function printType(rawType: Type, normalize = true) {
+function printTypeWithOptionalNormalization(rawType: Type, normalize = true) {
   const type = normalize ? normalizeType(rawType) : rawType;
   return _printType(type);
 }
+
+export { printTypeWithOptionalNormalization as printType };

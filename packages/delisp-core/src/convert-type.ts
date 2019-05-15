@@ -1,6 +1,8 @@
 import { capitalize } from "./utils";
 import { ConvertError, parseRecord } from "./convert-utils";
 import { printHighlightedExpr } from "./error-report";
+import { readFromString } from "./reader";
+
 import {
   ASExpr,
   ASExprList,
@@ -11,18 +13,24 @@ import {
 
 import {
   emptyRow,
+  TConstant,
+  TVar,
   Type,
   tApp,
   tBoolean,
   tNumber,
   tRecord,
+  tEffect,
   tString,
   tUserDefined,
   tVar,
   tVector,
   tVoid,
-  tcArrow
+  tcArrow,
+  TypeSchema
 } from "./types";
+
+import { TypeWithWildcards } from "./type-wildcards";
 
 /** Return true if a symbol is a valid name for a user defined type, false otherwise. */
 export function userDefinedType(expr: ASExprSymbol): boolean {
@@ -45,7 +53,7 @@ export function checkUserDefinedTypeName(expr: ASExprSymbol): void {
   }
 }
 
-function convertSymbol(expr: ASExprSymbol): Type {
+function convertSymbol(expr: ASExprSymbol): TVar | TConstant {
   switch (expr.name) {
     case "->":
       return tcArrow;
@@ -62,10 +70,31 @@ function convertSymbol(expr: ASExprSymbol): Type {
   }
 }
 
+function convertEffect(effects: ASExpr[]): Type {
+  const labels = effects.map(e => {
+    if (e.tag !== "symbol") {
+      throw new ConvertError(
+        printHighlightedExpr(`not a valid effect`, e.location)
+      );
+    }
+    return e.name;
+  });
+  const last = labels.slice(-2);
+  if (last.length === 2 && last[0] === "|") {
+    return tEffect(labels.slice(0, -2), tVar(last[1]));
+  } else {
+    return tEffect(labels);
+  }
+}
+
 function convertList(expr: ASExprList): Type {
   const [op, ...args] = expr.elements;
-  const opType = convert(op);
-  return tApp(opType, ...args.map(convert));
+  if (op.tag === "symbol" && op.name === "effect") {
+    return convertEffect(args);
+  } else {
+    const opType = convert_(op);
+    return tApp(opType, ...args.map(convert_));
+  }
 }
 
 function convertVector(expr: ASExprVector): Type {
@@ -74,7 +103,7 @@ function convertVector(expr: ASExprVector): Type {
       printHighlightedExpr("Expected exactly 1 argument", expr.location)
     );
   }
-  return tVector(convert(expr.elements[0]));
+  return tVector(convert_(expr.elements[0]));
 }
 
 function convertMap(expr: ASExprMap): Type {
@@ -83,14 +112,14 @@ function convertMap(expr: ASExprMap): Type {
   return tRecord(
     fields.map(({ label, value }) => ({
       label: label.name,
-      type: convert(value)
+      type: convert_(value)
     })),
-    tail ? convert(tail) : emptyRow
+    tail ? convert_(tail) : emptyRow
   );
 }
 
 /* Try to convert a S-Expression into a type. */
-export function convert(expr: ASExpr): Type {
+function convert_(expr: ASExpr): Type {
   switch (expr.tag) {
     case "list":
       return convertList(expr);
@@ -105,4 +134,15 @@ export function convert(expr: ASExpr): Type {
         printHighlightedExpr("Not a valid type", expr.location)
       );
   }
+}
+
+function convertToTypeWithWildcards(expr: ASExpr): TypeWithWildcards {
+  return new TypeWithWildcards(convert_(expr));
+}
+
+export { convertToTypeWithWildcards as convert };
+
+export function readType(source: string): TypeSchema {
+  const t = convertToTypeWithWildcards(readFromString(source));
+  return t.generalize();
 }

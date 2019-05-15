@@ -1,49 +1,51 @@
 import { readFromString } from "../src/reader";
-import { convert } from "./convert-type";
+import { convert as convert_ } from "./convert-type";
 import { tFn, tNumber, tString, tVar, Type } from "./types";
 import { printType } from "./type-printer";
 
+function readAndConvert(x: string) {
+  return convert_(readFromString(x)).noWildcards();
+}
+
 describe("convertType", () => {
   it("should convert to numbers", () => {
-    expect(convert(readFromString("number"))).toMatchObject(tNumber);
-    expect(convert(readFromString("  number  "))).toMatchObject(tNumber);
+    expect(readAndConvert("number")).toMatchObject(tNumber);
+    expect(readAndConvert("  number  ")).toMatchObject(tNumber);
   });
 
   it("should convert to strings", () => {
-    expect(convert(readFromString("string"))).toMatchObject(tString);
-    expect(convert(readFromString("  string  "))).toMatchObject(tString);
+    expect(readAndConvert("string")).toMatchObject(tString);
+    expect(readAndConvert("  string  ")).toMatchObject(tString);
   });
 
   it("should convert to symbols", () => {
-    expect(convert(readFromString("a"))).toMatchObject(tVar("a"));
-    expect(convert(readFromString("  b  "))).toMatchObject(tVar("b"));
+    expect(readAndConvert("a")).toMatchObject(tVar("a"));
+    expect(readAndConvert("  b  ")).toMatchObject(tVar("b"));
   });
 
   it("should convert to functions", () => {
-    expect(convert(readFromString("  (->  string  number)  "))).toMatchObject(
-      tFn([tString], tNumber)
+    expect(readAndConvert("  (->  string _ number)  ")).toMatchObject(
+      tFn([tString], tVar("_"), tNumber)
     );
 
-    expect(
-      convert(readFromString("(-> string (-> string c) c)"))
-    ).toMatchObject(tFn([tString, tFn([tString], tVar("c"))], tVar("c")));
+    expect(readAndConvert("(-> string (-> string _ c) _ c)")).toMatchObject(
+      tFn([tString, tFn([tString], tVar("_"), tVar("c"))], tVar("_"), tVar("c"))
+    );
   });
 
   it("should read extensible record", () => {
-    expect(
-      convert(readFromString("{:x number :y number | a}"))
-    ).toMatchSnapshot();
+    expect(readAndConvert("{:x number :y number | a}")).toMatchSnapshot();
   });
 
   it("should fail for invalid syntax of extensible records", () => {
     expect(() => {
-      convert(readFromString("{| a :x number}"));
+      readAndConvert("{| a :x number}");
     }).toThrow();
   });
 
   it("should fail for duplicated labels of extensible records", () => {
     expect(() => {
-      convert(readFromString("{:x 10 :x 20}"));
+      readAndConvert("{:x 10 :x 20}");
     }).toThrow();
   });
 
@@ -52,7 +54,7 @@ describe("convertType", () => {
       let result: Type | string;
 
       try {
-        result = convert(readFromString(x));
+        result = readAndConvert(x);
       } catch (err) {
         result = `\n${err.message}`;
       }
@@ -73,5 +75,24 @@ describe("convertType", () => {
     expect(failedType(`"hello"`)).toMatchSnapshot();
     expect(failedType("(1 2 3)")).toMatchSnapshot();
     expect(failedType(`("hello" "world")`)).toMatchSnapshot();
+    expect(failedType(`(effect 1`)).toMatchSnapshot();
+  });
+
+  describe("Effects", () => {
+    it("should convert empty effect", () => {
+      expect(readAndConvert("(effect)")).toMatchSnapshot();
+    });
+
+    it("should convert simple effect with one labrel", () => {
+      expect(readAndConvert("(effect console)")).toMatchSnapshot();
+    });
+
+    it("should convert effect with multiple labels", () => {
+      expect(readAndConvert("(effect console async)")).toMatchSnapshot();
+    });
+
+    it("should convert open effect with multiple labels", () => {
+      expect(readAndConvert("(effect console async | a)")).toMatchSnapshot();
+    });
   });
 });

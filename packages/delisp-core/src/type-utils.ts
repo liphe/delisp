@@ -1,7 +1,5 @@
 import { InvariantViolation } from "./invariant";
 
-import { convert as convertType } from "./convert-type";
-import { readFromString } from "./reader";
 import { generateUniqueTVar } from "./type-generate";
 import { flatten } from "./utils";
 
@@ -132,10 +130,6 @@ export function instantiate(t: TypeSchema, userSpecified = false): Type {
     };
   }, {});
   return applySubstitution(t.mono, subst);
-}
-
-export function readType(source: string): TypeSchema {
-  return generalize(convertType(readFromString(source)), []);
 }
 
 export function normalizeRow(

@@ -206,4 +206,5 @@ export interface Module<EInfo = {}, SInfo = {}> {
 
 export interface Typed {
   type: Type;
+  effect: Type;
 }

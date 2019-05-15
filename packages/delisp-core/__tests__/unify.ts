@@ -19,14 +19,14 @@ describe("Unification", () => {
 
   describe("Application", () => {
     it("should catch function arity mismatches", () => {
-      const t1 = tFn([tNumber, tNumber], tNumber);
-      const t2 = tFn([tNumber], tNumber);
+      const t1 = tFn([tNumber, tNumber], tVar("_"), tNumber);
+      const t2 = tFn([tNumber], tVar("_"), tNumber);
       const result = unify(t1, t2, {});
       expect(result.tag).toBe("unify-missing-value-error");
     });
     it("should catch operator mismatches", () => {
       const t1 = tVector(tNumber);
-      const t2 = tFn([], tNumber);
+      const t2 = tFn([], tVar("_"), tNumber);
       const result = unify(t1, t2, {});
       expect(result.tag).toBe("unify-mismatch-error");
     });
@@ -54,6 +54,13 @@ describe("Unification", () => {
         [{ label: "z", type: tNumber }, { label: ":y", type: tNumber }],
         r
       );
+      const result = unify(t1, t2, {});
+      expect(result.tag).toBe("unify-mismatch-error");
+    });
+
+    it("closed rows with different labels dont unify", () => {
+      const t1 = tRecord([{ label: ":x", type: tNumber }]);
+      const t2 = tRecord([{ label: ":z", type: tNumber }]);
       const result = unify(t1, t2, {});
       expect(result.tag).toBe("unify-mismatch-error");
     });
