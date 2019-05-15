@@ -1,6 +1,6 @@
 {
   "name": "@delisp/core",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "main": "dist/src/index.js",
   "license": "MIT",
   "scripts": {
@@ -15,7 +15,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@delisp/runtime": "^0.1.2",
+    "@delisp/runtime": "^0.2.0",
     "@types/debug": "^4.1.2",
     "debug": "^4.1.0",
     "escodegen": "^1.11.1"
