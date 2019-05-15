@@ -10,6 +10,8 @@ import {
   readModule,
   inferModule,
   pprint,
+  printType,
+  Type,
   exprFChildren,
   SDefinition,
   isDefinition,
@@ -127,11 +129,11 @@ function ExpressionExplorer({ expr }: { expr: Expression<Typed> }) {
       )}
       <details>
         <summary>Type</summary>
-        <UnknownExplorer value={expr.info.type} />
+        <TypeExplorer type={expr.info.type} />
       </details>
       <details>
         <summary>Effect</summary>
-        <UnknownExplorer value={expr.info.effect} />
+        <TypeExplorer type={expr.info.effect} />
       </details>
       <details>
         <summary>Location</summary>
@@ -140,6 +142,10 @@ function ExpressionExplorer({ expr }: { expr: Expression<Typed> }) {
       <div />
     </Box>
   );
+}
+
+function TypeExplorer({ type }: { type: Type }) {
+  return <Code>{printType(type, false)}</Code>;
 }
 
 function UnknownExplorer({ value }: { value: unknown }) {
