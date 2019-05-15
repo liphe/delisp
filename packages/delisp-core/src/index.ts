@@ -42,6 +42,9 @@ export {
   isExpression,
   isTypeAlias,
   Module,
+  SDefinition,
+  SExport,
+  STypeAlias,
   Syntax,
   Typed
 } from "./syntax";

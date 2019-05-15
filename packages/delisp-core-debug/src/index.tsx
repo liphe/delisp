@@ -1,3 +1,4 @@
+import styled from "styled-components";
 import React, { useReducer } from "react";
 import ReactDOM from "react-dom";
 
@@ -6,12 +7,18 @@ import { updateCode, State, reducer } from "./state";
 import {
   Module,
   Syntax,
-  Expression,
   isExpression,
   readModule,
   inferModule,
   pprint,
   exprFChildren,
+  SDefinition,
+  isDefinition,
+  isTypeAlias,
+  isExport,
+  // SExport,
+  // STypeAlias,
+  Expression,
   Typed
 } from "@delisp/core";
 
@@ -22,6 +29,10 @@ const initialState: State = {
 type ASTResult =
   | { tag: "success"; module: Module<Typed> }
   | { tag: "error"; message: string };
+
+export function assertNever(x: never): never {
+  throw new Error("Unexpected object: " + x);
+}
 
 function readModuleOrError(code: string): ASTResult {
   try {
@@ -52,27 +63,52 @@ function AST(props: { code: string }) {
 function ModuleExplorer({ module: m }: { module: Module<Typed> }) {
   return (
     <div>
-      {m.body.map(s => (
-        <DeclExplorer syntax={s} />
+      {m.body.map((s, i) => (
+        <SyntaxExplorer key={i} syntax={s} />
       ))}
     </div>
   );
 }
 
-function DeclExplorer({ syntax }: { syntax: Syntax<Typed> }) {
+function SyntaxExplorer({ syntax }: { syntax: Syntax<Typed> }) {
   if (isExpression(syntax)) {
     return <ExpressionExplorer expr={syntax} />;
-  } else {
+  } else if (isDefinition(syntax)) {
+    return <DefinitionExplorer definition={syntax} />;
+  } else if (isExport(syntax)) {
     return <UnknownExplorer value={syntax} />;
+  } else if (isTypeAlias(syntax)) {
+    return <UnknownExplorer value={syntax} />;
+  } else {
+    throw new Error(`??? TS is not detecting exhaustiveness.`);
   }
 }
+
+function DefinitionExplorer({
+  definition
+}: {
+  definition: SDefinition<Typed>;
+}) {
+  return (
+    <div>
+      <span>Definition: {definition.node.variable.name}</span>
+      <ExpressionExplorer expr={definition.node.value} />
+    </div>
+  );
+}
+
+const Box = styled.div`
+  border: 1px solid;
+  margin: 10px;
+  padding: 5px;
+`;
 
 function ExpressionExplorer({ expr }: { expr: Expression<Typed> }) {
   const subexpr = exprFChildren(expr).map((e, i) => (
     <ExpressionExplorer key={i} expr={e} />
   ));
   return (
-    <div style={{ border: "1px solid", margin: "10px", padding: "5px" }}>
+    <Box>
       <pre>{pprint(expr, 80)}</pre>
       {subexpr.length === 0 ? null : (
         <details>
@@ -93,7 +129,7 @@ function ExpressionExplorer({ expr }: { expr: Expression<Typed> }) {
         <UnknownExplorer value={expr.location} />
       </details>
       <div />
-    </div>
+    </Box>
   );
 }
 
