@@ -72,7 +72,7 @@ function ExpressionExplorer({ expr }: { expr: Expression<Typed> }) {
     <ExpressionExplorer key={i} expr={e} />
   ));
   return (
-    <div>
+    <div style={{ border: "1px solid", margin: "10px", padding: "5px" }}>
       <pre>{pprint(expr, 80)}</pre>
       {subexpr.length === 0 ? null : (
         <details>
