@@ -3,16 +3,24 @@ import ReactDOM from "react-dom";
 
 import { updateCode, State, reducer } from "./state";
 
-import { readModule, inferModule } from "@delisp/core";
+import {
+  Module,
+  Syntax,
+  Expression,
+  isExpression,
+  readModule,
+  inferModule,
+  pprint,
+  exprFChildren,
+  Typed
+} from "@delisp/core";
 
 const initialState: State = {
   code: ""
 };
 
-type Module = ReturnType<typeof inferModule>["typedModule"];
-
 type ASTResult =
-  | { tag: "success"; module: Module }
+  | { tag: "success"; module: Module<Typed> }
   | { tag: "error"; message: string };
 
 function readModuleOrError(code: string): ASTResult {
@@ -41,9 +49,56 @@ function AST(props: { code: string }) {
   }
 }
 
-function ModuleExplorer(props: { module: Module }) {
-  const m = props.module;
-  return <pre>{JSON.stringify(m, null, 2)}</pre>;
+function ModuleExplorer({ module: m }: { module: Module<Typed> }) {
+  return (
+    <div>
+      {m.body.map(s => (
+        <DeclExplorer syntax={s} />
+      ))}
+    </div>
+  );
+}
+
+function DeclExplorer({ syntax }: { syntax: Syntax<Typed> }) {
+  if (isExpression(syntax)) {
+    return <ExpressionExplorer expr={syntax} />;
+  } else {
+    return <UnknownExplorer value={syntax} />;
+  }
+}
+
+function ExpressionExplorer({ expr }: { expr: Expression<Typed> }) {
+  const subexpr = exprFChildren(expr).map((e, i) => (
+    <ExpressionExplorer key={i} expr={e} />
+  ));
+  return (
+    <div>
+      <pre>{pprint(expr, 80)}</pre>
+      {subexpr.length === 0 ? null : (
+        <details>
+          <summary>Subexpressions</summary>
+          {subexpr}
+        </details>
+      )}
+      <details>
+        <summary>Type</summary>
+        <UnknownExplorer value={expr.info.type} />
+      </details>
+      <details>
+        <summary>Effect</summary>
+        <UnknownExplorer value={expr.info.effect} />
+      </details>
+      <details>
+        <summary>Location</summary>
+        <UnknownExplorer value={expr.location} />
+      </details>
+      <div />
+    </div>
+  );
+}
+
+function UnknownExplorer({ value }: { value: unknown }) {
+  return <pre>{JSON.stringify(value, null, 2)}</pre>;
 }
 
 function App() {

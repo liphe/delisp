@@ -17,7 +17,12 @@ export {
   isDefinition,
   isExpression,
   isExport,
-  isTypeAlias
+  isTypeAlias,
+  Module,
+  Declaration,
+  Expression,
+  Syntax,
+  Typed
 } from "./syntax";
 export { default as primitives } from "./primitives";
 
@@ -27,7 +32,11 @@ export function readSyntax(source: string) {
   return convertSyntax(readFromString(source));
 }
 
-export { findSyntaxByOffset, findSyntaxByRange } from "./syntax-utils";
+export {
+  exprFChildren,
+  findSyntaxByOffset,
+  findSyntaxByRange
+} from "./syntax-utils";
 
 export {
   createModule,
