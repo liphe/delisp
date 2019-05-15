@@ -27,6 +27,9 @@ export {
   Syntax,
   Typed
 } from "./syntax";
+
+export { Type } from "./types";
+
 export { default as primitives } from "./primitives";
 
 export { printHighlightedExpr } from "./error-report";
