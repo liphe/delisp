@@ -92,11 +92,24 @@ function DefinitionExplorer({
   );
 }
 
+const Editor = styled.textarea`
+  width: 100%;
+  height: 200px;
+  font-family: courier;
+  font-size: 1.5em;
+`;
+
 const Box = styled.div`
   border: 1px solid;
   margin: 10px;
   padding: 5px;
   background-color: rgba(200, 200, 255, 0.8);
+`;
+
+const Code = styled.pre`
+  background-color: white;
+  padding: 5px;
+  font-family: courier;
 `;
 
 function ExpressionExplorer({ expr }: { expr: Expression<Typed> }) {
@@ -105,7 +118,7 @@ function ExpressionExplorer({ expr }: { expr: Expression<Typed> }) {
   ));
   return (
     <Box>
-      <pre>{pprint(expr, 80)}</pre>
+      <Code>{pprint(expr, 80)}</Code>
       {subexpr.length === 0 ? null : (
         <details>
           <summary>Subexpressions</summary>
@@ -143,7 +156,7 @@ export function App({
   return (
     <div>
       <h1>delisp-core-debug</h1>
-      <textarea
+      <Editor
         value={state.code}
         onChange={e => dispatch(updateCode(e.target.value))}
       />
