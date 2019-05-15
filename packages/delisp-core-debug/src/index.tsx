@@ -62,7 +62,8 @@ function App() {
 }
 
 function start() {
-  const container = document.getElementById("app");
+  const container = document.createElement("div");
+  document.body.appendChild(container);
   ReactDOM.render(<App />, container);
 }
 
