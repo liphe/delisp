@@ -9,9 +9,10 @@ import {
   isExpression,
   readModule,
   inferModule,
-  pprint,
+  pprintAs,
   printType,
   Type,
+  Encoder,
   exprFChildren,
   SDefinition,
   isDefinition,
@@ -106,6 +107,18 @@ const Box = styled.div`
   margin: 10px;
   padding: 5px;
   background-color: rgba(200, 200, 255, 0.8);
+
+  .keyword {
+    color: blue;
+  }
+
+  .number {
+    color: orange;
+  }
+
+  .string {
+    color: red;
+  }
 `;
 
 const Code = styled.pre`
@@ -114,13 +127,38 @@ const Code = styled.pre`
   font-family: courier;
 `;
 
+const Token = styled.span`
+  &:hover {
+    background-color: #88f;
+  }
+`;
+
+const PrettierEncoder: Encoder<React.ReactElement[]> = {
+  fromString: (x: string, kind: string, source?: Syntax<Typed>) => [
+    <Token
+      data-source={source}
+      className={kind}
+      onClick={() => {
+        console.log({ source });
+      }}
+      title={
+        source && isExpression(source) ? printType(source.info.type) : undefined
+      }
+    >
+      {x}
+    </Token>
+  ],
+  concat: (...args: React.ReactElement[][]): React.ReactElement[] =>
+    args.flat(1)
+};
+
 function ExpressionExplorer({ expr }: { expr: Expression<Typed> }) {
   const subexpr = exprFChildren(expr).map((e, i) => (
     <ExpressionExplorer key={i} expr={e} />
   ));
   return (
     <Box>
-      <Code>{pprint(expr, 80)}</Code>
+      <Code>{pprintAs(expr, 80, PrettierEncoder)}</Code>
       {subexpr.length === 0 ? null : (
         <details>
           <summary>Subexpressions</summary>
