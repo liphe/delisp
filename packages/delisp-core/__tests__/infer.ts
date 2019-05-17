@@ -1,4 +1,5 @@
 import { isDeclaration, readSyntax } from "../src/index";
+import { Expression } from "../src/syntax";
 import {
   ExternalEnvironment,
   inferType,
@@ -7,15 +8,22 @@ import {
 import { readType } from "../src/convert-type";
 import { printType } from "../src/type-printer";
 
-function typeOf(
-  str: string,
-  externalEnv: ExternalEnvironment = { variables: {}, types: {} },
-  internalEnv: InternalTypeEnvironment = {}
-): string {
-  const syntax = readSyntax(str);
+function readExpr(code: string): Expression {
+  const syntax = readSyntax(code);
   if (isDeclaration(syntax)) {
     throw new Error(`Not an expression!`);
   }
+  return syntax;
+}
+
+const emptyExternalEnv: ExternalEnvironment = { variables: {}, types: {} };
+
+function typeOf(
+  str: string,
+  externalEnv: ExternalEnvironment = emptyExternalEnv,
+  internalEnv: InternalTypeEnvironment = {}
+): string {
+  const syntax = readExpr(str);
   const typedExpr = inferType(syntax, externalEnv, internalEnv);
   return printType(typedExpr.info.type);
 }
@@ -282,6 +290,14 @@ describe("Type inference", () => {
 `
         )
       ).toBe("(-> (-> (effect) α) β α)");
+    });
+  });
+
+  describe("Regressions", () => {
+    it("(the _ _) type annotations should keep the type annotation node in the AST", () => {
+      const expr = readExpr("(the number 10)");
+      const typedExpr = inferType(expr, emptyExternalEnv, {});
+      expect(typedExpr).toHaveProperty(["node", "tag"], "type-annotation");
     });
   });
 });
