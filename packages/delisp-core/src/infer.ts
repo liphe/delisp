@@ -460,7 +460,7 @@ function infer(
           ...expr,
           node: {
             ...expr.node,
-            ...inferred.result.node
+            value: inferred.result
           },
           info: {
             type: t,
