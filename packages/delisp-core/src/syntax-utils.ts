@@ -124,9 +124,9 @@ export function exprFChildren<I, E>(e: ExpressionF<I, E>): E[] {
 
 export function foldExpr<I, A>(
   expr: Expression<I>,
-  fn: (e: ExpressionF<I, A>) => A
+  fn: (e: ExpressionF<I, A>, original: Expression<I>) => A
 ): A {
-  return fn(mapExpr(expr, e => foldExpr(e, fn)));
+  return fn(mapExpr(expr, e => foldExpr(e, fn)), expr);
 }
 
 export function transformRecurExpr<I>(

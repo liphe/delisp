@@ -25,9 +25,9 @@ function indent(x: Doc, level = 2): Doc {
   return indent_(x, level);
 }
 
-function printString(str: string): Doc {
+function printString(str: string, source: Syntax): Doc {
   const escaped = str.replace(/\n/g, "\\n").replace(/"/g, '\\"');
-  return text(`"${escaped}"`, "string");
+  return text(`"${escaped}"`, "string", source);
 }
 
 function printIdentifier(name: string, source?: Syntax): Doc {
@@ -51,16 +51,16 @@ function lines(...docs: Doc[]): Doc {
 }
 
 function printExpr(expr: Expression): Doc {
-  return foldExpr(expr, e => {
+  return foldExpr(expr, (e, source) => {
     switch (e.node.tag) {
       case "unknown": {
         const { input, start, end } = e.location;
         return text(input.toString().slice(start, end), "unknown");
       }
       case "string":
-        return printString(e.node.value);
+        return printString(e.node.value, source);
       case "number":
-        return text(String(e.node.value), "number");
+        return text(String(e.node.value), "number", source);
       case "vector": {
         return group(vector(align(...e.node.values)));
       }
@@ -85,7 +85,7 @@ function printExpr(expr: Expression): Doc {
         return group(
           list(
             concat(
-              text("if", "keyword"),
+              text("if", "keyword", source),
               space,
               align(e.node.condition, e.node.consequent, e.node.alternative)
             )
@@ -99,7 +99,7 @@ function printExpr(expr: Expression): Doc {
       case "function":
         const singleBody = e.node.body.length === 1;
         const doc = list(
-          text("lambda", "keyword"),
+          text("lambda", "keyword", source),
           space,
           group(
             list(
@@ -122,7 +122,7 @@ function printExpr(expr: Expression): Doc {
 
       case "let-bindings":
         return list(
-          text("let", "keyword"),
+          text("let", "keyword", source),
           space,
           map(
             align(
@@ -137,7 +137,7 @@ function printExpr(expr: Expression): Doc {
       case "type-annotation":
         return group(
           list(
-            text("the", "keyword"),
+            text("the", "keyword", source),
             space,
             text(e.node.typeWithWildcards.print(), "type"),
             indent(concat(line, e.node.value))
@@ -147,7 +147,7 @@ function printExpr(expr: Expression): Doc {
       case "do-block":
         return list(
           concat(
-            text("do", "keyword"),
+            text("do", "keyword", source),
             indent(concat(line, join([...e.node.body, e.node.returning], line)))
           )
         );
@@ -163,7 +163,7 @@ function print(form: Syntax): Doc {
       case "definition":
         return group(
           list(
-            text("define", "keyword"),
+            text("define", "keyword", form),
             space,
             printIdentifier(form.node.variable.name),
             indent(concat(line, print(form.node.value)))
@@ -172,7 +172,7 @@ function print(form: Syntax): Doc {
 
       case "export":
         return list(
-          text("export", "keyword"),
+          text("export", "keyword", form),
           space,
           text(form.node.value.name, "identifier")
         );
@@ -180,7 +180,7 @@ function print(form: Syntax): Doc {
       case "type-alias":
         return group(
           list(
-            text("type", "keyword"),
+            text("type", "keyword", form),
             space,
             text(form.node.alias.name, "identifier"),
             indent(
