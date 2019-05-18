@@ -12,8 +12,8 @@
   "devDependencies": {
     "@types/jest": "^23.3.9",
     "@types/node": "^11.11.3",
-    "@typescript-eslint/eslint-plugin": "^1.4.2",
-    "@typescript-eslint/parser": "^1.4.2",
+    "@typescript-eslint/eslint-plugin": "^1.9.0",
+    "@typescript-eslint/parser": "^1.9.0",
     "coveralls": "^3.0.2",
     "eslint": "^5.16.0",
     "eslint-config-prettier": "^4.3.0",
@@ -23,7 +23,7 @@
     "lerna": "^3.13.1",
     "prettier": "^1.17.1",
     "ts-jest": "^23.10.4",
-    "typescript": "^3.3.3333"
+    "typescript": "^3.4.5"
   },
   "workspaces": [
     "packages/*"
