@@ -18,6 +18,7 @@ interface DocText {
   tag: "text";
   content: string;
   next: Doc;
+  source?: unknown;
 }
 interface DocLine {
   tag: "line";
@@ -52,14 +53,14 @@ export const nil: Doc = { tag: "nil" };
 //
 
 /** A document consisting of a literal string. */
-export function text(content: string): Doc {
+export function text(content: string, source?: unknown): Doc {
   if (content.includes("\n")) {
     throw new Error(`Newline is not allowed in a call to 'text'`);
   }
   if (content.length === 0) {
     return nil;
   } else {
-    return { tag: "text", content, next: nil };
+    return { tag: "text", content, source, next: nil };
   }
 }
 
@@ -130,6 +131,7 @@ function concat2(x: Doc, y: Doc): Doc {
       return {
         tag: "text",
         content: x.content,
+        source: x.source,
         next: concat2(x.next, y)
       };
     case "line":
@@ -173,6 +175,7 @@ function flatten(doc: Doc): Doc {
       return {
         tag: "text",
         content: doc.content,
+        source: doc.source,
         next: flatten(doc.next)
       };
     case "line":
@@ -217,6 +220,7 @@ export function group(doc: Doc, width?: number): Doc {
       return {
         tag: "text",
         content: doc.content,
+        source: doc.source,
         next: group(doc.next, width)
       };
     case "line":
@@ -308,6 +312,7 @@ function best(doc: Doc, w: number, k: number): Doc {
       return {
         tag: "text",
         content: doc.content,
+        source: doc.source,
         next: best(doc.next, w, k + doc.content.length)
       };
     case "line":
@@ -350,36 +355,84 @@ function repeatChar(ch: string, n: number): string {
     .join("");
 }
 
-function layout(doc: Doc, indentation: number, alignment: number): string {
+/** Encoders assist the transformation of a Doc into a value.
+ *
+ * @description This allows for instance to add syntax highlight to
+ * the pretty printed code or generate React components instead of
+ * text.
+ *
+ * For an example, look at `StringEncoder`.
+ */
+export interface Encoder<A> {
+  fromString(text: string, source?: unknown): A;
+  concat(...args: A[]): A;
+}
+
+export const StringEncoder: Encoder<string> = {
+  fromString(x: string) {
+    return x;
+  },
+  concat(...args: string[]): string {
+    return args.join("");
+  }
+};
+
+/** Like `.join(sep)` but it works for an arbitrary encoder. */
+export function encodeMany<A>(encoder: Encoder<A>, args: A[], separator: A): A {
+  if (args.length === 0) {
+    return encoder.fromString("");
+  } else if (args.length === 1) {
+    return args[0];
+  } else {
+    const [first, ...rest] = args;
+    return rest.reduce((a, b) => encoder.concat(a, separator, b), first);
+  }
+}
+
+/* Print the best layout of a Doc using an encoder. */
+function layout<A>(
+  doc: Doc,
+  indentation: number,
+  alignment: number,
+  encoder: Encoder<A>
+): A {
   switch (doc.tag) {
     case "nil":
-      return "";
+      return encoder.fromString("");
     case "text":
-      return (
-        doc.content +
-        layout(doc.next, indentation, alignment + doc.content.length)
+      return encoder.concat(
+        encoder.fromString(doc.content, doc.source),
+        layout(doc.next, indentation, alignment + doc.content.length, encoder)
       );
     case "line":
-      return (
-        "\n" + repeatChar(" ", indentation) + layout(doc.next, indentation, 0)
+      return encoder.concat(
+        encoder.fromString("\n"),
+        encoder.fromString(repeatChar(" ", indentation)),
+        layout(doc.next, indentation, 0, encoder)
       );
     case "union":
       throw new InvariantViolation(`No layout for unions!`);
     case "align":
-      return (
-        [
-          layout(doc.root, indentation + alignment, 0),
-          ...doc.docs.map(
-            d =>
-              repeatChar(" ", indentation + alignment) +
-              layout(d, indentation + alignment, 0)
-          )
-        ].join("\n") + layout(doc.next, indentation, alignment)
+      return encoder.concat(
+        encodeMany(
+          encoder,
+          [
+            layout(doc.root, indentation + alignment, 0, encoder),
+            ...doc.docs.map(d =>
+              encoder.concat(
+                encoder.fromString(repeatChar(" ", indentation + alignment)),
+                layout(d, indentation + alignment, 0, encoder)
+              )
+            )
+          ],
+          encoder.fromString("\n")
+        ),
+        layout(doc.next, indentation, alignment, encoder)
       );
     case "indent":
-      return (
-        layout(doc.doc, indentation + doc.level, alignment) +
-        layout(doc.next, indentation, alignment)
+      return encoder.concat(
+        layout(doc.doc, indentation + doc.level, alignment, encoder),
+        layout(doc.next, indentation, alignment, encoder)
       );
   }
 }
@@ -387,8 +440,17 @@ function layout(doc: Doc, indentation: number, alignment: number): string {
 /** Pretty print a document
  * @param doc The document to pretty print
  * @param w The width of the line we want to adjust it to
+ * @param encoder A encoder to compose the output type
+ */
+export function prettyAs<A>(doc: Doc, w: number, encoder: Encoder<A>): A {
+  const d = best(doc, w, 0);
+  return layout(d, 0, 0, encoder);
+}
+
+/** Pretty print a document
+ * @param doc The document to pretty print
+ * @param w The width of the line we want to adjust it to
  */
 export function pretty(doc: Doc, w: number): string {
-  const d = best(doc, w, 0);
-  return layout(d, 0, 0);
+  return prettyAs(doc, w, StringEncoder);
 }

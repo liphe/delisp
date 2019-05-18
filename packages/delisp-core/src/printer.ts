@@ -9,9 +9,12 @@ import {
   indent as indent_,
   join,
   line,
-  pretty,
+  prettyAs,
   space,
-  text
+  text,
+  Encoder,
+  encodeMany,
+  StringEncoder
 } from "./prettier";
 import { isExpression, Expression, Module, Syntax } from "./syntax";
 import { foldExpr } from "./syntax-utils";
@@ -27,8 +30,8 @@ function printString(str: string): Doc {
   return text(`"${escaped}"`);
 }
 
-function printIdentifier(name: string): Doc {
-  return text(name);
+function printIdentifier(name: string, source?: Syntax): Doc {
+  return text(name, source);
 }
 
 function list(...docs: Doc[]): Doc {
@@ -76,7 +79,7 @@ function printExpr(expr: Expression): Doc {
         );
       }
       case "variable-reference":
-        return printIdentifier(e.node.name);
+        return printIdentifier(e.node.name, { ...e, node: e.node });
 
       case "conditional":
         return group(
@@ -94,12 +97,19 @@ function printExpr(expr: Expression): Doc {
         );
 
       case "function":
-        const argNames = e.node.lambdaList.positionalArgs.map(x => x.name);
         const singleBody = e.node.body.length === 1;
         const doc = list(
           text("lambda"),
           space,
-          group(list(align(...argNames.map(printIdentifier)))),
+          group(
+            list(
+              align(
+                ...e.node.lambdaList.positionalArgs.map(x =>
+                  printIdentifier(x.name)
+                )
+              )
+            )
+          ),
           indent(lines(...e.node.body))
         );
         return singleBody ? group(doc) : doc;
@@ -179,13 +189,22 @@ function print(form: Syntax): Doc {
   }
 }
 
-export function pprint(form: Syntax, lineWidth: number): string {
-  return pretty(print(form), lineWidth);
+export function pprintAs<A>(
+  form: Syntax,
+  lineWidth: number,
+  encoder: Encoder<A>
+): A {
+  return prettyAs(print(form), lineWidth, encoder);
 }
 
-export function pprintModule(m: Module, lineWidth: number): string {
-  return m.body
-    .map((s, i) => {
+export function pprintModuleAs<A>(
+  m: Module,
+  lineWidth: number,
+  encoder: Encoder<A>
+): A {
+  return encodeMany(
+    encoder,
+    m.body.map((s, i) => {
       let newlines;
       if (i > 0) {
         const end = m.body[i - 1].location.end;
@@ -195,8 +214,17 @@ export function pprintModule(m: Module, lineWidth: number): string {
       } else {
         newlines = 0;
       }
-      const nl = newlines > 1 ? "\n" : "";
-      return nl + pprint(s, lineWidth);
-    })
-    .join("\n");
+      const nl = encoder.fromString(newlines > 1 ? "\n" : "");
+      return encoder.concat(nl, pprintAs(s, lineWidth, encoder));
+    }),
+    encoder.fromString("\n")
+  );
+}
+
+export function pprint(form: Syntax, lineWidth: number): string {
+  return prettyAs(print(form), lineWidth, StringEncoder);
+}
+
+export function pprintModule(m: Module, lineWidth: number): string {
+  return pprintModuleAs(m, lineWidth, StringEncoder);
 }

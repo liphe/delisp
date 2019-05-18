@@ -19,8 +19,6 @@ export {
   isExport,
   isTypeAlias
 } from "./syntax";
-export { pprintModule } from "./printer";
-
 export { default as primitives } from "./primitives";
 
 export { printHighlightedExpr } from "./error-report";
@@ -40,3 +38,6 @@ export {
 } from "./module";
 
 export { generateTSModuleDeclaration } from "./typescript-generation";
+
+export { Encoder } from "./prettier";
+export { pprintAs, pprint, pprintModuleAs, pprintModule } from "./printer";
