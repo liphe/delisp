@@ -19,6 +19,7 @@ interface DocText {
   content: string;
   next: Doc;
   source?: unknown;
+  kind: string;
 }
 interface DocLine {
   tag: "line";
@@ -53,14 +54,14 @@ export const nil: Doc = { tag: "nil" };
 //
 
 /** A document consisting of a literal string. */
-export function text(content: string, source?: unknown): Doc {
+export function text(content: string, kind: string, source?: unknown): Doc {
   if (content.includes("\n")) {
     throw new Error(`Newline is not allowed in a call to 'text'`);
   }
   if (content.length === 0) {
     return nil;
   } else {
-    return { tag: "text", content, source, next: nil };
+    return { tag: "text", content, source, kind, next: nil };
   }
 }
 
@@ -132,6 +133,7 @@ function concat2(x: Doc, y: Doc): Doc {
         tag: "text",
         content: x.content,
         source: x.source,
+        kind: x.kind,
         next: concat2(x.next, y)
       };
     case "line":
@@ -176,12 +178,14 @@ function flatten(doc: Doc): Doc {
         tag: "text",
         content: doc.content,
         source: doc.source,
+        kind: doc.kind,
         next: flatten(doc.next)
       };
     case "line":
       return {
         tag: "text",
         content: " ",
+        kind: "space",
         next: flatten(doc.next)
       };
     case "union":
@@ -221,6 +225,7 @@ export function group(doc: Doc, width?: number): Doc {
         tag: "text",
         content: doc.content,
         source: doc.source,
+        kind: doc.kind,
         next: group(doc.next, width)
       };
     case "line":
@@ -251,7 +256,7 @@ export function group(doc: Doc, width?: number): Doc {
 //
 
 /** A space. */
-export const space = text(" ");
+export const space = text(" ", "space");
 
 /** Concatenate a sequence of documents with a separator.
  * @description
@@ -313,6 +318,7 @@ function best(doc: Doc, w: number, k: number): Doc {
         tag: "text",
         content: doc.content,
         source: doc.source,
+        kind: doc.kind,
         next: best(doc.next, w, k + doc.content.length)
       };
     case "line":
@@ -364,7 +370,7 @@ function repeatChar(ch: string, n: number): string {
  * For an example, look at `StringEncoder`.
  */
 export interface Encoder<A> {
-  fromString(text: string, source?: unknown): A;
+  fromString(text: string, kind: string, source?: unknown): A;
   concat(...args: A[]): A;
 }
 
@@ -380,7 +386,7 @@ export const StringEncoder: Encoder<string> = {
 /** Like `.join(sep)` but it works for an arbitrary encoder. */
 export function encodeMany<A>(encoder: Encoder<A>, args: A[], separator: A): A {
   if (args.length === 0) {
-    return encoder.fromString("");
+    return encoder.fromString("", "");
   } else if (args.length === 1) {
     return args[0];
   } else {
@@ -398,16 +404,16 @@ function layout<A>(
 ): A {
   switch (doc.tag) {
     case "nil":
-      return encoder.fromString("");
+      return encoder.fromString("", "");
     case "text":
       return encoder.concat(
-        encoder.fromString(doc.content, doc.source),
+        encoder.fromString(doc.content, doc.kind, doc.source),
         layout(doc.next, indentation, alignment + doc.content.length, encoder)
       );
     case "line":
       return encoder.concat(
-        encoder.fromString("\n"),
-        encoder.fromString(repeatChar(" ", indentation)),
+        encoder.fromString("\n", "space"),
+        encoder.fromString(repeatChar(" ", indentation), "indentation"),
         layout(doc.next, indentation, 0, encoder)
       );
     case "union":
@@ -420,12 +426,15 @@ function layout<A>(
             layout(doc.root, indentation + alignment, 0, encoder),
             ...doc.docs.map(d =>
               encoder.concat(
-                encoder.fromString(repeatChar(" ", indentation + alignment)),
+                encoder.fromString(
+                  repeatChar(" ", indentation + alignment),
+                  "space"
+                ),
                 layout(d, indentation + alignment, 0, encoder)
               )
             )
           ],
-          encoder.fromString("\n")
+          encoder.fromString("\n", "space")
         ),
         layout(doc.next, indentation, alignment, encoder)
       );
