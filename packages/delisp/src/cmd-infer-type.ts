@@ -29,7 +29,9 @@ export const cmdInferType: CommandModule = {
   command: "infer-type <file>",
   builder: yargs => {
     return yargs
-      .number("cursor-offset")
+      .option("cursor-offset", {
+        type: "number"
+      })
       .demand(
         "cursor-offset",
         "You must specify the cursor offset to identiy which expression you want to infer."
@@ -37,7 +39,7 @@ export const cmdInferType: CommandModule = {
   },
   handler: wrap(async args => {
     const file = args.file as string;
-    const cursorOffset = args.cursorOffset as number;
+    const cursorOffset = args["cursor-offset"] as number;
 
     const content = await fs.readFile(file, "utf8");
 
