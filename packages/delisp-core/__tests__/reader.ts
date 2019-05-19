@@ -302,6 +302,8 @@ describe("Reader", () => {
     expect(readAll("(1 2 3)4 5)")).toBe(false);
     expect(readAll("((1 2 3)")).toBe(true);
     expect(readAll("(1 2 3))")).toBe(false);
+
+    expect(readAll("@{abc")).toBe(true);
   });
 
   describe("@-syntax", () => {
