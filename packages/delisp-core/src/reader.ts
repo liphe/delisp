@@ -215,12 +215,17 @@ const atExprBodyConstitutent: Parser<ASExpr> = lazy(() => {
         }
         return Parser.of(x);
       })
-    ).map(
-      (chars, location): ASExpr => ({
-        tag: "string",
-        value: chars.join(""),
-        location
-      })
+    ).chain(
+      (chars, location): Parser<ASExpr> => {
+        if (chars.length === 0) {
+          return Parser.fail(`empty body`);
+        }
+        return Parser.of({
+          tag: "string",
+          value: chars.join(""),
+          location
+        });
+      }
     )
   );
 });
