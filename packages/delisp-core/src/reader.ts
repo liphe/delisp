@@ -233,7 +233,23 @@ const atExprBody: Parser<ASExpr[]> = delimitedMany(
 
 const atExpr = lazy(() => {
   return character("@").chain((_, location) => {
-    return sexpr.chain(headValue => {
+    // @{...}
+    const simpleForm = atExprBody.map(
+      (bodyValue): ASExpr => ({
+        tag: "list",
+        elements: [
+          {
+            tag: "symbol",
+            name: "comment",
+            location
+          },
+          ...bodyValue
+        ],
+        location
+      })
+    );
+
+    const fullForm = sexpr.chain(headValue => {
       return atExprBody.map(
         (bodyValue): ASExpr => ({
           tag: "list",
@@ -242,6 +258,8 @@ const atExpr = lazy(() => {
         })
       );
     });
+
+    return alternatives(simpleForm, fullForm);
   });
 });
 

@@ -305,6 +305,9 @@ describe("Reader", () => {
   });
 
   describe("@-syntax", () => {
+    expect(removeLocation(readFromString("@{hello world}"))).toEqual(
+      removeLocation(readFromString(`(comment "hello world")`))
+    );
     expect(removeLocation(readFromString("@comment{hello world}"))).toEqual(
       removeLocation(readFromString(`(comment "hello world")`))
     );

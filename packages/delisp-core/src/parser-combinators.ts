@@ -104,8 +104,8 @@ export class Parser<A> {
     return this.chain(x => p.map(_ => x));
   }
 
-  or(alternative: Parser<A>) {
-    return new Parser((input: Input) => {
+  or<B>(alternative: Parser<B>) {
+    return new Parser<A | B>((input: Input) => {
       // Try the current parser
       const result = this.run(input);
       if (result.status === "success") {
