@@ -146,6 +146,116 @@ Object {
 }
 `;
 
+exports[`convertType Variants should detect incorrect variants 1`] = `
+"
+file:1:3: Missing row
+(or)
+--^"
+`;
+
+exports[`convertType Variants should detect incorrect variants 2`] = `
+"
+file:1:5: The variants object should look like an record
+(or a)
+----^"
+`;
+
+exports[`convertType Variants should detect incorrect variants 3`] = `
+"
+file:1:8: Too many arguments for a variant type
+(or {} {})
+-------^"
+`;
+
+exports[`convertType Variants should read basic variant 1`] = `
+Object {
+  "node": Object {
+    "args": Array [
+      Object {
+        "node": Object {
+          "extends": Object {
+            "node": Object {
+              "extends": Object {
+                "node": Object {
+                  "tag": "empty-row",
+                },
+              },
+              "label": ":machine",
+              "labelType": Object {
+                "node": Object {
+                  "name": "number",
+                  "tag": "constant",
+                },
+              },
+              "tag": "row-extension",
+            },
+          },
+          "label": ":person",
+          "labelType": Object {
+            "node": Object {
+              "name": "string",
+              "tag": "constant",
+            },
+          },
+          "tag": "row-extension",
+        },
+      },
+    ],
+    "op": Object {
+      "node": Object {
+        "name": "or",
+        "tag": "constant",
+      },
+    },
+    "tag": "application",
+  },
+}
+`;
+
+exports[`convertType Variants should read empty variant 1`] = `
+Object {
+  "node": Object {
+    "args": Array [
+      Object {
+        "node": Object {
+          "tag": "empty-row",
+        },
+      },
+    ],
+    "op": Object {
+      "node": Object {
+        "name": "or",
+        "tag": "constant",
+      },
+    },
+    "tag": "application",
+  },
+}
+`;
+
+exports[`convertType Variants should read fully polymorphic variant 1`] = `
+Object {
+  "node": Object {
+    "args": Array [
+      Object {
+        "node": Object {
+          "name": "a",
+          "tag": "type-variable",
+          "userSpecified": false,
+        },
+      },
+    ],
+    "op": Object {
+      "node": Object {
+        "name": "or",
+        "tag": "constant",
+      },
+    },
+    "tag": "application",
+  },
+}
+`;
+
 exports[`convertType should detect incorrect types 1`] = `
 "
 file:1:1: Not a valid type
