@@ -89,6 +89,16 @@ interface SDoBlockF<E> {
   returning: E;
 }
 
+interface SMatchF<E> {
+  tag: "match";
+  value: E;
+  cases: Array<{
+    label: string;
+    variable: Identifier;
+    value: E;
+  }>;
+}
+
 interface SUnknownF<_E> {
   tag: "unknown";
 }
@@ -105,6 +115,7 @@ type AnyExpressionF<I = {}, E = Expression<I>> =
   | SRecordF<E>
   | STypeAnnotationF<E>
   | SDoBlockF<E>
+  | SMatchF<E>
   | SUnknownF<E>;
 
 interface Node<I, E> {
@@ -137,6 +148,8 @@ export interface SVectorConstructor<I = {}>
   extends Node<I, SVectorConstructorF<Expression<I>>> {}
 
 export interface SDoBlock<I = {}> extends Node<I, SDoBlockF<Expression<I>>> {}
+
+export interface SMatch<I = {}> extends Node<I, SMatchF<Expression<I>>> {}
 
 export interface SUnknown<I = {}> extends Node<I, SUnknownF<Expression<I>>> {}
 

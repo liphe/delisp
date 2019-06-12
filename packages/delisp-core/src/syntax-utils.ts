@@ -93,6 +93,19 @@ export function mapExpr<I, A, B>(
           returning: fn(expr.node.returning)
         }
       };
+    case "match":
+      return {
+        ...expr,
+        node: {
+          ...expr.node,
+          value: fn(expr.node.value),
+          cases: expr.node.cases.map(c => ({
+            label: c.label,
+            variable: c.variable,
+            value: fn(c.value)
+          }))
+        }
+      };
   }
 }
 
@@ -119,6 +132,8 @@ export function exprFChildren<I, E>(e: ExpressionF<I, E>): E[] {
       return [e.node.value];
     case "do-block":
       return [...e.node.body, e.node.returning];
+    case "match":
+      return [e.node.value, ...e.node.cases.map(c => c.value)];
   }
 }
 
