@@ -63,6 +63,20 @@ function printApplicationType(type: TApplication): string {
         : " | " + _printType(row.extends);
 
     return `(effect${fields}${extending})`;
+  } else if (
+    type.node.op.node.tag === "constant" &&
+    type.node.op.node.name === "or"
+  ) {
+    const arg = type.node.args[0];
+    const row = normalizeRow(arg);
+    const fields = row.fields
+      .map(f => `${f.label} ${_printType(f.labelType)}`)
+      .join(" ");
+    const extension =
+      row.extends.node.tag !== "empty-row"
+        ? ` | ${_printType(row.extends)}`
+        : "";
+    return `(or {${fields}${extension}})`;
   } else {
     return (
       "(" + [type.node.op, ...type.node.args].map(_printType).join(" ") + ")"
