@@ -12,6 +12,7 @@ import {
   SFunctionCall,
   SVariableReference,
   SLet,
+  SMatch,
   SRecord,
   SVectorConstructor,
   Syntax,
@@ -337,6 +338,23 @@ function compileDoBlock(expr: SDoBlock, env: Environment): JS.Expression {
   };
 }
 
+function compileMatch(expr: SMatch, env: Environment): JS.Expression {
+  return {
+    type: "CallExpression",
+    callee: {
+      type: "FunctionExpression",
+      params: expr.node.bindings.map(
+        (b): JS.Pattern => ({
+          type: "Identifier",
+          name: lookupBindingOrError(b.variable.name, newenv).jsname
+        })
+      ),
+      body: compileBody(expr.node.body, newenv)
+    },
+    arguments: expr.node.bindings.map(b => compile(b.value, env))
+  };
+}
+
 function compileUnknown(_expr: SUnknown, env: Environment): JS.Expression {
   const unknownFn = compilePrimitive("unknown", env);
   const message = literal("Reached code that did not compile properly.");
@@ -376,6 +394,8 @@ export function compile(expr: Expression, env: Environment): JS.Expression {
       return compile(expr.node.value, env);
     case "do-block":
       return compileDoBlock({ ...expr, node: expr.node }, env);
+    case "match":
+      return compileMatch({ ...expr, node: expr.node }, env);
   }
 }
 
