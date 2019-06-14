@@ -438,6 +438,12 @@ function compileRuntime(env: Environment): JS.Statement | JS.ModuleDeclaration {
   return env.moduleFormat.importRuntime("env");
 }
 
+function compileRuntimeUtils(
+  env: Environment
+): JS.Statement | JS.ModuleDeclaration {
+  return env.moduleFormat.importRuntimeUtils(["matchTag", "tag"]);
+}
+
 function compileExports(
   exps: SExport[],
   env: Environment
@@ -506,7 +512,9 @@ function compileModule(
     type: "Program",
     sourceType: "module",
     body: [
-      ...(includeRuntime ? [compileRuntime(env)] : []),
+      ...(includeRuntime
+        ? [compileRuntime(env), compileRuntimeUtils(env)]
+        : []),
       ...maybeMap((syntax: Syntax) => compileTopLevel(syntax, env), m.body),
       ...compileExports(m.body.filter(isExport), env)
     ]
