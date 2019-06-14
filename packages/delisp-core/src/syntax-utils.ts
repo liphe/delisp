@@ -1,4 +1,5 @@
 import { assertNever, InvariantViolation } from "./invariant";
+import { flatten } from "./utils";
 import {
   isExpression,
   ExpressionF,
@@ -102,7 +103,7 @@ export function mapExpr<I, A, B>(
           cases: expr.node.cases.map(c => ({
             label: c.label,
             variable: c.variable,
-            value: fn(c.value)
+            body: c.body.map(fn)
           }))
         }
       };
@@ -133,7 +134,7 @@ export function exprFChildren<I, E>(e: ExpressionF<I, E>): E[] {
     case "do-block":
       return [...e.node.body, e.node.returning];
     case "match":
-      return [e.node.value, ...e.node.cases.map(c => c.value)];
+      return [e.node.value, ...flatten(e.node.cases.map(c => c.body))];
   }
 }
 

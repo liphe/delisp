@@ -92,7 +92,7 @@ interface SDoBlockF<E> {
 export interface SMatchCaseF<E> {
   label: string;
   variable: Identifier;
-  value: E;
+  body: E[];
 }
 
 interface SMatchF<E> {

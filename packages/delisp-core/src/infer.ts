@@ -507,7 +507,11 @@ function infer(
       const cases = expr.node.cases.map(c => {
         return {
           ...c,
-          infer: infer(c.value, [...monovars, c.variable.name], internalTypes)
+          infer: inferMany(
+            c.body,
+            [...monovars, c.variable.name],
+            internalTypes
+          )
         };
       });
 
@@ -528,7 +532,7 @@ function infer(
             cases: cases.map(c => ({
               label: c.label,
               variable: c.variable,
-              value: c.infer.result
+              body: c.infer.result
             }))
           },
           info: {
@@ -546,9 +550,15 @@ function infer(
           constEqual(value.result, tVariant(variantTypes)),
 
           ...flatMap(c => {
+            const returningForm = last(c.infer.result);
+
+            if (returningForm === undefined) {
+              throw new InvariantViolation(`Missing returning form!`);
+            }
+
             return [
               // Each case must return a value of the same type
-              constEqual(c.infer.result, t),
+              constEqual(returningForm, t),
 
               // The pattern variable of each case must be the same
               // type as the variant we are handling.

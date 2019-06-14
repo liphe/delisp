@@ -153,7 +153,36 @@ function printExpr(expr: Expression): Doc {
         );
 
       case "match":
-        throw new Error(`not supported`);
+        return list(
+          concat(
+            text("match", "keyword", source),
+            space,
+            e.node.value,
+            indent(
+              concat(
+                line,
+                join(
+                  e.node.cases.map(c => {
+                    return group(
+                      concat(
+                        list(
+                          map(
+                            text(c.label, "keyword"),
+                            space,
+                            printIdentifier(c.variable.name)
+                          ),
+                          line,
+                          join(c.body, line)
+                        )
+                      )
+                    );
+                  }),
+                  line
+                )
+              )
+            )
+          )
+        );
     }
   });
 }

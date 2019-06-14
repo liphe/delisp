@@ -346,7 +346,7 @@ defineConversion("match", (_match, args, whole) => {
       return null;
     }
 
-    const [pattern, value] = c.elements;
+    const [pattern, ...bodyForms] = c.elements;
 
     if (pattern.tag !== "map") {
       errors.push(`The pattern must be a map`);
@@ -381,7 +381,7 @@ defineConversion("match", (_match, args, whole) => {
     return {
       label: record.fields[0].label.name,
       variable: parseIdentifier(variableSymbol),
-      value: convertExpr(value)
+      body: parseBody(c, bodyForms)
     };
   }, caseForms);
 

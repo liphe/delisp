@@ -356,8 +356,8 @@ function compileMatch(expr: SMatch, env: Environment): JS.Expression {
           shorthand: false,
           computed: false,
           key: {
-            type: "Identifier",
-            name: identifierToJS(c.label)
+            type: "Literal",
+            value: c.label
           },
           value: {
             type: "ArrowFunctionExpression",
