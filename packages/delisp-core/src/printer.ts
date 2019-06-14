@@ -151,6 +151,9 @@ function printExpr(expr: Expression): Doc {
             indent(concat(line, join([...e.node.body, e.node.returning], line)))
           )
         );
+
+      case "match":
+        throw new Error(`not supported`);
     }
   });
 }

@@ -89,14 +89,16 @@ interface SDoBlockF<E> {
   returning: E;
 }
 
+export interface SMatchCaseF<E> {
+  label: string;
+  variable: Identifier;
+  value: E;
+}
+
 interface SMatchF<E> {
   tag: "match";
   value: E;
-  cases: Array<{
-    label: string;
-    variable: Identifier;
-    value: E;
-  }>;
+  cases: Array<SMatchCaseF<E>>;
 }
 
 interface SUnknownF<_E> {

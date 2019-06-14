@@ -15,16 +15,17 @@ import {
   Expression,
   SLetBindingF,
   LambdaList,
-  Syntax
+  Syntax,
+  SMatchCaseF
 } from "./syntax";
 import { foldExpr, exprFChildren } from "./syntax-utils";
-import { flatten, last } from "./utils";
+import { maybeMap, flatten, last } from "./utils";
 
 import {
   checkUserDefinedTypeName,
   convert as convertType
 } from "./convert-type";
-import { ConvertError, parseRecord } from "./convert-utils";
+import { ConvertError, parseRecord, ParseRecordResult } from "./convert-utils";
 import { listTypeVariables } from "./type-utils";
 
 export interface WithErrors {
@@ -323,6 +324,76 @@ defineConversion("do", (do_, args, whole) => {
     body: middleForms.map(convertExpr),
     returning: convertExpr(lastForm)
   });
+});
+
+defineConversion("match", (_match, args, whole) => {
+  let errors: string[] = [];
+
+  const [valueForm, ...caseForms] = args;
+
+  const value = valueForm
+    ? convertExpr(valueForm)
+    : missingFrom(whole, [`missing match value`]);
+
+  const cases = maybeMap<ASExpr, SMatchCaseF<Expression<WithErrors>>>(c => {
+    if (c.tag !== "list") {
+      errors.push("invalid pattern");
+      return null;
+    }
+
+    if (c.elements.length !== 2) {
+      errors.push(`ill-formatted case`);
+      return null;
+    }
+
+    const [pattern, value] = c.elements;
+
+    if (pattern.tag !== "map") {
+      errors.push(`The pattern must be a map`);
+      return null;
+    }
+
+    let record: ParseRecordResult;
+
+    try {
+      record = parseRecord(pattern);
+    } catch (err) {
+      errors.push(`ill-formatted pattern`);
+      return null;
+    }
+
+    if (record.tail !== undefined) {
+      errors.push(`The pattern must be a map`);
+      return null;
+    }
+
+    if (record.fields.length !== 1) {
+      errors.push(`Expected a single fieldn`);
+      return null;
+    }
+
+    const variableSymbol = record.fields[0].value;
+    if (variableSymbol.tag !== "symbol") {
+      errors.push(`Expected a variable`);
+      return null;
+    }
+
+    return {
+      label: record.fields[0].label.name,
+      variable: parseIdentifier(variableSymbol),
+      value: convertExpr(value)
+    };
+  }, caseForms);
+
+  return result(
+    {
+      tag: "match",
+      value,
+      cases
+    },
+    whole.location,
+    errors
+  );
 });
 
 defineToplevel("define", (define_, args, whole) => {
