@@ -548,6 +548,7 @@ function infer(
           // Value must produce a value of type with all the variants
           // that `match` is handling.
           constEqual(value.result, tVariant(variantTypes)),
+          constEffect(value.result, effect),
 
           ...flatMap(c => {
             const returningForm = last(c.infer.result);
@@ -559,6 +560,8 @@ function infer(
             return [
               // Each case must return a value of the same type
               constEqual(returningForm, t),
+
+              ...c.infer.result.map(f => constEffect(f, effect)),
 
               // The pattern variable of each case must be the same
               // type as the variant we are handling.
