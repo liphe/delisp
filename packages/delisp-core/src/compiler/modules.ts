@@ -45,9 +45,14 @@ export const cjs: ModuleBackend = {
           type: "VariableDeclarator",
           id: { type: "Identifier", name: localName },
           init: {
-            type: "CallExpression",
-            callee: { type: "Identifier", name: "require" },
-            arguments: [{ type: "Literal", value: "@delisp/runtime" }]
+            type: "MemberExpression",
+            object: {
+              type: "CallExpression",
+              callee: { type: "Identifier", name: "require" },
+              arguments: [{ type: "Literal", value: "@delisp/runtime" }]
+            },
+            computed: false,
+            property: { type: "Identifier", name: "default" }
           }
         }
       ]
