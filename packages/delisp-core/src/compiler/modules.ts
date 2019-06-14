@@ -1,4 +1,5 @@
 import * as JS from "estree";
+import { member } from "./estree-utils";
 
 export interface ModuleBackend {
   export(vars: string[]): JS.Statement | JS.ModuleDeclaration;
@@ -44,16 +45,14 @@ export const cjs: ModuleBackend = {
         {
           type: "VariableDeclarator",
           id: { type: "Identifier", name: localName },
-          init: {
-            type: "MemberExpression",
-            object: {
+          init: member(
+            {
               type: "CallExpression",
               callee: { type: "Identifier", name: "require" },
               arguments: [{ type: "Literal", value: "@delisp/runtime" }]
             },
-            computed: false,
-            property: { type: "Identifier", name: "default" }
-          }
+            "default"
+          )
         }
       ]
     };
