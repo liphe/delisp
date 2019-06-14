@@ -342,16 +342,43 @@ function compileMatch(expr: SMatch, env: Environment): JS.Expression {
   return {
     type: "CallExpression",
     callee: {
-      type: "FunctionExpression",
-      params: expr.node.bindings.map(
-        (b): JS.Pattern => ({
-          type: "Identifier",
-          name: lookupBindingOrError(b.variable.name, newenv).jsname
-        })
-      ),
-      body: compileBody(expr.node.body, newenv)
+      type: "Identifier",
+      name: "matchTag"
     },
-    arguments: expr.node.bindings.map(b => compile(b.value, env))
+    arguments: [
+      compile(expr.node.value, env),
+      {
+        type: "ObjectExpression",
+        properties: expr.node.cases.map(c => ({
+          type: "Property",
+          kind: "init",
+          method: false,
+          shorthand: false,
+          computed: false,
+          key: {
+            type: "Identifier",
+            name: identifierToJS(c.label)
+          },
+          value: {
+            type: "ArrowFunctionExpression",
+            kind: "init",
+            id: null,
+            expression: false,
+            generator: false,
+            params: [
+              {
+                type: "Identifier",
+                name: identifierToJS(c.variable.name)
+              }
+            ],
+            body: (() => {
+              const newenv = addBinding(c.variable.name, env);
+              return compileBody(c.body, newenv);
+            })()
+          }
+        }))
+      }
+    ]
   };
 }
 
