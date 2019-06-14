@@ -9,7 +9,7 @@
 //   https://pdfs.semanticscholar.org/8983/233b3dff2c5b94efb31235f62bddc22dc899.pdf
 //
 
-import { assertNever } from "./invariant";
+import { InvariantViolation, assertNever } from "./invariant";
 
 import {
   Expression,
@@ -37,6 +37,7 @@ import {
   tNumber,
   tRecord,
   tEffect,
+  tVariant,
   tString,
   tVector,
   TypeSchema
@@ -497,6 +498,85 @@ function infer(
           constEffect(returning.result, effect)
         ],
         assumptions: [...body.assumptions, ...returning.assumptions]
+      };
+    }
+
+    case "match": {
+      const value = infer(expr.node.value, monovars, internalTypes);
+
+      const cases = expr.node.cases.map(c => {
+        return {
+          ...c,
+          infer: infer(c.value, [...monovars, c.variable.name], internalTypes)
+        };
+      });
+
+      const t = generateUniqueTVar();
+      const effect = generateUniqueTVar();
+
+      const variantTypes = expr.node.cases.map(c => ({
+        label: c.label,
+        type: generateUniqueTVar()
+      }));
+
+      return {
+        result: {
+          ...expr,
+          node: {
+            ...expr.node,
+            value: value.result,
+            cases: cases.map(c => ({
+              label: c.label,
+              variable: c.variable,
+              value: c.infer.result
+            }))
+          },
+          info: {
+            type: t,
+            effect
+          }
+        },
+
+        constraints: [
+          ...value.constraints,
+          ...flatMap(c => c.infer.constraints, cases),
+
+          // Value must produce a value of type with all the variants
+          // that `match` is handling.
+          constEqual(value.result, tVariant(variantTypes)),
+
+          ...flatMap(c => {
+            return [
+              // Each case must return a value of the same type
+              constEqual(c.infer.result, t),
+
+              // The pattern variable of each case must be the same
+              // type as the variant we are handling.
+              ...flatMap(a => {
+                if (a.node.name === c.variable.name) {
+                  const variant = variantTypes.find(v => v.label === c.label);
+                  if (!variant) {
+                    throw new InvariantViolation(
+                      `Unknown invariant case ${c.label}`
+                    );
+                  }
+                  return [constEqual(a, variant.type)];
+                } else {
+                  return [];
+                }
+              }, c.infer.assumptions)
+            ];
+          }, cases)
+        ],
+
+        assumptions: [
+          ...value.assumptions,
+          ...flatMap(
+            c =>
+              c.infer.assumptions.filter(a => a.node.name !== c.variable.name),
+            cases
+          )
+        ]
       };
     }
   }
