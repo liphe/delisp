@@ -341,11 +341,6 @@ defineConversion("match", (_match, args, whole) => {
       return null;
     }
 
-    if (c.elements.length !== 2) {
-      errors.push(`ill-formatted case`);
-      return null;
-    }
-
     const [pattern, ...bodyForms] = c.elements;
 
     if (pattern.tag !== "map") {
@@ -368,7 +363,7 @@ defineConversion("match", (_match, args, whole) => {
     }
 
     if (record.fields.length !== 1) {
-      errors.push(`Expected a single fieldn`);
+      errors.push(`Expected a single field`);
       return null;
     }
 
@@ -378,8 +373,10 @@ defineConversion("match", (_match, args, whole) => {
       return null;
     }
 
+    const label = record.fields[0].label.name;
+
     return {
-      label: record.fields[0].label.name,
+      label,
       variable: parseIdentifier(variableSymbol),
       body: parseBody(c, bodyForms)
     };

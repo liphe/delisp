@@ -171,8 +171,7 @@ function printExpr(expr: Expression): Doc {
                             space,
                             printIdentifier(c.variable.name)
                           ),
-                          line,
-                          join(c.body, line)
+                          indent(concat(line, join(c.body, line)))
                         )
                       )
                     );
