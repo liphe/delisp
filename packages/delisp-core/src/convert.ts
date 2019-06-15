@@ -393,6 +393,30 @@ defineConversion("match", (_match, args, whole) => {
   );
 });
 
+defineConversion("tag", (_tag, args, whole) => {
+  let [labelForm, valueForm] = args;
+
+  if (labelForm.tag !== "symbol" || !labelForm.name.startsWith(":")) {
+    throw new ConvertError(`Invalid tag!`);
+  }
+
+  const label = labelForm.name;
+
+  const value = valueForm
+    ? convertExpr(valueForm)
+    : missingFrom(whole, ["missing keyword"]);
+
+  return result(
+    {
+      tag: "tag",
+      label,
+      value
+    },
+    whole.location,
+    []
+  );
+});
+
 defineToplevel("define", (define_, args, whole) => {
   if (args.length !== 2) {
     const lastExpr = last([define_, ...args]) as ASExpr;
