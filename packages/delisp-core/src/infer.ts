@@ -597,7 +597,10 @@ function infer(
       const inferredValue = infer(expr.node.value, monovars, internalTypes);
 
       const labelType = generateUniqueTVar();
-      const t = tVariant([{ label: expr.node.label, type: labelType }]);
+      const t = tVariant(
+        [{ label: expr.node.label, type: labelType }],
+        generateUniqueTVar()
+      );
       const effect = generateUniqueTVar();
 
       return {
