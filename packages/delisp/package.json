@@ -17,6 +17,7 @@
   ],
   "dependencies": {
     "@delisp/core": "^0.2.0",
+    "@delisp/runtime": "^0.2.0",
     "@types/debug": "^4.1.4",
     "@types/mkdirp": "^0.5.2",
     "chalk": "^2.4.2",

@@ -11,9 +11,13 @@ export default Object.entries(primitives).reduce(
 // Variants
 //
 
-interface TaggedValue {
+export class TaggedValue {
   tag: string;
   value: unknown;
+  constructor(tag: string, value: unknown) {
+    this.tag = tag;
+    this.value = value;
+  }
 }
 
 export function matchTag(
@@ -25,5 +29,5 @@ export function matchTag(
 }
 
 export function tag(tag: string, value: unknown): TaggedValue {
-  return { tag, value };
+  return new TaggedValue(tag, value);
 }
