@@ -1,11 +1,3 @@
 (define >>>
   (lambda (f1 f2)
     (lambda (x) (f2 (f1 x)))))
-
-(define test
-  (lambda (x)
-    (match x
-      ({:person name}
-        (print name)
-        name)
-      ({:machine version} "noname"))))
