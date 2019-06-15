@@ -7,6 +7,24 @@ function readAndConvert(x: string) {
   return convert_(readFromString(x)).noWildcards();
 }
 
+function failedType(x: string) {
+  let result: Type | string;
+
+  try {
+    result = readAndConvert(x);
+  } catch (err) {
+    result = `\n${err.message}`;
+  }
+
+  if (typeof result === "string") {
+    return result;
+  } else {
+    throw new Error(
+      `The type is expected to fail, but returned ${printType(result, false)}`
+    );
+  }
+}
+
 describe("convertType", () => {
   it("should convert to numbers", () => {
     expect(readAndConvert("number")).toMatchObject(tNumber);
@@ -50,27 +68,6 @@ describe("convertType", () => {
   });
 
   it("should detect incorrect types", () => {
-    function failedType(x: string) {
-      let result: Type | string;
-
-      try {
-        result = readAndConvert(x);
-      } catch (err) {
-        result = `\n${err.message}`;
-      }
-
-      if (typeof result === "string") {
-        return result;
-      } else {
-        throw new Error(
-          `The type is expected to fail, but returned ${printType(
-            result,
-            false
-          )}`
-        );
-      }
-    }
-
     expect(failedType("1")).toMatchSnapshot();
     expect(failedType(`"hello"`)).toMatchSnapshot();
     expect(failedType("(1 2 3)")).toMatchSnapshot();
@@ -93,6 +90,26 @@ describe("convertType", () => {
 
     it("should convert open effect with multiple labels", () => {
       expect(readAndConvert("(effect console async | a)")).toMatchSnapshot();
+    });
+  });
+
+  describe("Variants", () => {
+    it("should read empty variant", () => {
+      expect(readAndConvert("(or {})")).toMatchSnapshot();
+    });
+    it("should read fully polymorphic variant", () => {
+      expect(readAndConvert("(or {| a})")).toMatchSnapshot();
+    });
+    it("should read basic variant", () => {
+      expect(
+        readAndConvert("(or {:person string :machine number})")
+      ).toMatchSnapshot();
+    });
+
+    it("should detect incorrect variants", () => {
+      expect(failedType(`(or)`)).toMatchSnapshot();
+      expect(failedType(`(or a)`)).toMatchSnapshot();
+      expect(failedType(`(or {} {})`)).toMatchSnapshot();
     });
   });
 });

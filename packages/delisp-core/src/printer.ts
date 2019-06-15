@@ -151,6 +151,47 @@ function printExpr(expr: Expression): Doc {
             indent(concat(line, join([...e.node.body, e.node.returning], line)))
           )
         );
+
+      case "match":
+        return list(
+          concat(
+            text("match", "keyword", source),
+            space,
+            e.node.value,
+            indent(
+              concat(
+                line,
+                join(
+                  e.node.cases.map(c => {
+                    return group(
+                      concat(
+                        list(
+                          map(
+                            text(c.label, "keyword"),
+                            space,
+                            printIdentifier(c.variable.name)
+                          ),
+                          indent(concat(line, join(c.body, line)))
+                        )
+                      )
+                    );
+                  }),
+                  line
+                )
+              )
+            )
+          )
+        );
+
+      case "tag":
+        return group(
+          list(
+            text("tag", "keyword", source),
+            space,
+            text(e.node.label, "label"),
+            indent(concat(line, e.node.value))
+          )
+        );
     }
   });
 }

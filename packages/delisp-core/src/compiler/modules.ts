@@ -4,6 +4,7 @@ import { member } from "./estree-utils";
 export interface ModuleBackend {
   export(vars: string[]): JS.Statement | JS.ModuleDeclaration;
   importRuntime(localName: string): JS.Statement | JS.ModuleDeclaration;
+  importRuntimeUtils(names: string[]): JS.Statement | JS.ModuleDeclaration;
 }
 
 export const cjs: ModuleBackend = {
@@ -56,6 +57,34 @@ export const cjs: ModuleBackend = {
         }
       ]
     };
+  },
+  importRuntimeUtils(names: string[]) {
+    return {
+      type: "VariableDeclaration",
+      kind: "const",
+      declarations: [
+        {
+          type: "VariableDeclarator",
+          id: {
+            type: "ObjectPattern",
+            properties: names.map(name => ({
+              type: "Property",
+              kind: "init",
+              key: { type: "Identifier", name },
+              value: { type: "Identifier", name },
+              computed: false,
+              method: false,
+              shorthand: true
+            }))
+          },
+          init: {
+            type: "CallExpression",
+            callee: { type: "Identifier", name: "require" },
+            arguments: [{ type: "Literal", value: "@delisp/runtime" }]
+          }
+        }
+      ]
+    };
   }
 };
 
@@ -84,6 +113,18 @@ export const esm: ModuleBackend = {
           local: { type: "Identifier", name: localName }
         }
       ],
+      source: { type: "Literal", value: "@delisp/runtime" }
+    };
+  },
+  importRuntimeUtils(names: string[]) {
+    return {
+      type: "ImportDeclaration",
+      importKind: "value",
+      specifiers: names.map(name => ({
+        type: "ImportSpecifier",
+        local: { type: "Identifier", name },
+        imported: { type: "Identifier", name }
+      })),
       source: { type: "Literal", value: "@delisp/runtime" }
     };
   }

@@ -85,6 +85,14 @@ exports[`Pretty Printer should align nested function calls 3`] = `
                ttt))"
 `;
 
+exports[`Pretty Printer should break long bodies in match expressions 1`] = `
+"
+(match value
+  ({:version number}
+    (+ 1234 1234 1234 1234 1234 123 1234 1234 1234 1234 1234 1234 number))
+  ({:unrelesed _} () number))"
+`;
+
 exports[`Pretty Printer should insert newlines 1`] = `
 "
 aaa
@@ -111,6 +119,13 @@ ccc
 ddd
 
 eee"
+`;
+
+exports[`Pretty Printer should pretty match expressions 1`] = `
+"
+(match value
+  ({:version number} number)
+  ({:unrelesed _} number))"
 `;
 
 exports[`Pretty Printer should pretty print a combination of lambda and function call 1`] = `
@@ -144,6 +159,17 @@ exports[`Pretty Printer should pretty print do blocks 1`] = `
 (do
   (print \\"hello\\")
   (print \\"bye bye!\\"))"
+`;
+
+exports[`Pretty Printer should pretty print tag forms 1`] = `
+"
+(tag :version 0)"
+`;
+
+exports[`Pretty Printer should pretty print tag forms with large expressions 1`] = `
+"
+(tag :version
+  this-is-a-extremely--long-and-annoying-variable-name-in-order-to-break-the-line)"
 `;
 
 exports[`Pretty Printer should pretty print type declarations 1`] = `

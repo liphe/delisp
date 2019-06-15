@@ -12,6 +12,8 @@ import {
   SFunctionCall,
   SVariableReference,
   SLet,
+  SMatch,
+  STag,
   SRecord,
   SVectorConstructor,
   Syntax,
@@ -337,6 +339,64 @@ function compileDoBlock(expr: SDoBlock, env: Environment): JS.Expression {
   };
 }
 
+function compileMatch(expr: SMatch, env: Environment): JS.Expression {
+  return {
+    type: "CallExpression",
+    callee: {
+      type: "Identifier",
+      name: "matchTag"
+    },
+    arguments: [
+      compile(expr.node.value, env),
+      {
+        type: "ObjectExpression",
+        properties: expr.node.cases.map(c => ({
+          type: "Property",
+          kind: "init",
+          method: false,
+          shorthand: false,
+          computed: false,
+          key: {
+            type: "Literal",
+            value: c.label
+          },
+          value: {
+            type: "ArrowFunctionExpression",
+            kind: "init",
+            id: null,
+            expression: false,
+            generator: false,
+            params: [
+              {
+                type: "Identifier",
+                name: identifierToJS(c.variable.name)
+              }
+            ],
+            body: (() => {
+              const newenv = addBinding(c.variable.name, env);
+              return compileBody(c.body, newenv);
+            })()
+          }
+        }))
+      }
+    ]
+  };
+}
+
+function compileTag(expr: STag, env: Environment): JS.Expression {
+  return {
+    type: "CallExpression",
+    callee: {
+      type: "Identifier",
+      name: "tag"
+    },
+    arguments: [
+      { type: "Literal", value: expr.node.label },
+      compile(expr.node.value, env)
+    ]
+  };
+}
+
 function compileUnknown(_expr: SUnknown, env: Environment): JS.Expression {
   const unknownFn = compilePrimitive("unknown", env);
   const message = literal("Reached code that did not compile properly.");
@@ -376,6 +436,10 @@ export function compile(expr: Expression, env: Environment): JS.Expression {
       return compile(expr.node.value, env);
     case "do-block":
       return compileDoBlock({ ...expr, node: expr.node }, env);
+    case "match":
+      return compileMatch({ ...expr, node: expr.node }, env);
+    case "tag":
+      return compileTag({ ...expr, node: expr.node }, env);
   }
 }
 
@@ -416,6 +480,12 @@ ${pprint(syntax, 60)}
 
 function compileRuntime(env: Environment): JS.Statement | JS.ModuleDeclaration {
   return env.moduleFormat.importRuntime("env");
+}
+
+function compileRuntimeUtils(
+  env: Environment
+): JS.Statement | JS.ModuleDeclaration {
+  return env.moduleFormat.importRuntimeUtils(["matchTag", "tag"]);
 }
 
 function compileExports(
@@ -486,7 +556,9 @@ function compileModule(
     type: "Program",
     sourceType: "module",
     body: [
-      ...(includeRuntime ? [compileRuntime(env)] : []),
+      ...(includeRuntime
+        ? [compileRuntime(env), compileRuntimeUtils(env)]
+        : []),
       ...maybeMap((syntax: Syntax) => compileTopLevel(syntax, env), m.body),
       ...compileExports(m.body.filter(isExport), env)
     ]

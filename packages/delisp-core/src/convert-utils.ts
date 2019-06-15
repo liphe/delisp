@@ -1,10 +1,18 @@
 import { printHighlightedExpr } from "./error-report";
-import { ASExprMap } from "./sexpr";
+import { ASExpr, ASExprSymbol, ASExprMap } from "./sexpr";
 import { duplicatedItemsBy, last } from "./utils";
 
 export class ConvertError extends Error {}
 
-export function parseRecord(expr: ASExprMap) {
+export interface ParseRecordResult {
+  fields: Array<{
+    label: ASExprSymbol;
+    value: ASExpr;
+  }>;
+  tail: ASExpr | undefined;
+}
+
+export function parseRecord(expr: ASExprMap): ParseRecordResult {
   //
   // Destructure a map into fields and tail
   function fieldsAndTail() {

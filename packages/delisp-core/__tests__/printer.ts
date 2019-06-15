@@ -236,4 +236,40 @@ eee
       pprintSource(`(do (print "hello") (print "bye bye!"))`)
     ).toMatchSnapshot();
   });
+
+  it("should pretty print tag forms", () => {
+    expect(pprintSource(`(tag :version 0)`)).toMatchSnapshot();
+  });
+
+  it("should pretty print tag forms with large expressions", () => {
+    expect(
+      pprintSource(
+        `(tag :version this-is-a-extremely--long-and-annoying-variable-name-in-order-to-break-the-line)`
+      )
+    ).toMatchSnapshot();
+  });
+
+  it("should pretty match expressions", () => {
+    expect(
+      pprintSource(
+        `
+(match value
+  ({:version number} number)
+  ({:unrelesed _} number)
+)`
+      )
+    ).toMatchSnapshot();
+  });
+
+  it("should break long bodies in match expressions", () => {
+    expect(
+      pprintSource(
+        `
+(match value
+  ({:version number} (+ 1234 1234 1234 1234 1234 123 1234 1234 1234 1234 1234 1234 number))
+  ({:unrelesed _} ()number)
+)`
+      )
+    ).toMatchSnapshot();
+  });
 });

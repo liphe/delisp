@@ -20,6 +20,7 @@ import {
   tBoolean,
   tNumber,
   tRecord,
+  tVariant,
   tEffect,
   tString,
   tUserDefined,
@@ -87,10 +88,45 @@ function convertEffect(effects: ASExpr[]): Type {
   }
 }
 
+function convertVariant(op: ASExpr, args: ASExpr[]): Type {
+  if (args.length === 0) {
+    throw new ConvertError(
+      printHighlightedExpr(`Missing row`, op.location, true)
+    );
+  }
+
+  if (args.length > 1) {
+    throw new ConvertError(
+      printHighlightedExpr(
+        `Too many arguments for a variant type`,
+        args[1].location
+      )
+    );
+  }
+
+  const variants = args[0];
+  if (variants.tag !== "map") {
+    throw new ConvertError(
+      printHighlightedExpr(
+        `The variants object should look like an record`,
+        args[0].location
+      )
+    );
+  }
+
+  const { fields, tail } = parseRecord(variants);
+  return tVariant(
+    fields.map(r => ({ label: r.label.name, type: convert_(r.value) })),
+    tail && convert_(tail)
+  );
+}
+
 function convertList(expr: ASExprList): Type {
   const [op, ...args] = expr.elements;
   if (op.tag === "symbol" && op.name === "effect") {
     return convertEffect(args);
+  } else if (op.tag === "symbol" && op.name === "or") {
+    return convertVariant(op, args);
   } else {
     const opType = convert_(op);
     return tApp(opType, ...args.map(convert_));
