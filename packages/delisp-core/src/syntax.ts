@@ -101,6 +101,12 @@ interface SMatchF<E> {
   cases: Array<SMatchCaseF<E>>;
 }
 
+interface STagF<E> {
+  tag: "tag";
+  label: string;
+  value: E;
+}
+
 interface SUnknownF<_E> {
   tag: "unknown";
 }
@@ -118,6 +124,7 @@ type AnyExpressionF<I = {}, E = Expression<I>> =
   | STypeAnnotationF<E>
   | SDoBlockF<E>
   | SMatchF<E>
+  | STagF<E>
   | SUnknownF<E>;
 
 interface Node<I, E> {
@@ -152,6 +159,8 @@ export interface SVectorConstructor<I = {}>
 export interface SDoBlock<I = {}> extends Node<I, SDoBlockF<Expression<I>>> {}
 
 export interface SMatch<I = {}> extends Node<I, SMatchF<Expression<I>>> {}
+
+export interface STag<I = {}> extends Node<I, STagF<Expression<I>>> {}
 
 export interface SUnknown<I = {}> extends Node<I, SUnknownF<Expression<I>>> {}
 

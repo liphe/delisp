@@ -13,6 +13,7 @@ import {
   SVariableReference,
   SLet,
   SMatch,
+  STag,
   SRecord,
   SVectorConstructor,
   Syntax,
@@ -382,6 +383,20 @@ function compileMatch(expr: SMatch, env: Environment): JS.Expression {
   };
 }
 
+function compileTag(expr: STag, env: Environment): JS.Expression {
+  return {
+    type: "CallExpression",
+    callee: {
+      type: "Identifier",
+      name: "tag"
+    },
+    arguments: [
+      { type: "Literal", value: expr.node.label },
+      compile(expr.node.value, env)
+    ]
+  };
+}
+
 function compileUnknown(_expr: SUnknown, env: Environment): JS.Expression {
   const unknownFn = compilePrimitive("unknown", env);
   const message = literal("Reached code that did not compile properly.");
@@ -423,6 +438,8 @@ export function compile(expr: Expression, env: Environment): JS.Expression {
       return compileDoBlock({ ...expr, node: expr.node }, env);
     case "match":
       return compileMatch({ ...expr, node: expr.node }, env);
+    case "tag":
+      return compileTag({ ...expr, node: expr.node }, env);
   }
 }
 

@@ -182,6 +182,16 @@ function printExpr(expr: Expression): Doc {
             )
           )
         );
+
+      case "tag":
+        return group(
+          list(
+            text("tag", "keyword", source),
+            space,
+            text(e.node.label, "label"),
+            indent(concat(line, e.node.value))
+          )
+        );
     }
   });
 }

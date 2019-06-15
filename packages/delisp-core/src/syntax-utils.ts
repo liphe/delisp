@@ -107,6 +107,15 @@ export function mapExpr<I, A, B>(
           }))
         }
       };
+    case "tag":
+      return {
+        ...expr,
+        node: {
+          ...expr.node,
+          label: expr.node.label,
+          value: fn(expr.node.value)
+        }
+      };
   }
 }
 
@@ -135,6 +144,8 @@ export function exprFChildren<I, E>(e: ExpressionF<I, E>): E[] {
       return [...e.node.body, e.node.returning];
     case "match":
       return [e.node.value, ...flatten(e.node.cases.map(c => c.body))];
+    case "tag":
+      return [e.node.value];
   }
 }
 

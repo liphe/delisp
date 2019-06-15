@@ -592,6 +592,37 @@ function infer(
         ]
       };
     }
+
+    case "tag": {
+      const inferredValue = infer(expr.node.value, monovars, internalTypes);
+
+      const labelType = generateUniqueTVar();
+      const t = tVariant([{ label: expr.node.label, type: labelType }]);
+      const effect = generateUniqueTVar();
+
+      return {
+        result: {
+          ...expr,
+          node: {
+            ...expr.node,
+            label: expr.node.label,
+            value: inferredValue.result
+          },
+          info: {
+            type: t,
+            effect
+          }
+        },
+
+        constraints: [
+          ...inferredValue.constraints,
+          constEffect(inferredValue.result, effect),
+          constEqual(inferredValue.result, labelType)
+        ],
+
+        assumptions: [...inferredValue.assumptions]
+      };
+    }
   }
 }
 
