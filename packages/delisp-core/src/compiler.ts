@@ -115,10 +115,6 @@ function compileBody(body: Expression[], env: Environment): JS.BlockStatement {
   };
 }
 
-// Convert a Delisp variable name to Javascript. This function should
-// be injective so there is no collisions and the output should be a
-// valid variable name.
-
 function compileLambda(
   fn: SFunction,
   env: Environment

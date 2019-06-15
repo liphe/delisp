@@ -114,6 +114,9 @@ export function escapeIdentifier(x: string): string {
   return `${prefix}${escapeName(x)}`;
 }
 
+// Convert a Delisp variable name to Javascript. This function should
+// be injective so there is no collisions and the output should be a
+// valid variable name.
 export function identifierToJS(x: string): string {
   return isValidJSIdentifier(x) ? x : escapeIdentifier(x);
 }
