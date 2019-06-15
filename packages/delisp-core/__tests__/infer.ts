@@ -142,6 +142,49 @@ describe("Type inference", () => {
       });
     });
 
+    describe("Variants", () => {
+      it("should infer the type of injected variants", () => {
+        expect(typeOf("(tag :version 0)")).toBe("(or {:version number | α})");
+      });
+      it("should infer the type of match", () => {
+        expect(
+          typeOf(`
+(lambda (x)
+  (match x
+    ({:version number} number)
+    ({:unreleased _} -1)))
+`)
+        ).toBe("(-> (or {:version number :unreleased α}) β number)");
+      });
+
+      it("match can handle variants", () => {
+        expect(
+          typeOf(`
+(match (tag :version 2)
+  ({:version number} number)
+  ({:unreleased _} -1))`)
+        ).toBe("number");
+      });
+
+      it("unexpected variants are not allowed", () => {
+        expect(() =>
+          typeOf(`
+(match (tag :test "foo")
+  ({:version number} number)
+  ({:unreleased _} -1))`)
+        ).toThrow();
+      });
+
+      it("variants with the wrong type are not allowed", () => {
+        expect(() =>
+          typeOf(`
+(match (tag :version "foo")
+  ({:version number} number)
+  ({:unreleased _} -1))`)
+        ).toThrow();
+      });
+    });
+
     describe("Conditionals", () => {
       it("should infer the right type when both branches return the same type", () => {
         expect(typeOf("(if true 1 0)")).toBe("number");
