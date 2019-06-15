@@ -5,5 +5,7 @@
 (define test
   (lambda (x)
     (match x
-      ({:person name} 1)
-      ({:machine name} name))))
+      ({:person name}
+        (print name)
+        name)
+      ({:machine version} "noname"))))
