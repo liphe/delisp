@@ -1,9 +1,12 @@
-export function flatMap<A, B>(fn: (x: A) => B[], list: A[]): B[] {
-  return flatten(list.map(x => fn(x)));
+export function flatMap<A, B>(fn: (x: A, i: number) => B[], list: A[]): B[] {
+  return flatten(list.map((x, i) => fn(x, i)));
 }
 
-export function maybeMap<A, B>(fn: (x: A) => B | null, list: A[]): B[] {
-  return list.map(x => fn(x)).filter((x): x is B => x !== null);
+export function maybeMap<A, B>(
+  fn: (x: A, i: number) => B | null,
+  list: A[]
+): B[] {
+  return list.map((x, i) => fn(x, i)).filter((x): x is B => x !== null);
 }
 
 export function flatten<A>(x: A[][]): A[] {

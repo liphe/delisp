@@ -104,7 +104,8 @@ export function mapExpr<I, A, B>(
             label: c.label,
             variable: c.variable,
             body: c.body.map(fn)
-          }))
+          })),
+          defaultCase: expr.node.defaultCase && expr.node.defaultCase.map(fn)
         }
       };
     case "tag":
@@ -143,7 +144,11 @@ export function exprFChildren<I, E>(e: ExpressionF<I, E>): E[] {
     case "do-block":
       return [...e.node.body, e.node.returning];
     case "match":
-      return [e.node.value, ...flatten(e.node.cases.map(c => c.body))];
+      return [
+        e.node.value,
+        ...flatten(e.node.cases.map(c => c.body)),
+        ...(e.node.defaultCase ? e.node.defaultCase : [])
+      ];
     case "tag":
       return [e.node.value];
   }

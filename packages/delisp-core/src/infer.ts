@@ -94,6 +94,31 @@ function inferMany(
   };
 }
 
+function inferBody(
+  exprs: Expression[],
+  monovars: string[],
+  internalTypes: InternalTypeEnvironment,
+  returnType: Type,
+  effectType: Type
+) {
+  if (exprs.length === 0) {
+    throw new Error(`Empty body is not allowed!`);
+  }
+
+  const inferred = inferMany(exprs, monovars, internalTypes);
+  const returningForm = inferred.result[inferred.result.length - 1];
+
+  return {
+    result: inferred.result,
+    constraints: [
+      ...inferred.constraints,
+      constEqual(returningForm, returnType),
+      ...inferred.result.map(form => constEffect(form, effectType))
+    ],
+    assumptions: inferred.assumptions
+  };
+}
+
 // Generate new types for an expression an all its subexpressions,
 // returning and a set of constraints and assumptions between them.
 function infer(
@@ -518,6 +543,10 @@ function infer(
       const t = generateUniqueTVar();
       const effect = generateUniqueTVar();
 
+      const defaultCase =
+        expr.node.defaultCase &&
+        inferBody(expr.node.defaultCase, monovars, internalTypes, t, effect);
+
       const variantTypes = expr.node.cases.map(c => ({
         label: c.label,
         type: generateUniqueTVar()
@@ -533,7 +562,8 @@ function infer(
               label: c.label,
               variable: c.variable,
               body: c.infer.result
-            }))
+            })),
+            defaultCase: defaultCase && defaultCase.result
           },
           info: {
             type: t,
@@ -544,10 +574,17 @@ function infer(
         constraints: [
           ...value.constraints,
           ...flatMap(c => c.infer.constraints, cases),
+          ...(defaultCase ? defaultCase.constraints : []),
 
           // Value must produce a value of type with all the variants
           // that `match` is handling.
-          constEqual(value.result, tVariant(variantTypes)),
+          constEqual(
+            value.result,
+            tVariant(
+              variantTypes,
+              defaultCase ? generateUniqueTVar() : undefined
+            )
+          ),
           constEffect(value.result, effect),
 
           ...flatMap(c => {
@@ -579,7 +616,9 @@ function infer(
                 }
               }, c.infer.assumptions)
             ];
-          }, cases)
+          }, cases),
+
+          ...(defaultCase ? defaultCase.constraints : [])
         ],
 
         assumptions: [

@@ -329,18 +329,32 @@ defineConversion("do", (do_, args, whole) => {
 defineConversion("match", (_match, args, whole) => {
   let errors: string[] = [];
 
-  const [valueForm, ...caseForms] = args;
+  let [valueForm, ...caseForms] = args;
+  let defaultCaseForm: ASExprList | undefined;
 
   const value = valueForm
     ? convertExpr(valueForm)
     : missingFrom(whole, [`missing match value`]);
 
-  const cases = maybeMap<ASExpr, SMatchCaseF<Expression<WithErrors>>>(c => {
-    if (c.tag !== "list") {
-      errors.push("invalid pattern");
-      return null;
-    }
+  function isDefaultCase(matchCase: ASExprList) {
+    const head = matchCase.elements[0];
+    return head.tag === "symbol" && head.name === ":default";
+  }
 
+  const lastCaseForm = caseForms.length > 0 && last(caseForms)!;
+  if (
+    lastCaseForm &&
+    lastCaseForm.tag === "list" &&
+    isDefaultCase(lastCaseForm)
+  ) {
+    defaultCaseForm = lastCaseForm;
+    caseForms = caseForms.slice(0, -1);
+  }
+
+  //
+  // c is expected to be a pattern case like ({label: variable} ...forms...)
+  //
+  function convertMatchPatternCase(c: ASExprList) {
     const [pattern, ...bodyForms] = c.elements;
 
     if (pattern.tag !== "map") {
@@ -380,13 +394,26 @@ defineConversion("match", (_match, args, whole) => {
       variable: parseIdentifier(variableSymbol),
       body: parseBody(c, bodyForms)
     };
+  }
+
+  const cases = maybeMap<ASExpr, SMatchCaseF<Expression<WithErrors>>>(c => {
+    if (c.tag !== "list") {
+      errors.push("invalid pattern");
+      return null;
+    }
+    return convertMatchPatternCase(c);
   }, caseForms);
+
+  const defaultCase =
+    defaultCaseForm &&
+    parseBody(defaultCaseForm, defaultCaseForm.elements.slice(1));
 
   return result(
     {
       tag: "match",
       value,
-      cases
+      cases,
+      defaultCase
     },
     whole.location,
     errors

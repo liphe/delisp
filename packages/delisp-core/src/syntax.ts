@@ -99,6 +99,7 @@ interface SMatchF<E> {
   tag: "match";
   value: E;
   cases: Array<SMatchCaseF<E>>;
+  defaultCase?: E[];
 }
 
 interface STagF<E> {

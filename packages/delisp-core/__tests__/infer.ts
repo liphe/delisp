@@ -183,6 +183,18 @@ describe("Type inference", () => {
   ({:unreleased _} -1))`)
         ).toThrow();
       });
+
+      it("match can handle a default case", () => {
+        expect(
+          typeOf(`
+(lambda (x)
+  (match x
+    ({:version number} number)
+    ({:unreleased _} -1)
+    (:default -2)))
+`)
+        ).toBe("(-> (or {:version number :unreleased α | β}) γ number)");
+      });
     });
 
     describe("Conditionals", () => {
