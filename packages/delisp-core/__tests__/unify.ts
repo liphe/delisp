@@ -7,6 +7,7 @@ import {
   tVar,
   tVector
 } from "../src/types";
+import { generateUniqueTVar } from "../src/type-generate";
 import { unify } from "../src/unify";
 
 describe("Unification", () => {
@@ -63,6 +64,19 @@ describe("Unification", () => {
       const t2 = tRecord([{ label: ":z", type: tNumber }]);
       const result = unify(t1, t2, {});
       expect(result.tag).toBe("unify-mismatch-error");
+    });
+
+    // FIXME
+    it.skip("should unify records open multiple times", () => {
+      const r1 = tRecord(
+        [{ label: ":x", type: tNumber }],
+        generateUniqueTVar()
+      );
+      const r2 = tRecord([{ label: ":x", type: tNumber }]);
+      const t1 = tFn([r1], generateUniqueTVar(), r1);
+      const t2 = tFn([r2], generateUniqueTVar(), r2);
+      const result = unify(t1, t2, {});
+      expect(result.tag).toBe("unify-success");
     });
   });
 
