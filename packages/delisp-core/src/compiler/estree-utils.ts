@@ -38,3 +38,17 @@ export function arrowFunction(
     async: false
   };
 }
+
+export function literal(value: number | string): JS.Literal {
+  return {
+    type: "Literal",
+    value
+  };
+}
+
+export function identifier(name: string): JS.Identifier {
+  return {
+    type: "Identifier",
+    name
+  };
+}

@@ -23,7 +23,7 @@ import {
 } from "./syntax";
 import { printType } from "./type-printer";
 
-import { methodCall } from "./compiler/estree-utils";
+import { methodCall, literal, identifier } from "./compiler/estree-utils";
 import { last, mapObject, maybeMap } from "./utils";
 
 import { InvariantViolation } from "./invariant";
@@ -258,20 +258,6 @@ function compileLetBindings(expr: SLet, env: Environment): JS.Expression {
       body: compileBody(expr.node.body, newenv)
     },
     arguments: expr.node.bindings.map(b => compile(b.value, env))
-  };
-}
-
-function literal(value: number | string): JS.Literal {
-  return {
-    type: "Literal",
-    value
-  };
-}
-
-function identifier(name: string): JS.Identifier {
-  return {
-    type: "Identifier",
-    name
   };
 }
 
