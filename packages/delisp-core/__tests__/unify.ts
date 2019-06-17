@@ -66,8 +66,7 @@ describe("Unification", () => {
       expect(result.tag).toBe("unify-mismatch-error");
     });
 
-    // FIXME
-    it.skip("should unify records open multiple times", () => {
+    it("should unify records open multiple times", () => {
       const r1 = tRecord(
         [{ label: ":x", type: tNumber }],
         generateUniqueTVar()

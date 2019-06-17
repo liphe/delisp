@@ -117,11 +117,9 @@ describe("Type inference", () => {
         expect(typeOf(":foo")).toBe(
           "{:get (-> {:foo α | β} γ α) :set (-> {:foo α | β} α δ {:foo α | β})}"
         );
-        // Temporarily broken
-        //
-        // expect(typeOf("(if true :x :y)")).toBe(
-        //   "{:get (-> {:x α :y α | β} γ α)}"
-        // );
+        expect(typeOf("(if true :x :y)")).toBe(
+          "{:get (-> {:x α :y α | β} γ α) :set (-> {:x α :y α | β} α δ {:x α :y α | β})}"
+        );
       });
       it("should be able to access the field", () => {
         expect(typeOf("(get :x {:x 5})")).toBe("number");

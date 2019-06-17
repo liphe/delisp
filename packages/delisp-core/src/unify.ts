@@ -127,6 +127,7 @@ function unifyArray(t1s: Type[], t2s: Type[], ctx: Substitution): UnifyResult {
 function rewriteRowForLabel(
   row: Type,
   label: string,
+  tail: TVar | undefined,
   ctx: Substitution
 ): { row: RExtension; substitution: Substitution } | null {
   if (row.node.tag === "type-variable") {
@@ -137,6 +138,11 @@ function rewriteRowForLabel(
     //    {label: γ | β}
     //
     // and map that variable to the row in the substitution.
+
+    if (tail && row.node.name === tail.node.name) {
+      return null;
+    }
+
     const gamma = generateUniqueTVar();
     const beta = generateUniqueTVar();
     const theta = tRowExtension(label, gamma, beta);
@@ -160,7 +166,7 @@ function rewriteRowForLabel(
       //
       // Firstly, we recursively rewrite the tail of the row extension
       // to start with `label.`
-      const result = rewriteRowForLabel(row.node.extends, label, ctx);
+      const result = rewriteRowForLabel(row.node.extends, label, tail, ctx);
       if (!result) {
         return null;
       }
@@ -189,7 +195,15 @@ function unifyRow(
   row2: RExtension,
   ctx: Substitution
 ): UnifyResult {
-  const rewriteResult = rewriteRowForLabel(row2, row1.node.label, ctx);
+  const tail = row1.node.extends;
+  const rewriteResult = rewriteRowForLabel(
+    row2,
+    row1.node.label,
+    tail.node.tag === "type-variable"
+      ? { ...tail, node: tail.node }
+      : undefined,
+    ctx
+  );
   if (!rewriteResult) {
     return {
       tag: "unify-mismatch-error",
@@ -199,18 +213,6 @@ function unifyRow(
   }
 
   const { substitution: subs, row: row3 } = rewriteResult;
-
-  if (
-    row1.node.extends.node.tag === "type-variable" &&
-    subs[row1.node.extends.node.name]
-  ) {
-    return {
-      tag: "unify-mismatch-error",
-      t1: row1,
-      t2: row2
-    };
-  }
-
   return unifyArray(
     [row1.node.labelType, row1.node.extends],
     [row3.node.labelType, row3.node.extends],
