@@ -14,7 +14,6 @@
   (lambda ()
     (the Action (tag :complete-all 0))))
 
-(define get (lambda (selector record) (selector record)))
 
 (define reducer
   (lambda (state action)
@@ -32,14 +31,14 @@
 (define showTodo
   (lambda (todo)
     (print (string-append
-            (if (:completed todo)
+            (if (get :completed todo)
                 "✅"
                 "❌")
             (string-append " "
-                           (:title todo))))))
+                           (get :title todo))))))
 (define showTodos
   (lambda (state)
-    (map showTodo (:todos state))))
+    (map showTodo (get :todos state))))
 
 (export reducer)
 (export initialState)
