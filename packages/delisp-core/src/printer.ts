@@ -1,6 +1,7 @@
 import { assertNever } from "./invariant";
 
 import {
+  nil,
   align,
   concat,
   Doc,
@@ -153,6 +154,12 @@ function printExpr(expr: Expression): Doc {
         );
 
       case "match":
+        function printCase(pattern: Doc, body: Doc[]) {
+          return group(
+            concat(list(pattern, indent(concat(line, join(body, line)))))
+          );
+        }
+
         return list(
           concat(
             text("match", "keyword", source),
@@ -162,20 +169,25 @@ function printExpr(expr: Expression): Doc {
               concat(
                 line,
                 join(
-                  e.node.cases.map(c => {
-                    return group(
-                      concat(
-                        list(
-                          map(
-                            text(c.label, "keyword"),
-                            space,
-                            printIdentifier(c.variable.name)
-                          ),
-                          indent(concat(line, join(c.body, line)))
+                  [
+                    ...e.node.cases.map(c => {
+                      return printCase(
+                        map(
+                          text(c.label, "keyword"),
+                          space,
+                          printIdentifier(c.variable.name)
+                        ),
+                        c.body
+                      );
+                    }),
+
+                    e.node.defaultCase
+                      ? printCase(
+                          text(":default", "keyword"),
+                          e.node.defaultCase
                         )
-                      )
-                    );
-                  }),
+                      : nil
+                  ],
                   line
                 )
               )
