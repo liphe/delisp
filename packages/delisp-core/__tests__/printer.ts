@@ -185,6 +185,10 @@ eee
     ).toMatchSnapshot();
   });
 
+  it("should print extended records", () => {
+    expect(pprintSource(`{:foo 1 | bar}`)).toMatchSnapshot();
+  });
+
   it("should some real code", () => {
     expect(
       pprintSource(

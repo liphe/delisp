@@ -70,9 +70,14 @@ function printExpr(expr: Expression): Doc {
           map(
             align(
               join(
-                e.node.fields.map(({ label, value }) =>
-                  concat(text(label.name, "label"), space, value)
-                ),
+                [
+                  ...e.node.fields.map(({ label, value }) =>
+                    concat(text(label.name, "label"), space, value)
+                  ),
+                  ...(e.node.extends
+                    ? [concat(text("|", "label-ext"), space, e.node.extends)]
+                    : [])
+                ],
                 line
               )
             )

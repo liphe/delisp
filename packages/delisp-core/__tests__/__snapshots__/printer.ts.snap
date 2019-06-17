@@ -218,6 +218,11 @@ exports[`Pretty Printer should print empty vectors 1`] = `
 []"
 `;
 
+exports[`Pretty Printer should print extended records 1`] = `
+"
+{:foo 1 | bar}"
+`;
+
 exports[`Pretty Printer should print lambda abstractions beautifully 1`] = `
 "
 (lambda (aaa bbb ccc) xxx)"
