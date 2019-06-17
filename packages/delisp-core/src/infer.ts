@@ -621,7 +621,8 @@ function infer(
             c =>
               c.infer.assumptions.filter(a => a.node.name !== c.variable.name),
             cases
-          )
+          ),
+          ...(defaultCase ? defaultCase.assumptions : [])
         ]
       };
     }

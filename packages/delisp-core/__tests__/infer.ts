@@ -195,6 +195,17 @@ describe("Type inference", () => {
 `)
         ).toBe("(-> (or {:version number :unreleased α | β}) γ number)");
       });
+
+      it("match can handle a default case", () => {
+        expect(
+          typeOf(`
+(lambda (state action)
+  (match action
+    ({:foo _} "hello")
+    (:default state)))
+`)
+        ).toBe("(-> string (or {:foo α | β}) γ string)");
+      });
     });
 
     describe("Conditionals", () => {
