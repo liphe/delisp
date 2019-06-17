@@ -53,7 +53,7 @@ async function compileFile(
     throw new Error(unknowns.join("\n\n"));
   }
 
-  const code = compileModuleToString(module, {
+  const code = compileModuleToString(typedModule, {
     esModule: moduleFormat === "esm"
   });
 

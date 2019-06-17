@@ -18,8 +18,10 @@ import {
   SVectorConstructor,
   Syntax,
   SDoBlock,
-  SUnknown
+  SUnknown,
+  Typed
 } from "./syntax";
+import { printType } from "./type-printer";
 
 import { methodCall } from "./compiler/estree-utils";
 import { last, mapObject, maybeMap } from "./utils";
@@ -459,20 +461,25 @@ function compileTopLevel(
   syntax: Syntax,
   env: Environment
 ): JS.Statement | null {
-  if (isExport(syntax) || isTypeAlias(syntax)) {
+  const typedSyntax = syntax as Syntax<Partial<Typed>, Partial<Typed>>;
+
+  if (isExport(typedSyntax) || isTypeAlias(typedSyntax)) {
     // exports are compiled at the end of the module
     return null;
   }
 
   let js: JS.Statement;
+  let type;
 
-  if (isDefinition(syntax)) {
-    js = compileDefinition(syntax, env);
+  if (isDefinition(typedSyntax)) {
+    js = compileDefinition(typedSyntax, env);
+    type = typedSyntax.node.value.info.type;
   } else {
     js = {
       type: "ExpressionStatement",
-      expression: compile(syntax, env)
+      expression: compile(typedSyntax, env)
     };
+    type = typedSyntax.info.type;
   }
 
   return {
@@ -483,7 +490,8 @@ function compileTopLevel(
       {
         type: "Block",
         value: `
-${pprint(syntax, 60)}
+${type ? printType(type) : ""}
+${pprint(syntax, 40)}
 `
       }
     ]
