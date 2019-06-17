@@ -22,9 +22,10 @@ export class TaggedValue {
 
 export function matchTag(
   obj: TaggedValue,
-  cases: { [label: string]: (value: unknown) => unknown }
+  cases: { [label: string]: (value: unknown) => unknown },
+  defaultCase?: () => unknown
 ): unknown {
-  const handler = cases[obj.tag];
+  const handler = cases[obj.tag] || defaultCase;
   return handler(obj.value);
 }
 

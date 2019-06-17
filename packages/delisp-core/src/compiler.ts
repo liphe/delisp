@@ -340,6 +340,17 @@ function compileDoBlock(expr: SDoBlock, env: Environment): JS.Expression {
 }
 
 function compileMatch(expr: SMatch, env: Environment): JS.Expression {
+  const defaultCase: JS.ArrowFunctionExpression | undefined = expr.node
+    .defaultCase && {
+    type: "ArrowFunctionExpression",
+    expression: false,
+    generator: false,
+    params: [],
+    body: (() => {
+      return compileBody(expr.node.defaultCase, env);
+    })()
+  };
+
   return {
     type: "CallExpression",
     callee: {
@@ -378,7 +389,8 @@ function compileMatch(expr: SMatch, env: Environment): JS.Expression {
             })()
           }
         }))
-      }
+      },
+      ...(defaultCase ? [defaultCase] : [])
     ]
   };
 }
