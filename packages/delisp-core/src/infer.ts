@@ -416,9 +416,17 @@ function infer(
           inference: infer(b.value, monovars, internalTypes)
         };
       });
-      const bodyInference = inferMany(expr.node.body, monovars, internalTypes);
 
+      const t = generateUniqueTVar();
       const effect = generateUniqueTVar();
+
+      const bodyInference = inferBody(
+        expr.node.body,
+        monovars,
+        internalTypes,
+        t,
+        effect
+      );
 
       return {
         result: {
@@ -432,7 +440,7 @@ function infer(
             body: bodyInference.result
           },
           info: {
-            type: last(bodyInference.result)!.info.type,
+            type: t,
             effect
           }
         },
@@ -460,12 +468,7 @@ function infer(
             }),
 
           // We require let-binding values to be free of effects
-          ...bindingsInfo.map(b =>
-            constEffect(b.inference.result, tEffect([]))
-          ),
-          // But we require all forms of the body to have the same
-          // kind of effects.
-          ...bodyInference.result.map(form => constEffect(form, effect))
+          ...bindingsInfo.map(b => constEffect(b.inference.result, tEffect([])))
         ],
         assumptions: [
           ...bodyInference.assumptions.filter(v => !toBeBound(v.node.name)),
@@ -529,19 +532,21 @@ function infer(
     case "match": {
       const value = infer(expr.node.value, monovars, internalTypes);
 
+      const t = generateUniqueTVar();
+      const effect = generateUniqueTVar();
+
       const cases = expr.node.cases.map(c => {
         return {
           ...c,
-          infer: inferMany(
+          infer: inferBody(
             c.body,
             [...monovars, c.variable.name],
-            internalTypes
+            internalTypes,
+            t,
+            effect
           )
         };
       });
-
-      const t = generateUniqueTVar();
-      const effect = generateUniqueTVar();
 
       const defaultCase =
         expr.node.defaultCase &&
@@ -588,18 +593,7 @@ function infer(
           constEffect(value.result, effect),
 
           ...flatMap(c => {
-            const returningForm = last(c.infer.result);
-
-            if (returningForm === undefined) {
-              throw new InvariantViolation(`Missing returning form!`);
-            }
-
             return [
-              // Each case must return a value of the same type
-              constEqual(returningForm, t),
-
-              ...c.infer.result.map(f => constEffect(f, effect)),
-
               // The pattern variable of each case must be the same
               // type as the variant we are handling.
               ...flatMap(a => {
