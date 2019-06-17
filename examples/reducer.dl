@@ -1,0 +1,48 @@
+(type Todo
+  {:title string :completed boolean})
+
+(define initialState {:todos []})
+
+(type Action
+  (or {:add-todo string :complete-all number}))
+
+(define addTodo
+  (lambda (title)
+    (the Action (tag :add-todo title))))
+
+(define completeAll
+  (lambda ()
+    (the Action (tag :complete-all 0))))
+
+(define get (lambda (selector record) (selector record)))
+
+(define reducer
+  (lambda (state action)
+    (match action
+      ({:add-todo title}
+        {:todos (cons {:title title
+                       :completed false}
+                      (get :todos state))})
+      ({:complete-all nothing}
+        {:todos (map (lambda (todo)
+                       {:completed true | todo})
+                     (get :todos state))})
+      (:default state))))
+
+(define showTodo
+  (lambda (todo)
+    (print (string-append
+            (if (:completed todo)
+                "✅"
+                "❌")
+            (string-append " "
+                           (:title todo))))))
+(define showTodos
+  (lambda (state)
+    (map showTodo (:todos state))))
+
+(export reducer)
+(export initialState)
+(export addTodo)
+(export completeAll)
+(export showTodos)
