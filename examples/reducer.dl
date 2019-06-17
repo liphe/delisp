@@ -14,7 +14,6 @@
   (lambda ()
     (the Action (tag :complete-all 0))))
 
-
 (define reducer
   (lambda (state action)
     (match action
@@ -24,7 +23,7 @@
                       (get :todos state))})
       ({:complete-all nothing}
         {:todos (map (lambda (todo)
-                       {:completed true | todo})
+                       (set :completed todo true))
                      (get :todos state))})
       (:default state))))
 
@@ -35,7 +34,8 @@
                 "✅"
                 "❌")
             (string-append " "
-                           (get :title todo))))))
+                           (get :title
+                                todo))))))
 (define showTodos
   (lambda (state)
     (map showTodo (get :todos state))))
