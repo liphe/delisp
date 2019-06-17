@@ -1,3 +1,9 @@
 (define >>>
   (lambda (f1 f2)
     (lambda (x) (f2 (f1 x)))))
+
+(define over
+  (lambda (lens fn value)
+    (set lens
+         value
+         (fn (get lens value)))))
