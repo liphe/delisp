@@ -5,7 +5,7 @@ import { readType } from "../convert-type";
 import { isFunctionType, generalize } from "../type-utils";
 import { tFn, tRecord, TypeSchema } from "../types";
 import { range } from "../utils";
-import { member, methodCall } from "./estree-utils";
+import { member, methodCall, arrowFunction } from "./estree-utils";
 
 type InlineHandler = (args: JS.Expression[]) => JS.Expression;
 
@@ -225,6 +225,12 @@ defineInlinePrimitive("string-downcase", "(-> string _ string)", ([str]) =>
 );
 
 defineInlinePrimitive(
+  "get",
+  "(-> {:get (-> r e v) | l} r e v)",
+  ([lens, obj]) => methodCall(lens, "get", [obj])
+);
+
+defineInlinePrimitive(
   "string-append",
   "(-> string string _ string)",
   ([str1, str2]) => {
@@ -237,17 +243,39 @@ defineInlinePrimitive(
   }
 );
 
-// matches `.foo` and inlines `(-> {foo a | b} a)`
+// matches `:foo` and inlines `{:get (-> {foo a | b} a)}`
 defineMagicPrimitive(
   name => name[0] === ":" && name.length > 1,
   name => {
-    const a = generateUniqueTVar();
-    const r = generateUniqueTVar();
-    const jsname = name.replace(/^:/, "");
-    const t = generalize(
-      tFn([tRecord([{ label: name, type: a }], r)], generateUniqueTVar(), a),
+    const fieldType = generateUniqueTVar();
+    const extendsType = generateUniqueTVar();
+    const getterType = tFn(
+      [tRecord([{ label: name, type: fieldType }], extendsType)],
+      generateUniqueTVar(),
+      fieldType
+    );
+    const lensType = generalize(
+      tRecord([{ label: ":get", type: getterType }]),
       []
     );
-    return createInlinePrimitive(t, ([vec]) => member(vec, jsname));
+    const jsname = name.replace(/^:/, "");
+    const getter = arrowFunction(
+      ["obj"],
+      member({ type: "Identifier", name: "obj" }, jsname)
+    );
+    return createInlinePrimitive(lensType, () => ({
+      type: "ObjectExpression",
+      properties: [
+        {
+          type: "Property",
+          key: { type: "Literal", value: "get" },
+          computed: false,
+          value: getter,
+          kind: "init",
+          method: false,
+          shorthand: false
+        }
+      ]
+    }));
   }
 );

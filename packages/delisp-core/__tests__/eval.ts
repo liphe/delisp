@@ -121,7 +121,7 @@ describe("Evaluation", () => {
       expect(evaluateString("{:x 2 :y 8}")).toEqual({ x: 2, y: 8 });
     });
     it("should access record fields", () => {
-      expect(evaluateString("(:foo {:bar 3 :foo 5 :baz 2})")).toEqual(5);
+      expect(evaluateString("(get :foo {:bar 3 :foo 5 :baz 2})")).toEqual(5);
     });
     it("should update records", () => {
       expect(evaluateString("{:x 2 | {:x 1}}")).toEqual({ x: 2 });

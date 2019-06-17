@@ -111,12 +111,14 @@ describe("Type inference", () => {
         expect(typeOf('{:x 10 :y "hello"}')).toBe("{:x number :y string}");
       });
       it("should infer the type of a field selector", () => {
-        expect(typeOf(":x")).toBe("(-> {:x α | β} γ α)");
-        expect(typeOf(":foo")).toBe("(-> {:foo α | β} γ α)");
-        expect(typeOf("(if true :x :y)")).toBe("(-> {:x α :y α | β} γ α)");
+        expect(typeOf(":x")).toBe("{:get (-> {:x α | β} γ α)}");
+        expect(typeOf(":foo")).toBe("{:get (-> {:foo α | β} γ α)}");
+        expect(typeOf("(if true :x :y)")).toBe(
+          "{:get (-> {:x α :y α | β} γ α)}"
+        );
       });
       it("should be able to access the field", () => {
-        expect(typeOf("(:x {:x 5})")).toBe("number");
+        expect(typeOf("(get :x {:x 5})")).toBe("number");
         expect(typeOf("(lambda (f) (f {:x 5 :y 6}))")).toBe(
           "(-> (-> {:x number :y number} α β) α β)"
         );

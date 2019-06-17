@@ -24,3 +24,17 @@ export function methodCall(
     arguments: args
   };
 }
+
+export function arrowFunction(
+  args: string[],
+  body: JS.Expression
+): JS.ArrowFunctionExpression {
+  return {
+    type: "ArrowFunctionExpression",
+    params: args.map(name => ({ type: "Identifier", name })),
+    body,
+    generator: false,
+    expression: true,
+    async: false
+  };
+}
