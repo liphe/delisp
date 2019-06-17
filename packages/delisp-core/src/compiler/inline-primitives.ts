@@ -5,7 +5,14 @@ import { readType } from "../convert-type";
 import { isFunctionType, generalize } from "../type-utils";
 import { tFn, tRecord, TypeSchema } from "../types";
 import { range } from "../utils";
-import { member, methodCall, arrowFunction } from "./estree-utils";
+import {
+  member,
+  methodCall,
+  arrowFunction,
+  identifier,
+  literal
+} from "./estree-utils";
+import { isValidJSIdentifierName } from "./jsvariable";
 
 type InlineHandler = (args: JS.Expression[]) => JS.Expression;
 
@@ -231,6 +238,12 @@ defineInlinePrimitive(
 );
 
 defineInlinePrimitive(
+  "set",
+  "(-> {:set (-> r v e r) | l} r v e r)",
+  ([lens, obj, val]) => methodCall(lens, "set", [obj, val])
+);
+
+defineInlinePrimitive(
   "string-append",
   "(-> string string _ string)",
   ([str1, str2]) => {
@@ -243,19 +256,30 @@ defineInlinePrimitive(
   }
 );
 
-// matches `:foo` and inlines `{:get (-> {foo a | b} a)}`
+/*
+matches `:foo` and inlines lens
+  {
+    :get (-> {:foo a | b} _ a)
+    :set (-> {:foo a | b} a _ {:foo a | b})
+  }
+*/
 defineMagicPrimitive(
   name => name[0] === ":" && name.length > 1,
   name => {
     const fieldType = generateUniqueTVar();
     const extendsType = generateUniqueTVar();
-    const getterType = tFn(
-      [tRecord([{ label: name, type: fieldType }], extendsType)],
+    const recordType = tRecord([{ label: name, type: fieldType }], extendsType);
+    const getterType = tFn([recordType], generateUniqueTVar(), fieldType);
+    const setterType = tFn(
+      [recordType, fieldType],
       generateUniqueTVar(),
-      fieldType
+      recordType
     );
     const lensType = generalize(
-      tRecord([{ label: ":get", type: getterType }]),
+      tRecord([
+        { label: ":get", type: getterType },
+        { label: ":set", type: setterType }
+      ]),
       []
     );
     const jsname = name.replace(/^:/, "");
@@ -263,14 +287,46 @@ defineMagicPrimitive(
       ["obj"],
       member({ type: "Identifier", name: "obj" }, jsname)
     );
+    const setter = arrowFunction(
+      ["obj", "val"],
+      methodCall({ type: "Identifier", name: "Object" }, "assign", [
+        { type: "ObjectExpression", properties: [] },
+        { type: "Identifier", name: "Object" },
+        {
+          type: "ObjectExpression",
+          properties: [
+            {
+              type: "Property",
+              key: isValidJSIdentifierName(jsname)
+                ? identifier(jsname)
+                : literal(jsname),
+              value: identifier("val"),
+              kind: "init",
+              method: false,
+              shorthand: false,
+              computed: false
+            }
+          ]
+        }
+      ])
+    );
     return createInlinePrimitive(lensType, () => ({
       type: "ObjectExpression",
       properties: [
         {
           type: "Property",
           key: { type: "Literal", value: "get" },
-          computed: false,
           value: getter,
+          computed: false,
+          kind: "init",
+          method: false,
+          shorthand: false
+        },
+        {
+          type: "Property",
+          key: { type: "Literal", value: "set" },
+          value: setter,
+          computed: false,
           kind: "init",
           method: false,
           shorthand: false
