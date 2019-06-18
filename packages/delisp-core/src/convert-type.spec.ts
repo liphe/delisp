@@ -95,20 +95,18 @@ describe("convertType", () => {
 
   describe("Cases", () => {
     it("should read empty case", () => {
-      expect(readAndConvert("(cases {})")).toMatchSnapshot();
+      expect(readAndConvert("(cases)")).toMatchSnapshot();
     });
     it("should read fully polymorphic case", () => {
-      expect(readAndConvert("(cases {| a})")).toMatchSnapshot();
+      expect(readAndConvert("(cases a)")).toMatchSnapshot();
     });
     it("should read basic case", () => {
       expect(
-        readAndConvert("(cases {:person string :machine number})")
+        readAndConvert("(cases (:person string) (:machine number))")
       ).toMatchSnapshot();
     });
 
     it("should detect incorrect cases", () => {
-      expect(failedType(`(cases)`)).toMatchSnapshot();
-      expect(failedType(`(cases a)`)).toMatchSnapshot();
       expect(failedType(`(cases {} {})`)).toMatchSnapshot();
     });
   });

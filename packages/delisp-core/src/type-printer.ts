@@ -70,13 +70,11 @@ function printApplicationType(type: TApplication): string {
     const arg = type.node.args[0];
     const row = normalizeRow(arg);
     const fields = row.fields
-      .map(f => `${f.label} ${_printType(f.labelType)}`)
+      .map(f => `(${f.label} ${_printType(f.labelType)})`)
       .join(" ");
     const extension =
-      row.extends.node.tag !== "empty-row"
-        ? ` | ${_printType(row.extends)}`
-        : "";
-    return `(cases {${fields}${extension}})`;
+      row.extends.node.tag !== "empty-row" ? ` ${_printType(row.extends)}` : "";
+    return `(cases ${fields}${extension})`;
   } else {
     return (
       "(" + [type.node.op, ...type.node.args].map(_printType).join(" ") + ")"

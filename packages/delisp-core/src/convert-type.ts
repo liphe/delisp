@@ -2,6 +2,7 @@ import { capitalize } from "./utils";
 import { ConvertError, parseRecord } from "./convert-utils";
 import { printHighlightedExpr } from "./error-report";
 import { readFromString } from "./reader";
+import { last } from "./utils";
 
 import {
   ASExpr,
@@ -88,37 +89,42 @@ function convertEffect(effects: ASExpr[]): Type {
   }
 }
 
-function convertCases(op: ASExpr, args: ASExpr[]): Type {
-  if (args.length === 0) {
-    throw new ConvertError(
-      printHighlightedExpr(`Missing row`, op.location, true)
-    );
+function convertCases(_op: ASExpr, args: ASExpr[]): Type {
+  const lastArg = last(args);
+  let tail: ASExpr | undefined;
+
+  if (lastArg && lastArg.tag === "symbol" && !lastArg.name.startsWith(":")) {
+    tail = args.pop();
   }
 
-  if (args.length > 1) {
-    throw new ConvertError(
-      printHighlightedExpr(
-        `Too many arguments for a variant type`,
-        args[1].location
-      )
-    );
+  function parseCase(c: ASExpr): { label: string; type: Type } {
+    if (c.tag === "symbol" && c.name.startsWith(":")) {
+      return { label: c.name, type: tVoid };
+    } else if (c.tag === "list") {
+      if (c.elements.length !== 2) {
+        throw new ConvertError(
+          printHighlightedExpr(
+            `Invalid case: expected exaclty two elements`,
+            c.location
+          )
+        );
+      }
+      const [keyword, innerType] = c.elements;
+      if (keyword.tag !== "symbol" || !keyword.name.startsWith(":")) {
+        throw new ConvertError(
+          printHighlightedExpr(
+            `Invalid case: expected valid keyword`,
+            keyword.location
+          )
+        );
+      }
+      return { label: keyword.name, type: convert_(innerType) };
+    } else {
+      throw new ConvertError(printHighlightedExpr(`Invalid case`, c.location));
+    }
   }
 
-  const variants = args[0];
-  if (variants.tag !== "map") {
-    throw new ConvertError(
-      printHighlightedExpr(
-        `The variants object should look like an record`,
-        args[0].location
-      )
-    );
-  }
-
-  const { fields, tail } = parseRecord(variants);
-  return tCases(
-    fields.map(r => ({ label: r.label.name, type: convert_(r.value) })),
-    tail && convert_(tail)
-  );
+  return tCases(args.map(parseCase), tail && convert_(tail));
 }
 
 function convertList(expr: ASExprList): Type {

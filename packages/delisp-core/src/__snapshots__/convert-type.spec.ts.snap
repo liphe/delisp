@@ -2,23 +2,9 @@
 
 exports[`convertType Cases should detect incorrect cases 1`] = `
 "
-file:1:6: Missing row
-(cases)
------^"
-`;
-
-exports[`convertType Cases should detect incorrect cases 2`] = `
-"
-file:1:8: The variants object should look like an record
-(cases a)
--------^"
-`;
-
-exports[`convertType Cases should detect incorrect cases 3`] = `
-"
-file:1:11: Too many arguments for a variant type
+file:1:8: Invalid case
 (cases {} {})
-----------^"
+-------^"
 `;
 
 exports[`convertType Cases should read basic case 1`] = `

@@ -150,9 +150,7 @@ describe("Type inference", () => {
 
     describe("Cases", () => {
       it("should infer the type of injected cases", () => {
-        expect(typeOf("(case :version 0)")).toBe(
-          "(cases {:version number | α})"
-        );
+        expect(typeOf("(case :version 0)")).toBe("(cases (:version number) α)");
       });
       it("should infer the type of match", () => {
         expect(
@@ -162,7 +160,7 @@ describe("Type inference", () => {
     ({:version number} number)
     ({:unreleased _} -1)))
 `)
-        ).toBe("(-> (cases {:version number :unreleased α}) β number)");
+        ).toBe("(-> (cases (:version number) (:unreleased α)) β number)");
       });
 
       it("match can handle cases", () => {
@@ -201,7 +199,7 @@ describe("Type inference", () => {
     ({:unreleased _} -1)
     (:default -2)))
 `)
-        ).toBe("(-> (cases {:version number :unreleased α | β}) γ number)");
+        ).toBe("(-> (cases (:version number) (:unreleased α) β) γ number)");
       });
 
       it("match can handle a default case", () => {
@@ -212,7 +210,7 @@ describe("Type inference", () => {
     ({:foo _} "hello")
     (:default state)))
 `)
-        ).toBe("(-> string (cases {:foo α | β}) γ string)");
+        ).toBe("(-> string (cases (:foo α) β) γ string)");
       });
     });
 
