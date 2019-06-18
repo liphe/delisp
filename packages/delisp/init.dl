@@ -5,3 +5,14 @@
 (define over
   (lambda (lens fn x)
     (set lens (fn (get lens x)) x)))
+
+(define >>
+  (lambda (outer inner)
+    {:get (lambda (container)
+       (get inner (get outer container)))
+     :set (lambda (value container)
+       (set outer
+            (set inner
+                 value
+                 (get outer container))
+            container))}))
