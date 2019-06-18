@@ -14,6 +14,7 @@
 
 import { generateUniqueTVar } from "./type-generate";
 import { Substitution } from "./type-utils";
+import { printType } from "./type-printer";
 import { Type, RExtension, tRowExtension, TVar } from "./types";
 
 interface UnifySuccess {
@@ -124,12 +125,16 @@ function unifyArray(t1s: Type[], t2s: Type[], ctx: Substitution): UnifyResult {
  * @returns an extension row, together with a subsitution that will
  * partially unify it with `row` (only the head of the extension).
  */
+Error.stackTraceLimit = 100;
+
 function rewriteRowForLabel(
   row: Type,
   label: string,
   tail: TVar | undefined,
   ctx: Substitution
 ): { row: RExtension; substitution: Substitution } | null {
+  console.dir({ row, label, tail }, { depth: null });
+
   if (row.node.tag === "type-variable") {
     // RULE (row-var)
     //
@@ -228,6 +233,8 @@ function unifyRow(
  * be obtained as a composition of this one with another one.
  */
 export function unify(t1: Type, t2: Type, ctx: Substitution): UnifyResult {
+  console.log("unify", printType(t1, false), printType(t2, false));
+
   // RULE (uni-const)
   if (t1.node.tag === "constant" && t2.node.tag === "constant") {
     return t1.node.name === t2.node.name

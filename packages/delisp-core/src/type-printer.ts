@@ -1,6 +1,6 @@
 // TODO: replace with the pretty printer
 
-import { InvariantViolation } from "./invariant";
+// import { InvariantViolation } from "./invariant";
 import { TApplication, Type, tVar } from "./types";
 
 import {
@@ -94,7 +94,8 @@ function _printType(type: Type): string {
       return type.node.name;
     case "empty-row":
     case "row-extension":
-      throw new InvariantViolation(`Can't print ${type.node.tag} types`);
+      return JSON.stringify(type, null, 2);
+    // throw new InvariantViolation(`Can't print ${type.node.tag} types`);
   }
 }
 

@@ -7,3 +7,16 @@
     (set lens
          value
          (fn (get lens value)))))
+
+(define >>
+  (lambda (lens1 lens2)
+    {:get (lambda (container)
+       (get lens2 (get lens1 container)))
+     :set (lambda (container value)
+       (set lens2
+            container
+            (set lens1
+                 (get lens1 container)
+                 value)))}))
+
+(define author-name (>> :author :name))
