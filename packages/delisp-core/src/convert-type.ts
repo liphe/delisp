@@ -20,7 +20,7 @@ import {
   tBoolean,
   tNumber,
   tRecord,
-  tVariant,
+  tCases,
   tEffect,
   tString,
   tUserDefined,
@@ -115,7 +115,7 @@ function convertVariant(op: ASExpr, args: ASExpr[]): Type {
   }
 
   const { fields, tail } = parseRecord(variants);
-  return tVariant(
+  return tCases(
     fields.map(r => ({ label: r.label.name, type: convert_(r.value) })),
     tail && convert_(tail)
   );

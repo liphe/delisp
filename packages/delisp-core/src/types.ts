@@ -67,7 +67,7 @@ export const tcVector = tConstant("vector");
 // row -> *
 export const tcRecord = tConstant("record");
 // row -> *
-export const tcOr = tConstant("or");
+export const tcCases = tConstant("or");
 // *
 export const tVoid = tConstant("void");
 export const tBoolean = tConstant("boolean");
@@ -147,9 +147,9 @@ export function tRecord(
   return tApp(tcRecord, tRow(fields, extending));
 }
 
-export function tVariant(
+export function tCases(
   variants: Array<{ label: string; type: Type }>,
   extending: Type = emptyRow
 ): Type {
-  return tApp(tcOr, tRow(variants, extending));
+  return tApp(tcCases, tRow(variants, extending));
 }

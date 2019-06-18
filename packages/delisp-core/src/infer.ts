@@ -37,7 +37,7 @@ import {
   tNumber,
   tRecord,
   tEffect,
-  tVariant,
+  tCases,
   tString,
   tVector,
   TypeSchema
@@ -585,10 +585,7 @@ function infer(
           // that `match` is handling.
           constEqual(
             value.result,
-            tVariant(
-              variantTypes,
-              defaultCase ? generateUniqueTVar() : undefined
-            )
+            tCases(variantTypes, defaultCase ? generateUniqueTVar() : undefined)
           ),
           constEffect(value.result, effect),
 
@@ -631,7 +628,7 @@ function infer(
       const inferredValue = infer(expr.node.value, monovars, internalTypes);
 
       const labelType = generateUniqueTVar();
-      const t = tVariant(
+      const t = tCases(
         [{ label: expr.node.label, type: labelType }],
         generateUniqueTVar()
       );
