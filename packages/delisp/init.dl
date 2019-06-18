@@ -3,7 +3,5 @@
     (lambda (x) (f2 (f1 x)))))
 
 (define over
-  (lambda (lens fn value)
-    (set lens
-         value
-         (fn (get lens value)))))
+  (lambda (lens fn x)
+    (set lens x (fn (get lens x)))))
