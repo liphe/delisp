@@ -1,4 +1,4 @@
-import { tEffect, tVar } from "./types";
+import { tEffect, tCases, tVar, tVoid } from "./types";
 import { printType } from "./type-printer";
 
 describe("Type printer", () => {
@@ -12,5 +12,17 @@ describe("Type printer", () => {
     expect(printType(tEffect(["console", "async"], tVar("a")), false)).toBe(
       "(effect console async | a)"
     );
+  });
+
+  test("cases type are printed correctly", () => {
+    expect(
+      printType(
+        tCases(
+          [{ label: ":a", type: tVar("a") }, { label: ":b", type: tVoid }],
+          tVar("c")
+        ),
+        false
+      )
+    ).toBe("(cases (:a a) :b c)");
   });
 });

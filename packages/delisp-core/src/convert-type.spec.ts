@@ -105,7 +105,11 @@ describe("convertType", () => {
         readAndConvert("(cases (:person string) (:machine number))")
       ).toMatchSnapshot();
     });
-
+    it("should enumeration cases type", () => {
+      expect(
+        readAndConvert("(cases (:person string) (:machine number) :other)")
+      ).toMatchSnapshot();
+    });
     it("should detect incorrect cases", () => {
       expect(failedType(`(cases {} {})`)).toMatchSnapshot();
     });

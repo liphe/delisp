@@ -7,6 +7,63 @@ file:1:8: Invalid case
 -------^"
 `;
 
+exports[`convertType Cases should enumeration cases type 1`] = `
+Object {
+  "node": Object {
+    "args": Array [
+      Object {
+        "node": Object {
+          "extends": Object {
+            "node": Object {
+              "extends": Object {
+                "node": Object {
+                  "extends": Object {
+                    "node": Object {
+                      "tag": "empty-row",
+                    },
+                  },
+                  "label": ":other",
+                  "labelType": Object {
+                    "node": Object {
+                      "name": "void",
+                      "tag": "constant",
+                    },
+                  },
+                  "tag": "row-extension",
+                },
+              },
+              "label": ":machine",
+              "labelType": Object {
+                "node": Object {
+                  "name": "number",
+                  "tag": "constant",
+                },
+              },
+              "tag": "row-extension",
+            },
+          },
+          "label": ":person",
+          "labelType": Object {
+            "node": Object {
+              "name": "string",
+              "tag": "constant",
+            },
+          },
+          "tag": "row-extension",
+        },
+      },
+    ],
+    "op": Object {
+      "node": Object {
+        "name": "cases",
+        "tag": "constant",
+      },
+    },
+    "tag": "application",
+  },
+}
+`;
+
 exports[`convertType Cases should read basic case 1`] = `
 Object {
   "node": Object {
