@@ -291,7 +291,7 @@ defineMagicPrimitive(
       ["val", "obj"],
       methodCall({ type: "Identifier", name: "Object" }, "assign", [
         { type: "ObjectExpression", properties: [] },
-        { type: "Identifier", name: "Object" },
+        { type: "Identifier", name: "obj" },
         {
           type: "ObjectExpression",
           properties: [
