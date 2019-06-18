@@ -112,10 +112,10 @@ describe("Type inference", () => {
       });
       it("should infer the type of a lenses", () => {
         expect(typeOf(":x")).toBe(
-          "{:get (-> {:x α | β} γ α) :set (-> α {:x α | β} δ {:x α | β})}"
+          "{:get (-> {:x α | β} γ α) :set (-> δ {:x α | β} ε {:x δ | β})}"
         );
         expect(typeOf(":foo")).toBe(
-          "{:get (-> {:foo α | β} γ α) :set (-> α {:foo α | β} δ {:foo α | β})}"
+          "{:get (-> {:foo α | β} γ α) :set (-> δ {:foo α | β} ε {:foo δ | β})}"
         );
         expect(typeOf("(if true :x :y)")).toBe(
           "{:get (-> {:x α :y α | β} γ α) :set (-> α {:x α :y α | β} δ {:x α :y α | β})}"

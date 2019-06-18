@@ -239,7 +239,7 @@ defineInlinePrimitive(
 
 defineInlinePrimitive(
   "set",
-  "(-> {:set (-> v r e r) | l} v r e r)",
+  "(-> {:set (-> v r1 e r2) | l} v r1 e r2)",
   ([lens, val, obj]) => methodCall(lens, "set", [val, obj])
 );
 
@@ -267,13 +267,20 @@ defineMagicPrimitive(
   name => name[0] === ":" && name.length > 1,
   name => {
     const fieldType = generateUniqueTVar();
+    const newFieldType = generateUniqueTVar();
     const extendsType = generateUniqueTVar();
+
     const recordType = tRecord([{ label: name, type: fieldType }], extendsType);
+    const newRecordType = tRecord(
+      [{ label: name, type: newFieldType }],
+      extendsType
+    );
+
     const getterType = tFn([recordType], generateUniqueTVar(), fieldType);
     const setterType = tFn(
-      [fieldType, recordType],
+      [newFieldType, recordType],
       generateUniqueTVar(),
-      recordType
+      newRecordType
     );
     const lensType = generalize(
       tRecord([

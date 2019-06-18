@@ -4,4 +4,4 @@
 
 (define over
   (lambda (lens fn x)
-    (set lens x (fn (get lens x)))))
+    (set lens (fn (get lens x)) x)))
