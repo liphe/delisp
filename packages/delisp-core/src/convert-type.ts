@@ -88,7 +88,7 @@ function convertEffect(effects: ASExpr[]): Type {
   }
 }
 
-function convertVariant(op: ASExpr, args: ASExpr[]): Type {
+function convertCases(op: ASExpr, args: ASExpr[]): Type {
   if (args.length === 0) {
     throw new ConvertError(
       printHighlightedExpr(`Missing row`, op.location, true)
@@ -125,8 +125,8 @@ function convertList(expr: ASExprList): Type {
   const [op, ...args] = expr.elements;
   if (op.tag === "symbol" && op.name === "effect") {
     return convertEffect(args);
-  } else if (op.tag === "symbol" && op.name === "or") {
-    return convertVariant(op, args);
+  } else if (op.tag === "symbol" && op.name === "cases") {
+    return convertCases(op, args);
   } else {
     const opType = convert_(op);
     return tApp(opType, ...args.map(convert_));

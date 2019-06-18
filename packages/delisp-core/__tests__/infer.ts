@@ -148,9 +148,11 @@ describe("Type inference", () => {
       });
     });
 
-    describe("Variants", () => {
-      it("should infer the type of injected variants", () => {
-        expect(typeOf("(case :version 0)")).toBe("(or {:version number | α})");
+    describe("Cases", () => {
+      it("should infer the type of injected cases", () => {
+        expect(typeOf("(case :version 0)")).toBe(
+          "(cases {:version number | α})"
+        );
       });
       it("should infer the type of match", () => {
         expect(
@@ -160,10 +162,10 @@ describe("Type inference", () => {
     ({:version number} number)
     ({:unreleased _} -1)))
 `)
-        ).toBe("(-> (or {:version number :unreleased α}) β number)");
+        ).toBe("(-> (cases {:version number :unreleased α}) β number)");
       });
 
-      it("match can handle variants", () => {
+      it("match can handle cases", () => {
         expect(
           typeOf(`
 (match (case :version 2)
@@ -172,7 +174,7 @@ describe("Type inference", () => {
         ).toBe("number");
       });
 
-      it("unexpected variants are not allowed", () => {
+      it("unexpected cases are not allowed", () => {
         expect(() =>
           typeOf(`
 (match (case :test "foo")
@@ -181,7 +183,7 @@ describe("Type inference", () => {
         ).toThrow();
       });
 
-      it("variants with the wrong type are not allowed", () => {
+      it("cases with the wrong type are not allowed", () => {
         expect(() =>
           typeOf(`
 (match (case :version "foo")
@@ -199,7 +201,7 @@ describe("Type inference", () => {
     ({:unreleased _} -1)
     (:default -2)))
 `)
-        ).toBe("(-> (or {:version number :unreleased α | β}) γ number)");
+        ).toBe("(-> (cases {:version number :unreleased α | β}) γ number)");
       });
 
       it("match can handle a default case", () => {
@@ -210,7 +212,7 @@ describe("Type inference", () => {
     ({:foo _} "hello")
     (:default state)))
 `)
-        ).toBe("(-> string (or {:foo α | β}) γ string)");
+        ).toBe("(-> string (cases {:foo α | β}) γ string)");
       });
     });
 

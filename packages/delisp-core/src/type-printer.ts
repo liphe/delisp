@@ -65,7 +65,7 @@ function printApplicationType(type: TApplication): string {
     return `(effect${fields}${extending})`;
   } else if (
     type.node.op.node.tag === "constant" &&
-    type.node.op.node.name === "or"
+    type.node.op.node.name === "cases"
   ) {
     const arg = type.node.args[0];
     const row = normalizeRow(arg);
@@ -76,7 +76,7 @@ function printApplicationType(type: TApplication): string {
       row.extends.node.tag !== "empty-row"
         ? ` | ${_printType(row.extends)}`
         : "";
-    return `(or {${fields}${extension}})`;
+    return `(cases {${fields}${extension}})`;
   } else {
     return (
       "(" + [type.node.op, ...type.node.args].map(_printType).join(" ") + ")"

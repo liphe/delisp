@@ -4,15 +4,17 @@
 (define initialState {:todos []})
 
 (type Action
-  (or {:add-todo string :complete-all number}))
+  (cases {:add-todo string :complete-all number}))
 
 (define addTodo
   (lambda (title)
-    (the Action (case :add-todo title))))
+    (the Action
+      (case :add-todo title))))
 
 (define completeAll
   (lambda ()
-    (the Action (case :complete-all 0))))
+    (the Action
+      (case :complete-all 0))))
 
 (define reducer
   (lambda (state action)

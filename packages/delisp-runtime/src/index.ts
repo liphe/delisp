@@ -8,7 +8,7 @@ export default Object.entries(primitives).reduce(
 );
 
 //
-// Variants
+// Cases
 //
 
 export class TaggedValue {

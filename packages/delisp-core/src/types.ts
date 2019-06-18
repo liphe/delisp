@@ -67,7 +67,7 @@ export const tcVector = tConstant("vector");
 // row -> *
 export const tcRecord = tConstant("record");
 // row -> *
-export const tcCases = tConstant("or");
+export const tcCases = tConstant("cases");
 // *
 export const tVoid = tConstant("void");
 export const tBoolean = tConstant("boolean");

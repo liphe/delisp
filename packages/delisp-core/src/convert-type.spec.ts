@@ -93,23 +93,23 @@ describe("convertType", () => {
     });
   });
 
-  describe("Variants", () => {
-    it("should read empty variant", () => {
-      expect(readAndConvert("(or {})")).toMatchSnapshot();
+  describe("Cases", () => {
+    it("should read empty case", () => {
+      expect(readAndConvert("(cases {})")).toMatchSnapshot();
     });
-    it("should read fully polymorphic variant", () => {
-      expect(readAndConvert("(or {| a})")).toMatchSnapshot();
+    it("should read fully polymorphic case", () => {
+      expect(readAndConvert("(cases {| a})")).toMatchSnapshot();
     });
-    it("should read basic variant", () => {
+    it("should read basic case", () => {
       expect(
-        readAndConvert("(or {:person string :machine number})")
+        readAndConvert("(cases {:person string :machine number})")
       ).toMatchSnapshot();
     });
 
-    it("should detect incorrect variants", () => {
-      expect(failedType(`(or)`)).toMatchSnapshot();
-      expect(failedType(`(or a)`)).toMatchSnapshot();
-      expect(failedType(`(or {} {})`)).toMatchSnapshot();
+    it("should detect incorrect cases", () => {
+      expect(failedType(`(cases)`)).toMatchSnapshot();
+      expect(failedType(`(cases a)`)).toMatchSnapshot();
+      expect(failedType(`(cases {} {})`)).toMatchSnapshot();
     });
   });
 });
