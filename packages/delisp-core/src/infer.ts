@@ -627,7 +627,7 @@ function infer(
       };
     }
 
-    case "tag": {
+    case "case": {
       const inferredValue = infer(expr.node.value, monovars, internalTypes);
 
       const labelType = generateUniqueTVar();

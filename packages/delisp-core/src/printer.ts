@@ -200,10 +200,10 @@ function printExpr(expr: Expression): Doc {
           )
         );
 
-      case "tag":
+      case "case":
         return group(
           list(
-            text("tag", "keyword", source),
+            text("case", "keyword", source),
             space,
             text(e.node.label, "label"),
             indent(concat(line, e.node.value))

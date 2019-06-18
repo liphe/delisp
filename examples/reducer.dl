@@ -8,11 +8,11 @@
 
 (define addTodo
   (lambda (title)
-    (the Action (tag :add-todo title))))
+    (the Action (case :add-todo title))))
 
 (define completeAll
   (lambda ()
-    (the Action (tag :complete-all 0))))
+    (the Action (case :complete-all 0))))
 
 (define reducer
   (lambda (state action)

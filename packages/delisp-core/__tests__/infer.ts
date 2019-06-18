@@ -150,7 +150,7 @@ describe("Type inference", () => {
 
     describe("Variants", () => {
       it("should infer the type of injected variants", () => {
-        expect(typeOf("(tag :version 0)")).toBe("(or {:version number | α})");
+        expect(typeOf("(case :version 0)")).toBe("(or {:version number | α})");
       });
       it("should infer the type of match", () => {
         expect(
@@ -166,7 +166,7 @@ describe("Type inference", () => {
       it("match can handle variants", () => {
         expect(
           typeOf(`
-(match (tag :version 2)
+(match (case :version 2)
   ({:version number} number)
   ({:unreleased _} -1))`)
         ).toBe("number");
@@ -175,7 +175,7 @@ describe("Type inference", () => {
       it("unexpected variants are not allowed", () => {
         expect(() =>
           typeOf(`
-(match (tag :test "foo")
+(match (case :test "foo")
   ({:version number} number)
   ({:unreleased _} -1))`)
         ).toThrow();
@@ -184,7 +184,7 @@ describe("Type inference", () => {
       it("variants with the wrong type are not allowed", () => {
         expect(() =>
           typeOf(`
-(match (tag :version "foo")
+(match (case :version "foo")
   ({:version number} number)
   ({:unreleased _} -1))`)
         ).toThrow();

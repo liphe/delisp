@@ -8,14 +8,14 @@ import primitives from "./primitives";
 import { Module, Syntax } from "./syntax";
 import { mapObject } from "./utils";
 
-import { tag, matchTag } from "@delisp/runtime";
+import { caseTag, matchTag } from "@delisp/runtime";
 
 export function createContext() {
   const sandbox = {
     env: mapObject(primitives, p => p.value),
     console,
     // Primitives
-    tag,
+    caseTag,
     matchTag
   };
   vm.createContext(sandbox);

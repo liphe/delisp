@@ -198,7 +198,7 @@ function printValue(value: any): string {
   } else if (value === undefined || value === null) {
     return "#<undefined>";
   } else if (value instanceof TaggedValue) {
-    return `(tag ${value.tag} ${value.value})`;
+    return `(case ${value.tag} ${value.value})`;
   } else if (Array.isArray(value)) {
     return `[${value.map(printValue).join(" ")}]`;
   } else if (typeof value === "object") {

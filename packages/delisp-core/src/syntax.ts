@@ -102,8 +102,8 @@ interface SMatchF<E> {
   defaultCase?: E[];
 }
 
-interface STagF<E> {
-  tag: "tag";
+interface SCaseTagF<E> {
+  tag: "case";
   label: string;
   value: E;
 }
@@ -125,7 +125,7 @@ type AnyExpressionF<I = {}, E = Expression<I>> =
   | STypeAnnotationF<E>
   | SDoBlockF<E>
   | SMatchF<E>
-  | STagF<E>
+  | SCaseTagF<E>
   | SUnknownF<E>;
 
 interface Node<I, E> {
@@ -161,7 +161,7 @@ export interface SDoBlock<I = {}> extends Node<I, SDoBlockF<Expression<I>>> {}
 
 export interface SMatch<I = {}> extends Node<I, SMatchF<Expression<I>>> {}
 
-export interface STag<I = {}> extends Node<I, STagF<Expression<I>>> {}
+export interface SCaseTag<I = {}> extends Node<I, SCaseTagF<Expression<I>>> {}
 
 export interface SUnknown<I = {}> extends Node<I, SUnknownF<Expression<I>>> {}
 

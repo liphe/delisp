@@ -108,7 +108,7 @@ export function mapExpr<I, A, B>(
           defaultCase: expr.node.defaultCase && expr.node.defaultCase.map(fn)
         }
       };
-    case "tag":
+    case "case":
       return {
         ...expr,
         node: {
@@ -149,7 +149,7 @@ export function exprFChildren<I, E>(e: ExpressionF<I, E>): E[] {
         ...flatten(e.node.cases.map(c => c.body)),
         ...(e.node.defaultCase ? e.node.defaultCase : [])
       ];
-    case "tag":
+    case "case":
       return [e.node.value];
   }
 }

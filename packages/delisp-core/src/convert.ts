@@ -420,7 +420,7 @@ defineConversion("match", (_match, args, whole) => {
   );
 });
 
-defineConversion("tag", (_tag, args, whole) => {
+defineConversion("case", (_tag, args, whole) => {
   let [labelForm, valueForm] = args;
 
   if (labelForm.tag !== "symbol" || !labelForm.name.startsWith(":")) {
@@ -435,7 +435,7 @@ defineConversion("tag", (_tag, args, whole) => {
 
   return result(
     {
-      tag: "tag",
+      tag: "case",
       label,
       value
     },

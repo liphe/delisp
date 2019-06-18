@@ -29,6 +29,6 @@ export function matchTag(
   return handler(obj.value);
 }
 
-export function tag(tag: string, value: unknown): TaggedValue {
+export function caseTag(tag: string, value: unknown): TaggedValue {
   return new TaggedValue(tag, value);
 }

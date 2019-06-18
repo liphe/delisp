@@ -13,7 +13,7 @@ import {
   SVariableReference,
   SLet,
   SMatch,
-  STag,
+  SCaseTag,
   SRecord,
   SVectorConstructor,
   Syntax,
@@ -383,12 +383,12 @@ function compileMatch(expr: SMatch, env: Environment): JS.Expression {
   };
 }
 
-function compileTag(expr: STag, env: Environment): JS.Expression {
+function compileTag(expr: SCaseTag, env: Environment): JS.Expression {
   return {
     type: "CallExpression",
     callee: {
       type: "Identifier",
-      name: "tag"
+      name: "caseTag"
     },
     arguments: [
       { type: "Literal", value: expr.node.label },
@@ -438,7 +438,7 @@ export function compile(expr: Expression, env: Environment): JS.Expression {
       return compileDoBlock({ ...expr, node: expr.node }, env);
     case "match":
       return compileMatch({ ...expr, node: expr.node }, env);
-    case "tag":
+    case "case":
       return compileTag({ ...expr, node: expr.node }, env);
   }
 }
@@ -491,7 +491,7 @@ function compileRuntime(env: Environment): JS.Statement | JS.ModuleDeclaration {
 function compileRuntimeUtils(
   env: Environment
 ): JS.Statement | JS.ModuleDeclaration {
-  return env.moduleFormat.importRuntimeUtils(["matchTag", "tag"]);
+  return env.moduleFormat.importRuntimeUtils(["matchTag", "caseTag"]);
 }
 
 function compileExports(

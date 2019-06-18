@@ -163,12 +163,12 @@ exports[`Pretty Printer should pretty print do blocks 1`] = `
 
 exports[`Pretty Printer should pretty print tag forms 1`] = `
 "
-(tag :version 0)"
+(case :version 0)"
 `;
 
 exports[`Pretty Printer should pretty print tag forms with large expressions 1`] = `
 "
-(tag :version
+(case :version
   this-is-a-extremely--long-and-annoying-variable-name-in-order-to-break-the-line)"
 `;
 

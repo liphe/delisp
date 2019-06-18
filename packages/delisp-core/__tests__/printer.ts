@@ -242,13 +242,13 @@ eee
   });
 
   it("should pretty print tag forms", () => {
-    expect(pprintSource(`(tag :version 0)`)).toMatchSnapshot();
+    expect(pprintSource(`(case :version 0)`)).toMatchSnapshot();
   });
 
   it("should pretty print tag forms with large expressions", () => {
     expect(
       pprintSource(
-        `(tag :version this-is-a-extremely--long-and-annoying-variable-name-in-order-to-break-the-line)`
+        `(case :version this-is-a-extremely--long-and-annoying-variable-name-in-order-to-break-the-line)`
       )
     ).toMatchSnapshot();
   });
