@@ -198,7 +198,11 @@ function printValue(value: any): string {
   } else if (value === undefined || value === null) {
     return "#<undefined>";
   } else if (value instanceof TaggedValue) {
-    return `(case ${value.tag} ${value.value})`;
+    if (value.value === undefined) {
+      return `(case ${value.tag})`;
+    } else {
+      return `(case ${value.tag} ${value.value})`;
+    }
   } else if (Array.isArray(value)) {
     return `[${value.map(printValue).join(" ")}]`;
   } else if (typeof value === "object") {

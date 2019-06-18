@@ -392,7 +392,7 @@ function compileTag(expr: SCaseTag, env: Environment): JS.Expression {
     },
     arguments: [
       { type: "Literal", value: expr.node.label },
-      compile(expr.node.value, env)
+      ...(expr.node.value ? [compile(expr.node.value, env)] : [])
     ]
   };
 }

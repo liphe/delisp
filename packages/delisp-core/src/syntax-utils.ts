@@ -114,7 +114,7 @@ export function mapExpr<I, A, B>(
         node: {
           ...expr.node,
           label: expr.node.label,
-          value: fn(expr.node.value)
+          value: expr.node.value && fn(expr.node.value)
         }
       };
   }
@@ -150,7 +150,7 @@ export function exprFChildren<I, E>(e: ExpressionF<I, E>): E[] {
         ...(e.node.defaultCase ? e.node.defaultCase : [])
       ];
     case "case":
-      return [e.node.value];
+      return e.node.value ? [e.node.value] : [];
   }
 }
 

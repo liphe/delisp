@@ -105,7 +105,7 @@ interface SMatchF<E> {
 interface SCaseTagF<E> {
   tag: "case";
   label: string;
-  value: E;
+  value?: E;
 }
 
 interface SUnknownF<_E> {

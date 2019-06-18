@@ -420,7 +420,16 @@ defineConversion("match", (_match, args, whole) => {
   );
 });
 
-defineConversion("case", (_tag, args, whole) => {
+defineConversion("case", (case_, args, whole) => {
+  if (args.length > 2 || args.length < 1) {
+    throw new ConvertError(
+      printHighlightedExpr(
+        "Expected a keyword an maybe a value",
+        case_.location
+      )
+    );
+  }
+
   let [labelForm, valueForm] = args;
 
   if (labelForm.tag !== "symbol" || !labelForm.name.startsWith(":")) {
@@ -428,10 +437,7 @@ defineConversion("case", (_tag, args, whole) => {
   }
 
   const label = labelForm.name;
-
-  const value = valueForm
-    ? convertExpr(valueForm)
-    : missingFrom(whole, ["missing keyword"]);
+  const value = valueForm ? convertExpr(valueForm) : undefined;
 
   return result(
     {

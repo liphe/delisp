@@ -206,7 +206,7 @@ function printExpr(expr: Expression): Doc {
             text("case", "keyword", source),
             space,
             text(e.node.label, "label"),
-            indent(concat(line, e.node.value))
+            e.node.value ? indent(concat(line, e.node.value)) : nil
           )
         );
     }

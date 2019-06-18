@@ -40,6 +40,7 @@ import {
   tCases,
   tString,
   tVector,
+  tVoid,
   TypeSchema
 } from "./types";
 import { difference, flatMap, last, mapObject, maybeMap } from "./utils";
@@ -625,9 +626,10 @@ function infer(
     }
 
     case "case": {
-      const inferredValue = infer(expr.node.value, monovars, internalTypes);
+      const inferredValue =
+        expr.node.value && infer(expr.node.value, monovars, internalTypes);
 
-      const labelType = generateUniqueTVar();
+      const labelType = expr.node.value ? generateUniqueTVar() : tVoid;
       const t = tCases(
         [{ label: expr.node.label, type: labelType }],
         generateUniqueTVar()
@@ -640,7 +642,7 @@ function infer(
           node: {
             ...expr.node,
             label: expr.node.label,
-            value: inferredValue.result
+            value: inferredValue && inferredValue.result
           },
           info: {
             type: t,
@@ -648,13 +650,15 @@ function infer(
           }
         },
 
-        constraints: [
-          ...inferredValue.constraints,
-          constEffect(inferredValue.result, effect),
-          constEqual(inferredValue.result, labelType)
-        ],
+        constraints: inferredValue
+          ? [
+              ...inferredValue.constraints,
+              constEffect(inferredValue.result, effect),
+              constEqual(inferredValue.result, labelType)
+            ]
+          : [],
 
-        assumptions: [...inferredValue.assumptions]
+        assumptions: inferredValue ? inferredValue.assumptions : []
       };
     }
   }
