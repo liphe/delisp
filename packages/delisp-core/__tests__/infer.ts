@@ -112,13 +112,13 @@ describe("Type inference", () => {
       });
       it("should infer the type of a lenses", () => {
         expect(typeOf(":x")).toBe(
-          "{:get (-> {:x α | β} γ α) :set (-> {:x α | β} α δ {:x α | β})}"
+          "{:get (-> {:x α | β} γ α) :set (-> α {:x α | β} δ {:x α | β})}"
         );
         expect(typeOf(":foo")).toBe(
-          "{:get (-> {:foo α | β} γ α) :set (-> {:foo α | β} α δ {:foo α | β})}"
+          "{:get (-> {:foo α | β} γ α) :set (-> α {:foo α | β} δ {:foo α | β})}"
         );
         expect(typeOf("(if true :x :y)")).toBe(
-          "{:get (-> {:x α :y α | β} γ α) :set (-> {:x α :y α | β} α δ {:x α :y α | β})}"
+          "{:get (-> {:x α :y α | β} γ α) :set (-> α {:x α :y α | β} δ {:x α :y α | β})}"
         );
       });
       it("should be able to access the field", () => {

@@ -239,8 +239,8 @@ defineInlinePrimitive(
 
 defineInlinePrimitive(
   "set",
-  "(-> {:set (-> r v e r) | l} r v e r)",
-  ([lens, obj, val]) => methodCall(lens, "set", [obj, val])
+  "(-> {:set (-> v r e r) | l} v r e r)",
+  ([lens, val, obj]) => methodCall(lens, "set", [val, obj])
 );
 
 defineInlinePrimitive(
@@ -271,7 +271,7 @@ defineMagicPrimitive(
     const recordType = tRecord([{ label: name, type: fieldType }], extendsType);
     const getterType = tFn([recordType], generateUniqueTVar(), fieldType);
     const setterType = tFn(
-      [recordType, fieldType],
+      [fieldType, recordType],
       generateUniqueTVar(),
       recordType
     );
@@ -288,7 +288,7 @@ defineMagicPrimitive(
       member({ type: "Identifier", name: "obj" }, jsname)
     );
     const setter = arrowFunction(
-      ["obj", "val"],
+      ["val", "obj"],
       methodCall({ type: "Identifier", name: "Object" }, "assign", [
         { type: "ObjectExpression", properties: [] },
         { type: "Identifier", name: "Object" },

@@ -23,7 +23,7 @@
                       (get :todos state))})
       ({:complete-all nothing}
         {:todos (map (lambda (todo)
-                       (set :completed todo true))
+                       (set :completed true todo))
                      (get :todos state))})
       (:default state))))
 
