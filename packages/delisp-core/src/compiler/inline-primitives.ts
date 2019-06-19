@@ -131,9 +131,16 @@ defineInlinePrimitive("false", "boolean", () => {
   };
 });
 
+defineInlinePrimitive("none", "none", () => {
+  return {
+    type: "Identifier",
+    name: "undefined"
+  };
+});
+
 defineInlinePrimitive(
   "print",
-  "(-> string (effect console | _) void)",
+  "(-> string (effect console | _) none)",
   args => {
     return methodCall({ type: "Identifier", name: "console" }, "log", args);
   }

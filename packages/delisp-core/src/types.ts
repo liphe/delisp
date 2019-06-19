@@ -73,6 +73,7 @@ export const tVoid = tConstant("void");
 export const tBoolean = tConstant("boolean");
 export const tNumber = tConstant("number");
 export const tString = tConstant("string");
+export const tNone = tConstant("none");
 
 const tcEffect = tConstant("effect");
 

@@ -195,8 +195,10 @@ function printValue(value: any): string {
     return `${value}`;
   } else if (typeof value === "string") {
     return `"${value}"`;
-  } else if (value === undefined || value === null) {
-    return "#<undefined>";
+  } else if (value === undefined) {
+    return "none";
+  } else if (value === null) {
+    return "#<null>";
   } else if (value instanceof TaggedValue) {
     if (value.value === undefined) {
       return `(case ${value.tag})`;
