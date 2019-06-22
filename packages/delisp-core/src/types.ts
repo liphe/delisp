@@ -60,7 +60,7 @@ function tConstant(name: string): TConstant {
   return { node: { tag: "constant", name } };
 }
 
-// row -> effect * -> *
+// * ... -> effect -> *
 export const tcArrow = tConstant("->");
 // * -> *
 export const tcVector = tConstant("vector");
@@ -75,6 +75,7 @@ export const tNumber = tConstant("number");
 export const tString = tConstant("string");
 export const tNone = tConstant("none");
 
+// row -> effect
 const tcEffect = tConstant("effect");
 
 export function tVar(name: string, userSpecified = false): TVar {
