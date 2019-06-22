@@ -16,3 +16,11 @@
                  value
                  (get outer container))
             container))}))
+
+(define ^fst
+  {:get fst
+   :set (lambda (v p) (pair v (snd p)))})
+
+(define ^snd
+  {:get snd
+   :set (lambda (v p) (pair (fst p) v))})
