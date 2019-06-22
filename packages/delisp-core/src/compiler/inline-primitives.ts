@@ -263,6 +263,41 @@ defineInlinePrimitive(
   }
 );
 
+// Tuples
+
+defineInlinePrimitive("pair", "(-> a b _ (* a b))", ([a, b]) => {
+  return {
+    type: "CallExpression",
+    callee: {
+      type: "Identifier",
+      name: "pair"
+    },
+    arguments: [a, b]
+  };
+});
+
+defineInlinePrimitive("fst", "(-> (* a b) _ a)", ([pair]) => {
+  return {
+    type: "CallExpression",
+    callee: {
+      type: "Identifier",
+      name: "fst"
+    },
+    arguments: [pair]
+  };
+});
+
+defineInlinePrimitive("snd", "(-> (* a b) _ b)", ([pair]) => {
+  return {
+    type: "CallExpression",
+    callee: {
+      type: "Identifier",
+      name: "snd"
+    },
+    arguments: [pair]
+  };
+});
+
 /*
 matches `:foo` and inlines lens
   {

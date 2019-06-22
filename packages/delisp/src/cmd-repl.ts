@@ -1,6 +1,6 @@
 import * as fs from "./fs-helpers";
 import path from "path";
-import { TaggedValue } from "@delisp/runtime";
+import { Pair, TaggedValue } from "@delisp/runtime";
 
 import { CommandModule } from "yargs";
 
@@ -205,6 +205,8 @@ function printValue(value: any): string {
     } else {
       return `(case ${value.tag} ${value.value})`;
     }
+  } else if (value instanceof Pair) {
+    return `(pair ${printValue(value.fst)} ${printValue(value.snd)})`;
   } else if (Array.isArray(value)) {
     return `[${value.map(printValue).join(" ")}]`;
   } else if (typeof value === "object") {

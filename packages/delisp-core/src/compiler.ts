@@ -491,7 +491,13 @@ function compileRuntime(env: Environment): JS.Statement | JS.ModuleDeclaration {
 function compileRuntimeUtils(
   env: Environment
 ): JS.Statement | JS.ModuleDeclaration {
-  return env.moduleFormat.importRuntimeUtils(["matchTag", "caseTag"]);
+  return env.moduleFormat.importRuntimeUtils([
+    "matchTag",
+    "caseTag",
+    "pair",
+    "fst",
+    "snd"
+  ]);
 }
 
 function compileExports(

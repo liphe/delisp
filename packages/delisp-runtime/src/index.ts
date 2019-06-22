@@ -32,3 +32,28 @@ export function matchTag(
 export function caseTag(tag: string, value: unknown): TaggedValue {
   return new TaggedValue(tag, value);
 }
+
+//
+// Tuples
+//
+
+export class Pair<A, B> {
+  fst: A;
+  snd: B;
+  constructor(fst: A, snd: B) {
+    this.fst = fst;
+    this.snd = snd;
+  }
+}
+
+export function pair<A, B>(a: A, b: B): Pair<A, B> {
+  return new Pair(a, b);
+}
+
+export function fst<A, B>(pair: Pair<A, B>): A {
+  return pair.fst;
+}
+
+export function snd<A, B>(pair: Pair<A, B>): B {
+  return pair.snd;
+}

@@ -30,6 +30,7 @@ import {
   tVoid,
   tNone,
   tcArrow,
+  tcStar,
   TypeSchema
 } from "./types";
 
@@ -70,6 +71,8 @@ function convertSymbol(expr: ASExprSymbol): TVar | TConstant {
       return tVoid;
     case "none":
       return tNone;
+    case "*":
+      return tcStar;
     default:
       return userDefinedType(expr) ? tUserDefined(expr.name) : tVar(expr.name);
   }

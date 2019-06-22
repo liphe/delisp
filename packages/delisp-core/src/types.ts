@@ -62,6 +62,10 @@ function tConstant(name: string): TConstant {
 
 // * ... -> effect -> *
 export const tcArrow = tConstant("->");
+
+// * ... -> *
+export const tcStar = tConstant("*");
+
 // * -> *
 export const tcVector = tConstant("vector");
 // row -> *
@@ -154,4 +158,8 @@ export function tCases(
   extending: Type = emptyRow
 ): Type {
   return tApp(tcCases, tRow(variants, extending));
+}
+
+export function tProduct(types: Type[]) {
+  return tApp(tcStar, ...types);
 }
