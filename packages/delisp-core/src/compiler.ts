@@ -23,7 +23,12 @@ import {
 } from "./syntax";
 import { printType } from "./type-printer";
 
-import { methodCall, literal, identifier } from "./compiler/estree-utils";
+import {
+  primitiveCall,
+  methodCall,
+  literal,
+  identifier
+} from "./compiler/estree-utils";
 import { last, mapObject, maybeMap } from "./utils";
 
 import { InvariantViolation } from "./invariant";
@@ -339,62 +344,50 @@ function compileMatch(expr: SMatch, env: Environment): JS.Expression {
     })()
   };
 
-  return {
-    type: "CallExpression",
-    callee: {
-      type: "Identifier",
-      name: "matchTag"
-    },
-    arguments: [
-      compile(expr.node.value, env),
-      {
-        type: "ObjectExpression",
-        properties: expr.node.cases.map(c => ({
-          type: "Property",
+  return primitiveCall(
+    "matchTag",
+    compile(expr.node.value, env),
+    {
+      type: "ObjectExpression",
+      properties: expr.node.cases.map(c => ({
+        type: "Property",
+        kind: "init",
+        method: false,
+        shorthand: false,
+        computed: false,
+        key: {
+          type: "Literal",
+          value: c.label
+        },
+        value: {
+          type: "ArrowFunctionExpression",
           kind: "init",
-          method: false,
-          shorthand: false,
-          computed: false,
-          key: {
-            type: "Literal",
-            value: c.label
-          },
-          value: {
-            type: "ArrowFunctionExpression",
-            kind: "init",
-            id: null,
-            expression: false,
-            generator: false,
-            params: [
-              {
-                type: "Identifier",
-                name: identifierToJS(c.variable.name)
-              }
-            ],
-            body: (() => {
-              const newenv = addBinding(c.variable.name, env);
-              return compileBody(c.body, newenv);
-            })()
-          }
-        }))
-      },
-      ...(defaultCase ? [defaultCase] : [])
-    ]
-  };
+          id: null,
+          expression: false,
+          generator: false,
+          params: [
+            {
+              type: "Identifier",
+              name: identifierToJS(c.variable.name)
+            }
+          ],
+          body: (() => {
+            const newenv = addBinding(c.variable.name, env);
+            return compileBody(c.body, newenv);
+          })()
+        }
+      }))
+    },
+    ...(defaultCase ? [defaultCase] : [])
+  );
 }
 
 function compileTag(expr: SCaseTag, env: Environment): JS.Expression {
-  return {
-    type: "CallExpression",
-    callee: {
-      type: "Identifier",
-      name: "caseTag"
-    },
-    arguments: [
-      { type: "Literal", value: expr.node.label },
-      ...(expr.node.value ? [compile(expr.node.value, env)] : [])
-    ]
-  };
+  return primitiveCall(
+    "caseTag",
+    { type: "Literal", value: expr.node.label },
+    ...(expr.node.value ? [compile(expr.node.value, env)] : [])
+  );
 }
 
 function compileUnknown(_expr: SUnknown, env: Environment): JS.Expression {

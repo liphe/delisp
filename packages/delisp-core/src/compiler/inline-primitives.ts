@@ -10,7 +10,8 @@ import {
   methodCall,
   arrowFunction,
   identifier,
-  literal
+  literal,
+  primitiveCall
 } from "./estree-utils";
 import { isValidJSIdentifierName } from "./jsvariable";
 
@@ -266,36 +267,15 @@ defineInlinePrimitive(
 // Tuples
 
 defineInlinePrimitive("pair", "(-> a b _ (* a b))", ([a, b]) => {
-  return {
-    type: "CallExpression",
-    callee: {
-      type: "Identifier",
-      name: "pair"
-    },
-    arguments: [a, b]
-  };
+  return primitiveCall("pair", a, b);
 });
 
 defineInlinePrimitive("fst", "(-> (* a b) _ a)", ([pair]) => {
-  return {
-    type: "CallExpression",
-    callee: {
-      type: "Identifier",
-      name: "fst"
-    },
-    arguments: [pair]
-  };
+  return primitiveCall("fst", pair);
 });
 
 defineInlinePrimitive("snd", "(-> (* a b) _ b)", ([pair]) => {
-  return {
-    type: "CallExpression",
-    callee: {
-      type: "Identifier",
-      name: "snd"
-    },
-    arguments: [pair]
-  };
+  return primitiveCall("snd", pair);
 });
 
 /*

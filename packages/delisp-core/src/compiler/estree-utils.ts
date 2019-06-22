@@ -52,3 +52,14 @@ export function identifier(name: string): JS.Identifier {
     name
   };
 }
+
+export function primitiveCall(
+  name: string,
+  ...args: JS.Expression[]
+): JS.Expression {
+  return {
+    type: "CallExpression",
+    callee: identifier(name),
+    arguments: args
+  };
+}
