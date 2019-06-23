@@ -41,10 +41,10 @@ import {
   tString,
   tVector,
   tVoid,
-  // tValues,
+  tValues,
   TypeSchema
 } from "./types";
-import { difference, flatMap, last, mapObject, maybeMap } from "./utils";
+import { difference, flatMap, mapObject, maybeMap } from "./utils";
 
 import {
   findInlinePrimitive,
@@ -354,13 +354,18 @@ function infer(
       const fnargs = expr.node.lambdaList.positionalArgs.map(a => a.name);
       const argtypes = fnargs.map(_ => generateUniqueTVar());
 
-      const { result: typedBody, constraints, assumptions } = inferMany(
+      const bodyEffect = generateUniqueTVar();
+      const valuesType = generateUniqueTVar();
+      const fnType = tFn(argtypes, bodyEffect, valuesType);
+
+      const { result: typedBody, constraints, assumptions } = inferBody(
         expr.node.body,
         [...monovars, ...argtypes.map(v => v.node.name)],
-        internalTypes
+        internalTypes,
+        valuesType,
+        bodyEffect,
+        true
       );
-
-      const bodyEffect = generateUniqueTVar();
 
       // Generate a constraint for each assumption pending for each
       // argument, stating that they are equal to the argument types
@@ -371,9 +376,7 @@ function infer(
           .map(v => {
             const varIndex = fnargs.indexOf(v.node.name);
             return constEqual(v, argtypes[varIndex]);
-          }),
-
-        ...typedBody.map(form => constEffect(form, bodyEffect))
+          })
       ];
 
       return {
@@ -383,10 +386,7 @@ function infer(
             ...expr.node,
             body: typedBody
           },
-          info: returnTypes(
-            generateUniqueTVar(),
-            tFn(argtypes, bodyEffect, last(typedBody)!.info.type)
-          )
+          info: returnTypes(generateUniqueTVar(), fnType)
         },
         constraints: [...constraints, ...newConstraints],
         // assumptions have already been used, so they can be deleted.
@@ -709,9 +709,9 @@ function infer(
       const inference = inferMany(expr.node.values, monovars, internalTypes);
 
       const tPrimaryType = inference.result[0].info.resultingType;
-      // const tValuesType = tValues(
-      //   inference.result.map(r => r.info.resultingType)
-      // );
+      const tValuesType = tValues(
+        inference.result.map(r => r.info.resultingType)
+      );
 
       const effect = generateUniqueTVar();
 
@@ -722,7 +722,11 @@ function infer(
             ...expr.node,
             values: inference.result
           },
-          info: returnTypes(effect, tPrimaryType)
+          info: new Typed({
+            effect,
+            expressionType: tValuesType,
+            resultingType: multipleValues ? tValuesType : tPrimaryType
+          })
         },
 
         constraints: [
