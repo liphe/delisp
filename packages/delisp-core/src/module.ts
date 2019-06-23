@@ -1,6 +1,6 @@
 import { WithErrors, convert } from "./convert";
 import { readAllFromString } from "./reader";
-import { Module, Syntax } from "./syntax";
+import { Module, Syntax, SDefinition, isDefinition } from "./syntax";
 
 export function createModule(): Module {
   return {
@@ -39,4 +39,17 @@ export function removeModuleTypeDefinition(m: Module, name: string): Module {
       return d.node.tag === "type-alias" ? d.node.alias.name !== name : true;
     })
   };
+}
+
+export function moduleDefinitions<A>(m: Module<A>): Array<SDefinition<A>> {
+  return m.body.filter(isDefinition);
+}
+
+export function moduleDefinitionByName<A>(
+  name: string,
+  m: Module<A>
+): SDefinition<A> | null {
+  return (
+    moduleDefinitions(m).find(def => def.node.variable.name === name) || null
+  );
 }

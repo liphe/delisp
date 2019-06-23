@@ -10,7 +10,8 @@ export {
   moduleEnvironment
 } from "./compiler";
 export { createContext, evaluate, evaluateModule } from "./eval";
-export { inferType, inferModule } from "./infer";
+export { inferType, inferModule, inferExpressionInModule } from "./infer";
+export { Type } from "./types";
 export { printType } from "./type-printer";
 export {
   isDeclaration,
@@ -34,7 +35,9 @@ export {
   readModule,
   addToModule,
   removeModuleDefinition,
-  removeModuleTypeDefinition
+  removeModuleTypeDefinition,
+  moduleDefinitions,
+  moduleDefinitionByName
 } from "./module";
 
 export { generateTSModuleDeclaration } from "./typescript-generation";
