@@ -1,6 +1,6 @@
 import * as fs from "./fs-helpers";
 import path from "path";
-import { Pair, TaggedValue } from "@delisp/runtime";
+import { Pair, TaggedValue, MultipleValues } from "@delisp/runtime";
 
 import { CommandModule } from "yargs";
 
@@ -10,7 +10,7 @@ import {
   evaluate,
   evaluateModule,
   inferModule,
-  isDeclaration,
+  inferExpressionInModule,
   isDefinition,
   isExpression,
   moduleEnvironment,
@@ -19,11 +19,13 @@ import {
   readSyntax,
   removeModuleDefinition,
   removeModuleTypeDefinition,
-  collectConvertErrors
+  moduleDefinitionByName,
+  collectConvertErrors,
+  Type
 } from "@delisp/core";
 
 import { Typed } from "@delisp/core/src/syntax";
-import { Module, Syntax } from "@delisp/core/src/syntax";
+import { Module, Expression, Syntax } from "@delisp/core/src/syntax";
 
 import * as theme from "./color-theme";
 
@@ -32,7 +34,7 @@ import readline from "readline";
 let rl: readline.Interface;
 const PROMPT = "λ ";
 
-let previousModule: Module;
+let currentModule: Module;
 const context = createContext();
 
 async function loadModule(file: string): Promise<Module> {
@@ -44,7 +46,7 @@ async function loadModule(file: string): Promise<Module> {
 }
 
 async function startREPL() {
-  previousModule = await loadModule(path.join(__dirname, "../../init.dl"));
+  currentModule = await loadModule(path.join(__dirname, "../../init.dl"));
 
   rl = readline.createInterface({
     input: process.stdin,
@@ -86,66 +88,94 @@ function handleLine(line: string) {
       });
     }
 
-    const { value, type, name } = delispEval(syntax);
-    if (type) {
-      const typ = printType(type);
-      const sep = typ.length > 10 ? "\n  " : " ";
-      console.log(
-        dimBrackets(
-          `(${theme.dim("the")} ${theme.type(typ)}${sep}${
-            name ? theme.name(name) : printColoredValue(value)
-          })`
-        )
-      );
-    } else {
-      console.log(printColoredValue(value));
+    const evalResult = delispEval(syntax);
+    switch (evalResult.tag) {
+      case "expression":
+        console.log(
+          printWithTheType(evalResult.type, printColoredValue(evalResult.value))
+        );
+        return;
+
+      case "definition":
+        console.log(printWithTheType(evalResult.type, evalResult.name));
+        return;
+
+      case "other":
+        return;
     }
   } catch (err) {
-    console.error(theme.error(err.message));
+    console.error(theme.error(err.message + "\n" + err.stack));
   } finally {
     rl.prompt();
   }
 }
 
 function completer(input: string): [string[], string] {
-  const defs = previousModule.body.filter(isDefinition);
+  const defs = currentModule.body.filter(isDefinition);
   const completions = defs.map(d => d.node.variable.name);
   return [completions, input];
 }
 
-const delispEval = (syntax: Syntax) => {
-  //
-  // Type checking
-  //
-
-  // The current module, extended with the current form
-  let m;
-
+// Update `currentModule` with the syntax as introduced in the REPL.
+function updateModule(syntax: Syntax) {
   if (isDefinition(syntax)) {
-    previousModule = removeModuleDefinition(
-      previousModule,
+    currentModule = removeModuleDefinition(
+      currentModule,
       syntax.node.variable.name
     );
-    previousModule = addToModule(previousModule, syntax);
-    m = previousModule;
+    currentModule = addToModule(currentModule, syntax);
   } else if (syntax.node.tag === "type-alias") {
-    previousModule = removeModuleTypeDefinition(
-      previousModule,
+    currentModule = removeModuleTypeDefinition(
+      currentModule,
       syntax.node.alias.name
     );
-    previousModule = addToModule(previousModule, syntax);
-    m = previousModule;
+    currentModule = addToModule(currentModule, syntax);
   } else if (isExpression(syntax)) {
-    m = addToModule(previousModule, syntax);
+    // An expression won't affect the module so we don't need to
+    // update it.
   } else {
     throw new Error(`I don't know how to handle this in the REPL.`);
   }
+}
 
+type DelispEvalResult =
+  | {
+      tag: "expression";
+      type?: Type;
+      value: unknown;
+    }
+  | {
+      tag: "definition";
+      name: string;
+      type?: Type;
+    }
+  | {
+      tag: "other";
+    };
+
+const delispEval = (syntax: Syntax): DelispEvalResult => {
+  updateModule(syntax);
+
+  //
+  // Type checking
+  //
   let typedModule: Module<Typed> | undefined;
+  let typedExpression: Expression<Typed> | undefined;
+
   try {
-    const result = inferModule(m);
+    const result = inferModule(currentModule);
     typedModule = result.typedModule;
-    result.unknowns.forEach(v => {
+
+    const expressionResult =
+      typedModule && isExpression(syntax)
+        ? inferExpressionInModule(syntax, typedModule)
+        : undefined;
+    typedExpression = expressionResult && expressionResult.typedExpression;
+
+    [
+      ...result.unknowns,
+      ...(expressionResult ? expressionResult.unknowns : [])
+    ].forEach(v => {
       console.warn(
         theme.warn(
           `Unknown variable ${v.node.name} expected with type ${printType(
@@ -159,61 +189,58 @@ const delispEval = (syntax: Syntax) => {
     console.log(theme.error(err.message));
   }
 
-  const typedSyntax: Syntax<Typed> | null = typedModule
-    ? typedModule.body.slice(-1)[0]
-    : null;
-
   //
   // Evaluation
   //
 
-  const env = moduleEnvironment(previousModule, { definitionContainer: "env" });
+  const env = moduleEnvironment(currentModule, { definitionContainer: "env" });
   const value = evaluate(syntax, env, context);
 
-  if (isDeclaration(syntax)) {
-    const type =
-      typedSyntax && isDefinition(typedSyntax)
-        ? typedSyntax.node.value.info.type
-        : null;
-
-    if (isDefinition(syntax)) {
-      return { type, name: syntax.node.variable.name };
-    } else {
-      return { type };
-    }
+  if (isExpression(syntax)) {
+    return {
+      tag: "expression",
+      value,
+      type: typedExpression && typedExpression.info.type
+    };
+  } else if (isDefinition(syntax)) {
+    const name = syntax.node.variable.name;
+    const definition =
+      typedModule && (moduleDefinitionByName(name, typedModule) || undefined);
+    const type = definition && definition.node.value.info.type;
+    return { tag: "definition", name, type };
   } else {
-    const type =
-      typedSyntax && !isDeclaration(typedSyntax) ? typedSyntax.info.type : null;
-    return { value, type };
+    return { tag: "other" };
   }
 };
 
-function printValue(value: any): string {
-  if (typeof value === "number") {
-    return `${value}`;
-  } else if (typeof value === "boolean") {
-    return `${value}`;
-  } else if (typeof value === "string") {
-    return `"${value}"`;
-  } else if (value === undefined) {
+function printValue(result: any): string {
+  if (typeof result === "number") {
+    return `${result}`;
+  } else if (typeof result === "boolean") {
+    return `${result}`;
+  } else if (typeof result === "string") {
+    return `"${result}"`;
+  } else if (result === undefined) {
     return "none";
-  } else if (value === null) {
+  } else if (result === null) {
     return "#<null>";
-  } else if (value instanceof TaggedValue) {
-    if (value.value === undefined) {
-      return `(case ${value.tag})`;
+  } else if (result instanceof MultipleValues) {
+    return `(values${result.values.map(v => " " + printValue(v)).join("")})`;
+  } else if (result instanceof TaggedValue) {
+    if (result.value === undefined) {
+      return `(case ${result.tag})`;
     } else {
-      return `(case ${value.tag} ${value.value})`;
+      return `(case ${result.tag} ${result.value})`;
     }
-  } else if (value instanceof Pair) {
-    return `(pair ${printValue(value.fst)} ${printValue(value.snd)})`;
-  } else if (Array.isArray(value)) {
-    return `[${value.map(printValue).join(" ")}]`;
-  } else if (typeof value === "object") {
-    return `{${Object.entries(value)
+  } else if (result instanceof Pair) {
+    return `(pair ${printValue(result.fst)} ${printValue(result.snd)})`;
+  } else if (Array.isArray(result)) {
+    return `[${result.map(printValue).join(" ")}]`;
+  } else if (typeof result === "object") {
+    return `{${Object.entries(result)
       .map(([k, v]) => `:${k} ${printValue(v)}`)
       .join(" ")}}`;
-  } else if (typeof value === "function") {
+  } else if (typeof result === "function") {
     return `#<function>`;
   } else {
     return "?";
@@ -225,6 +252,17 @@ function printColoredValue(value: any): string {
   return printedValue[0] === "#" || printedValue[0] === "?"
     ? theme.unreadableValue(printedValue)
     : theme.value(printedValue);
+}
+
+function printWithTheType(type: Type | undefined, x: string): string {
+  if (type) {
+    // a definition
+    const typ = printType(type);
+    const sep = typ.length > 10 ? "\n  " : " ";
+    return dimBrackets(`(${theme.dim("the")} ${theme.type(typ)}${sep}${x})`);
+  } else {
+    return x;
+  }
 }
 
 function dimBrackets(str: string): string {
