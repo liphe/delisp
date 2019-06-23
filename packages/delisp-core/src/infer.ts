@@ -285,7 +285,9 @@ function infer(
       // as we found a variable, and because we lack an
       // 'environment/context', we generate a new type and add an
       // assumption for this variable.
+
       const t = generateUniqueTVar();
+
       const effect = generateUniqueTVar();
       const typedVar = {
         ...expr,
@@ -319,6 +321,7 @@ function infer(
         internalTypes,
         multipleValues
       );
+
       const t = generateUniqueTVar();
       const effect = generateUniqueTVar();
 
@@ -331,7 +334,10 @@ function infer(
             consequent: consequent.result,
             alternative: alternative.result
           },
-          info: singleType(effect, t)
+          info: new Typed({
+            effect,
+            expressionType: t
+          })
         },
         assumptions: [
           ...condition.assumptions,
@@ -489,7 +495,7 @@ function infer(
             })),
             body: bodyInference.result
           },
-          info: singleType(effect, t)
+          info: new Typed({ effect, expressionType: t })
         },
         constraints: [
           ...bodyInference.constraints,
@@ -532,6 +538,9 @@ function infer(
         internalTypes,
         multipleValues
       );
+
+      const effect = generateUniqueTVar();
+
       const t = expandTypeAliases(
         expr.node.typeWithWildcards.instantiate(),
         internalTypes
@@ -544,12 +553,13 @@ function infer(
             ...expr.node,
             value: inferred.result
           },
-          info: singleType(inferred.result.info.effect, t)
+          info: new Typed({ effect, expressionType: t })
         },
         assumptions: inferred.assumptions,
         constraints: [
           ...inferred.constraints,
-          constEqual(inferred.result, t, "expression-type")
+          constEqual(inferred.result, t, "expression-type"),
+          constEffect(inferred.result, effect)
         ]
       };
     }
@@ -573,7 +583,10 @@ function infer(
             body: body.result,
             returning: returning.result
           },
-          info: singleType(effect, returning.result.info.type)
+          info: new Typed({
+            effect,
+            expressionType: returning.result.info.type
+          })
         },
 
         constraints: [
@@ -636,7 +649,7 @@ function infer(
             })),
             defaultCase: defaultCase && defaultCase.result
           },
-          info: singleType(effect, t)
+          info: new Typed({ effect, expressionType: t })
         },
 
         constraints: [
