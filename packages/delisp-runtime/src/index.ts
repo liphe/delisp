@@ -57,3 +57,22 @@ export function fst<A, B>(pair: Pair<A, B>): A {
 export function snd<A, B>(pair: Pair<A, B>): B {
   return pair.snd;
 }
+
+//
+// Multiple values
+//
+
+export class MultipleValues {
+  values: unknown[];
+  constructor(values: unknown[]) {
+    this.values = values;
+  }
+}
+
+export function values(...x: unknown[]): MultipleValues {
+  return new MultipleValues(x);
+}
+
+export function primaryValue(x: MultipleValues): unknown {
+  return x instanceof MultipleValues ? x.values[0] : x;
+}
