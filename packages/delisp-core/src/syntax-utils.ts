@@ -117,6 +117,14 @@ export function mapExpr<I, A, B>(
           value: expr.node.value && fn(expr.node.value)
         }
       };
+    case "values":
+      return {
+        ...expr,
+        node: {
+          ...expr.node,
+          values: expr.node.values.map(fn)
+        }
+      };
   }
 }
 
@@ -151,6 +159,8 @@ export function exprFChildren<I, E>(e: ExpressionF<I, E>): E[] {
       ];
     case "case":
       return e.node.value ? [e.node.value] : [];
+    case "values":
+      return e.node.values;
   }
 }
 

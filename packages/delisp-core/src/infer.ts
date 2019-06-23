@@ -661,6 +661,10 @@ function infer(
         assumptions: inferredValue ? inferredValue.assumptions : []
       };
     }
+
+    case "values": {
+      throw new Error(`TODO: Infer values types!`);
+    }
   }
 }
 
@@ -910,6 +914,38 @@ function expandTypeAliases(type: Type, env: InternalTypeEnvironment): Type {
   });
 }
 
+/** Return an environment with the types defined in this module.  */
+function moduleInternalTypes(m: Module): InternalTypeEnvironment {
+  checkCircularTypes(m.body.filter(isTypeAlias));
+  return m.body.reduce((env, s) => {
+    if (s.node.tag === "type-alias") {
+      return { ...env, [s.node.alias.name]: s.node.definition };
+    } else {
+      return env;
+    }
+  }, {});
+}
+
+function getModuleInternalEnvironment(
+  m: Module<Typed>,
+  internalTypes: InternalTypeEnvironment
+): InternalEnvironment {
+  return {
+    variables: m.body.reduce((env, s) => {
+      if (s.node.tag === "definition") {
+        return {
+          ...env,
+          [s.node.variable.name]: s.node.value.info.type
+        };
+      } else {
+        return env;
+      }
+    }, {}),
+
+    types: internalTypes
+  };
+}
+
 /** Run the type inference on a module.
  *
  * @description Takes a Module and the external environment, will run
@@ -924,29 +960,13 @@ export function inferModule(
   typedModule: Module<Typed>;
   unknowns: TAssumption[];
 } {
-  checkCircularTypes(m.body.filter(isTypeAlias));
-  const internalTypes: InternalTypeEnvironment = m.body.reduce((env, s) => {
-    if (s.node.tag === "type-alias") {
-      return { ...env, [s.node.alias.name]: s.node.definition };
-    } else {
-      return env;
-    }
-  }, {});
-
+  const internalTypes = moduleInternalTypes(m);
   const bodyInferences = m.body.map(form => inferSyntax(form, internalTypes));
   const body = bodyInferences.map(i => i.result);
-
-  const internalEnv: InternalEnvironment = {
-    variables: body.reduce((env, s) => {
-      if (s.node.tag === "definition") {
-        return { ...env, [s.node.variable.name]: s.node.value.info.type };
-      } else {
-        return env;
-      }
-    }, {}),
-
-    types: internalTypes
-  };
+  const internalEnv = getModuleInternalEnvironment(
+    { tag: "module", body },
+    internalTypes
+  );
 
   const assumptions = groupAssumptions(
     flatMap(i => i.assumptions, bodyInferences),
@@ -971,6 +991,51 @@ export function inferModule(
       ...m,
       body: body.map(s => applySubstitutionToSyntax(s, solution))
     },
+    unknowns: assumptions.unknowns.map(
+      (v): TAssumption => {
+        return applySubstitutionToExpr(v, solution) as SVariableReference<
+          Typed
+        >;
+      }
+    )
+  };
+}
+
+/** Run the type inference in an expression in the context on a
+ * module. */
+export function inferExpressionInModule(
+  expr: Expression,
+  m: Module<Typed>,
+  externalEnv: ExternalEnvironment = defaultEnvironment
+): {
+  typedExpression: Expression<Typed>;
+  unknowns: TAssumption[];
+} {
+  const internalTypes = moduleInternalTypes(m);
+  const internalEnv = getModuleInternalEnvironment(m, internalTypes);
+
+  const inference = infer(expr, [], internalTypes);
+
+  const assumptions = groupAssumptions(
+    inference.assumptions,
+    internalEnv,
+    externalEnv
+  );
+
+  const constraints: TConstraint[] = [
+    ...inference.constraints,
+
+    ...assumptionsToConstraints(assumptions.externals, externalEnv),
+
+    ...assumptions.internals.map(v =>
+      constImplicitInstance(v, [], internalEnv.variables[v.node.name])
+    )
+  ];
+
+  const solution = solve(constraints, {});
+
+  return {
+    typedExpression: applySubstitutionToExpr(inference.result, solution),
     unknowns: assumptions.unknowns.map(
       (v): TAssumption => {
         return applySubstitutionToExpr(v, solution) as SVariableReference<

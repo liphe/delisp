@@ -209,6 +209,17 @@ function printExpr(expr: Expression): Doc {
             e.node.value ? indent(concat(line, e.node.value)) : nil
           )
         );
+
+      case "values": {
+        return group(
+          list(
+            groupalign(
+              text("values", "keyword", source),
+              align(...e.node.values)
+            )
+          )
+        );
+      }
     }
   });
 }

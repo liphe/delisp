@@ -108,6 +108,11 @@ interface SCaseTagF<E> {
   value?: E;
 }
 
+interface SValuesF<E> {
+  tag: "values";
+  values: E[];
+}
+
 interface SUnknownF<_E> {
   tag: "unknown";
 }
@@ -126,6 +131,7 @@ type AnyExpressionF<I = {}, E = Expression<I>> =
   | SDoBlockF<E>
   | SMatchF<E>
   | SCaseTagF<E>
+  | SValuesF<E>
   | SUnknownF<E>;
 
 interface Node<I, E> {
@@ -162,6 +168,8 @@ export interface SDoBlock<I = {}> extends Node<I, SDoBlockF<Expression<I>>> {}
 export interface SMatch<I = {}> extends Node<I, SMatchF<Expression<I>>> {}
 
 export interface SCaseTag<I = {}> extends Node<I, SCaseTagF<Expression<I>>> {}
+
+export interface SValues<I = {}> extends Node<I, SValuesF<Expression<I>>> {}
 
 export interface SUnknown<I = {}> extends Node<I, SUnknownF<Expression<I>>> {}
 
