@@ -9,9 +9,18 @@ import {
   emptyRow,
   TypeSchema,
   TConstant,
-  TApplication
+  TApplication,
+  TVar
 } from "./types";
 import { unique } from "./utils";
+
+export function isTVar(t: Type): t is TVar {
+  return t.node.tag === "type-variable";
+}
+
+export function onlyPrimaryType(t: Type): Type {
+  return { ...t, node: { ...t.node } };
+}
 
 export function isFunctionType(t: Type): t is TApplication {
   return (
@@ -39,7 +48,12 @@ export function mapType<A, B>(type: TypeF<A>, fn: (x: A) => B): TypeF<B> {
     case "constant":
     case "type-variable":
     case "empty-row":
-      return { node: type.node };
+      return {
+        ...type,
+        node: {
+          ...type.node
+        }
+      };
     case "application":
       return {
         node: {
@@ -91,7 +105,16 @@ export function applySubstitution(t: Type, env: Substitution): Type {
 // Return user defined types
 export function listTypeConstants(type: Type): TConstant[] {
   return foldType(type, t => {
-    return t.node.tag === "constant" ? [{ node: t.node }] : typeChildren(t);
+    return t.node.tag === "constant"
+      ? [
+          {
+            node: {
+              ...t.node,
+              nextType: undefined
+            }
+          }
+        ]
+      : typeChildren(t);
   });
 }
 

@@ -13,7 +13,7 @@ interface TApplicationF<T> {
   args: T[];
 }
 
-interface TVarF<_E> {
+interface TVarF<_T> {
   tag: "type-variable";
   name: string;
   userSpecified: boolean;
@@ -36,6 +36,7 @@ type AnyTypeF<T = Type> = TConstantF<T> | TApplicationF<T> | TVarF<T> | RowF<T>;
 interface Node<A> {
   node: A;
 }
+
 export interface TConstant extends Node<TConstantF<Type>> {}
 export interface TApplication extends Node<TApplicationF<Type>> {}
 export interface TVar extends Node<TVarF<Type>> {}
@@ -81,6 +82,8 @@ export const tNone = tConstant("none");
 
 // row -> effect
 const tcEffect = tConstant("effect");
+// row -> values
+const tcValues = tConstant("values");
 
 export function tVar(name: string, userSpecified = false): TVar {
   return {
@@ -110,11 +113,9 @@ export function tVector(t: Type): Type {
   return tApp(tcVector, t);
 }
 
-export function tFn(args: Type[], effect: Type, out: Type): Type {
-  return tApp(tcArrow, ...args, effect, out);
-}
-
-export const emptyRow: REmpty = { node: { tag: "empty-row" } };
+export const emptyRow: REmpty = {
+  node: { tag: "empty-row" }
+};
 
 export const tRowExtension = (
   label: string,
@@ -162,4 +163,23 @@ export function tCases(
 
 export function tProduct(types: Type[]) {
   return tApp(tcStar, ...types);
+}
+
+export function tValues(types: Type[], extending: Type = emptyRow): Type {
+  return tApp(
+    tcValues,
+    tRow(types.map((type, i) => ({ label: String(i), type })), extending)
+  );
+}
+
+export function tMultiValuedFunction(
+  args: Type[],
+  effect: Type,
+  out: Type
+): Type {
+  return tApp(tcArrow, ...args, effect, out);
+}
+
+export function tFn(args: Type[], effect: Type, out: Type): Type {
+  return tMultiValuedFunction(args, effect, tValues([out]));
 }

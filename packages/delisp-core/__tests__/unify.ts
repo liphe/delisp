@@ -23,7 +23,7 @@ describe("Unification", () => {
       const t1 = tFn([tNumber, tNumber], tVar("_"), tNumber);
       const t2 = tFn([tNumber], tVar("_"), tNumber);
       const result = unify(t1, t2, {});
-      expect(result.tag).toBe("unify-missing-value-error");
+      expect(result.tag).toBe("unify-mismatch-error");
     });
     it("should catch operator mismatches", () => {
       const t1 = tVector(tNumber);

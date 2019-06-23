@@ -1,6 +1,5 @@
-// TODO: replace with the pretty printer
-
 import { InvariantViolation } from "./invariant";
+import { range } from "./utils";
 import { TApplication, Type, tVar } from "./types";
 
 import {
@@ -30,68 +29,108 @@ function normalizeType(t: Type): Type {
   return applySubstitution(t, substitution);
 }
 
-function printApplicationType(type: TApplication): string {
-  if (
-    type.node.op.node.tag === "constant" &&
-    type.node.op.node.name === "vector"
-  ) {
-    return `[${_printType(type.node.args[0])}]`;
-  } else if (
-    type.node.op.node.tag === "constant" &&
-    type.node.op.node.name === "record"
-  ) {
-    const arg = type.node.args[0];
-    const row = normalizeRow(arg);
-    const fields = row.fields
-      .map(f => `${f.label} ${_printType(f.labelType)}`)
-      .join(" ");
-    const extension =
-      row.extends.node.tag !== "empty-row"
-        ? ` | ${_printType(row.extends)}`
-        : "";
-    return `{${fields}${extension}}`;
-  } else if (
-    type.node.op.node.tag === "constant" &&
-    type.node.op.node.name === "effect"
-  ) {
-    const row = normalizeRow(type.node.args[0]);
+function printValuesType(fnout: Type, simplify = false): string {
+  const row = normalizeRow(fnout);
 
-    const fields = row.fields.map(f => " " + f.label).join("");
-    const extending =
-      row.extends.node.tag === "empty-row"
-        ? ""
-        : " | " + _printType(row.extends);
-
-    return `(effect${fields}${extending})`;
-  } else if (
-    type.node.op.node.tag === "constant" &&
-    type.node.op.node.name === "cases"
-  ) {
-    const arg = type.node.args[0];
-    const row = normalizeRow(arg);
-    const fields = row.fields
-      .map(f =>
-        f.labelType.node.tag === "constant" && f.labelType.node.name === "void"
-          ? `${f.label}`
-          : `(${f.label} ${_printType(f.labelType)})`
-      )
-      .join(" ");
-    const extension =
-      row.extends.node.tag !== "empty-row" ? ` ${_printType(row.extends)}` : "";
-    return `(cases ${fields}${extension})`;
+  // primary value only
+  if (simplify && row.fields.length === 1 && row.fields[0].label === "0") {
+    return _printType(row.fields[0].labelType);
   } else {
+    // full form (values a b c ...)
     return (
-      "(" + [type.node.op, ...type.node.args].map(_printType).join(" ") + ")"
+      "(values " +
+      range(row.fields.length)
+        .map(i => {
+          const field = row.fields.find(f => f.label === String(i))!;
+          return _printType(field.labelType);
+        })
+        .join(" ") +
+      ")"
     );
   }
 }
 
-function _printType(type: Type): string {
+function printApplicationType(type: TApplication, simplify = false): string {
+  function genericApp(op: Type, args: Type[]): string {
+    return "(" + [op, ...args].map(t => _printType(t)).join(" ") + ")";
+  }
+
+  if (type.node.op.node.tag === "constant") {
+    switch (type.node.op.node.name) {
+      case "vector": {
+        return `[${_printType(type.node.args[0])}]`;
+      }
+      case "record": {
+        const arg = type.node.args[0];
+        const row = normalizeRow(arg);
+        const fields = row.fields
+          .map(f => `${f.label} ${_printType(f.labelType)}`)
+          .join(" ");
+        const extension =
+          row.extends.node.tag !== "empty-row"
+            ? ` | ${_printType(row.extends)}`
+            : "";
+        return `{${fields}${extension}}`;
+      }
+      case "effect": {
+        const row = normalizeRow(type.node.args[0]);
+
+        const fields = row.fields.map(f => " " + f.label).join("");
+        const extending =
+          row.extends.node.tag === "empty-row"
+            ? ""
+            : " | " + _printType(row.extends);
+
+        return `(effect${fields}${extending})`;
+      }
+
+      case "cases": {
+        const arg = type.node.args[0];
+        const row = normalizeRow(arg);
+        const fields = row.fields
+          .map(f =>
+            f.labelType.node.tag === "constant" &&
+            f.labelType.node.name === "void"
+              ? `${f.label}`
+              : `(${f.label} ${_printType(f.labelType)})`
+          )
+          .join(" ");
+        const extension =
+          row.extends.node.tag !== "empty-row"
+            ? ` ${_printType(row.extends)}`
+            : "";
+        return `(cases ${fields}${extension})`;
+      }
+
+      case "values":
+        return printValuesType(type.node.args[0], simplify);
+
+      case "->": {
+        const { op, args } = type.node;
+        return (
+          "(" +
+          [op, ...args]
+            .map((t, i) => _printType(t, i === args.length))
+            .join(" ") +
+          ")"
+        );
+      }
+
+      default: {
+        return genericApp(type.node.op, type.node.args);
+      }
+    }
+  } else {
+    return genericApp(type.node.op, type.node.args);
+  }
+}
+
+function _printType(type: Type, simplify = false): string {
   switch (type.node.tag) {
     case "constant":
       return type.node.name;
     case "application":
-      return printApplicationType({ node: type.node });
+      return printApplicationType({ node: type.node }, simplify);
     case "type-variable":
       return type.node.name;
     case "empty-row":
