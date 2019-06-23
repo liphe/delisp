@@ -33,7 +33,7 @@ import {
   emptyRow,
   Type,
   tBoolean,
-  tFn,
+  tMultiValuedFunction,
   tNumber,
   tRecord,
   tEffect,
@@ -356,7 +356,7 @@ function infer(
 
       const bodyEffect = generateUniqueTVar();
       const valuesType = generateUniqueTVar();
-      const fnType = tFn(argtypes, bodyEffect, valuesType);
+      const fnType = tMultiValuedFunction(argtypes, bodyEffect, valuesType);
 
       const { result: typedBody, constraints, assumptions } = inferBody(
         expr.node.body,
@@ -397,9 +397,16 @@ function infer(
     case "function-call": {
       const ifn = infer(expr.node.fn, monovars, internalTypes, false);
       const iargs = inferMany(expr.node.args, monovars, internalTypes);
-      const tTo = generateUniqueTVar();
+
+      const primaryType = generateUniqueTVar();
+      const valuesType = tValues([primaryType], generateUniqueTVar());
+
       const effect = generateUniqueTVar();
-      const tfn: Type = tFn(iargs.result.map(a => a.info.type), effect, tTo);
+      const tfn: Type = tMultiValuedFunction(
+        iargs.result.map(a => a.info.type),
+        effect,
+        valuesType
+      );
 
       return {
         result: {
@@ -409,7 +416,11 @@ function infer(
             fn: ifn.result,
             args: iargs.result
           },
-          info: returnTypes(effect, tTo)
+          info: new Typed({
+            effect,
+            expressionType: valuesType,
+            resultingType: multipleValues ? valuesType : primaryType
+          })
         },
 
         constraints: [
@@ -881,7 +892,7 @@ function applySubstitutionToSyntax(
   }
 }
 
-const defaultEnvironment: ExternalEnvironment = {
+export const defaultEnvironment: ExternalEnvironment = {
   variables: mapObject(primitives, prim => prim.type),
   types: {}
 };
