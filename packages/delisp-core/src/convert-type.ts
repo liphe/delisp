@@ -5,6 +5,7 @@ import { readFromString } from "./reader";
 import { last } from "./utils";
 
 import {
+  isSymbolOfName,
   ASExpr,
   ASExprList,
   ASExprMap,
@@ -21,6 +22,8 @@ import {
   tBoolean,
   tNumber,
   tRecord,
+  tMultiValuedFunction,
+  tValues,
   tCases,
   tEffect,
   tString,
@@ -133,12 +136,37 @@ function convertCases(_op: ASExpr, args: ASExpr[]): Type {
   return tCases(args.map(parseCase), tail && convert_(tail));
 }
 
+function convertValues(expr: ASExpr): Type[] {
+  // Check if X is the symbol VALUES
+  if (
+    expr.tag === "list" &&
+    expr.elements.length > 0 &&
+    isSymbolOfName(expr.elements[0], "values")
+  ) {
+    return expr.elements.slice(1).map(convert_);
+  } else {
+    return [convert_(expr)];
+  }
+}
+
 function convertList(expr: ASExprList): Type {
   const [op, ...args] = expr.elements;
   if (op.tag === "symbol" && op.name === "effect") {
     return convertEffect(args);
   } else if (op.tag === "symbol" && op.name === "cases") {
     return convertCases(op, args);
+  } else if (op.tag === "symbol" && op.name === "->") {
+    if (args.length < 2) {
+      throw new ConvertError(`Missing some arguments!`);
+    }
+    const fnargs = args.slice(0, -2);
+    const fneffect = args[args.length - 2];
+    const fnout = args[args.length - 1];
+    return tMultiValuedFunction(
+      fnargs.map(convert_),
+      convert_(fneffect),
+      tValues(convertValues(fnout))
+    );
   } else {
     const opType = convert_(op);
     return tApp(opType, ...args.map(convert_));

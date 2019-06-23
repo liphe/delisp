@@ -13,7 +13,7 @@
  */
 
 import { generateUniqueTVar } from "./type-generate";
-import { Substitution } from "./type-utils";
+import { isTVar, Substitution } from "./type-utils";
 import { Type, RExtension, tRowExtension, TVar } from "./types";
 
 interface UnifySuccess {
@@ -199,9 +199,7 @@ function unifyRow(
   const rewriteResult = rewriteRowForLabel(
     row2,
     row1.node.label,
-    tail.node.tag === "type-variable"
-      ? { ...tail, node: tail.node }
-      : undefined,
+    isTVar(tail) ? tail : undefined,
     ctx
   );
   if (!rewriteResult) {
