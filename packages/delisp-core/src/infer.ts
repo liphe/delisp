@@ -86,9 +86,19 @@ interface InferResult<A> {
 function inferMany(
   exprs: Expression[],
   monovars: string[],
-  internalTypes: InternalTypeEnvironment
+  internalTypes: InternalTypeEnvironment,
+  options = {
+    multipleValuedLastForm: false
+  }
 ): InferResult<Array<Expression<Typed>>> {
-  const results = exprs.map(e => infer(e, monovars, internalTypes));
+  const results = exprs.map((e, i) =>
+    infer(
+      e,
+      monovars,
+      internalTypes,
+      options.multipleValuedLastForm && i === exprs.length - 1
+    )
+  );
   return {
     result: results.map(r => r.result),
     constraints: flatMap(r => r.constraints, results),
@@ -101,13 +111,17 @@ function inferBody(
   monovars: string[],
   internalTypes: InternalTypeEnvironment,
   returnType: Type,
-  effectType: Type
+  effectType: Type,
+  multipleValues: boolean
 ) {
   if (exprs.length === 0) {
     throw new Error(`Empty body is not allowed!`);
   }
 
-  const inferred = inferMany(exprs, monovars, internalTypes);
+  const inferred = inferMany(exprs, monovars, internalTypes, {
+    multipleValuedLastForm: multipleValues
+  });
+
   const returningForm = inferred.result[inferred.result.length - 1];
 
   return {
@@ -130,7 +144,13 @@ function infer(
   // of type variables introduced by lambda.
   monovars: string[],
   // Known type aliases that must be expanded
-  internalTypes: InternalTypeEnvironment
+  internalTypes: InternalTypeEnvironment,
+
+  // True if the caller wants the _resulting type_ to be a
+  // multi-valued type. For many forms, being multipleValues or not
+  // depends on if the parent itself is multipleValued. If that's the
+  // case, just pass the value down to the subexpressions.
+  multipleValues: boolean
 ): InferResult<Expression<Typed>> {
   function returnTypes(effect: Type, ...types: Type[]): Typed {
     return new Typed({
@@ -200,11 +220,12 @@ function infer(
     case "record": {
       const inferred = expr.node.fields.map(({ label, value }) => ({
         label,
-        ...infer(value, monovars, internalTypes)
+        ...infer(value, monovars, internalTypes, false)
       }));
 
       const tailInferred =
-        expr.node.extends && infer(expr.node.extends, monovars, internalTypes);
+        expr.node.extends &&
+        infer(expr.node.extends, monovars, internalTypes, false);
       const tailRowType = generateUniqueTVar();
 
       const effect = generateUniqueTVar();
@@ -278,9 +299,24 @@ function infer(
       };
     }
     case "conditional": {
-      const condition = infer(expr.node.condition, monovars, internalTypes);
-      const consequent = infer(expr.node.consequent, monovars, internalTypes);
-      const alternative = infer(expr.node.alternative, monovars, internalTypes);
+      const condition = infer(
+        expr.node.condition,
+        monovars,
+        internalTypes,
+        false
+      );
+      const consequent = infer(
+        expr.node.consequent,
+        monovars,
+        internalTypes,
+        multipleValues
+      );
+      const alternative = infer(
+        expr.node.alternative,
+        monovars,
+        internalTypes,
+        multipleValues
+      );
       const t = generateUniqueTVar();
       const effect = generateUniqueTVar();
 
@@ -359,7 +395,7 @@ function infer(
     }
 
     case "function-call": {
-      const ifn = infer(expr.node.fn, monovars, internalTypes);
+      const ifn = infer(expr.node.fn, monovars, internalTypes, false);
       const iargs = inferMany(expr.node.args, monovars, internalTypes);
       const tTo = generateUniqueTVar();
       const effect = generateUniqueTVar();
@@ -413,7 +449,7 @@ function infer(
       const bindingsInfo = expr.node.bindings.map(b => {
         return {
           binding: b,
-          inference: infer(b.value, monovars, internalTypes)
+          inference: infer(b.value, monovars, internalTypes, false)
         };
       });
 
@@ -425,7 +461,8 @@ function infer(
         monovars,
         internalTypes,
         t,
-        effect
+        effect,
+        multipleValues
       );
 
       return {
@@ -475,7 +512,12 @@ function infer(
     }
 
     case "type-annotation": {
-      const inferred = infer(expr.node.value, monovars, internalTypes);
+      const inferred = infer(
+        expr.node.value,
+        monovars,
+        internalTypes,
+        multipleValues
+      );
       const t = expandTypeAliases(
         expr.node.typeWithWildcards.instantiate(),
         internalTypes
@@ -497,7 +539,12 @@ function infer(
 
     case "do-block": {
       const body = inferMany(expr.node.body, monovars, internalTypes);
-      const returning = infer(expr.node.returning, monovars, internalTypes);
+      const returning = infer(
+        expr.node.returning,
+        monovars,
+        internalTypes,
+        multipleValues
+      );
 
       const effect = generateUniqueTVar();
 
@@ -524,7 +571,7 @@ function infer(
     }
 
     case "match": {
-      const value = infer(expr.node.value, monovars, internalTypes);
+      const value = infer(expr.node.value, monovars, internalTypes, false);
 
       const t = generateUniqueTVar();
       const effect = generateUniqueTVar();
@@ -537,14 +584,22 @@ function infer(
             [...monovars, c.variable.name],
             internalTypes,
             t,
-            effect
+            effect,
+            multipleValues
           )
         };
       });
 
       const defaultCase =
         expr.node.defaultCase &&
-        inferBody(expr.node.defaultCase, monovars, internalTypes, t, effect);
+        inferBody(
+          expr.node.defaultCase,
+          monovars,
+          internalTypes,
+          t,
+          effect,
+          multipleValues
+        );
 
       const variantTypes = expr.node.cases.map(c => ({
         label: c.label,
@@ -617,7 +672,8 @@ function infer(
 
     case "case": {
       const inferredValue =
-        expr.node.value && infer(expr.node.value, monovars, internalTypes);
+        expr.node.value &&
+        infer(expr.node.value, monovars, internalTypes, false);
 
       const labelType = expr.node.value ? generateUniqueTVar() : tVoid;
       const t = tCases(
@@ -688,7 +744,8 @@ function inferSyntax(
     const { result, assumptions, constraints } = infer(
       { ...syntax, node: { ...syntax.node } },
       [],
-      internalTypes
+      internalTypes,
+      false
     );
     return {
       result,
@@ -699,7 +756,8 @@ function inferSyntax(
     const { result, assumptions, constraints } = infer(
       syntax.node.value,
       [],
-      internalTypes
+      internalTypes,
+      false
     );
     return {
       result: {
@@ -832,7 +890,8 @@ export function inferType(
   const { result: tmpExpr, constraints, assumptions } = infer(
     expr,
     [],
-    internalTypes
+    internalTypes,
+    false
   );
 
   const s = solve(
@@ -1018,7 +1077,8 @@ export function inferModule(
 export function inferExpressionInModule(
   expr: Expression,
   m: Module<Typed>,
-  externalEnv: ExternalEnvironment = defaultEnvironment
+  externalEnv: ExternalEnvironment = defaultEnvironment,
+  multipleValues: boolean
 ): {
   typedExpression: Expression<Typed>;
   unknowns: TAssumption[];
@@ -1026,7 +1086,7 @@ export function inferExpressionInModule(
   const internalTypes = moduleInternalTypes(m);
   const internalEnv = getModuleInternalEnvironment(m, internalTypes);
 
-  const inference = infer(expr, [], internalTypes);
+  const inference = infer(expr, [], internalTypes, multipleValues);
 
   const assumptions = groupAssumptions(
     inference.assumptions,
