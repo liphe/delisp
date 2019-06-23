@@ -128,7 +128,7 @@ function inferBody(
     result: inferred.result,
     constraints: [
       ...inferred.constraints,
-      constEqual(returningForm, returnType),
+      constEqual(returningForm, returnType, "resulting-type"),
       ...inferred.result.map(form => constEffect(form, effectType))
     ],
     assumptions: inferred.assumptions
@@ -152,9 +152,10 @@ function infer(
   // case, just pass the value down to the subexpressions.
   multipleValues: boolean
 ): InferResult<Expression<Typed>> {
-  function returnTypes(effect: Type, ...types: Type[]): Typed {
+  function singleType(effect: Type, type: Type): Typed {
     return new Typed({
-      expressionType: types[0],
+      expressionType: type,
+      resultingType: multipleValues ? tValues([type]) : undefined,
       effect
     });
   }
@@ -165,7 +166,7 @@ function infer(
         result: {
           ...expr,
           node: expr.node,
-          info: returnTypes(generateUniqueTVar(), generateUniqueTVar())
+          info: singleType(generateUniqueTVar(), generateUniqueTVar())
         },
         constraints: [],
         assumptions: []
@@ -176,7 +177,7 @@ function infer(
         result: {
           ...expr,
           node: expr.node,
-          info: returnTypes(generateUniqueTVar(), tNumber)
+          info: singleType(generateUniqueTVar(), tNumber)
         },
         constraints: [],
         assumptions: []
@@ -186,7 +187,7 @@ function infer(
         result: {
           ...expr,
           node: expr.node,
-          info: returnTypes(generateUniqueTVar(), tString)
+          info: singleType(generateUniqueTVar(), tString)
         },
         constraints: [],
         assumptions: []
@@ -206,12 +207,12 @@ function infer(
             ...expr.node,
             values: inferredValues.result
           },
-          info: returnTypes(effect, tVector(t))
+          info: singleType(effect, tVector(t))
         },
         assumptions: inferredValues.assumptions,
         constraints: [
           ...inferredValues.constraints,
-          ...inferredValues.result.map(e => constEqual(e, t)),
+          ...inferredValues.result.map(e => constEqual(e, t, "resulting-type")),
           ...inferredValues.result.map(e => constEffect(e, effect))
         ]
       };
@@ -241,7 +242,7 @@ function infer(
             })),
             extends: tailInferred && tailInferred.result
           },
-          info: returnTypes(
+          info: singleType(
             effect,
             tRecord(
               inferred.map(i => ({
@@ -269,7 +270,8 @@ function infer(
                       type: generateUniqueTVar()
                     })),
                     tailRowType
-                  )
+                  ),
+                  "resulting-type"
                 )
               ]
             : []),
@@ -290,7 +292,7 @@ function infer(
         node: {
           ...expr.node
         },
-        info: returnTypes(effect, t)
+        info: singleType(effect, t)
       };
       return {
         result: typedVar,
@@ -329,7 +331,7 @@ function infer(
             consequent: consequent.result,
             alternative: alternative.result
           },
-          info: returnTypes(effect, t)
+          info: singleType(effect, t)
         },
         assumptions: [
           ...condition.assumptions,
@@ -340,9 +342,9 @@ function infer(
           ...condition.constraints,
           ...consequent.constraints,
           ...alternative.constraints,
-          constEqual(condition.result, tBoolean),
-          constEqual(consequent.result, t),
-          constEqual(alternative.result, t),
+          constEqual(condition.result, tBoolean, "resulting-type"),
+          constEqual(consequent.result, t, "resulting-type"),
+          constEqual(alternative.result, t, "resulting-type"),
 
           constEffect(condition.result, effect),
           constEffect(consequent.result, effect),
@@ -375,7 +377,7 @@ function infer(
           .filter(v => fnargs.includes(v.node.name))
           .map(v => {
             const varIndex = fnargs.indexOf(v.node.name);
-            return constEqual(v, argtypes[varIndex]);
+            return constEqual(v, argtypes[varIndex], "expression-type");
           })
       ];
 
@@ -386,7 +388,7 @@ function infer(
             ...expr.node,
             body: typedBody
           },
-          info: returnTypes(generateUniqueTVar(), fnType)
+          info: singleType(generateUniqueTVar(), fnType)
         },
         constraints: [...constraints, ...newConstraints],
         // assumptions have already been used, so they can be deleted.
@@ -424,7 +426,7 @@ function infer(
         },
 
         constraints: [
-          constEqual(ifn.result, tfn) as TConstraint,
+          constEqual(ifn.result, tfn, "resulting-type"),
           ...ifn.constraints,
           ...iargs.constraints,
 
@@ -487,7 +489,7 @@ function infer(
             })),
             body: bodyInference.result
           },
-          info: returnTypes(effect, t)
+          info: singleType(effect, t)
         },
         constraints: [
           ...bodyInference.constraints,
@@ -508,7 +510,8 @@ function infer(
               return constImplicitInstance(
                 v,
                 monovars,
-                bInfo.inference.result.info.type
+                bInfo.inference.result.info.type,
+                "expression-type"
               );
             }),
 
@@ -541,10 +544,13 @@ function infer(
             ...expr.node,
             value: inferred.result
           },
-          info: returnTypes(inferred.result.info.effect, t)
+          info: singleType(inferred.result.info.effect, t)
         },
         assumptions: inferred.assumptions,
-        constraints: [...inferred.constraints, constEqual(inferred.result, t)]
+        constraints: [
+          ...inferred.constraints,
+          constEqual(inferred.result, t, "expression-type")
+        ]
       };
     }
 
@@ -567,7 +573,7 @@ function infer(
             body: body.result,
             returning: returning.result
           },
-          info: returnTypes(effect, returning.result.info.type)
+          info: singleType(effect, returning.result.info.type)
         },
 
         constraints: [
@@ -630,7 +636,7 @@ function infer(
             })),
             defaultCase: defaultCase && defaultCase.result
           },
-          info: returnTypes(effect, t)
+          info: singleType(effect, t)
         },
 
         constraints: [
@@ -642,7 +648,11 @@ function infer(
           // that `match` is handling.
           constEqual(
             value.result,
-            tCases(variantTypes, defaultCase ? generateUniqueTVar() : undefined)
+            tCases(
+              variantTypes,
+              defaultCase ? generateUniqueTVar() : undefined
+            ),
+            "resulting-type"
           ),
           constEffect(value.result, effect),
 
@@ -658,7 +668,7 @@ function infer(
                       `Unknown invariant case ${c.label}`
                     );
                   }
-                  return [constEqual(a, variant.type)];
+                  return [constEqual(a, variant.type, "expression-type")];
                 } else {
                   return [];
                 }
@@ -701,14 +711,14 @@ function infer(
             label: expr.node.label,
             value: inferredValue && inferredValue.result
           },
-          info: returnTypes(effect, t)
+          info: singleType(effect, t)
         },
 
         constraints: inferredValue
           ? [
               ...inferredValue.constraints,
               constEffect(inferredValue.result, effect),
-              constEqual(inferredValue.result, labelType)
+              constEqual(inferredValue.result, labelType, "resulting-type")
             ]
           : [],
 
@@ -865,7 +875,7 @@ function assumptionsToConstraints(
 ): TConstraint[] {
   return maybeMap(a => {
     const t = lookupVariableType(a.node.name, env);
-    return t && constExplicitInstance(a, t);
+    return t && constExplicitInstance(a, t, "expression-type");
   }, assumptions);
 }
 
@@ -1066,7 +1076,12 @@ export function inferModule(
     ...assumptionsToConstraints(assumptions.externals, externalEnv),
 
     ...assumptions.internals.map(v =>
-      constImplicitInstance(v, [], internalEnv.variables[v.node.name])
+      constImplicitInstance(
+        v,
+        [],
+        internalEnv.variables[v.node.name],
+        "expression-type"
+      )
     )
   ];
 
@@ -1115,7 +1130,12 @@ export function inferExpressionInModule(
     ...assumptionsToConstraints(assumptions.externals, externalEnv),
 
     ...assumptions.internals.map(v =>
-      constImplicitInstance(v, [], internalEnv.variables[v.node.name])
+      constImplicitInstance(
+        v,
+        [],
+        internalEnv.variables[v.node.name],
+        "expression-type"
+      )
     )
   ];
 
