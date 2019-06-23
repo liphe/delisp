@@ -41,6 +41,7 @@ import {
   tString,
   tVector,
   tVoid,
+  // tValues,
   TypeSchema
 } from "./types";
 import { difference, flatMap, last, mapObject, maybeMap } from "./utils";
@@ -131,13 +132,20 @@ function infer(
   // Known type aliases that must be expanded
   internalTypes: InternalTypeEnvironment
 ): InferResult<Expression<Typed>> {
+  function returnTypes(effect: Type, ...types: Type[]): Typed {
+    return new Typed({
+      expressionType: types[0],
+      effect
+    });
+  }
+
   switch (expr.node.tag) {
     case "unknown":
       return {
         result: {
           ...expr,
           node: expr.node,
-          info: { type: generateUniqueTVar(), effect: generateUniqueTVar() }
+          info: returnTypes(generateUniqueTVar(), generateUniqueTVar())
         },
         constraints: [],
         assumptions: []
@@ -148,7 +156,7 @@ function infer(
         result: {
           ...expr,
           node: expr.node,
-          info: { type: tNumber, effect: generateUniqueTVar() }
+          info: returnTypes(generateUniqueTVar(), tNumber)
         },
         constraints: [],
         assumptions: []
@@ -158,7 +166,7 @@ function infer(
         result: {
           ...expr,
           node: expr.node,
-          info: { type: tString, effect: generateUniqueTVar() }
+          info: returnTypes(generateUniqueTVar(), tString)
         },
         constraints: [],
         assumptions: []
@@ -178,7 +186,7 @@ function infer(
             ...expr.node,
             values: inferredValues.result
           },
-          info: { type: tVector(t), effect }
+          info: returnTypes(effect, tVector(t))
         },
         assumptions: inferredValues.assumptions,
         constraints: [
@@ -212,16 +220,16 @@ function infer(
             })),
             extends: tailInferred && tailInferred.result
           },
-          info: {
-            type: tRecord(
+          info: returnTypes(
+            effect,
+            tRecord(
               inferred.map(i => ({
                 label: i.label.name,
                 type: i.result.info.type
               })),
               tailInferred ? tailRowType : emptyRow
-            ),
-            effect
-          }
+            )
+          )
         },
         assumptions: [
           ...flatMap(i => i.assumptions, inferred),
@@ -261,10 +269,7 @@ function infer(
         node: {
           ...expr.node
         },
-        info: {
-          type: t,
-          effect
-        }
+        info: returnTypes(effect, t)
       };
       return {
         result: typedVar,
@@ -288,10 +293,7 @@ function infer(
             consequent: consequent.result,
             alternative: alternative.result
           },
-          info: {
-            type: t,
-            effect
-          }
+          info: returnTypes(effect, t)
         },
         assumptions: [
           ...condition.assumptions,
@@ -345,13 +347,10 @@ function infer(
             ...expr.node,
             body: typedBody
           },
-          info: {
-            type: tFn(argtypes, bodyEffect, last(typedBody)!.info.type),
-            // This is the effect of evaluating the lambda itself, not
-            // calling it, that's why we don't specify any specific
-            // effect.
-            effect: generateUniqueTVar()
-          }
+          info: returnTypes(
+            generateUniqueTVar(),
+            tFn(argtypes, bodyEffect, last(typedBody)!.info.type)
+          )
         },
         constraints: [...constraints, ...newConstraints],
         // assumptions have already been used, so they can be deleted.
@@ -374,7 +373,7 @@ function infer(
             fn: ifn.result,
             args: iargs.result
           },
-          info: { type: tTo, effect }
+          info: returnTypes(effect, tTo)
         },
 
         constraints: [
@@ -440,10 +439,7 @@ function infer(
             })),
             body: bodyInference.result
           },
-          info: {
-            type: t,
-            effect
-          }
+          info: returnTypes(effect, t)
         },
         constraints: [
           ...bodyInference.constraints,
@@ -492,10 +488,7 @@ function infer(
             ...expr.node,
             value: inferred.result
           },
-          info: {
-            type: t,
-            effect: inferred.result.info.effect
-          }
+          info: returnTypes(inferred.result.info.effect, t)
         },
         assumptions: inferred.assumptions,
         constraints: [...inferred.constraints, constEqual(inferred.result, t)]
@@ -516,7 +509,7 @@ function infer(
             body: body.result,
             returning: returning.result
           },
-          info: { type: returning.result.info.type, effect }
+          info: returnTypes(effect, returning.result.info.type)
         },
 
         constraints: [
@@ -571,10 +564,7 @@ function infer(
             })),
             defaultCase: defaultCase && defaultCase.result
           },
-          info: {
-            type: t,
-            effect
-          }
+          info: returnTypes(effect, t)
         },
 
         constraints: [
@@ -644,10 +634,7 @@ function infer(
             label: expr.node.label,
             value: inferredValue && inferredValue.result
           },
-          info: {
-            type: t,
-            effect
-          }
+          info: returnTypes(effect, t)
         },
 
         constraints: inferredValue
@@ -663,7 +650,32 @@ function infer(
     }
 
     case "values": {
-      throw new Error(`TODO: Infer values types!`);
+      const inference = inferMany(expr.node.values, monovars, internalTypes);
+
+      const tPrimaryType = inference.result[0].info.resultingType;
+      // const tValuesType = tValues(
+      //   inference.result.map(r => r.info.resultingType)
+      // );
+
+      const effect = generateUniqueTVar();
+
+      return {
+        result: {
+          ...expr,
+          node: {
+            ...expr.node,
+            values: inference.result
+          },
+          info: returnTypes(effect, tPrimaryType)
+        },
+
+        constraints: [
+          ...inference.constraints,
+          ...inference.result.map(r => constEffect(r, effect))
+        ],
+
+        assumptions: inference.assumptions
+      };
     }
   }
 }
