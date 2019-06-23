@@ -21,6 +21,7 @@ import {
   removeModuleTypeDefinition,
   moduleDefinitionByName,
   collectConvertErrors,
+  defaultEnvironment,
   Type
 } from "@delisp/core";
 
@@ -168,7 +169,7 @@ const delispEval = (syntax: Syntax): DelispEvalResult => {
 
     const expressionResult =
       typedModule && isExpression(syntax)
-        ? inferExpressionInModule(syntax, typedModule)
+        ? inferExpressionInModule(syntax, typedModule, defaultEnvironment, true)
         : undefined;
     typedExpression = expressionResult && expressionResult.typedExpression;
 

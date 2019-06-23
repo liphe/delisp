@@ -10,7 +10,12 @@ export {
   moduleEnvironment
 } from "./compiler";
 export { createContext, evaluate, evaluateModule } from "./eval";
-export { inferType, inferModule, inferExpressionInModule } from "./infer";
+export {
+  inferType,
+  inferModule,
+  inferExpressionInModule,
+  defaultEnvironment
+} from "./infer";
 export { Type } from "./types";
 export { printType } from "./type-printer";
 export {
