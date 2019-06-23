@@ -49,3 +49,7 @@ export type ASExpr =
   | ASExprList
   | ASExprVector
   | ASExprMap;
+
+export function isSymbolOfName(x: ASExpr, name: string): boolean {
+  return x.tag === "symbol" && x.name === name;
+}

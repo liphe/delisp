@@ -450,6 +450,14 @@ defineConversion("case", (case_, args, whole) => {
   );
 });
 
+defineConversion("values", (_values, args, whole) => {
+  return result(
+    { tag: "values", values: args.map(convertExpr) },
+    whole.location,
+    []
+  );
+});
+
 defineToplevel("define", (define_, args, whole) => {
   if (args.length !== 2) {
     const lastExpr = last([define_, ...args]) as ASExpr;
