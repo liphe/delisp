@@ -8,10 +8,12 @@ export function applySubstitutionToExpr(
 ): Expression<Typed> {
   return transformRecurExpr(s, expr => ({
     ...expr,
-    info: {
-      ...expr.info,
-      type: applySubstitution(expr.info.type, env),
+    info: new Typed({
+      expressionType: applySubstitution(expr.info.expressionType, env),
+      resultingType:
+        expr.info._resultingType &&
+        applySubstitution(expr.info._resultingType, env),
       effect: applySubstitution(expr.info.effect, env)
-    }
+    })
   }));
 }
