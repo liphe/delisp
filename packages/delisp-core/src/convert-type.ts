@@ -159,13 +159,13 @@ function convertValues(expr: ASExpr): Type {
 
 function convertList(expr: ASExprList): Type {
   const [op, ...args] = expr.elements;
-  if (op.tag === "symbol" && op.name === "effect") {
+  if (isSymbolOfName(op, "effect")) {
     return convertEffect(args);
-  } else if (op.tag === "symbol" && op.name === "cases") {
+  } else if (isSymbolOfName(op, "cases")) {
     return convertCases(op, args);
-  } else if (op.tag === "symbol" && op.name === "values") {
+  } else if (isSymbolOfName(op, "values")) {
     return convertValues(expr);
-  } else if (op.tag === "symbol" && op.name === "->") {
+  } else if (isSymbolOfName(op, "->")) {
     if (args.length < 2) {
       throw new ConvertError(`Missing some arguments!`);
     }
