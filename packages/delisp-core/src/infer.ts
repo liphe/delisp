@@ -771,6 +771,9 @@ function infer(
         assumptions: inference.assumptions
       };
     }
+
+    case "multiple-value-bind":
+      throw new Error(`TODO!`);
   }
 }
 
