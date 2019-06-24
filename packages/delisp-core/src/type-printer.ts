@@ -1,12 +1,7 @@
 import { InvariantViolation } from "./invariant";
 import { range } from "./utils";
-import { TApplication, Type, tVar } from "./types";
-
-import {
-  normalizeRow,
-  listTypeVariables,
-  applySubstitution
-} from "./type-utils";
+import { TApplication, Type, TVar } from "./types";
+import { normalizeRow } from "./type-utils";
 
 function typeIndexName(index: number): string {
   const alphabet = "αβγδεζηθικμνξοπρστυφχψ";
@@ -15,26 +10,29 @@ function typeIndexName(index: number): string {
     : `ω${index - alphabet.length + 1}`;
 }
 
-function normalizeType(t: Type): Type {
-  const vars = listTypeVariables(t);
-  const substitution = vars.reduce((s, v, i) => {
-    const normalizedName = typeIndexName(i);
-    return v === normalizedName
-      ? s
-      : {
-          ...s,
-          [v]: tVar(normalizedName)
-        };
-  }, {});
-  return applySubstitution(t, substitution);
+function createVariableNormalizer() {
+  let variables: string[] = [];
+
+  return (t: TVar): string => {
+    let idx = variables.indexOf(t.node.name);
+    if (idx === -1) {
+      idx = variables.length;
+      variables.push(t.node.name);
+    }
+    return typeIndexName(idx);
+  };
 }
 
-function printValuesType(fnout: Type, simplify = false): string {
+function printValuesType(
+  fnout: Type,
+  normalizeVar: (t: TVar) => string,
+  simplify = false
+): string {
   const row = normalizeRow(fnout);
 
   // primary value only
   if (simplify && row.fields.length === 1 && row.fields[0].label === "0") {
-    return _printType(row.fields[0].labelType);
+    return _printType(row.fields[0].labelType, normalizeVar);
   } else {
     // full form (values a b c ...)
     return (
@@ -42,36 +40,42 @@ function printValuesType(fnout: Type, simplify = false): string {
       range(row.fields.length)
         .map(i => {
           const field = row.fields.find(f => f.label === String(i))!;
-          return _printType(field.labelType);
+          return _printType(field.labelType, normalizeVar);
         })
         .join(" ") +
       (row.extends.node.tag === "empty-row"
         ? ""
-        : "| " + _printType(row.extends)) +
+        : "| " + _printType(row.extends, normalizeVar)) +
       ")"
     );
   }
 }
 
-function printApplicationType(type: TApplication, simplify = false): string {
+function printApplicationType(
+  type: TApplication,
+  normalizeVar: (t: TVar) => string,
+  simplify = false
+): string {
   function genericApp(op: Type, args: Type[]): string {
-    return "(" + [op, ...args].map(t => _printType(t)).join(" ") + ")";
+    return (
+      "(" + [op, ...args].map(t => _printType(t, normalizeVar)).join(" ") + ")"
+    );
   }
 
   if (type.node.op.node.tag === "constant") {
     switch (type.node.op.node.name) {
       case "vector": {
-        return `[${_printType(type.node.args[0])}]`;
+        return `[${_printType(type.node.args[0], normalizeVar)}]`;
       }
       case "record": {
         const arg = type.node.args[0];
         const row = normalizeRow(arg);
         const fields = row.fields
-          .map(f => `${f.label} ${_printType(f.labelType)}`)
+          .map(f => `${f.label} ${_printType(f.labelType, normalizeVar)}`)
           .join(" ");
         const extension =
           row.extends.node.tag !== "empty-row"
-            ? ` | ${_printType(row.extends)}`
+            ? ` | ${_printType(row.extends, normalizeVar)}`
             : "";
         return `{${fields}${extension}}`;
       }
@@ -82,7 +86,7 @@ function printApplicationType(type: TApplication, simplify = false): string {
         const extending =
           row.extends.node.tag === "empty-row"
             ? ""
-            : " | " + _printType(row.extends);
+            : " | " + _printType(row.extends, normalizeVar);
 
         return `(effect${fields}${extending})`;
       }
@@ -95,25 +99,25 @@ function printApplicationType(type: TApplication, simplify = false): string {
             f.labelType.node.tag === "constant" &&
             f.labelType.node.name === "void"
               ? `${f.label}`
-              : `(${f.label} ${_printType(f.labelType)})`
+              : `(${f.label} ${_printType(f.labelType, normalizeVar)})`
           )
           .join(" ");
         const extension =
           row.extends.node.tag !== "empty-row"
-            ? ` ${_printType(row.extends)}`
+            ? ` ${_printType(row.extends, normalizeVar)}`
             : "";
         return `(cases ${fields}${extension})`;
       }
 
       case "values":
-        return printValuesType(type.node.args[0], simplify);
+        return printValuesType(type.node.args[0], normalizeVar, simplify);
 
       case "->": {
         const { op, args } = type.node;
         return (
           "(" +
           [op, ...args]
-            .map((t, i) => _printType(t, i === args.length))
+            .map((t, i) => _printType(t, normalizeVar, i === args.length))
             .join(" ") +
           ")"
         );
@@ -128,14 +132,18 @@ function printApplicationType(type: TApplication, simplify = false): string {
   }
 }
 
-function _printType(type: Type, simplify = false): string {
+function _printType(
+  type: Type,
+  normalizeVar: (t: TVar) => string,
+  simplify = false
+): string {
   switch (type.node.tag) {
     case "constant":
       return type.node.name;
     case "application":
-      return printApplicationType({ node: type.node }, simplify);
+      return printApplicationType({ node: type.node }, normalizeVar, simplify);
     case "type-variable":
-      return type.node.name;
+      return normalizeVar({ node: type.node });
     case "empty-row":
     case "row-extension":
       throw new InvariantViolation(`Can't print ${type.node.tag} types`);
@@ -143,8 +151,10 @@ function _printType(type: Type, simplify = false): string {
 }
 
 function printTypeWithOptionalNormalization(rawType: Type, normalize = true) {
-  const type = normalize ? normalizeType(rawType) : rawType;
-  return _printType(type);
+  const normalizeVar = normalize
+    ? createVariableNormalizer()
+    : (t: TVar) => t.node.name;
+  return _printType(rawType, normalizeVar);
 }
 
 export { printTypeWithOptionalNormalization as printType };
