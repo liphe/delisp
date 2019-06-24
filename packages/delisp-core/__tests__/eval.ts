@@ -135,4 +135,21 @@ describe("Evaluation", () => {
       expect(evaluateString(`(do 1 2)`)).toBe(2);
     });
   });
+
+  describe("Multiple values", () => {
+    it("uses the primary value by default", () => {
+      expect(evaluateString(`(+ 1 (values 2 10))`)).toBe(3);
+      expect(evaluateString(`(+ (values 1) (values 2 10))`)).toBe(3);
+    });
+
+    it("multiple-value-bind can catch forms with a single value transparently", () => {
+      expect(evaluateString(`(multiple-value-bind (x) 3 x)`)).toBe(3);
+    });
+
+    it("multiple-value-bind can catch forms with a multiple values", () => {
+      expect(
+        evaluateString(`(multiple-value-bind (x y) (values 3 7) (+ x y))`)
+      ).toBe(10);
+    });
+  });
 });
