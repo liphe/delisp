@@ -233,3 +233,43 @@ exports[`Convert Error messages generate nice errors for do-blocks 1`] = `
 (do)
 --^"
 `;
+
+exports[`Convert Error messages generaten nice errors for multiple-value-bind form 1`] = `
+"file:1:1: Ill-formed form. 
+
+(multiple-value-bind (variable1 variable2 ...) 
+    form 
+  ...body)
+(multiple-value-bind)
+^"
+`;
+
+exports[`Convert Error messages generaten nice errors for multiple-value-bind form 2`] = `
+"file:1:1: Ill-formed form. 
+
+(multiple-value-bind (variable1 variable2 ...) 
+    form 
+  ...body)
+(multiple-value-bind x)
+^"
+`;
+
+exports[`Convert Error messages generaten nice errors for multiple-value-bind form 3`] = `
+"file:1:1: Ill-formed form. 
+
+(multiple-value-bind (variable1 variable2 ...) 
+    form 
+  ...body)
+(multiple-value-bind x y)
+^"
+`;
+
+exports[`Convert Error messages generaten nice errors for multiple-value-bind form 4`] = `
+"file:1:1: Ill-formed form. 
+
+(multiple-value-bind (variable1 variable2 ...) 
+    form 
+  ...body)
+(multiple-value-bind (x) y)
+^"
+`;

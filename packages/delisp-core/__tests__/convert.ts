@@ -96,5 +96,12 @@ describe("Convert", () => {
     it("generate nice errors for do-blocks", () => {
       expect(compileError("(do)")).toMatchSnapshot();
     });
+
+    it("generaten nice errors for multiple-value-bind form", () => {
+      expect(compileError("(multiple-value-bind)")).toMatchSnapshot();
+      expect(compileError("(multiple-value-bind x)")).toMatchSnapshot();
+      expect(compileError("(multiple-value-bind x y)")).toMatchSnapshot();
+      expect(compileError("(multiple-value-bind (x) y)")).toMatchSnapshot();
+    });
   });
 });
