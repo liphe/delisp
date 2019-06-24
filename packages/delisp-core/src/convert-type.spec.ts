@@ -114,4 +114,18 @@ describe("convertType", () => {
       expect(failedType(`(cases {} {})`)).toMatchSnapshot();
     });
   });
+
+  describe("Values type", () => {
+    it("should read the single basic type", () => {
+      expect(readAndConvert("(values number)")).toMatchSnapshot();
+    });
+
+    it("should read the two values type", () => {
+      expect(readAndConvert("(values string number)")).toMatchSnapshot();
+    });
+
+    it("should read open value types", () => {
+      expect(readAndConvert("(values string | a)")).toMatchSnapshot();
+    });
+  });
 });
