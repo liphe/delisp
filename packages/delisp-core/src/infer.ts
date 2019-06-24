@@ -772,8 +772,62 @@ function infer(
       };
     }
 
-    case "multiple-value-bind":
-      throw new Error(`TODO!`);
+    case "multiple-value-bind": {
+      const t = generateUniqueTVar();
+      const effect = generateUniqueTVar();
+
+      const variableNames = expr.node.variables.map(v => v.name);
+      const variableTypes = variableNames.map(_ => generateUniqueTVar());
+
+      const form = infer(expr.node.form, monovars, internalTypes, true);
+      const body = inferBody(
+        expr.node.body,
+        [...monovars, ...expr.node.variables.map(v => v.name)],
+        internalTypes,
+        t,
+        effect,
+        multipleValues
+      );
+
+      return {
+        result: {
+          ...expr,
+          node: {
+            ...expr.node,
+            form: form.result,
+            body: body.result
+          },
+          info: new Typed({
+            effect,
+            expressionType: t
+          })
+        },
+
+        constraints: [
+          ...form.constraints,
+          constEqual(form.result, tValues(variableTypes), "resulting-type"),
+          constEffect(form.result, effect),
+
+          ...body.constraints,
+          ...body.assumptions
+            .filter(a => variableNames.includes(a.node.name))
+            .map(a => {
+              const name = a.node.name;
+              const idx = variableNames.indexOf(name);
+              if (idx < 0) {
+                throw new InvariantViolation(
+                  `Could not find variable in the list of assumptions.`
+                );
+              }
+              return constEqual(a, variableTypes[idx], "expression-type");
+            })
+        ],
+
+        assumptions: body.assumptions.filter(
+          a => !variableNames.includes(a.node.name)
+        )
+      };
+    }
   }
 }
 
