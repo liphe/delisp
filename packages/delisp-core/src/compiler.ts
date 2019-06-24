@@ -16,6 +16,7 @@ import {
   SCaseTag,
   SRecord,
   SValues,
+  SMultipleValueBind,
   SVectorConstructor,
   Syntax,
   SDoBlock,
@@ -437,6 +438,28 @@ function compileValues(
   }
 }
 
+function compileMultipleValueBind(
+  expr: SMultipleValueBind,
+  env: Environment,
+  multipleValues: boolean
+) {
+  const form = compile(expr.node.form, env, true);
+  const newenv = expr.node.variables.reduce((env, v) => {
+    return addBinding(v.name, env);
+  }, env);
+  const body = compileBody(expr.node.body, newenv, multipleValues);
+
+  return primitiveCall("mvbind", form, {
+    type: "ArrowFunctionExpression",
+    params: expr.node.variables.map(v => ({
+      type: "Identifier",
+      name: lookupBindingOrError(v.name, newenv).jsname
+    })),
+    expression: false,
+    body
+  });
+}
+
 function compileUnknown(
   _expr: SUnknown,
   env: Environment,
@@ -488,6 +511,12 @@ export function compile(
       );
     case "values":
       return compileValues({ ...expr, node: expr.node }, env, multipleValues);
+    case "multiple-value-bind":
+      return compileMultipleValueBind(
+        { ...expr, node: expr.node },
+        env,
+        multipleValues
+      );
     case "let-bindings":
       return compileLetBindings(
         { ...expr, node: expr.node },
@@ -567,7 +596,8 @@ function compileRuntimeUtils(
     "fst",
     "snd",
     "primaryValue",
-    "values"
+    "values",
+    "mvbind"
   ]);
 }
 

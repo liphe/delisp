@@ -113,6 +113,13 @@ interface SValuesF<E> {
   values: E[];
 }
 
+interface SMultipleValueBindF<E> {
+  tag: "multiple-value-bind";
+  variables: Identifier[];
+  form: E;
+  body: E[];
+}
+
 interface SUnknownF<_E> {
   tag: "unknown";
 }
@@ -132,6 +139,7 @@ type AnyExpressionF<I = {}, E = Expression<I>> =
   | SMatchF<E>
   | SCaseTagF<E>
   | SValuesF<E>
+  | SMultipleValueBindF<E>
   | SUnknownF<E>;
 
 interface Node<I, E> {
@@ -170,6 +178,9 @@ export interface SMatch<I = {}> extends Node<I, SMatchF<Expression<I>>> {}
 export interface SCaseTag<I = {}> extends Node<I, SCaseTagF<Expression<I>>> {}
 
 export interface SValues<I = {}> extends Node<I, SValuesF<Expression<I>>> {}
+
+export interface SMultipleValueBind<I = {}>
+  extends Node<I, SMultipleValueBindF<Expression<I>>> {}
 
 export interface SUnknown<I = {}> extends Node<I, SUnknownF<Expression<I>>> {}
 

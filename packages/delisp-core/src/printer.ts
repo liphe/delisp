@@ -220,6 +220,9 @@ function printExpr(expr: Expression): Doc {
           )
         );
       }
+
+      case "multiple-value-bind":
+        return nil;
     }
   });
 }

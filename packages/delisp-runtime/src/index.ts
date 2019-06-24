@@ -76,3 +76,11 @@ export function values(...x: unknown[]): MultipleValues {
 export function primaryValue(x: MultipleValues): unknown {
   return x instanceof MultipleValues ? x.values[0] : x;
 }
+
+export function mvbind(x: unknown, fn: (...xs: unknown[]) => unknown): unknown {
+  if (x instanceof MultipleValues) {
+    return fn.apply(null, x.values);
+  } else {
+    return fn(x);
+  }
+}

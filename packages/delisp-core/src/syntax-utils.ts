@@ -125,6 +125,15 @@ export function mapExpr<I, A, B>(
           values: expr.node.values.map(fn)
         }
       };
+    case "multiple-value-bind":
+      return {
+        ...expr,
+        node: {
+          ...expr.node,
+          form: fn(expr.node.form),
+          body: expr.node.body.map(fn)
+        }
+      };
   }
 }
 
@@ -161,6 +170,8 @@ export function exprFChildren<I, E>(e: ExpressionF<I, E>): E[] {
       return e.node.value ? [e.node.value] : [];
     case "values":
       return e.node.values;
+    case "multiple-value-bind":
+      return [e.node.form, ...e.node.body];
   }
 }
 

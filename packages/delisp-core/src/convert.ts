@@ -458,6 +458,50 @@ defineConversion("values", (_values, args, whole) => {
   );
 });
 
+defineConversion("multiple-value-bind", (_mvbind, args, whole) => {
+  if (args.length < 3) {
+    throw new ConvertError(
+      printHighlightedExpr(
+        `Ill-formed form. 
+
+(multiple-value-bind (variable1 variable2 ...) 
+    form 
+  ...body)`,
+        whole.location
+      )
+    );
+  }
+
+  const [variables, form, ...body] = args;
+
+  if (variables.tag !== "list") {
+    throw new ConvertError(
+      printHighlightedExpr(`Expected a list of variables`, variables.location)
+    );
+  }
+
+  variables.elements.forEach(v => {
+    if (v.tag !== "symbol") {
+      throw new ConvertError(
+        printHighlightedExpr(`Expected an identifier`, v.location)
+      );
+    }
+  });
+
+  return result(
+    {
+      tag: "multiple-value-bind",
+      variables: variables.elements.map(v =>
+        parseIdentifier(v as ASExprSymbol)
+      ),
+      form: convertExpr(form),
+      body: parseBody(whole, body)
+    },
+    whole.location,
+    []
+  );
+});
+
 defineToplevel("define", (define_, args, whole) => {
   if (args.length !== 2) {
     const lastExpr = last([define_, ...args]) as ASExpr;
