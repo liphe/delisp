@@ -222,7 +222,19 @@ function printExpr(expr: Expression): Doc {
       }
 
       case "multiple-value-bind":
-        return nil;
+        return list(
+          text("multiple-value-bind", "keyword", source),
+          space,
+          // List of variables
+          list(
+            join(
+              e.node.variables.map(v => printIdentifier(v.name, source)),
+              space
+            )
+          ),
+          indent(concat(line, e.node.form), 4),
+          indent(concat(line, join(e.node.body, line)))
+        );
     }
   });
 }
