@@ -45,6 +45,9 @@ function printValuesType(fnout: Type, simplify = false): string {
           return _printType(field.labelType);
         })
         .join(" ") +
+      (row.extends.node.tag === "empty-row"
+        ? ""
+        : "| " + _printType(row.extends)) +
       ")"
     );
   }
