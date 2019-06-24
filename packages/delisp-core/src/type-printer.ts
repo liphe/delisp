@@ -29,9 +29,13 @@ function printValuesType(
   simplify = false
 ): string {
   const row = normalizeRow(fnout);
-
   // primary value only
-  if (simplify && row.fields.length === 1 && row.fields[0].label === "0") {
+  if (
+    simplify &&
+    row.fields.length === 1 &&
+    row.fields[0].label === "0" &&
+    row.extends.node.tag === "empty-row"
+  ) {
     return _printType(row.fields[0].labelType, normalizeVar);
   } else {
     // full form (values a b c ...)
@@ -45,7 +49,7 @@ function printValuesType(
         .join(" ") +
       (row.extends.node.tag === "empty-row"
         ? ""
-        : "| " + _printType(row.extends, normalizeVar)) +
+        : " | " + _printType(row.extends, normalizeVar)) +
       ")"
     );
   }

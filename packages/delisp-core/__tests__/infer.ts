@@ -71,7 +71,9 @@ describe("Type inference", () => {
       it("should infer the right type", () => {
         expect(typeOf("(lambda (x) x)")).toBe("(-> α β α)");
         expect(typeOf("(lambda (x y) y)")).toBe("(-> α β γ β)");
-        expect(typeOf("(lambda (f x) (f x))")).toBe("(-> (-> α β γ) α β γ)");
+        expect(typeOf("(lambda (f x) (f x))")).toBe(
+          "(-> (-> α β (values γ | δ)) α β (values γ | δ))"
+        );
         expect(typeOf("(lambda (x) (lambda (y) x))")).toBe(
           "(-> α β (-> γ δ α))"
         );
@@ -124,7 +126,7 @@ describe("Type inference", () => {
       it("should be able to access the field", () => {
         expect(typeOf("(get :x {:x 5})")).toBe("number");
         expect(typeOf("(lambda (f) (f {:x 5 :y 6}))")).toBe(
-          "(-> (-> {:x number :y number} α β) α β)"
+          "(-> (-> {:x number :y number} α (values β | γ)) α (values β | γ))"
         );
       });
       it("should throw an error when trying to access unknown fields", () => {
@@ -361,7 +363,26 @@ describe("Type inference", () => {
     x))
 `
         )
-      ).toBe("(-> (-> (effect) α) β α)");
+      ).toBe("(-> (-> (effect) (values α | β)) γ α)");
+    });
+  });
+
+  describe("Multiple Values", () => {
+    it("should infer the primary type of a values form in an argument position", () => {
+      expect(typeOf(`(+ 1 (values 2 3)))`)).toBe("number");
+      expect(typeOf(`(lambda (x) (values (values x x))))`)).toBe("(-> α β α)");
+    });
+
+    it("should infer the type of a function with multiple values", () => {
+      expect(typeOf(`(lambda (x) (values x "foo"))`)).toBe(
+        "(-> α β (values α string))"
+      );
+    });
+
+    it("infer multiple values of a function call in tail-position", () => {
+      expect(typeOf(`(lambda (f) (f))`)).toBe(
+        `(-> (-> α (values β | γ)) α (values β | γ))`
+      );
     });
   });
 
