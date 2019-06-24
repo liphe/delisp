@@ -102,6 +102,17 @@
         (case (symbol-at-point)
           ((define lambda let the do match)
            (* delisp-indent-level level))
+          ((multiple-value-bind)
+
+           (condition-case err
+               (forward-sexp 3)
+             (scan-error
+              err
+              (goto-char (third err))))
+           
+           (if (< (point) pos)
+               (* delisp-indent-level level)
+             (* delisp-indent-level (+ level 1))))
           (t
            (forward-sexp 2)
            (backward-sexp)
@@ -168,7 +179,7 @@
          '(2 font-lock-variable-name-face))
 
    (list
-    (concat "(" (regexp-opt '("if" "lambda" "let" "export" "and" "case" "the" "do" "match") t) "\\>")
+    (concat "(" (regexp-opt '("if" "lambda" "let" "export" "and" "case" "the" "do" "match" "multiple-value-bind" "values") t) "\\>")
     '(1 font-lock-keyword-face))
 
    (list
