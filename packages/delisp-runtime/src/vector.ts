@@ -8,12 +8,12 @@ const vectorPrims: Primitives = {
 
   cons: {
     type: "(-> a [a] _ [a])",
-    value: <T>(a: T, list: T[]): T[] => [a, ...list]
+    value: <T>(_values: unknown, a: T, list: T[]): T[] => [a, ...list]
   },
 
   first: {
     type: "(-> [a] (effect exp | _) a)",
-    value: <T>(list: T[]): T => {
+    value: <T>(_values: unknown, list: T[]): T => {
       if (list.length > 0) {
         return list[0];
       } else {
@@ -24,7 +24,7 @@ const vectorPrims: Primitives = {
 
   rest: {
     type: "(-> [a] (effect exp | _) [a])",
-    value: <T>(list: T[]): T[] => {
+    value: <T>(_values: unknown, list: T[]): T[] => {
       if (list.length > 0) {
         const [, ...rest] = list;
         return rest;
@@ -36,7 +36,7 @@ const vectorPrims: Primitives = {
 
   "empty?": {
     type: "(-> [a] _ boolean)",
-    value: <T>(list: T[]): boolean => list.length === 0
+    value: <T>(_values: unknown, list: T[]): boolean => list.length === 0
   }
 };
 

@@ -7,7 +7,7 @@ import stringPrims from "./string";
 const prims: Primitives = {
   "<": {
     type: "(-> number number _ boolean)",
-    value: (a: number, b: number) => a < b
+    value: (_values: unknown, a: number, b: number) => a < b
   },
 
   unknown: {
