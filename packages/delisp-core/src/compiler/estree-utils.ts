@@ -63,7 +63,3 @@ export function primitiveCall(
     arguments: args
   };
 }
-
-export function primaryValue(x: JS.Expression): JS.Expression {
-  return primitiveCall("primaryValue", x);
-}
