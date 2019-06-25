@@ -174,13 +174,17 @@ defineInlinePrimitive("*", "(-> number number _ number)", args => {
   };
 });
 
-defineInlinePrimitive("map", "(-> (-> a e b) [a] e [b])", ([fn, vec]) => {
-  return methodCall(vec, "map", [primitiveCall("bindPrimaryValue", fn)]);
-});
+defineInlinePrimitive(
+  "map",
+  "(-> (-> a e (values b | _)) [a] e [b])",
+  ([fn, vec]) => {
+    return methodCall(vec, "map", [primitiveCall("bindPrimaryValue", fn)]);
+  }
+);
 
 defineInlinePrimitive(
   "filter",
-  "(-> (-> a _ boolean) [a] _ [a])",
+  "(-> (-> a _ (values boolean | _)) [a] _ [a])",
   ([predicate, vec]) => {
     return methodCall(vec, "filter", [
       primitiveCall("bindPrimaryValue", predicate)
@@ -190,7 +194,7 @@ defineInlinePrimitive(
 
 defineInlinePrimitive(
   "fold",
-  "(-> (-> b a _ b) [a] b _ b)",
+  "(-> (-> b a _ (values b | _)) [a] b _ b)",
   ([fn, vec, init]) => {
     return methodCall(vec, "reduce", [
       primitiveCall("bindPrimaryValue", fn),

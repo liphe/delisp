@@ -225,6 +225,24 @@ describe("Type inference", () => {
       });
     });
 
+    describe("Primitive functions", () => {
+      it("map with multiple values", () => {
+        expect(typeOf("(map (lambda (x) (values x x)) [1 2 3 4])")).toEqual(
+          "[number]"
+        );
+      });
+      it("filter with multiple values", () => {
+        expect(
+          typeOf("(filter (lambda (x) (values true 5)) [-2 -1 0 1 2])")
+        ).toEqual("[number]");
+      });
+      it("fold with multiple values", () => {
+        expect(
+          typeOf(`(fold (lambda (a b) (values 50 (+ a b))) [1 2 3 4] 0)`)
+        ).toEqual("number");
+      });
+    });
+
     describe("Type annotations", () => {
       it("user-specified variables can specialize inferred types", () => {
         expect(typeOf("(the [number] [])")).toBe("[number]");
