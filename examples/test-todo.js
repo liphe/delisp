@@ -8,8 +8,10 @@ const {
 
 let state = initialState;
 
-state = reducer(state, addTodo("Write todo app!"));
-state = reducer(state, completeAll());
-state = reducer(state, addTodo("Complete more todos"));
+const id = x => x;
 
-showTodos(state);
+state = reducer(id, state, addTodo(id, "Write todo app!"));
+state = reducer(id, state, completeAll(id));
+state = reducer(id, state, addTodo(id, "Complete more todos"));
+
+showTodos(id, state);
