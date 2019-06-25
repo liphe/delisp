@@ -84,3 +84,11 @@ export function mvbind(x: unknown, fn: (...xs: unknown[]) => unknown): unknown {
     return fn(x);
   }
 }
+
+export function id(x: unknown): unknown {
+  return x;
+}
+
+export function bindPrimaryValue(fn: Function): Function {
+  return (...args: unknown[]) => fn(id, ...args);
+}

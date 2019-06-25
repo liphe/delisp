@@ -16,7 +16,9 @@ import {
   snd,
   values,
   primaryValue,
-  mvbind
+  mvbind,
+  id,
+  bindPrimaryValue
 } from "@delisp/runtime";
 
 export function createContext() {
@@ -31,7 +33,9 @@ export function createContext() {
     snd,
     values,
     primaryValue,
-    mvbind
+    mvbind,
+    id,
+    bindPrimaryValue
   };
   vm.createContext(sandbox);
   return sandbox;

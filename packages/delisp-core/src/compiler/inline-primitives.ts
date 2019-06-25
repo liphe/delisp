@@ -107,7 +107,7 @@ export function compileInlinePrimitive(
     );
     return {
       type: "ArrowFunctionExpression",
-      params: identifiers,
+      params: [identifier("values"), ...identifiers],
       body: prim.handle(identifiers),
       expression: true
     };
@@ -175,14 +175,16 @@ defineInlinePrimitive("*", "(-> number number _ number)", args => {
 });
 
 defineInlinePrimitive("map", "(-> (-> a e b) [a] e [b])", ([fn, vec]) => {
-  return methodCall(vec, "map", [fn]);
+  return methodCall(vec, "map", [primitiveCall("bindPrimaryValue", fn)]);
 });
 
 defineInlinePrimitive(
   "filter",
   "(-> (-> a _ boolean) [a] _ [a])",
   ([predicate, vec]) => {
-    return methodCall(vec, "filter", [predicate]);
+    return methodCall(vec, "filter", [
+      primitiveCall("bindPrimaryValue", predicate)
+    ]);
   }
 );
 
@@ -190,7 +192,10 @@ defineInlinePrimitive(
   "fold",
   "(-> (-> b a _ b) [a] b _ b)",
   ([fn, vec, init]) => {
-    return methodCall(vec, "reduce", [fn, init]);
+    return methodCall(vec, "reduce", [
+      primitiveCall("bindPrimaryValue", fn),
+      init
+    ]);
   }
 );
 

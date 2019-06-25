@@ -156,7 +156,7 @@ function compileLambda(
 
   return {
     type: "ArrowFunctionExpression",
-    params: [...jsargs],
+    params: [identifier("values"), ...jsargs],
     body,
     expression: implicitReturn
   };
@@ -181,7 +181,7 @@ function compileFunctionCall(
     const jscall: JS.Expression = {
       type: "CallExpression",
       callee: compile(funcall.node.fn, env, false),
-      arguments: compiledArgs
+      arguments: [identifier("id"), ...compiledArgs]
     };
     return multipleValues ? jscall : primaryValue(jscall);
   }
@@ -597,7 +597,9 @@ function compileRuntimeUtils(
     "snd",
     "primaryValue",
     "values",
-    "mvbind"
+    "mvbind",
+    "id",
+    "bindPrimaryValue"
   ]);
 }
 
