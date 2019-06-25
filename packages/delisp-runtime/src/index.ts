@@ -62,33 +62,13 @@ export function snd<A, B>(pair: Pair<A, B>): B {
 // Multiple values
 //
 
-export class MultipleValues {
-  values: unknown[];
-  constructor(values: unknown[]) {
-    this.values = values;
-  }
-}
-
-export function values(...x: unknown[]): MultipleValues {
-  return new MultipleValues(x);
-}
-
-export function primaryValue(x: MultipleValues): unknown {
-  return x instanceof MultipleValues ? x.values[0] : x;
-}
-
-export function mvbind(x: unknown, fn: (...xs: unknown[]) => unknown): unknown {
-  if (x instanceof MultipleValues) {
-    return fn.apply(null, x.values);
-  } else {
-    return fn(x);
-  }
-}
-
-export function id(x: unknown): unknown {
+export function primaryValue(x: unknown, ..._others: unknown[]): unknown {
   return x;
 }
 
+// bit of a hack for toplevel function calls
+export const values = primaryValue;
+
 export function bindPrimaryValue(fn: Function): Function {
-  return (...args: unknown[]) => fn(id, ...args);
+  return (...args: unknown[]) => fn(primaryValue, ...args);
 }

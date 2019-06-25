@@ -30,7 +30,7 @@ import {
   literal,
   identifier,
   primitiveCall,
-  primaryValue
+  arrowFunction
 } from "./compiler/estree-utils";
 import { last, mapObject, maybeMap } from "./utils";
 
@@ -178,12 +178,14 @@ function compileFunctionCall(
       "funcall"
     );
   } else {
-    const jscall: JS.Expression = {
+    return {
       type: "CallExpression",
       callee: compile(funcall.node.fn, env, false),
-      arguments: [identifier("id"), ...compiledArgs]
+      arguments: [
+        identifier(multipleValues ? "values" : "primaryValue"),
+        ...compiledArgs
+      ]
     };
-    return multipleValues ? jscall : primaryValue(jscall);
   }
 }
 
@@ -425,39 +427,38 @@ function compileTag(
 function compileValues(
   expr: SValues,
   env: Environment,
-  multipleValues: boolean
+  _multipleValues: boolean
 ): JS.Expression {
-  const values = primitiveCall(
-    "values",
-    ...expr.node.values.map(e => compile(e, env, false))
-  );
-  if (multipleValues) {
-    return values;
-  } else {
-    return primaryValue(values);
-  }
+  return {
+    type: "CallExpression",
+    callee: identifier("values"),
+    arguments: expr.node.values.map(e => compile(e, env, false))
+  };
 }
 
 function compileMultipleValueBind(
   expr: SMultipleValueBind,
   env: Environment,
   multipleValues: boolean
-) {
-  const form = compile(expr.node.form, env, true);
+): JS.Expression {
+  const form = arrowFunction(["values"], compile(expr.node.form, env, true));
   const newenv = expr.node.variables.reduce((env, v) => {
     return addBinding(v.name, env);
   }, env);
-  const body = compileBody(expr.node.body, newenv, multipleValues);
-
-  return primitiveCall("mvbind", form, {
+  const continuation: JS.ArrowFunctionExpression = {
     type: "ArrowFunctionExpression",
     params: expr.node.variables.map(v => ({
       type: "Identifier",
       name: lookupBindingOrError(v.name, newenv).jsname
     })),
     expression: false,
-    body
-  });
+    body: compileBody(expr.node.body, newenv, multipleValues)
+  };
+  return {
+    type: "CallExpression",
+    callee: form,
+    arguments: [continuation]
+  };
 }
 
 function compileUnknown(
@@ -598,7 +599,6 @@ function compileRuntimeUtils(
     "primaryValue",
     "values",
     "mvbind",
-    "id",
     "bindPrimaryValue"
   ]);
 }
