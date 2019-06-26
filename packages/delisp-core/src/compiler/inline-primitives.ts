@@ -277,29 +277,34 @@ defineMagicPrimitive(
       []
     );
     const jsname = name.replace(/^:/, "");
-    const getter = arrowFunction(["obj"], member(identifier("obj"), jsname));
+    const getter = arrowFunction(
+      [identifier("obj")],
+      [member(identifier("obj"), jsname)]
+    );
     const setter = arrowFunction(
-      ["val", "obj"],
-      methodCall(identifier("Object"), "assign", [
-        { type: "ObjectExpression", properties: [] },
-        identifier("obj"),
-        {
-          type: "ObjectExpression",
-          properties: [
-            {
-              type: "Property",
-              key: isValidJSIdentifierName(jsname)
-                ? identifier(jsname)
-                : literal(jsname),
-              value: identifier("val"),
-              kind: "init",
-              method: false,
-              shorthand: false,
-              computed: false
-            }
-          ]
-        }
-      ])
+      [identifier("val"), identifier("obj")],
+      [
+        methodCall(identifier("Object"), "assign", [
+          { type: "ObjectExpression", properties: [] },
+          identifier("obj"),
+          {
+            type: "ObjectExpression",
+            properties: [
+              {
+                type: "Property",
+                key: isValidJSIdentifierName(jsname)
+                  ? identifier(jsname)
+                  : literal(jsname),
+                value: identifier("val"),
+                kind: "init",
+                method: false,
+                shorthand: false,
+                computed: false
+              }
+            ]
+          }
+        ])
+      ]
     );
     return createInlinePrimitive(lensType, () => ({
       type: "ObjectExpression",

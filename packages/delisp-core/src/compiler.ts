@@ -110,25 +110,13 @@ function compileBody(
   body: Expression[],
   env: Environment,
   multipleValues: boolean
-): JS.BlockStatement {
+): JS.Expression[] {
   const middleForms = body.slice(0, -1);
   const lastForm = last(body)!;
-
-  return {
-    type: "BlockStatement",
-    body: [
-      ...middleForms.map(
-        (e): JS.ExpressionStatement => ({
-          type: "ExpressionStatement",
-          expression: compile(e, env, false)
-        })
-      ),
-      {
-        type: "ReturnStatement",
-        argument: compile(lastForm, env, multipleValues)
-      }
-    ]
-  };
+  return [
+    ...middleForms.map(e => compile(e, env, false)),
+    compile(lastForm, env, multipleValues)
+  ];
 }
 
 function compileLambda(
@@ -146,18 +134,9 @@ function compileLambda(
       identifier(lookupBindingOrError(param.name, newEnv).jsname)
   );
 
-  const implicitReturn = fn.node.body.length === 1;
+  const body = compileBody(fn.node.body, newEnv, true);
 
-  const body: JS.Expression | JS.Statement = implicitReturn
-    ? compile(fn.node.body[0], newEnv, true)
-    : compileBody(fn.node.body, newEnv, true);
-
-  return {
-    type: "ArrowFunctionExpression",
-    params: [identifier("values"), ...jsargs],
-    body,
-    expression: implicitReturn
-  };
+  return arrowFunction([identifier("values"), ...jsargs], body);
 }
 
 function compileFunctionCall(
@@ -245,16 +224,17 @@ function compileLetBindings(
     env
   );
 
+  const params = expr.node.bindings.map(
+    (b): JS.Pattern =>
+      identifier(lookupBindingOrError(b.variable.name, newenv).jsname)
+  );
+
   return {
     type: "CallExpression",
-    callee: {
-      type: "FunctionExpression",
-      params: expr.node.bindings.map(
-        (b): JS.Pattern =>
-          identifier(lookupBindingOrError(b.variable.name, newenv).jsname)
-      ),
-      body: compileBody(expr.node.body, newenv, multipleValues)
-    },
+    callee: arrowFunction(
+      params,
+      compileBody(expr.node.body, newenv, multipleValues)
+    ),
     arguments: expr.node.bindings.map(b => compile(b.value, env, false))
   };
 }
@@ -344,16 +324,9 @@ function compileMatch(
   env: Environment,
   multipleValues: boolean
 ): JS.Expression {
-  const defaultCase: JS.ArrowFunctionExpression | undefined = expr.node
-    .defaultCase && {
-    type: "ArrowFunctionExpression",
-    expression: false,
-    generator: false,
-    params: [],
-    body: (() => {
-      return compileBody(expr.node.defaultCase, env, multipleValues);
-    })()
-  };
+  const defaultCase =
+    expr.node.defaultCase &&
+    arrowFunction([], compileBody(expr.node.defaultCase, env, multipleValues));
 
   return primitiveCall(
     "matchTag",
@@ -367,18 +340,13 @@ function compileMatch(
         shorthand: false,
         computed: false,
         key: literal(c.label),
-        value: {
-          type: "ArrowFunctionExpression",
-          kind: "init",
-          id: null,
-          expression: false,
-          generator: false,
-          params: [identifier(identifierToJS(c.variable.name))],
-          body: (() => {
+        value: arrowFunction(
+          [identifier(identifierToJS(c.variable.name))],
+          (() => {
             const newenv = addBinding(c.variable.name, env);
             return compileBody(c.body, newenv, multipleValues);
           })()
-        }
+        )
       }))
     },
     ...(defaultCase ? [defaultCase] : [])
@@ -414,18 +382,23 @@ function compileMultipleValueBind(
   env: Environment,
   multipleValues: boolean
 ): JS.Expression {
-  const form = arrowFunction(["values"], compile(expr.node.form, env, true));
+  const form = arrowFunction(
+    [identifier("values")],
+    [compile(expr.node.form, env, true)]
+  );
   const newenv = expr.node.variables.reduce((env, v) => {
     return addBinding(v.name, env);
   }, env);
-  const continuation: JS.ArrowFunctionExpression = {
-    type: "ArrowFunctionExpression",
-    params: expr.node.variables.map(v =>
-      identifier(lookupBindingOrError(v.name, newenv).jsname)
-    ),
-    expression: false,
-    body: compileBody(expr.node.body, newenv, multipleValues)
-  };
+
+  const params = expr.node.variables.map(v =>
+    identifier(lookupBindingOrError(v.name, newenv).jsname)
+  );
+
+  const continuation = arrowFunction(
+    params,
+    compileBody(expr.node.body, newenv, multipleValues)
+  );
+
   return {
     type: "CallExpression",
     callee: form,

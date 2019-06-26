@@ -23,18 +23,51 @@ export function methodCall(
   };
 }
 
+/** Generate an arrow function in JS
+ *
+ * @description This will execute all the expressions, returning the
+ * last one. */
 export function arrowFunction(
-  args: string[],
-  body: JS.Expression
+  args: JS.Pattern[],
+  body: JS.Expression[]
 ): JS.ArrowFunctionExpression {
-  return {
-    type: "ArrowFunctionExpression",
-    params: args.map(identifier),
-    body,
-    generator: false,
-    expression: true,
-    async: false
-  };
+  if (body.length === 0) {
+    throw new Error(`Empty body`);
+  }
+
+  if (body.length === 1) {
+    const expr = body[0];
+    return {
+      type: "ArrowFunctionExpression",
+      params: args,
+      body: expr,
+      generator: false,
+      expression: true,
+      async: false
+    };
+  } else {
+    const middle: JS.Statement[] = body.slice(0, -1).map(e => ({
+      type: "ExpressionStatement",
+      expression: e
+    }));
+
+    const returning: JS.Statement = {
+      type: "ReturnStatement",
+      argument: body[body.length - 1]
+    };
+
+    return {
+      type: "ArrowFunctionExpression",
+      params: args,
+      body: {
+        type: "BlockStatement",
+        body: [...middle, returning]
+      },
+      generator: false,
+      expression: false,
+      async: false
+    };
+  }
 }
 
 export function literal(value: number | string | boolean | null): JS.Literal {
