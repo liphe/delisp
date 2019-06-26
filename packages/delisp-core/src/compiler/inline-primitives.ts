@@ -3,7 +3,14 @@ import { InvariantViolation } from "../invariant";
 import { generateUniqueTVar } from "../type-generate";
 import { readType } from "../convert-type";
 import { isFunctionType, generalize } from "../type-utils";
-import { tFn, tRecord, TypeSchema } from "../types";
+import {
+  tFn,
+  tMultiValuedFunction,
+  tRecord,
+  tValues,
+  TypeSchema,
+  Type
+} from "../types";
 import { range } from "../utils";
 import {
   op,
@@ -20,7 +27,12 @@ type InlineHandler = (args: JS.Expression[]) => JS.Expression;
 
 interface InlinePrim {
   type: TypeSchema;
-  handle: InlineHandler;
+  // This handler is invoked to generate the output JS when the
+  // primitive is used in value position.
+  valueHandler: InlineHandler;
+  // This handler is invoked to generate the output JS when the
+  // primitive is used in function position.
+  funcHandler: InlineHandler;
 }
 
 interface MagicPrim {
@@ -31,11 +43,22 @@ const inlinefuncs = new Map<string, InlinePrim>();
 const magicfuncs: MagicPrim[] = [];
 
 function createInlinePrimitive(
-  typespec: string | TypeSchema,
+  name: string,
+  type: TypeSchema,
+  valueHandler: InlineHandler,
+  funcHandler: InlineHandler
+) {
+  const prim: InlinePrim = { type, valueHandler, funcHandler };
+  return inlinefuncs.set(name, prim);
+}
+
+function definePrimitiveValue(
+  name: string,
+  typespec: string,
   handle: InlineHandler
-): InlinePrim {
-  const type = typeof typespec === "string" ? readType(typespec) : typespec;
-  return { type, handle };
+) {
+  const type = readType(typespec);
+  return createInlinePrimitive(name, type, handle, handle);
 }
 
 function defineInlinePrimitive(
@@ -43,7 +66,23 @@ function defineInlinePrimitive(
   typespec: string,
   handle: InlineHandler
 ) {
-  return inlinefuncs.set(name, createInlinePrimitive(typespec, handle));
+  const type = readType(typespec);
+  const arity = typeArity(type.mono);
+
+  /* If the primitive is used in a value position, a wrapper function
+     will be created so the inlined primitive can be used as a
+     function. */
+  const valueHandler: InlineHandler = () => {
+    const identifiers = range(arity).map(i => identifier(`x${i}`));
+    return {
+      type: "ArrowFunctionExpression",
+      params: [identifier("values"), ...identifiers],
+      body: handle(identifiers),
+      expression: true
+    };
+  };
+
+  createInlinePrimitive(name, type, valueHandler, handle);
 }
 
 function defineMagicPrimitive(
@@ -73,8 +112,7 @@ export function findInlinePrimitive(name: string): InlinePrim {
   );
 }
 
-function primitiveArity(prim: InlinePrim): number {
-  const type = prim.type.mono;
+function typeArity(type: Type): number {
   if (isFunctionType(type)) {
     return type.node.args.length - 2;
   } else {
@@ -84,9 +122,6 @@ function primitiveArity(prim: InlinePrim): number {
 
 /** Compile a inline primitive with a set of parameters.
  *
- * @description If `position` is not a function call, a wrapper
- * function will be created so the inlined primitive can be used as a
- * function.
  *
  */
 export function compileInlinePrimitive(
@@ -95,18 +130,10 @@ export function compileInlinePrimitive(
   position: "funcall" | "value"
 ): JS.Expression {
   const prim = findInlinePrimitive(name);
-  const arity = primitiveArity(prim);
-
-  if (position === "funcall" || arity === 0) {
-    return prim.handle(args);
+  if (position === "funcall") {
+    return prim.funcHandler(args);
   } else {
-    const identifiers = range(arity).map(i => identifier(`x${i}`));
-    return {
-      type: "ArrowFunctionExpression",
-      params: [identifier("values"), ...identifiers],
-      body: prim.handle(identifiers),
-      expression: true
-    };
+    return prim.valueHandler(args);
   }
 }
 
@@ -114,15 +141,15 @@ export function compileInlinePrimitive(
 // Primitives
 //
 
-defineInlinePrimitive("true", "boolean", () => {
+definePrimitiveValue("true", "boolean", () => {
   return literal(true);
 });
 
-defineInlinePrimitive("false", "boolean", () => {
+definePrimitiveValue("false", "boolean", () => {
   return literal(false);
 });
 
-defineInlinePrimitive("none", "none", () => {
+definePrimitiveValue("none", "none", () => {
   return identifier("undefined");
 });
 
@@ -212,18 +239,6 @@ defineInlinePrimitive("string-downcase", "(-> string _ string)", ([str]) =>
 );
 
 defineInlinePrimitive(
-  "get",
-  "(-> {:get (-> r e v) | l} r e v)",
-  ([lens, obj]) => methodCall(lens, "get", [obj])
-);
-
-defineInlinePrimitive(
-  "set",
-  "(-> {:set (-> v r1 e r2) | l} v r1 e r2)",
-  ([lens, val, obj]) => methodCall(lens, "set", [val, obj])
-);
-
-defineInlinePrimitive(
   "string-append",
   "(-> string string _ string)",
   ([str1, str2]) => op("+", str1, str2)
@@ -244,63 +259,70 @@ defineInlinePrimitive("snd", "(-> (* a b) _ b)", ([pair]) => {
 });
 
 /*
-matches `:foo` and inlines lens
-  {
-    :get (-> {:foo a | b} _ a)
-    :set (-> {:foo a | b} a _ {:foo a | b})
-  }
+matches `:foo` and inlines the lens with type
+
+  (-> a _ (values b (-> c d)))
+
 */
 defineMagicPrimitive(
   name => name[0] === ":" && name.length > 1,
   name => {
     const fieldType = generateUniqueTVar();
     const newFieldType = generateUniqueTVar();
-    const extendsType = generateUniqueTVar();
 
+    const extendsType = generateUniqueTVar();
     const recordType = tRecord([{ label: name, type: fieldType }], extendsType);
     const newRecordType = tRecord(
       [{ label: name, type: newFieldType }],
       extendsType
     );
 
-    const getterType = tFn([recordType], generateUniqueTVar(), fieldType);
-    const setterType = tFn(
-      [newFieldType, recordType],
-      generateUniqueTVar(),
-      newRecordType
-    );
+    const storeType = tValues([
+      fieldType,
+      tFn([newFieldType], generateUniqueTVar(), newRecordType)
+    ]);
+
     const lensType = generalize(
-      tRecord([
-        { label: ":get", type: getterType },
-        { label: ":set", type: setterType }
-      ]),
+      tMultiValuedFunction([recordType], generateUniqueTVar(), storeType),
       []
     );
+
     const jsname = name.replace(/^:/, "");
-    const getter = arrowFunction(
-      [identifier("obj")],
-      [member(identifier("obj"), jsname)]
-    );
-    const setter = arrowFunction(
-      [identifier("val"), identifier("obj")],
-      [
-        methodCall(identifier("Object"), "assign", [
-          objectExpression([]),
-          identifier("obj"),
-          objectExpression([
-            {
-              key: jsname,
-              value: identifier("val")
-            }
-          ])
-        ])
-      ]
-    );
-    return createInlinePrimitive(lensType, () =>
-      objectExpression([
-        { key: "get", value: getter },
-        { key: "set", value: setter }
-      ])
-    );
+
+    const handler = () =>
+      arrowFunction(
+        [identifier("values"), identifier("obj")],
+        [
+          primitiveCall(
+            "values",
+            member(identifier("obj"), jsname),
+            arrowFunction(
+              [identifier("values"), identifier("val")],
+              [
+                methodCall(identifier("Object"), "assign", [
+                  objectExpression([]),
+                  identifier("obj"),
+                  objectExpression([
+                    {
+                      key: jsname,
+                      value: identifier("val")
+                    }
+                  ])
+                ])
+              ]
+            )
+          )
+        ]
+      );
+
+    return {
+      type: lensType,
+      valueHandler: handler,
+      funcHandler: args => ({
+        type: "CallExpression",
+        callee: handler(),
+        arguments: [identifier("values"), ...args]
+      })
+    };
   }
 );
