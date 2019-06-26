@@ -12,9 +12,9 @@ import {
   arrowFunction,
   identifier,
   literal,
-  primitiveCall
+  primitiveCall,
+  objectExpression
 } from "./estree-utils";
-import { isValidJSIdentifierName } from "./jsvariable";
 
 type InlineHandler = (args: JS.Expression[]) => JS.Expression;
 
@@ -285,49 +285,22 @@ defineMagicPrimitive(
       [identifier("val"), identifier("obj")],
       [
         methodCall(identifier("Object"), "assign", [
-          { type: "ObjectExpression", properties: [] },
+          objectExpression([]),
           identifier("obj"),
-          {
-            type: "ObjectExpression",
-            properties: [
-              {
-                type: "Property",
-                key: isValidJSIdentifierName(jsname)
-                  ? identifier(jsname)
-                  : literal(jsname),
-                value: identifier("val"),
-                kind: "init",
-                method: false,
-                shorthand: false,
-                computed: false
-              }
-            ]
-          }
+          objectExpression([
+            {
+              key: jsname,
+              value: identifier("val")
+            }
+          ])
         ])
       ]
     );
-    return createInlinePrimitive(lensType, () => ({
-      type: "ObjectExpression",
-      properties: [
-        {
-          type: "Property",
-          key: literal("get"),
-          value: getter,
-          computed: false,
-          kind: "init",
-          method: false,
-          shorthand: false
-        },
-        {
-          type: "Property",
-          key: literal("set"),
-          value: setter,
-          computed: false,
-          kind: "init",
-          method: false,
-          shorthand: false
-        }
-      ]
-    }));
+    return createInlinePrimitive(lensType, () =>
+      objectExpression([
+        { key: "get", value: getter },
+        { key: "set", value: setter }
+      ])
+    );
   }
 );

@@ -102,3 +102,23 @@ export function primitiveCall(
     arguments: args
   };
 }
+
+interface Property {
+  key: string;
+  value: JS.Expression;
+}
+
+export function objectExpression(properties: Property[]): JS.ObjectExpression {
+  return {
+    type: "ObjectExpression",
+    properties: properties.map(p => ({
+      type: "Property",
+      kind: "init",
+      method: false,
+      computed: false,
+      shorthand: false,
+      key: isValidJSIdentifierName(p.key) ? identifier(p.key) : literal(p.key),
+      value: p.value
+    }))
+  };
+}

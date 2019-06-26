@@ -1,5 +1,5 @@
 import * as JS from "estree";
-import { identifier, literal, member } from "./estree-utils";
+import { identifier, literal, member, objectExpression } from "./estree-utils";
 
 export interface ModuleBackend {
   export(vars: string[]): JS.Statement | JS.ModuleDeclaration;
@@ -15,20 +15,12 @@ export const cjs: ModuleBackend = {
         type: "AssignmentExpression",
         operator: "=",
         left: member(identifier("module"), "exports"),
-        right: {
-          type: "ObjectExpression",
-          properties: vars.map(
-            (vari): JS.Property => ({
-              type: "Property",
-              kind: "init",
-              key: identifier(vari),
-              value: identifier(vari),
-              method: false,
-              computed: false,
-              shorthand: true
-            })
-          )
-        }
+        right: objectExpression(
+          vars.map(vari => ({
+            key: vari,
+            value: identifier(vari)
+          }))
+        )
       }
     };
   },

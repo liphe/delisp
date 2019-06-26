@@ -30,6 +30,7 @@ import {
   literal,
   identifier,
   primitiveCall,
+  objectExpression,
   arrowFunction
 } from "./compiler/estree-utils";
 import { last, mapObject, maybeMap } from "./utils";
@@ -50,7 +51,7 @@ import {
   compileInlinePrimitive,
   isInlinePrimitive
 } from "./compiler/inline-primitives";
-import { identifierToJS, isValidJSIdentifierName } from "./compiler/jsvariable";
+import { identifierToJS } from "./compiler/jsvariable";
 import { pprint } from "./printer";
 
 import * as escodegen from "escodegen";
@@ -255,31 +256,22 @@ function compileRecord(
   env: Environment,
   multipleValues: boolean
 ): JS.Expression {
-  const newObj: JS.ObjectExpression = {
-    type: "ObjectExpression",
-    properties: expr.node.fields.map(
-      ({ label, value }): JS.Property => {
-        if (!label.name.startsWith(":")) {
-          throw new InvariantViolation(`Invalid record ${label}`);
-        }
-
-        const name = label.name.replace(/^:/, "");
-
-        return {
-          type: "Property",
-          key: isValidJSIdentifierName(name) ? identifier(name) : literal(name),
-          value: compile(value, env, multipleValues),
-          kind: "init",
-          method: false,
-          shorthand: false,
-          computed: false
-        };
+  const newObj = objectExpression(
+    expr.node.fields.map(({ label, value }) => {
+      if (!label.name.startsWith(":")) {
+        throw new InvariantViolation(`Invalid record ${label}`);
       }
-    )
-  };
+      const name = label.name.replace(/^:/, "");
+      return {
+        key: name,
+        value: compile(value, env, multipleValues)
+      };
+    })
+  );
+
   if (expr.node.extends) {
     return methodCall(identifier("Object"), "assign", [
-      { type: "ObjectExpression", properties: [] },
+      objectExpression([]),
       compile(expr.node.extends, env, false),
       newObj
     ]);
@@ -331,15 +323,10 @@ function compileMatch(
   return primitiveCall(
     "matchTag",
     compile(expr.node.value, env, false),
-    {
-      type: "ObjectExpression",
-      properties: expr.node.cases.map(c => ({
-        type: "Property",
-        kind: "init",
-        method: false,
-        shorthand: false,
-        computed: false,
-        key: literal(c.label),
+
+    objectExpression(
+      expr.node.cases.map(c => ({
+        key: c.label,
         value: arrowFunction(
           [identifier(identifierToJS(c.variable.name))],
           (() => {
@@ -348,7 +335,8 @@ function compileMatch(
           })()
         )
       }))
-    },
+    ),
+
     ...(defaultCase ? [defaultCase] : [])
   );
 }
