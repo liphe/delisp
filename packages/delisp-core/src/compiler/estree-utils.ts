@@ -111,14 +111,20 @@ interface Property {
 export function objectExpression(properties: Property[]): JS.ObjectExpression {
   return {
     type: "ObjectExpression",
-    properties: properties.map(p => ({
-      type: "Property",
-      kind: "init",
-      method: false,
-      computed: false,
-      shorthand: false,
-      key: isValidJSIdentifierName(p.key) ? identifier(p.key) : literal(p.key),
-      value: p.value
-    }))
+    properties: properties.map(p => {
+      const validIdentifier = isValidJSIdentifierName(p.key);
+      return {
+        type: "Property",
+        kind: "init",
+        method: false,
+        computed: false,
+        shorthand:
+          validIdentifier &&
+          p.value.type === "Identifier" &&
+          p.value.name === p.key,
+        key: validIdentifier ? identifier(p.key) : literal(p.key),
+        value: p.value
+      };
+    })
   };
 }
