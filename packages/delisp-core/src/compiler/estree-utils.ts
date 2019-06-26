@@ -7,9 +7,7 @@ export function member(obj: JS.Expression, prop: string): JS.MemberExpression {
     type: "MemberExpression",
     computed: !dotNotation,
     object: obj,
-    property: dotNotation
-      ? { type: "Identifier", name: prop }
-      : { type: "Literal", value: prop }
+    property: dotNotation ? identifier(prop) : { type: "Literal", value: prop }
   };
 }
 
@@ -31,7 +29,7 @@ export function arrowFunction(
 ): JS.ArrowFunctionExpression {
   return {
     type: "ArrowFunctionExpression",
-    params: args.map(name => ({ type: "Identifier", name })),
+    params: args.map(identifier),
     body,
     generator: false,
     expression: true,

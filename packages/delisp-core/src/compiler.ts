@@ -142,10 +142,8 @@ function compileLambda(
   );
 
   const jsargs = fn.node.lambdaList.positionalArgs.map(
-    (param): JS.Pattern => ({
-      type: "Identifier",
-      name: lookupBindingOrError(param.name, newEnv).jsname
-    })
+    (param): JS.Pattern =>
+      identifier(lookupBindingOrError(param.name, newEnv).jsname)
   );
 
   const implicitReturn = fn.node.body.length === 1;
@@ -193,13 +191,7 @@ function compilePrimitive(name: string, env: Environment): JS.Expression {
   const binding = lookupBindingOrError(name, env);
   switch (binding.source) {
     case "primitive":
-      return member(
-        {
-          type: "Identifier",
-          name: "env"
-        },
-        binding.jsname
-      );
+      return member(identifier("env"), binding.jsname);
     default:
       throw new Error(`${name} is not a valid primitive`);
   }
@@ -222,20 +214,11 @@ function compileVariable(
 
   switch (binding.source) {
     case "primitive":
-      return member(
-        {
-          type: "Identifier",
-          name: "env"
-        },
-        binding.jsname
-      );
+      return member(identifier("env"), binding.jsname);
     case "module":
       return env.defs.access(binding.jsname);
     case "lexical":
-      return {
-        type: "Identifier",
-        name: binding.jsname
-      };
+      return identifier(binding.jsname);
   }
 }
 
@@ -267,10 +250,8 @@ function compileLetBindings(
     callee: {
       type: "FunctionExpression",
       params: expr.node.bindings.map(
-        (b): JS.Pattern => ({
-          type: "Identifier",
-          name: lookupBindingOrError(b.variable.name, newenv).jsname
-        })
+        (b): JS.Pattern =>
+          identifier(lookupBindingOrError(b.variable.name, newenv).jsname)
       ),
       body: compileBody(expr.node.body, newenv, multipleValues)
     },
@@ -317,7 +298,7 @@ function compileRecord(
     )
   };
   if (expr.node.extends) {
-    return methodCall({ type: "Identifier", name: "Object" }, "assign", [
+    return methodCall(identifier("Object"), "assign", [
       { type: "ObjectExpression", properties: [] },
       compile(expr.node.extends, env, false),
       newObj
@@ -395,12 +376,7 @@ function compileMatch(
           id: null,
           expression: false,
           generator: false,
-          params: [
-            {
-              type: "Identifier",
-              name: identifierToJS(c.variable.name)
-            }
-          ],
+          params: [identifier(identifierToJS(c.variable.name))],
           body: (() => {
             const newenv = addBinding(c.variable.name, env);
             return compileBody(c.body, newenv, multipleValues);
@@ -447,10 +423,9 @@ function compileMultipleValueBind(
   }, env);
   const continuation: JS.ArrowFunctionExpression = {
     type: "ArrowFunctionExpression",
-    params: expr.node.variables.map(v => ({
-      type: "Identifier",
-      name: lookupBindingOrError(v.name, newenv).jsname
-    })),
+    params: expr.node.variables.map(v =>
+      identifier(lookupBindingOrError(v.name, newenv).jsname)
+    ),
     expression: false,
     body: compileBody(expr.node.body, newenv, multipleValues)
   };

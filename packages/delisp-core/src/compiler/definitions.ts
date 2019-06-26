@@ -1,5 +1,7 @@
 import * as JS from "estree";
 
+import { identifier } from "./estree-utils";
+
 export interface DefinitionBackend {
   define(name: string, value: JS.Expression): JS.Statement;
   access(name: string): JS.Expression;
@@ -18,10 +20,7 @@ export const staticDefinition: DefinitionBackend = {
       declarations: [
         {
           type: "VariableDeclarator",
-          id: {
-            type: "Identifier",
-            name
-          },
+          id: identifier(name),
           init: value
         }
       ]
@@ -29,10 +28,7 @@ export const staticDefinition: DefinitionBackend = {
   },
 
   access(name) {
-    return {
-      type: "Identifier",
-      name
-    };
+    return identifier(name);
   }
 };
 
@@ -51,10 +47,7 @@ export function dynamicDefinition(container: string): DefinitionBackend {
           left: {
             type: "MemberExpression",
             computed: true,
-            object: {
-              type: "Identifier",
-              name: container
-            },
+            object: identifier(container),
             property: {
               type: "Literal",
               value: name
@@ -69,10 +62,7 @@ export function dynamicDefinition(container: string): DefinitionBackend {
       return {
         type: "MemberExpression",
         computed: true,
-        object: {
-          type: "Identifier",
-          name: container
-        },
+        object: identifier(container),
         property: {
           type: "Literal",
           value: name

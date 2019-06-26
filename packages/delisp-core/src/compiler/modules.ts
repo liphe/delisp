@@ -1,5 +1,5 @@
 import * as JS from "estree";
-import { member } from "./estree-utils";
+import { identifier, member } from "./estree-utils";
 
 export interface ModuleBackend {
   export(vars: string[]): JS.Statement | JS.ModuleDeclaration;
@@ -17,8 +17,8 @@ export const cjs: ModuleBackend = {
         left: {
           type: "MemberExpression",
           computed: false,
-          object: { type: "Identifier", name: "module" },
-          property: { type: "Identifier", name: "exports" }
+          object: identifier("module"),
+          property: identifier("exports")
         },
 
         right: {
@@ -27,8 +27,8 @@ export const cjs: ModuleBackend = {
             (vari): JS.Property => ({
               type: "Property",
               kind: "init",
-              key: { type: "Identifier", name: vari },
-              value: { type: "Identifier", name: vari },
+              key: identifier(vari),
+              value: identifier(vari),
               method: false,
               computed: false,
               shorthand: true
@@ -45,11 +45,11 @@ export const cjs: ModuleBackend = {
       declarations: [
         {
           type: "VariableDeclarator",
-          id: { type: "Identifier", name: localName },
+          id: identifier(localName),
           init: member(
             {
               type: "CallExpression",
-              callee: { type: "Identifier", name: "require" },
+              callee: identifier("require"),
               arguments: [{ type: "Literal", value: "@delisp/runtime" }]
             },
             "default"
@@ -70,8 +70,8 @@ export const cjs: ModuleBackend = {
             properties: names.map(name => ({
               type: "Property",
               kind: "init",
-              key: { type: "Identifier", name },
-              value: { type: "Identifier", name },
+              key: identifier(name),
+              value: identifier(name),
               computed: false,
               method: false,
               shorthand: true
@@ -79,7 +79,7 @@ export const cjs: ModuleBackend = {
           },
           init: {
             type: "CallExpression",
-            callee: { type: "Identifier", name: "require" },
+            callee: identifier("require"),
             arguments: [{ type: "Literal", value: "@delisp/runtime" }]
           }
         }
@@ -96,8 +96,8 @@ export const esm: ModuleBackend = {
       specifiers: vars.map(
         (vari): JS.ExportSpecifier => ({
           type: "ExportSpecifier",
-          exported: { type: "Identifier", name: vari },
-          local: { type: "Identifier", name: vari }
+          exported: identifier(vari),
+          local: identifier(vari)
         })
       ),
       declaration: null
@@ -110,7 +110,7 @@ export const esm: ModuleBackend = {
       specifiers: [
         {
           type: "ImportDefaultSpecifier",
-          local: { type: "Identifier", name: localName }
+          local: identifier(localName)
         }
       ],
       source: { type: "Literal", value: "@delisp/runtime" }
@@ -122,8 +122,8 @@ export const esm: ModuleBackend = {
       importKind: "value",
       specifiers: names.map(name => ({
         type: "ImportSpecifier",
-        local: { type: "Identifier", name },
-        imported: { type: "Identifier", name }
+        local: identifier(name),
+        imported: identifier(name)
       })),
       source: { type: "Literal", value: "@delisp/runtime" }
     };

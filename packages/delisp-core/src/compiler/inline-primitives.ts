@@ -99,12 +99,7 @@ export function compileInlinePrimitive(
   if (position === "funcall" || arity === 0) {
     return prim.handle(args);
   } else {
-    const identifiers = range(arity).map(
-      (i): JS.Identifier => ({
-        type: "Identifier",
-        name: `x${i}`
-      })
-    );
+    const identifiers = range(arity).map(i => identifier(`x${i}`));
     return {
       type: "ArrowFunctionExpression",
       params: [identifier("values"), ...identifiers],
@@ -133,17 +128,14 @@ defineInlinePrimitive("false", "boolean", () => {
 });
 
 defineInlinePrimitive("none", "none", () => {
-  return {
-    type: "Identifier",
-    name: "undefined"
-  };
+  return identifier("undefined");
 });
 
 defineInlinePrimitive(
   "print",
   "(-> string (effect console | _) none)",
   args => {
-    return methodCall({ type: "Identifier", name: "console" }, "log", args);
+    return methodCall(identifier("console"), "log", args);
   }
 );
 
@@ -321,15 +313,12 @@ defineMagicPrimitive(
       []
     );
     const jsname = name.replace(/^:/, "");
-    const getter = arrowFunction(
-      ["obj"],
-      member({ type: "Identifier", name: "obj" }, jsname)
-    );
+    const getter = arrowFunction(["obj"], member(identifier("obj"), jsname));
     const setter = arrowFunction(
       ["val", "obj"],
-      methodCall({ type: "Identifier", name: "Object" }, "assign", [
+      methodCall(identifier("Object"), "assign", [
         { type: "ObjectExpression", properties: [] },
-        { type: "Identifier", name: "obj" },
+        identifier("obj"),
         {
           type: "ObjectExpression",
           properties: [
