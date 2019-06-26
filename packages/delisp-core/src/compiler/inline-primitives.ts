@@ -114,17 +114,11 @@ export function compileInlinePrimitive(
 //
 
 defineInlinePrimitive("true", "boolean", () => {
-  return {
-    type: "Literal",
-    value: true
-  };
+  return literal(true);
 });
 
 defineInlinePrimitive("false", "boolean", () => {
-  return {
-    type: "Literal",
-    value: false
-  };
+  return literal(false);
 });
 
 defineInlinePrimitive("none", "none", () => {
@@ -218,7 +212,7 @@ defineInlinePrimitive("zero?", "(-> number _ boolean)", ([x]) => ({
   type: "BinaryExpression",
   operator: "===",
   left: x,
-  right: { type: "Literal", value: 0 }
+  right: literal(0)
 }));
 
 defineInlinePrimitive("string=", "(-> string string _ boolean)", ([x, y]) => ({
@@ -342,7 +336,7 @@ defineMagicPrimitive(
       properties: [
         {
           type: "Property",
-          key: { type: "Literal", value: "get" },
+          key: literal("get"),
           value: getter,
           computed: false,
           kind: "init",
@@ -351,7 +345,7 @@ defineMagicPrimitive(
         },
         {
           type: "Property",
-          key: { type: "Literal", value: "set" },
+          key: literal("set"),
           value: setter,
           computed: false,
           kind: "init",

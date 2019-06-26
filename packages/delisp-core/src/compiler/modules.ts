@@ -1,5 +1,5 @@
 import * as JS from "estree";
-import { identifier, member } from "./estree-utils";
+import { identifier, literal, member } from "./estree-utils";
 
 export interface ModuleBackend {
   export(vars: string[]): JS.Statement | JS.ModuleDeclaration;
@@ -50,7 +50,7 @@ export const cjs: ModuleBackend = {
             {
               type: "CallExpression",
               callee: identifier("require"),
-              arguments: [{ type: "Literal", value: "@delisp/runtime" }]
+              arguments: [literal("@delisp/runtime")]
             },
             "default"
           )
@@ -80,7 +80,7 @@ export const cjs: ModuleBackend = {
           init: {
             type: "CallExpression",
             callee: identifier("require"),
-            arguments: [{ type: "Literal", value: "@delisp/runtime" }]
+            arguments: [literal("@delisp/runtime")]
           }
         }
       ]
@@ -113,7 +113,7 @@ export const esm: ModuleBackend = {
           local: identifier(localName)
         }
       ],
-      source: { type: "Literal", value: "@delisp/runtime" }
+      source: literal("@delisp/runtime")
     };
   },
   importRuntimeUtils(names: string[]) {
@@ -125,7 +125,7 @@ export const esm: ModuleBackend = {
         local: identifier(name),
         imported: identifier(name)
       })),
-      source: { type: "Literal", value: "@delisp/runtime" }
+      source: literal("@delisp/runtime")
     };
   }
 };

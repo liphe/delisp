@@ -7,7 +7,7 @@ export function member(obj: JS.Expression, prop: string): JS.MemberExpression {
     type: "MemberExpression",
     computed: !dotNotation,
     object: obj,
-    property: dotNotation ? identifier(prop) : { type: "Literal", value: prop }
+    property: dotNotation ? identifier(prop) : literal(prop)
   };
 }
 
@@ -37,7 +37,7 @@ export function arrowFunction(
   };
 }
 
-export function literal(value: number | string): JS.Literal {
+export function literal(value: number | string | boolean | null): JS.Literal {
   return {
     type: "Literal",
     value

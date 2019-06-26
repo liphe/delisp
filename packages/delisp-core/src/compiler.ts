@@ -366,10 +366,7 @@ function compileMatch(
         method: false,
         shorthand: false,
         computed: false,
-        key: {
-          type: "Literal",
-          value: c.label
-        },
+        key: literal(c.label),
         value: {
           type: "ArrowFunctionExpression",
           kind: "init",
@@ -395,7 +392,7 @@ function compileTag(
 ): JS.Expression {
   return primitiveCall(
     "caseTag",
-    { type: "Literal", value: expr.node.label },
+    literal(expr.node.label),
     ...(expr.node.value ? [compile(expr.node.value, env, false)] : [])
   );
 }
