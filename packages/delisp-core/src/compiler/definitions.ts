@@ -51,7 +51,7 @@ export function dynamicDefinition(container: string): DefinitionBackend {
     },
 
     access(name) {
-      return member(identifier("container"), name);
+      return member(identifier(container), name);
     }
   };
 }
