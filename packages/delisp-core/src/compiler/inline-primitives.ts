@@ -6,6 +6,7 @@ import { isFunctionType, generalize } from "../type-utils";
 import { tFn, tRecord, TypeSchema } from "../types";
 import { range } from "../utils";
 import {
+  op,
   member,
   methodCall,
   arrowFunction,
@@ -133,32 +134,17 @@ defineInlinePrimitive(
   }
 );
 
-defineInlinePrimitive("+", "(-> number number _ number)", args => {
-  return {
-    type: "BinaryExpression",
-    operator: "+",
-    left: args[0],
-    right: args[1]
-  };
-});
+defineInlinePrimitive("+", "(-> number number _ number)", args =>
+  op("+", args[0], args[1])
+);
 
-defineInlinePrimitive("-", "(-> number number _ number)", args => {
-  return {
-    type: "BinaryExpression",
-    operator: "-",
-    left: args[0],
-    right: args[1]
-  };
-});
+defineInlinePrimitive("-", "(-> number number _ number)", args =>
+  op("-", args[0], args[1])
+);
 
-defineInlinePrimitive("*", "(-> number number _ number)", args => {
-  return {
-    type: "BinaryExpression",
-    operator: "*",
-    left: args[0],
-    right: args[1]
-  };
-});
+defineInlinePrimitive("*", "(-> number number _ number)", args =>
+  op("*", args[0], args[1])
+);
 
 defineInlinePrimitive(
   "map",
@@ -201,26 +187,17 @@ defineInlinePrimitive("length", "(-> [a] _ number)", ([vec]) =>
   member(vec, "length")
 );
 
-defineInlinePrimitive("=", "(-> number number _ boolean)", ([x, y]) => ({
-  type: "BinaryExpression",
-  operator: "===",
-  left: x,
-  right: y
-}));
+defineInlinePrimitive("=", "(-> number number _ boolean)", ([x, y]) =>
+  op("===", x, y)
+);
 
-defineInlinePrimitive("zero?", "(-> number _ boolean)", ([x]) => ({
-  type: "BinaryExpression",
-  operator: "===",
-  left: x,
-  right: literal(0)
-}));
+defineInlinePrimitive("zero?", "(-> number _ boolean)", ([x]) =>
+  op("===", x, literal(0))
+);
 
-defineInlinePrimitive("string=", "(-> string string _ boolean)", ([x, y]) => ({
-  type: "BinaryExpression",
-  operator: "===",
-  left: x,
-  right: y
-}));
+defineInlinePrimitive("string=", "(-> string string _ boolean)", ([x, y]) =>
+  op("===", x, y)
+);
 
 defineInlinePrimitive("string-length", "(-> string _ number)", ([str]) =>
   member(str, "length")
@@ -249,14 +226,7 @@ defineInlinePrimitive(
 defineInlinePrimitive(
   "string-append",
   "(-> string string _ string)",
-  ([str1, str2]) => {
-    return {
-      type: "BinaryExpression",
-      operator: "+",
-      left: str1,
-      right: str2
-    };
-  }
+  ([str1, str2]) => op("+", str1, str2)
 );
 
 // Tuples

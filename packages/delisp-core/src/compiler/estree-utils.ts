@@ -51,6 +51,14 @@ export function identifier(name: string): JS.Identifier {
   };
 }
 
+export function op(
+  operator: JS.BinaryOperator,
+  left: JS.Expression,
+  right: JS.Expression
+): JS.BinaryExpression {
+  return { type: "BinaryExpression", operator, left, right };
+}
+
 export function primitiveCall(
   name: string,
   ...args: JS.Expression[]
