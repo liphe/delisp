@@ -14,13 +14,7 @@ export const cjs: ModuleBackend = {
       expression: {
         type: "AssignmentExpression",
         operator: "=",
-        left: {
-          type: "MemberExpression",
-          computed: false,
-          object: identifier("module"),
-          property: identifier("exports")
-        },
-
+        left: member(identifier("module"), "exports"),
         right: {
           type: "ObjectExpression",
           properties: vars.map(

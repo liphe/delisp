@@ -1,6 +1,6 @@
 import * as JS from "estree";
 
-import { identifier, literal } from "./estree-utils";
+import { identifier, member } from "./estree-utils";
 
 export interface DefinitionBackend {
   define(name: string, value: JS.Expression): JS.Statement;
@@ -44,24 +44,14 @@ export function dynamicDefinition(container: string): DefinitionBackend {
         expression: {
           type: "AssignmentExpression",
           operator: "=",
-          left: {
-            type: "MemberExpression",
-            computed: true,
-            object: identifier(container),
-            property: literal(name)
-          },
+          left: member(identifier(container), name),
           right: value
         }
       };
     },
 
     access(name) {
-      return {
-        type: "MemberExpression",
-        computed: true,
-        object: identifier(container),
-        property: literal(name)
-      };
+      return member(identifier("container"), name);
     }
   };
 }
