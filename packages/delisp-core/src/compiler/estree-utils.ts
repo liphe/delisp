@@ -1,5 +1,7 @@
 import * as JS from "estree";
 import { isValidJSIdentifierName } from "./jsvariable";
+import { mapObject } from "../utils";
+import * as esprima from "esprima";
 
 export function member(obj: JS.Expression, prop: string): JS.MemberExpression {
   const dotNotation = isValidJSIdentifierName(prop);
@@ -62,4 +64,56 @@ export function primitiveCall(
     callee: identifier(name),
     arguments: args
   };
+}
+
+/** Create some JS AST by interpolating a templated literal with Javascript code. */
+
+function prepareJSTemplate(chunks: TemplateStringsArray): JS.Expression {
+  const code = chunks.reduce(
+    (acc, c, idx) => acc + ` __delisp_placeholder_${idx} ` + c
+  );
+  const program = esprima.parseModule(code);
+  return (program.body[0] as JS.ExpressionStatement).expression;
+}
+
+export function jsexpr(chunks: TemplateStringsArray, ...values: any[]) {
+  const tmpl = prepareJSTemplate(chunks);
+
+  function isPlaceholder(node: any): number | null {
+    if (node && node.type === "Identifier") {
+      const match = node.name && node.name.match(/__delisp_placeholder_(\d+)/);
+      if (match) {
+        return parseInt(match[1], 10);
+      }
+      return null;
+    } else {
+      return null;
+    }
+  }
+
+  function replacePlaceholders(node: any): any {
+    if (Array.isArray(node)) {
+      if (node.length === 1) {
+        const idx = isPlaceholder(node[0]);
+        if (idx && Array.isArray(values[idx - 1])) {
+          return values[idx - 1];
+        } else {
+          return node.map(replacePlaceholders);
+        }
+      } else {
+        return node.map(replacePlaceholders);
+      }
+    } else if (typeof node !== "object" || node === null) {
+      return node;
+    } else {
+      const idx = isPlaceholder(node);
+      if (idx) {
+        return values[idx - 1];
+      } else {
+        return mapObject(node, replacePlaceholders);
+      }
+    }
+  }
+
+  return replacePlaceholders(tmpl);
 }

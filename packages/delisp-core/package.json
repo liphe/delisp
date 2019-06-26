@@ -18,9 +18,11 @@
     "@delisp/runtime": "^0.2.0",
     "@types/debug": "^4.1.4",
     "debug": "^4.1.0",
-    "escodegen": "^1.11.1"
+    "escodegen": "^1.11.1",
+    "esprima": "^4.0.1"
   },
   "devDependencies": {
+    "@types/esprima": "^4.0.2",
     "@types/estree": "^0.0.39"
   }
 }
