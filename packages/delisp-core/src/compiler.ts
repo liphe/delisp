@@ -26,7 +26,7 @@ import {
 import { printType } from "./type-printer";
 
 import {
-  methodCall,
+  jsexpr,
   literal,
   identifier,
   primitiveCall,
@@ -317,11 +317,8 @@ function compileRecord(
     )
   };
   if (expr.node.extends) {
-    return methodCall({ type: "Identifier", name: "Object" }, "assign", [
-      { type: "ObjectExpression", properties: [] },
-      compile(expr.node.extends, env, false),
-      newObj
-    ]);
+    const extending = compile(expr.node.extends, env, false);
+    return jsexpr`Object.assign({}, ${extending}, ${newObj})`;
   } else {
     return newObj;
   }
