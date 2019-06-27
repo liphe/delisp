@@ -402,6 +402,12 @@ describe("Type inference", () => {
         `(-> (-> α (values β | γ)) α (values β | γ))`
       );
     });
+
+    it("infer type of multiple-value-bind", () => {
+      expect(
+        typeOf(`(multiple-value-bind (x y) (values "foo" 2) (pair x y))`)
+      ).toBe(`(* string number)`);
+    });
   });
 
   describe("Regressions", () => {
