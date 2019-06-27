@@ -1,4 +1,3 @@
-import { InvariantViolation } from "./invariant";
 import { range } from "./utils";
 import { TApplication, Type, TVar } from "./types";
 import { normalizeRow } from "./type-utils";
@@ -149,8 +148,12 @@ function _printType(
     case "type-variable":
       return normalizeVar({ node: type.node });
     case "empty-row":
+      return "#<empty-row>";
     case "row-extension":
-      throw new InvariantViolation(`Can't print ${type.node.tag} types`);
+      return `(#<row-extend> ${type.node.label} ${_printType(
+        type.node.labelType,
+        normalizeVar
+      )} | ${_printType(type.node.extends, normalizeVar)}})`;
   }
 }
 

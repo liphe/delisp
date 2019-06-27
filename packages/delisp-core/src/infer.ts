@@ -59,10 +59,16 @@ import {
   constEffect,
   constImplicitInstance,
   constExplicitInstance,
-  solve
+  solve,
+  debugConstraints
 } from "./infer-solver";
 
 import { applySubstitutionToExpr } from "./infer-subst";
+
+import { typeAnnotate } from "../src/infer-debug";
+import { pprint } from "../src/printer";
+
+const DEBUG = false;
 
 // The type inference process is split in two stages. Firstly, `infer`
 // will run through the syntax it will generate dummy type variables,
@@ -981,21 +987,40 @@ export const defaultEnvironment: ExternalEnvironment = {
 export function inferType(
   expr: Expression,
   env: ExternalEnvironment = defaultEnvironment,
-  internalTypes: InternalTypeEnvironment
+  internalTypes: InternalTypeEnvironment,
+  multipleValues: boolean
 ): Expression<Typed> {
   const { result: tmpExpr, constraints, assumptions } = infer(
     expr,
     [],
     internalTypes,
-    false
+    multipleValues
   );
 
-  const s = solve(
-    [...constraints, ...assumptionsToConstraints(assumptions, env)],
-    {}
-  );
+  const allConstraints = [
+    ...constraints,
+    ...assumptionsToConstraints(assumptions, env)
+  ];
 
-  return applySubstitutionToExpr(tmpExpr, s);
+  const s = solve(allConstraints, {});
+
+  const result = applySubstitutionToExpr(tmpExpr, s);
+
+  if (DEBUG) {
+    console.log("———————————–");
+    const debug = typeAnnotate(tmpExpr);
+    console.log(pprint(debug, 40));
+
+    console.log("");
+    console.log("Constraints:");
+    debugConstraints(allConstraints);
+
+    console.log("");
+    console.log("Result");
+    console.log(pprint(typeAnnotate(result), 40));
+  }
+
+  return result;
 }
 
 // Group the gathered assumptions and classify them into:
