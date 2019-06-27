@@ -823,9 +823,10 @@ function infer(
             })
         ],
 
-        assumptions: body.assumptions.filter(
-          a => !variableNames.includes(a.node.name)
-        )
+        assumptions: [
+          ...form.assumptions,
+          ...body.assumptions.filter(a => !variableNames.includes(a.node.name))
+        ]
       };
     }
   }
