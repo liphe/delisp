@@ -143,7 +143,7 @@ describe("Evaluation", () => {
     });
 
     it("multiple-value-bind can catch forms with a single value transparently", () => {
-      expect(evaluateString(`(multiple-value-bind (x) 3 x)`)).toBe(3);
+      expect(evaluateString(`(multiple-value-bind (x) 3 (+ x 1))`)).toBe(4);
     });
 
     it("multiple-value-bind can catch forms with a multiple values", () => {

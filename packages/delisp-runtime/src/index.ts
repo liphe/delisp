@@ -72,3 +72,23 @@ export const values = primaryValue;
 export function bindPrimaryValue(fn: Function): Function {
   return (...args: unknown[]) => fn(primaryValue, ...args);
 }
+
+export function mvbind(
+  form: (values: any, ...args: any[]) => any,
+  cont: (...results: any[]) => any
+) {
+  let valuesCalled = false;
+
+  const values = (...results: any[]) => {
+    valuesCalled = true;
+    return cont(...results);
+  };
+
+  const result = form(values);
+
+  if (valuesCalled) {
+    return result;
+  } else {
+    return values(result);
+  }
+}

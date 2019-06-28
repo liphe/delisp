@@ -387,11 +387,7 @@ function compileMultipleValueBind(
     compileBody(expr.node.body, newenv, multipleValues)
   );
 
-  return {
-    type: "CallExpression",
-    callee: form,
-    arguments: [continuation]
-  };
+  return primitiveCall("mvbind", form, continuation);
 }
 
 function compileUnknown(
@@ -532,7 +528,8 @@ function compileRuntimeUtils(
     "primaryValue",
     "values",
     "mvbind",
-    "bindPrimaryValue"
+    "bindPrimaryValue",
+    "mvbind"
   ]);
 }
 
