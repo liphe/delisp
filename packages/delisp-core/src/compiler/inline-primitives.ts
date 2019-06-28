@@ -258,6 +258,14 @@ defineInlinePrimitive("%snd", "(-> (* a b) _ b)", ([pair]) => {
   return primitiveCall("snd", pair);
 });
 
+defineInlinePrimitive(
+  "assert",
+  "(-> boolean string (effect exp | _) none)",
+  ([x, msg]) => {
+    return primitiveCall("assert", x, msg);
+  }
+);
+
 /*
 matches `:foo` and inlines the lens with type
 

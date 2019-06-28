@@ -529,7 +529,8 @@ function compileRuntimeUtils(
     "values",
     "mvbind",
     "bindPrimaryValue",
-    "mvbind"
+    "mvbind",
+    "assert"
   ]);
 }
 
