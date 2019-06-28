@@ -2,7 +2,7 @@
   "name": "delisp-repo",
   "version": "0.1.0",
   "description": "A delightful Lisp for Javascript",
-  "repository": "https://github.com/ams-hackers/delisp.git",
+  "repository": "https://github.com/liphe/delisp.git",
   "license": "MIT",
   "scripts": {
     "build": "tsc --build packages/",
