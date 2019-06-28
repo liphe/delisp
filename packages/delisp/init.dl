@@ -39,3 +39,6 @@
     (values (%snd p)
             (lambda (new-value)
               (pair (%fst p) new-value)))))
+
+(define string-ref
+  (lambda (k) (substring k (+ k 1))))

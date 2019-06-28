@@ -9,19 +9,6 @@ function validBoundingIndex(str: string, start: number, end: number) {
 }
 
 const stringPrims: Primitives = {
-  "string-ref": {
-    type: "(-> number _ (-> string _ (values string (-> string _ string))))",
-    value: (_values: unknown, k: number) => {
-      return (values: any, str: string) => {
-        validBoundingIndex(str, k, k + 1);
-        const value = str[k];
-        const update = (_value: unknown, newChar: string) => {
-          return str.slice(0, k) + newChar + str.slice(k + 1);
-        };
-        return values(value, update);
-      };
-    }
-  },
   substring: {
     type:
       "(-> number number _ (-> string _ (values string (-> string _ string))))",
