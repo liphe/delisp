@@ -21,11 +21,13 @@ const emptyExternalEnv: ExternalEnvironment = { variables: {}, types: {} };
 function typeOf(
   str: string,
   externalEnv: ExternalEnvironment = emptyExternalEnv,
-  internalEnv: InternalTypeEnvironment = {}
+  internalEnv: InternalTypeEnvironment = {},
+  multipleValues = false
 ): string {
   const syntax = readExpr(str);
-  const typedExpr = inferType(syntax, externalEnv, internalEnv);
-  return printType(typedExpr.info.type);
+  const typedExpr = inferType(syntax, externalEnv, internalEnv, multipleValues);
+  const result = printType(typedExpr.info.type);
+  return result;
 }
 
 describe("Type inference", () => {
@@ -114,17 +116,19 @@ describe("Type inference", () => {
       });
       it("should infer the type of a lenses", () => {
         expect(typeOf(":x")).toBe(
-          "{:get (-> {:x α | β} γ α) :set (-> δ {:x α | β} ε {:x δ | β})}"
+          "(-> {:x α | β} γ (values α (-> δ ε {:x δ | β})))"
         );
         expect(typeOf(":foo")).toBe(
-          "{:get (-> {:foo α | β} γ α) :set (-> δ {:foo α | β} ε {:foo δ | β})}"
+          "(-> {:foo α | β} γ (values α (-> δ ε {:foo δ | β})))"
         );
         expect(typeOf("(if true :x :y)")).toBe(
-          "{:get (-> {:x α :y α | β} γ α) :set (-> α {:x α :y α | β} δ {:x α :y α | β})}"
+          "(-> {:x α :y α | β} γ (values α (-> α δ {:x α :y α | β})))"
         );
       });
       it("should be able to access the field", () => {
-        expect(typeOf("(get :x {:x 5})")).toBe("number");
+        expect(typeOf("(:x {:x 5})", undefined, undefined, true)).toBe(
+          "(values number (-> α β {:x α}))"
+        );
         expect(typeOf("(lambda (f) (f {:x 5 :y 6}))")).toBe(
           "(-> (-> {:x number :y number} α (values β | γ)) α (values β | γ))"
         );
@@ -147,6 +151,15 @@ describe("Type inference", () => {
       it("should not allow to extend any other type", () => {
         expect(() => typeOf("{:x 1 | 5}")).toThrow();
         expect(() => typeOf('{:x 1 | "foo"}')).toThrow();
+      });
+
+      it("infer the selector type of record lenses", () => {
+        expect(typeOf("(multiple-value-bind (x _) (:x {:x 20}) x)")).toBe(
+          "number"
+        );
+        expect(typeOf("(multiple-value-bind (_ u) (:x {:x 20}) u)")).toBe(
+          "(-> α β {:x α})"
+        );
       });
     });
 
@@ -222,24 +235,6 @@ describe("Type inference", () => {
       });
       it("should ensure both branches' types are instantiated properly", () => {
         expect(typeOf("(if true [] [1])")).toBe("[number]");
-      });
-    });
-
-    describe("Primitive functions", () => {
-      it("map with multiple values", () => {
-        expect(typeOf("(map (lambda (x) (values x x)) [1 2 3 4])")).toEqual(
-          "[number]"
-        );
-      });
-      it("filter with multiple values", () => {
-        expect(
-          typeOf("(filter (lambda (x) (values true 5)) [-2 -1 0 1 2])")
-        ).toEqual("[number]");
-      });
-      it("fold with multiple values", () => {
-        expect(
-          typeOf(`(fold (lambda (a b) (values 50 (+ a b))) [1 2 3 4] 0)`)
-        ).toEqual("number");
       });
     });
 
@@ -404,16 +399,17 @@ describe("Type inference", () => {
     });
 
     it("infer type of multiple-value-bind", () => {
-      expect(
-        typeOf(`(multiple-value-bind (x y) (values "foo" 2) (pair x y))`)
-      ).toBe(`(* string number)`);
+      const result = typeOf(
+        `(multiple-value-bind (x y) (values "foo" 2) (pair x y))`
+      );
+      expect(result).toBe(`(* string number)`);
     });
   });
 
   describe("Regressions", () => {
     it("(the _ _) type annotations should keep the type annotation node in the AST", () => {
       const expr = readExpr("(the number 10)");
-      const typedExpr = inferType(expr, emptyExternalEnv, {});
+      const typedExpr = inferType(expr, emptyExternalEnv, {}, false);
       expect(typedExpr).toHaveProperty(["node", "tag"], "type-annotation");
     });
   });

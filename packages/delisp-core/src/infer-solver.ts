@@ -8,6 +8,7 @@ import {
   Substitution,
   listTypeVariables
 } from "./type-utils";
+import { pprint } from "./printer";
 import { printType } from "./type-printer";
 import { unify } from "./unify";
 import { flatMap, union, difference, intersection } from "./utils";
@@ -104,6 +105,40 @@ export function constImplicitInstance(
   return { tag: "implicit-instance-constraint", expr, monovars, t, kind };
 }
 
+function exprType(expr: Expression<Typed>, kind: ConstraintKind) {
+  return kind === "resulting-type" ? expr.info.type : expr.info.expressionType;
+}
+
+export function debugConstraints(constraints: TConstraint[]) {
+  constraints.forEach(c => {
+    switch (c.tag) {
+      case "equal-constraint":
+        return console.log(
+          `${pprint(c.expr, 40)} ${c.kind} of type ${printType(
+            exprType(c.expr, c.kind),
+            false
+          )} is ${printType(c.t, false)}`
+        );
+      case "equal-effect-constraint":
+        return `${pprint(c.expr, 40)} has effect ${printType(c.t, false)}`;
+      case "implicit-instance-constraint":
+        return console.log(
+          `${pprint(c.expr, 40)} is implicit instance of ${printType(
+            c.t,
+            false
+          )}`
+        );
+      case "explicit-instance-constraint":
+        return console.log(
+          `${pprint(c.expr, 40)} is explicit instance of ${printType(
+            c.t.mono,
+            false
+          )}`
+        );
+    }
+  });
+}
+
 // Set of variables that are "active" in a set of constraints. This
 // is, all variables except the ones that will be bound in a type
 // scheme. This is used to decide which _instance constraint_ of the
@@ -116,30 +151,17 @@ function activevars(constraints: TConstraint[]): string[] {
   return flatMap(c => {
     switch (c.tag) {
       case "equal-constraint":
-        return equal(
-          c.kind === "resulting-type"
-            ? c.expr.info.type
-            : c.expr.info.expressionType,
-          c.t
-        );
+        return equal(exprType(c.expr, c.kind), c.t);
       case "equal-effect-constraint":
         return equal(c.expr.info.effect, c.t);
       case "implicit-instance-constraint":
         return union(
-          listTypeVariables(
-            c.kind === "resulting-type"
-              ? c.expr.info.type
-              : c.expr.info.expressionType
-          ),
+          listTypeVariables(exprType(c.expr, c.kind)),
           intersection(listTypeVariables(c.t), c.monovars)
         );
       case "explicit-instance-constraint":
         return union(
-          listTypeVariables(
-            c.kind === "resulting-type"
-              ? c.expr.info.type
-              : c.expr.info.expressionType
-          ),
+          listTypeVariables(exprType(c.expr, c.kind)),
           difference(listTypeVariables(c.t.mono), c.t.tvars)
         );
     }
@@ -277,14 +299,18 @@ export function solve(
             `Type mismatch
 
 Expected ${printType(
-              applySubstitution(result.t2, solution)
-            )} instead of ${printType(applySubstitution(result.t1, solution))}
+              applySubstitution(result.t2, solution),
+              false
+            )} instead of ${printType(
+              applySubstitution(result.t1, solution),
+              false
+            )}
 
-${printType(applySubstitution(t, solution))}
+${printType(applySubstitution(t, solution), false)}
 
 vs.
 
-${printType(applySubstitution(exprType, solution))}`,
+${printType(applySubstitution(exprType, solution), false)}`,
             constraint.expr.location
           )
         );
@@ -293,13 +319,13 @@ ${printType(applySubstitution(exprType, solution))}`,
           printHighlightedExpr(
             `Type mismatch
 
-Missing value of type ${printType(applySubstitution(result.t, solution))}
+Missing value of type ${printType(applySubstitution(result.t, solution), false)}
 
-${printType(applySubstitution(t, solution))}
+${printType(applySubstitution(t, solution), false)}
 
 vs.
 
-${printType(applySubstitution(exprType, solution))}
+${printType(applySubstitution(exprType, solution), false)}
 
 `,
             constraint.expr.location

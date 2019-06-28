@@ -4,23 +4,26 @@
 
 (define over
   (lambda (lens fn x)
-    (set lens (fn (get lens x)) x)))
+    (multiple-value-bind (current change)
+        (lens x)
+      (change (fn current)))))
+
+(define constantly
+  (lambda (x) (lambda (y) x)))
+
+(define set
+  (lambda (lens value container)
+    (over lens
+          (constantly value)
+          container)))
 
 (define >>
   (lambda (outer inner)
-    {:get (lambda (container)
-       (get inner (get outer container)))
-     :set (lambda (value container)
-       (set outer
-            (set inner
-                 value
-                 (get outer container))
-            container))}))
-
-(define ^fst
-  {:get fst
-   :set (lambda (v p) (pair v (snd p)))})
-
-(define ^snd
-  {:get snd
-   :set (lambda (v p) (pair (fst p) v))})
+    (lambda (outer-container)
+      (multiple-value-bind (inner-container outer-update)
+          (outer outer-container)
+        (multiple-value-bind (value inner-update)
+            (inner inner-container)
+          (values value
+                  (>>> inner-update
+                       outer-update)))))))
