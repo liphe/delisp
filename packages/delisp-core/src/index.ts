@@ -18,6 +18,7 @@ export {
 } from "./infer";
 export { Type } from "./types";
 export { printType } from "./type-printer";
+export { generateModuleInterface } from "./type-module";
 export {
   isDeclaration,
   isDefinition,

@@ -6,7 +6,8 @@ import {
   printHighlightedExpr,
   printType,
   readModule,
-  generateTSModuleDeclaration
+  generateTSModuleDeclaration,
+  generateModuleInterface
 } from "@delisp/core";
 
 import * as fs from "./fs-helpers";
@@ -29,9 +30,13 @@ async function compileFile(
   const cwd = process.cwd();
   const OUTPUT_DIR = path.join(cwd, ".delisp", "build");
   const basename = path.basename(file, path.extname(file));
-  const outfile = path.resolve(
+  const outfileJS = path.resolve(
     OUTPUT_DIR,
     path.relative(cwd, basename + ".js")
+  );
+  const outfileInfo = path.resolve(
+    OUTPUT_DIR,
+    path.relative(cwd, basename + ".json")
   );
 
   const content = await fs.readFile(file, "utf8");
@@ -53,12 +58,18 @@ async function compileFile(
     throw new Error(unknowns.join("\n\n"));
   }
 
+  await mkdirp(path.dirname(outfileJS));
+
   const code = compileModuleToString(typedModule, {
     esModule: moduleFormat === "esm"
   });
+  await fs.writeFile(outfileJS, code);
 
-  await mkdirp(path.dirname(outfile));
-  await fs.writeFile(outfile, code);
+  const signature = generateModuleInterface(typedModule);
+  await fs.writeFile(
+    outfileInfo,
+    JSON.stringify({ exports: signature }, null, 2)
+  );
 
   if (tsDeclaration) {
     const declarationFile = path.resolve(

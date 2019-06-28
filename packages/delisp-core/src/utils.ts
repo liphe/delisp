@@ -103,3 +103,12 @@ export function capitalize(str: string) {
     return str[0].toUpperCase() + str.slice(1);
   }
 }
+
+/** Build an object from an array of pairs */
+export function fromEntries<T>(
+  entries: Array<[string, T]>
+): { [key: string]: T } {
+  return entries.reduce((obj, [key, value]) => {
+    return { ...obj, [key]: value };
+  }, {});
+}
