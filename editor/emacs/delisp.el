@@ -192,7 +192,7 @@
 
    ;; Built-ins
    (list
-    (regexp-opt '("true" "false" "map" "filter" "fold") 'symbols)
+    (regexp-opt '("assert" "true" "false" "map" "filter" "fold") 'symbols)
     '(1 font-lock-builtin-face))
 
    ;; Delisp `:' keywords as constants.
