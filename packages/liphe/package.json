@@ -1,5 +1,5 @@
 {
-  "name": "delisp-core-debug",
+  "name": "liphe",
   "version": "1.0.0",
   "private": true,
   "main": "index.js",

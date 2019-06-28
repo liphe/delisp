@@ -199,7 +199,7 @@ export function App({
 }) {
   return (
     <div>
-      <h1>delisp-core-debug</h1>
+      <h1>Liphe</h1>
       <Editor
         value={state.code}
         onChange={e => dispatch(updateCode(e.target.value))}
