@@ -19,17 +19,11 @@
 
 (define >>
   (lambda (outer inner)
-    (lambda (container)
-      (values (inner (outer container))
-              (lambda (value
-                       container)
-                (set outer
-                     (set inner
-                          value
-                          (outer container))
-                     container))))))
-
-(define test
-  (multiple-value-bind (_ change)
-      (:x {:x 10})
-    change))
+    (lambda (outer-container)
+      (multiple-value-bind (inner-container outer-update)
+          (outer outer-container)
+        (multiple-value-bind (value inner-update)
+            (inner inner-container)
+          (values value
+                  (>>> inner-update
+                       outer-update)))))))
