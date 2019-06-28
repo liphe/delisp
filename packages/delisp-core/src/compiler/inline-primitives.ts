@@ -250,11 +250,11 @@ defineInlinePrimitive("pair", "(-> a b _ (* a b))", ([a, b]) => {
   return primitiveCall("pair", a, b);
 });
 
-defineInlinePrimitive("fst", "(-> (* a b) _ a)", ([pair]) => {
+defineInlinePrimitive("%fst", "(-> (* a b) _ a)", ([pair]) => {
   return primitiveCall("fst", pair);
 });
 
-defineInlinePrimitive("snd", "(-> (* a b) _ b)", ([pair]) => {
+defineInlinePrimitive("%snd", "(-> (* a b) _ b)", ([pair]) => {
   return primitiveCall("snd", pair);
 });
 

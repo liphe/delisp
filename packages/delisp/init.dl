@@ -27,3 +27,15 @@
           (values value
                   (>>> inner-update
                        outer-update)))))))
+
+(define fst
+  (lambda (p)
+    (values (%fst p)
+            (lambda (new-value)
+              (pair new-value (%snd p))))))
+
+(define snd
+  (lambda (p)
+    (values (%snd p)
+            (lambda (new-value)
+              (pair (%fst p) new-value)))))
