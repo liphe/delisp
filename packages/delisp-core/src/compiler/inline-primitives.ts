@@ -3,14 +3,8 @@ import { InvariantViolation } from "../invariant";
 import { generateUniqueTVar } from "../type-generate";
 import { readType } from "../convert-type";
 import { isFunctionType, generalize } from "../type-utils";
-import {
-  tFn,
-  tMultiValuedFunction,
-  tRecord,
-  tValues,
-  TypeSchema,
-  Type
-} from "../types";
+import { type } from "../type-tag";
+import { tRecord, TypeSchema, Type } from "../types";
 import { range } from "../utils";
 import {
   op,
@@ -285,13 +279,11 @@ defineMagicPrimitive(
       extendsType
     );
 
-    const storeType = tValues([
-      fieldType,
-      tFn([newFieldType], generateUniqueTVar(), newRecordType)
-    ]);
-
     const lensType = generalize(
-      tMultiValuedFunction([recordType], generateUniqueTVar(), storeType),
+      type`(-> ${recordType} 
+               _ 
+               (values ${fieldType} 
+                       (-> ${newFieldType} _ ${newRecordType})))`,
       []
     );
 

@@ -28,6 +28,7 @@ import { printHighlightedExpr } from "./error-report";
 
 import { generateUniqueTVar } from "./type-generate";
 import { listTypeConstants } from "./type-utils";
+import { type } from "./type-tag";
 
 import {
   emptyRow,
@@ -413,7 +414,7 @@ function infer(
       const iargs = inferMany(expr.node.args, monovars, internalTypes);
 
       const primaryType = generateUniqueTVar();
-      const valuesType = tValues([primaryType], generateUniqueTVar());
+      const valuesType = type`(values ${primaryType} | _)`;
 
       const effect = generateUniqueTVar();
       const tfn: Type = tMultiValuedFunction(
