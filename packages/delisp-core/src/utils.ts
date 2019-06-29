@@ -112,3 +112,8 @@ export function fromEntries<T>(
     return { ...obj, [key]: value };
   }, {});
 }
+
+export function zip<A, B>(xs: A[], ys: B[]): Array<[A, B]> {
+  const shortest: Array<A | B> = xs.length < ys.length ? xs : ys;
+  return shortest.map((_: A | B, i: number) => [xs[i], ys[i]]);
+}

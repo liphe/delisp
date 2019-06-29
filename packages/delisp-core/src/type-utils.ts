@@ -1,7 +1,6 @@
 import { InvariantViolation } from "./invariant";
-
+import { last, flatten } from "./utils";
 import { generateUniqueTVar } from "./type-generate";
-import { flatten } from "./utils";
 
 import {
   Type,
@@ -10,7 +9,8 @@ import {
   TypeSchema,
   TConstant,
   TApplication,
-  TVar
+  TVar,
+  tValues
 } from "./types";
 import { unique } from "./utils";
 
@@ -22,12 +22,16 @@ export function onlyPrimaryType(t: Type): Type {
   return { ...t, node: { ...t.node } };
 }
 
-export function isFunctionType(t: Type): t is TApplication {
+export function isConstantApplicationType(t: Type, opname: string) {
   return (
     t.node.tag === "application" &&
     t.node.op.node.tag === "constant" &&
-    t.node.op.node.name === "->"
+    t.node.op.node.name === opname
   );
+}
+
+export function isFunctionType(t: Type): t is TApplication {
+  return isConstantApplicationType(t, "->");
 }
 
 export function typeChildren<A>(type: TypeF<A[]>): A[] {
@@ -183,4 +187,28 @@ export function normalizeRow(
         extends: row
       };
   }
+}
+
+/** Normalize the values types in a type.
+ *
+ * @description Transform a type to ensure only VALUES type or type
+ * variables appear in the codomain of functions types. */
+export function normalizeValues(type: Type): Type {
+  return foldType(type, t => {
+    if (isFunctionType(t)) {
+      const out = last(t.node.args)!;
+      if (isConstantApplicationType(out, "values")) {
+        return t;
+      } else {
+        return {
+          node: {
+            ...t.node,
+            args: [...t.node.args.slice(0, -1), tValues([out])]
+          }
+        };
+      }
+    } else {
+      return t;
+    }
+  });
 }

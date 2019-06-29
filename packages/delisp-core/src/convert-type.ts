@@ -3,6 +3,7 @@ import { ConvertError, parseRecord } from "./convert-utils";
 import { printHighlightedExpr } from "./error-report";
 import { readFromString } from "./reader";
 import { last } from "./utils";
+import { normalizeValues as doNormalizeValues } from "./type-utils";
 
 import {
   isSymbolOfName,
@@ -136,25 +137,14 @@ function convertCases(_op: ASExpr, args: ASExpr[]): Type {
   return tCases(args.map(parseCase), tail && convert_(tail));
 }
 
-function convertValues(expr: ASExpr): Type {
-  // Check if X is the symbol VALUES
-  if (
-    expr.tag === "list" &&
-    expr.elements.length > 0 &&
-    isSymbolOfName(expr.elements[0], "values")
-  ) {
-    let args = expr.elements.slice(1);
-    let extending: Type | undefined = undefined;
-
-    if (args.length > 2 && isSymbolOfName(args[args.length - 2], "|")) {
-      extending = convert_(args[args.length - 1]);
-      args = args.slice(0, -2);
-    }
-
-    return tValues(args.map(convert_), extending);
-  } else {
-    return tValues([convert_(expr)]);
+function convertValues(expr: ASExprList): Type {
+  let args = expr.elements.slice(1);
+  let extending: Type | undefined = undefined;
+  if (args.length > 2 && isSymbolOfName(args[args.length - 2], "|")) {
+    extending = convert_(args[args.length - 1]);
+    args = args.slice(0, -2);
   }
+  return tValues(args.map(convert_), extending);
 }
 
 function convertList(expr: ASExprList): Type {
@@ -175,7 +165,7 @@ function convertList(expr: ASExprList): Type {
     return tMultiValuedFunction(
       fnargs.map(convert_),
       convert_(fneffect),
-      convertValues(fnout)
+      convert_(fnout)
     );
   } else {
     const opType = convert_(op);
@@ -222,13 +212,19 @@ function convert_(expr: ASExpr): Type {
   }
 }
 
-function convertToTypeWithWildcards(expr: ASExpr): TypeWithWildcards {
-  return new TypeWithWildcards(convert_(expr));
+function convertToTypeWithWildcards(
+  expr: ASExpr,
+  normalizeValues = true
+): TypeWithWildcards {
+  const type = convert_(expr);
+  return new TypeWithWildcards(
+    normalizeValues ? doNormalizeValues(type) : type
+  );
 }
 
 export { convertToTypeWithWildcards as convert };
 
-export function readType(source: string): TypeSchema {
-  const t = convertToTypeWithWildcards(readFromString(source));
+export function readType(source: string, normalizeValues = true): TypeSchema {
+  const t = convertToTypeWithWildcards(readFromString(source), normalizeValues);
   return t.generalize();
 }
