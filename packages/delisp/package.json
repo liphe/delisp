@@ -22,11 +22,13 @@
     "@types/mkdirp": "^0.5.2",
     "chalk": "^2.4.2",
     "debug": "^4.1.0",
+    "find-up": "^4.1.0",
     "mkdirp": "^0.5.1",
     "source-map-support": "^0.5.12",
     "yargs": "^13.0.0"
   },
   "devDependencies": {
+    "@types/find-up": "^2.1.1",
     "@types/yargs": "^13.0.0"
   }
 }

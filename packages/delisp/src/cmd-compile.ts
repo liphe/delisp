@@ -15,29 +15,30 @@ import path from "path";
 import { promisify } from "util";
 
 import _mkdirp from "mkdirp";
+import findUp from "find-up";
 
 const mkdirp = promisify(_mkdirp);
 
 interface CompileOptions {
   moduleFormat: "cjs" | "esm";
   tsDeclaration: boolean;
+  projectDirectory: string;
 }
 
 async function compileFile(
   file: string,
-  { moduleFormat, tsDeclaration }: CompileOptions
+  { moduleFormat, tsDeclaration, projectDirectory }: CompileOptions
 ): Promise<void> {
-  const cwd = process.cwd();
-  const OUTPUT_DIR = path.join(cwd, ".delisp", "build");
-  const basename = path.basename(file, path.extname(file));
-  const outfileJS = path.resolve(
+  const OUTPUT_DIR = path.join(projectDirectory, ".delisp", "build");
+
+  const outFileSansExt = path.join(
     OUTPUT_DIR,
-    path.relative(cwd, basename + ".js")
+    path.relative(projectDirectory, path.dirname(file)) +
+      path.sep +
+      path.basename(file, path.extname(file))
   );
-  const outfileInfo = path.resolve(
-    OUTPUT_DIR,
-    path.relative(cwd, basename + ".json")
-  );
+  const outfileJS = outFileSansExt + ".js";
+  const outfileInfo = outFileSansExt + ".json";
 
   const content = await fs.readFile(file, "utf8");
 
@@ -72,15 +73,17 @@ async function compileFile(
   );
 
   if (tsDeclaration) {
-    const declarationFile = path.resolve(
-      OUTPUT_DIR,
-      path.relative(cwd, basename + ".d.ts")
-    );
+    const declarationFile = outFileSansExt + ".d.ts";
     const content = generateTSModuleDeclaration(typedModule);
     await fs.writeFile(declarationFile, content);
   }
 
   return;
+}
+
+async function findProjectDirectory() {
+  const projectDirectory = await findUp(["package.json"]);
+  return projectDirectory && path.dirname(projectDirectory);
 }
 
 export const cmdCompile: CommandModule = {
@@ -98,18 +101,27 @@ export const cmdCompile: CommandModule = {
         describe: "Generate Typescript declaration file"
       }),
 
-  handler: args => {
+  handler: async args => {
     const files = args.files as string[];
+
+    const projectDirectory = await findProjectDirectory();
+    if (!projectDirectory) {
+      console.error(`Couldn't find package.json file`);
+      process.exit(-1);
+      return;
+    }
+
     Promise.all(
       files.map(file =>
         compileFile(file, {
           moduleFormat: args.module as "cjs" | "esm",
-          tsDeclaration: args["ts-declaration"] ? true : false
+          tsDeclaration: args["ts-declaration"] ? true : false,
+          projectDirectory
         })
       )
     ).catch(err => {
       // eslint:disable: no-console
-      console.log(err.message);
+      console.error(err.message);
       process.exit(-1);
     });
   }
