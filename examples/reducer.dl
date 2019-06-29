@@ -22,25 +22,24 @@
       ({:add-todo title}
         {:todos (cons {:title title
                        :completed false}
-                      (get :todos state))})
+                      (:todos state))})
       ({:complete-all nothing}
         {:todos (map (lambda (todo)
                        (set :completed true todo))
-                     (get :todos state))})
+                     (:todos state))})
       (:default state))))
 
 (define showTodo
   (lambda (todo)
     (print (string-append
-            (if (get :completed todo)
+            (if (:completed todo)
                 "✅"
                 "❌")
             (string-append " "
-                           (get :title
-                                todo))))))
+                           (:title todo))))))
 (define showTodos
   (lambda (state)
-    (map showTodo (get :todos state))))
+    (map showTodo (:todos state))))
 
 (export reducer)
 (export initialState)
