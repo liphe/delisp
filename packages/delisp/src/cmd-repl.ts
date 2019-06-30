@@ -38,6 +38,8 @@ const PROMPT = "λ ";
 let currentModule: Module;
 const context = createContext();
 
+async function compileModule(file: string): Promise<Module> {}
+
 async function loadModule(file: string): Promise<Module> {
   const code = await fs.readFile(path.join(file), "utf-8");
   const m = readModule(code);
