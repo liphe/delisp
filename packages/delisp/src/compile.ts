@@ -27,10 +27,15 @@ interface CompileOptions {
   tsDeclaration: boolean;
 }
 
+interface CompileFileResult {
+  jsFile: string;
+  infoFile: string;
+}
+
 export async function compileFile(
   file: string,
   { moduleFormat, tsDeclaration }: CompileOptions
-): Promise<void> {
+): Promise<CompileFileResult> {
   const projectDirectory = await findProjectDirectory();
   if (!projectDirectory) {
     throw new Error(`Couldn't find package.json file`);
@@ -44,8 +49,8 @@ export async function compileFile(
       path.sep +
       path.basename(file, path.extname(file))
   );
-  const outfileJS = outFileSansExt + ".js";
-  const outfileInfo = outFileSansExt + ".json";
+  const jsFile = outFileSansExt + ".js";
+  const infoFile = outFileSansExt + ".json";
 
   const content = await fs.readFile(file, "utf8");
 
@@ -66,18 +71,15 @@ export async function compileFile(
     throw new Error(unknowns.join("\n\n"));
   }
 
-  await mkdirp(path.dirname(outfileJS));
+  await mkdirp(path.dirname(jsFile));
 
   const code = compileModuleToString(typedModule, {
     esModule: moduleFormat === "esm"
   });
-  await fs.writeFile(outfileJS, code);
+  await fs.writeFile(jsFile, code);
 
   const signature = generateModuleInterface(typedModule);
-  await fs.writeFile(
-    outfileInfo,
-    JSON.stringify({ exports: signature }, null, 2)
-  );
+  await fs.writeFile(infoFile, JSON.stringify({ exports: signature }, null, 2));
 
   if (tsDeclaration) {
     const declarationFile = outFileSansExt + ".d.ts";
@@ -85,5 +87,5 @@ export async function compileFile(
     await fs.writeFile(declarationFile, content);
   }
 
-  return;
+  return { jsFile, infoFile };
 }

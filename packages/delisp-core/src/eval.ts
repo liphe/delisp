@@ -41,6 +41,17 @@ export function createContext() {
   return sandbox;
 }
 
+export function evaluateScript(
+  filename: string,
+  content: string,
+  context = createContext()
+) {
+  const script = new vm.Script(content, {
+    filename
+  });
+  return script.runInContext(context);
+}
+
 export function evaluate(
   syntax: Syntax,
   env: Environment,

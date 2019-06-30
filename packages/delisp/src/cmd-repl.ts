@@ -8,14 +8,13 @@ import {
   addToModule,
   createContext,
   evaluate,
-  evaluateModule,
+  evaluateScript,
   inferModule,
   inferExpressionInModule,
   isDefinition,
   isExpression,
   moduleEnvironment,
   printType,
-  readModule,
   readSyntax,
   removeModuleDefinition,
   removeModuleTypeDefinition,
@@ -28,6 +27,7 @@ import {
 import { Typed } from "@delisp/core/src/syntax";
 import { Module, Expression, Syntax } from "@delisp/core/src/syntax";
 
+import { compileFile } from "./compile";
 import * as theme from "./color-theme";
 
 import readline from "readline";
@@ -38,18 +38,20 @@ const PROMPT = "λ ";
 let currentModule: Module;
 const context = createContext();
 
-async function compileModule(file: string): Promise<Module> {}
+async function loadModule(file: string): Promise<void> {
+  process.stdout.write(theme.info(`Compiling ${file}...`));
+  const { jsFile } = await compileFile(path.join(__dirname, "../../init.dl"), {
+    moduleFormat: "cjs",
+    tsDeclaration: false
+  });
+  process.stdout.write(theme.info("done\n"));
 
-async function loadModule(file: string): Promise<Module> {
-  const code = await fs.readFile(path.join(file), "utf-8");
-  const m = readModule(code);
-  inferModule(m);
-  evaluateModule(m, context);
-  return m;
+  const content = await fs.readFile(jsFile, "utf-8");
+  evaluateScript(jsFile, content, context);
 }
 
 async function startREPL() {
-  currentModule = await loadModule(path.join(__dirname, "../../init.dl"));
+  await loadModule(path.join(__dirname, "../../init.dl"));
 
   rl = readline.createInterface({
     input: process.stdin,

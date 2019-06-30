@@ -9,7 +9,12 @@ export {
   compileModuleToString,
   moduleEnvironment
 } from "./compiler";
-export { createContext, evaluate, evaluateModule } from "./eval";
+export {
+  createContext,
+  evaluate,
+  evaluateModule,
+  evaluateScript
+} from "./eval";
 export {
   inferType,
   inferModule,

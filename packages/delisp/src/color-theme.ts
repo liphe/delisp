@@ -2,6 +2,7 @@ import chalk from "chalk";
 
 export const error = chalk.red;
 export const warn = chalk.yellowBright;
+export const info = chalk.gray;
 
 export const dim = chalk.dim;
 
