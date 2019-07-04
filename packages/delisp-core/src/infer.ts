@@ -71,7 +71,7 @@ import { applySubstitutionToExpr } from "./infer-subst";
 import { typeAnnotate } from "./infer-debug";
 import { pprint } from "./printer";
 
-import { moduleDefinitions } from "./module";
+import { moduleExportedDefinitions } from "./module";
 
 const DEBUG = false;
 
@@ -1268,7 +1268,7 @@ export function inferExpressionInModule(
 export function getModuleExternalEnvironment(
   m: Module<Typed>
 ): ExternalEnvironment {
-  const defs = moduleDefinitions(m);
+  const defs = moduleExportedDefinitions(m);
   const variables = fromEntries(
     defs.map(d => [
       d.node.variable.name,

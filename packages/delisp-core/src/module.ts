@@ -1,6 +1,16 @@
 import { WithErrors, convert } from "./convert";
 import { readAllFromString } from "./reader";
-import { Module, Syntax, SDefinition, isDefinition } from "./syntax";
+import {
+  Module,
+  Syntax,
+  SDefinition,
+  isExport,
+  isImport,
+  SExport,
+  SImport,
+  isTypeAlias,
+  isDefinition
+} from "./syntax";
 
 export function createModule(): Module {
   return {
@@ -27,7 +37,7 @@ export function removeModuleDefinition(m: Module, name: string): Module {
   return {
     tag: "module",
     body: m.body.filter(d => {
-      return d.node.tag === "definition" ? d.node.variable.name !== name : true;
+      return isDefinition(d) ? d.node.variable.name !== name : true;
     })
   };
 }
@@ -36,13 +46,30 @@ export function removeModuleTypeDefinition(m: Module, name: string): Module {
   return {
     tag: "module",
     body: m.body.filter(d => {
-      return d.node.tag === "type-alias" ? d.node.alias.name !== name : true;
+      return isTypeAlias(d) ? d.node.alias.name !== name : true;
     })
   };
 }
 
+export function moduleExportedDefinitions<A>(
+  m: Module<A>
+): Array<SDefinition<A>> {
+  const exported = moduleExports(m).map(e => e.node.value.name);
+  return moduleDefinitions(m).filter(d =>
+    exported.includes(d.node.variable.name)
+  );
+}
+
 export function moduleDefinitions<A>(m: Module<A>): Array<SDefinition<A>> {
   return m.body.filter(isDefinition);
+}
+
+export function moduleExports<A>(m: Module<A>): Array<SExport<A>> {
+  return m.body.filter(isExport);
+}
+
+export function moduleImports<A>(m: Module<A>): Array<SImport<A>> {
+  return m.body.filter(isImport);
 }
 
 export function moduleDefinitionByName<A>(
