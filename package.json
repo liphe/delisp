@@ -6,6 +6,7 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc --build packages/",
+    "bootstrap": "yarn workspace delisp run bootstrap",
     "lint": "eslint --ext .ts .",
     "test": "yarn workspaces run test"
   },
