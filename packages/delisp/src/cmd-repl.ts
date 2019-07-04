@@ -45,7 +45,7 @@ async function loadModule(file: string): Promise<void> {
     tsDeclaration: false
   });
   process.stdout.write(theme.info("done\n"));
-  evaluateJS(`console.log(require("${jsFile}"))`, context);
+  evaluateJS(`Object.assign(env, require("${jsFile}"))`, context);
 }
 
 async function startREPL() {
