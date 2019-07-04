@@ -82,7 +82,7 @@ export async function compileFile(
   const moduleInt = encodeExternalEnvironment(
     getModuleExternalEnvironment(typedModule)
   );
-  await fs.writeFile(infoFile, JSON.stringify(moduleInt, null, 2));
+  await fs.writeJSONFile(infoFile, moduleInt);
 
   if (tsDeclaration) {
     const declarationFile = outFileSansExt + ".d.ts";

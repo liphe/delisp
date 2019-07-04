@@ -29,6 +29,7 @@ import {
 import { Typed } from "@delisp/core/src/syntax";
 import { Module, Expression, Syntax } from "@delisp/core/src/syntax";
 
+import { readJSONFile } from "./fs-helpers";
 import { compileFile } from "./compile";
 import * as theme from "./color-theme";
 
@@ -67,7 +68,7 @@ async function startREPL() {
 }
 
 let inputBuffer = "";
-function handleLine(line: string) {
+async function handleLine(line: string) {
   try {
     inputBuffer += "\n" + line;
 
@@ -95,7 +96,7 @@ function handleLine(line: string) {
       });
     }
 
-    const evalResult = delispEval(syntax);
+    const evalResult = await delispEval(syntax);
     switch (evalResult.tag) {
       case "expression":
         console.log(
@@ -160,7 +161,7 @@ type DelispEvalResult =
       tag: "other";
     };
 
-const delispEval = (syntax: Syntax): DelispEvalResult => {
+const delispEval = async (syntax: Syntax): Promise<DelispEvalResult> => {
   updateModule(syntax);
 
   //
@@ -170,10 +171,9 @@ const delispEval = (syntax: Syntax): DelispEvalResult => {
   let typedExpression: Expression<Typed> | undefined;
 
   try {
-    const initInfo: any = require(path.resolve(
-      pkgdir,
-      ".delisp/build/init.json"
-    ));
+    const initInfo: any = await readJSONFile(
+      path.resolve(pkgdir, ".delisp/build/init.json")
+    );
 
     const environment = mergeExternalEnvironments(
       defaultEnvironment,
