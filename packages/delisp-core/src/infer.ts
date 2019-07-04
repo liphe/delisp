@@ -45,6 +45,8 @@ import {
   tValues,
   TypeSchema
 } from "./types";
+import { ExternalEnvironment } from "./infer-environment";
+
 import { difference, flatMap, mapObject, maybeMap } from "./utils";
 
 import {

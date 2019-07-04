@@ -10,6 +10,8 @@ import {
   evaluate,
   evaluateJS,
   inferModule,
+  mergeExternalEnvironments,
+  parseModuleInterface,
   inferExpressionInModule,
   isDefinition,
   isExpression,
@@ -31,6 +33,8 @@ import { compileFile } from "./compile";
 import * as theme from "./color-theme";
 
 import readline from "readline";
+
+import pkgdir from "./pkgdir";
 
 let rl: readline.Interface;
 const PROMPT = "λ ";
@@ -166,12 +170,22 @@ const delispEval = (syntax: Syntax): DelispEvalResult => {
   let typedExpression: Expression<Typed> | undefined;
 
   try {
-    const result = inferModule(currentModule);
+    const initInfo: any = require(path.resolve(
+      pkgdir,
+      ".delisp/build/init.json"
+    ));
+
+    const environment = mergeExternalEnvironments(
+      defaultEnvironment,
+      parseModuleInterface(initInfo)
+    );
+
+    const result = inferModule(currentModule, environment);
     typedModule = result.typedModule;
 
     const expressionResult =
       typedModule && isExpression(syntax)
-        ? inferExpressionInModule(syntax, typedModule, defaultEnvironment, true)
+        ? inferExpressionInModule(syntax, typedModule, environment, true)
         : undefined;
     typedExpression = expressionResult && expressionResult.typedExpression;
 

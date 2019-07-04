@@ -78,8 +78,8 @@ export async function compileFile(
   });
   await fs.writeFile(jsFile, code);
 
-  const signature = generateModuleInterface(typedModule);
-  await fs.writeFile(infoFile, JSON.stringify({ exports: signature }, null, 2));
+  const moduleInt = generateModuleInterface(typedModule);
+  await fs.writeFile(infoFile, JSON.stringify(moduleInt, null, 2));
 
   if (tsDeclaration) {
     const declarationFile = outFileSansExt + ".d.ts";

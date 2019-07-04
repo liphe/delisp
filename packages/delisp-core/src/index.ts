@@ -16,9 +16,13 @@ export {
   inferExpressionInModule,
   defaultEnvironment
 } from "./infer";
+export {
+  ExternalEnvironment,
+  mergeExternalEnvironments
+} from "./infer-environment";
 export { Type } from "./types";
 export { printType } from "./type-printer";
-export { generateModuleInterface } from "./type-module";
+export { parseModuleInterface, generateModuleInterface } from "./type-module";
 export {
   isDeclaration,
   isDefinition,
