@@ -1,4 +1,3 @@
-import * as fs from "./fs-helpers";
 import path from "path";
 import { Pair, TaggedValue } from "@delisp/runtime";
 
@@ -8,7 +7,7 @@ import {
   addToModule,
   createContext,
   evaluate,
-  evaluateScript,
+  evaluateJS,
   inferModule,
   inferExpressionInModule,
   isDefinition,
@@ -45,9 +44,7 @@ async function loadModule(file: string): Promise<void> {
     tsDeclaration: false
   });
   process.stdout.write(theme.info("done\n"));
-
-  const content = await fs.readFile(jsFile, "utf-8");
-  evaluateScript(jsFile, content, context);
+  evaluateJS(`require("${jsFile}")`, context);
 }
 
 async function startREPL() {

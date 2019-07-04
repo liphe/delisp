@@ -36,19 +36,14 @@ export function createContext() {
     bindPrimaryValue,
     mvbind,
     assert,
+    require
   };
   vm.createContext(sandbox);
   return sandbox;
 }
 
-export function evaluateScript(
-  filename: string,
-  content: string,
-  context = createContext()
-) {
-  const script = new vm.Script(content, {
-    filename
-  });
+export function evaluateJS(content: string, context = createContext()) {
+  const script = new vm.Script(content);
   return script.runInContext(context);
 }
 
