@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "tsc --build",
+    "bootstrap": "delisp compile init.dl",
     "test": "true"
   },
   "files": [
