@@ -1,12 +1,44 @@
-import { Type, TypeSchema } from "./types";
+import { TypeSchema } from "./types";
+import { readType } from "./convert-type";
+import { printType } from "./type-printer";
 
-export interface ExternalEnvironment {
-  variables: {
-    [v: string]: TypeSchema;
-  };
-  types: {
-    [t: string]: Type;
-  };
+import { PathReporter } from "io-ts/lib/PathReporter";
+import * as t from "io-ts";
+import { isLeft, either } from "fp-ts/lib/Either";
+
+const TypeSchemaFromString = new t.Type<TypeSchema, string, unknown>(
+  "TypeFromString",
+  (u): u is TypeSchema => u instanceof TypeSchema,
+  (u, c) =>
+    either.chain(t.string.validate(u, c), s => {
+      try {
+        return t.success(readType(s));
+      } catch (err) {
+        return t.failure(u, c);
+      }
+    }),
+  a => printType(a.mono, true)
+);
+
+const ExternalEnvironment = t.type({
+  variables: t.record(t.string, TypeSchemaFromString),
+  types: t.record(t.string, TypeSchemaFromString)
+});
+
+export type ExternalEnvironment = t.TypeOf<typeof ExternalEnvironment>;
+
+export function encodeExternalEnvironment(e: ExternalEnvironment) {
+  return ExternalEnvironment.encode(e);
+}
+
+export function decodeExternalEnvironment(x: unknown) {
+  const result = ExternalEnvironment.decode(x);
+  if (isLeft(result)) {
+    const message = PathReporter.report(result).join("\n");
+    throw new Error(message);
+  } else {
+    return result.right;
+  }
 }
 
 export function mergeExternalEnvironments(

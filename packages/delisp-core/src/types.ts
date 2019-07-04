@@ -47,10 +47,14 @@ export interface Row extends Node<RowF<Type>> {}
 export interface Type extends Node<AnyTypeF<Type>> {}
 export type TypeF<A> = Node<AnyTypeF<A>>;
 
-export interface TypeSchema {
-  tag: "type";
+export class TypeSchema {
+  tag = "type";
   tvars: string[];
   mono: Type;
+  constructor(tvars: string[], mono: Type) {
+    this.tvars = tvars;
+    this.mono = mono;
+  }
 }
 
 //

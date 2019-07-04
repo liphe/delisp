@@ -22,7 +22,7 @@ import {
   Typed
 } from "./syntax";
 
-import { Substitution, transformRecurType } from "./type-utils";
+import { Substitution, transformRecurType, generalize } from "./type-utils";
 
 import { printHighlightedExpr } from "./error-report";
 
@@ -47,7 +47,7 @@ import {
 } from "./types";
 import { ExternalEnvironment } from "./infer-environment";
 
-import { difference, flatMap, mapObject, maybeMap } from "./utils";
+import { fromEntries, difference, flatMap, mapObject, maybeMap } from "./utils";
 
 import {
   findInlinePrimitive,
@@ -68,8 +68,10 @@ import {
 
 import { applySubstitutionToExpr } from "./infer-subst";
 
-import { typeAnnotate } from "../src/infer-debug";
-import { pprint } from "../src/printer";
+import { typeAnnotate } from "./infer-debug";
+import { pprint } from "./printer";
+
+import { moduleDefinitions } from "./module";
 
 const DEBUG = false;
 
@@ -1249,5 +1251,21 @@ export function inferExpressionInModule(
         >;
       }
     )
+  };
+}
+
+export function getModuleExternalEnvironment(
+  m: Module<Typed>
+): ExternalEnvironment {
+  const defs = moduleDefinitions(m);
+  const variables = fromEntries(
+    defs.map(d => [
+      d.node.variable.name,
+      generalize(d.node.value.info.resultingType, [])
+    ])
+  );
+  return {
+    variables,
+    types: {}
   };
 }

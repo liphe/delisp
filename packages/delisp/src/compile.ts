@@ -5,7 +5,8 @@ import {
   printType,
   readModule,
   generateTSModuleDeclaration,
-  generateModuleInterface
+  getModuleExternalEnvironment,
+  encodeExternalEnvironment
 } from "@delisp/core";
 
 import * as fs from "./fs-helpers";
@@ -78,7 +79,9 @@ export async function compileFile(
   });
   await fs.writeFile(jsFile, code);
 
-  const moduleInt = generateModuleInterface(typedModule);
+  const moduleInt = encodeExternalEnvironment(
+    getModuleExternalEnvironment(typedModule)
+  );
   await fs.writeFile(infoFile, JSON.stringify(moduleInt, null, 2));
 
   if (tsDeclaration) {

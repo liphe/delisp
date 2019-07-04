@@ -11,7 +11,7 @@ import {
   evaluateJS,
   inferModule,
   mergeExternalEnvironments,
-  parseModuleInterface,
+  decodeExternalEnvironment,
   inferExpressionInModule,
   isDefinition,
   isExpression,
@@ -177,7 +177,7 @@ const delispEval = (syntax: Syntax): DelispEvalResult => {
 
     const environment = mergeExternalEnvironments(
       defaultEnvironment,
-      parseModuleInterface(initInfo)
+      decodeExternalEnvironment(initInfo)
     );
 
     const result = inferModule(currentModule, environment);

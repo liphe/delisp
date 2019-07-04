@@ -18,7 +18,9 @@
     "@delisp/runtime": "^0.2.0",
     "@types/debug": "^4.1.4",
     "debug": "^4.1.0",
-    "escodegen": "^1.11.1"
+    "escodegen": "^1.11.1",
+    "fp-ts": "^2.0.0",
+    "io-ts": "^2.0.0"
   },
   "devDependencies": {
     "@types/estree": "^0.0.39"

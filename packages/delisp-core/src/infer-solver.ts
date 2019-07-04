@@ -190,11 +190,10 @@ function applySubstitutionToPolytype(
   t: TypeSchema,
   s: Substitution
 ): TypeSchema {
-  return {
-    tag: "type",
-    tvars: t.tvars,
-    mono: applySubstitution(t.mono, removeSubstitution(s, t.tvars))
-  };
+  return new TypeSchema(
+    t.tvars,
+    applySubstitution(t.mono, removeSubstitution(s, t.tvars))
+  );
 }
 
 function applySubstitutionToConstraint(
