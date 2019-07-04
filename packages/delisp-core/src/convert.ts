@@ -610,6 +610,54 @@ defineToplevel("type", (type_, args, whole) => {
   };
 });
 
+defineToplevel("import", (import_, args, whole) => {
+  if (args.length !== 3) {
+    const lastExpr = last([import_, ...args]) as ASExpr;
+    throw new ConvertError(
+      printHighlightedExpr(
+        `'import' needs exactly 3 arguments, got ${args.length}`,
+        lastExpr.location,
+        true
+      )
+    );
+  }
+
+  const [name, from_, source] = args;
+
+  if (name.tag !== "symbol") {
+    throw new ConvertError(
+      printHighlightedExpr("'type' expected a symbol as a name", name.location)
+    );
+  }
+
+  if (!(from_.tag === "symbol" && from_.name === ":from")) {
+    throw new ConvertError(
+      printHighlightedExpr("Expected :FROM keyword.", from_.location)
+    );
+  }
+
+  if (source.tag !== "string") {
+    throw new ConvertError(
+      printHighlightedExpr(
+        "Source of an import should be specified as a string",
+        from_.location
+      )
+    );
+  }
+
+  return {
+    node: {
+      tag: "import",
+      variable: parseIdentifier(name),
+      source: source.value
+    },
+    location: whole.location,
+    info: {
+      errors: []
+    }
+  };
+});
+
 function convertList(list: ASExprList): ExpressionWithErrors {
   if (list.elements.length === 0) {
     throw new ConvertError(
@@ -747,6 +795,7 @@ export function collectConvertErrors(syntax: SyntaxWithErrors): string[] {
     return collectConvertExprErrors(syntax);
   } else {
     switch (syntax.node.tag) {
+      case "import":
       case "export":
       case "type-alias":
         return syntax.info.errors;

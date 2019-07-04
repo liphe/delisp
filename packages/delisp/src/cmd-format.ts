@@ -18,7 +18,8 @@ export const cmdFormat: CommandModule = {
   handler: args => {
     const files = args.files as string[];
     Promise.all(files.map(formatFile)).catch(err => {
-      console.log(err.message);
+      console.error(err.message);
+      console.error(err.stack);
       process.exit(-1);
     });
   }

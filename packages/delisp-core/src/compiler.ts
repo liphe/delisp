@@ -2,6 +2,7 @@ import runtime from "@delisp/runtime";
 import {
   Expression,
   isDefinition,
+  isImport,
   isExport,
   isTypeAlias,
   Module,
@@ -477,7 +478,11 @@ function compileTopLevel(
 ): JS.Statement | null {
   const typedSyntax = syntax as Syntax<Partial<Typed>, Partial<Typed>>;
 
-  if (isExport(typedSyntax) || isTypeAlias(typedSyntax)) {
+  if (
+    isImport(typedSyntax) ||
+    isExport(typedSyntax) ||
+    isTypeAlias(typedSyntax)
+  ) {
     // exports are compiled at the end of the module
     return null;
   }

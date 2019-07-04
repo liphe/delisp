@@ -203,6 +203,8 @@ export function syntaxChildren<I>(s: Syntax<I>): Array<Expression<I>> {
     switch (s.node.tag) {
       case "definition":
         return [s.node.value];
+      case "import":
+        return [];
       case "export":
         return [];
       case "type-alias":

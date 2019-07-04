@@ -895,6 +895,15 @@ function inferSyntax(
       assumptions: [],
       constraints: []
     };
+  } else if (syntax.node.tag === "import") {
+    return {
+      result: {
+        ...syntax,
+        node: syntax.node
+      },
+      assumptions: [],
+      constraints: []
+    };
   } else {
     return assertNever(syntax.node);
   }
@@ -978,6 +987,8 @@ function applySubstitutionToSyntax(
   } else if (s.node.tag === "export") {
     return s;
   } else if (s.node.tag === "type-alias") {
+    return s;
+  } else if (s.node.tag === "import") {
     return s;
   } else {
     return assertNever(s.node);

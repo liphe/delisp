@@ -179,7 +179,7 @@
          '(2 font-lock-variable-name-face))
 
    (list
-    (concat "(" (regexp-opt '("if" "lambda" "let" "export" "and" "case" "the" "do" "match" "multiple-value-bind" "values") t) "\\>")
+    (concat "(" (regexp-opt '("import" "if" "lambda" "let" "export" "and" "case" "the" "do" "match" "multiple-value-bind" "values") t) "\\>")
     '(1 font-lock-keyword-face))
 
    (list

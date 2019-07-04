@@ -254,6 +254,17 @@ function print(form: Syntax): Doc {
           )
         );
 
+      case "import":
+        return list(
+          text("import", "keyword", form),
+          space,
+          text(form.node.variable.name, "identifier"),
+          space,
+          text(":from", "keyword"),
+          space,
+          printString(form.node.source, form)
+        );
+
       case "export":
         return list(
           text("export", "keyword", form),
@@ -272,7 +283,6 @@ function print(form: Syntax): Doc {
             )
           )
         );
-
       default:
         return assertNever(form.node);
     }
