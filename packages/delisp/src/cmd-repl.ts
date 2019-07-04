@@ -6,6 +6,7 @@ import { CommandModule } from "yargs";
 import {
   addToModule,
   createContext,
+  createModule,
   evaluate,
   evaluateJS,
   inferModule,
@@ -34,7 +35,7 @@ import readline from "readline";
 let rl: readline.Interface;
 const PROMPT = "λ ";
 
-let currentModule: Module;
+let currentModule: Module = createModule();
 const context = createContext();
 
 async function loadModule(file: string): Promise<void> {
@@ -44,7 +45,7 @@ async function loadModule(file: string): Promise<void> {
     tsDeclaration: false
   });
   process.stdout.write(theme.info("done\n"));
-  evaluateJS(`require("${jsFile}")`, context);
+  evaluateJS(`console.log(require("${jsFile}"))`, context);
 }
 
 async function startREPL() {
