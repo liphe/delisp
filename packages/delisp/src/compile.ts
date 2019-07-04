@@ -17,8 +17,8 @@ import findUp from "find-up";
 
 const mkdirp = promisify(_mkdirp);
 
-async function findProjectDirectory() {
-  const projectDirectory = await findUp(["package.json"]);
+async function findProjectDirectory(base: string) {
+  const projectDirectory = await findUp(["package.json"], { cwd: base });
   return projectDirectory && path.dirname(projectDirectory);
 }
 
@@ -36,7 +36,7 @@ export async function compileFile(
   file: string,
   { moduleFormat, tsDeclaration }: CompileOptions
 ): Promise<CompileFileResult> {
-  const projectDirectory = await findProjectDirectory();
+  const projectDirectory = await findProjectDirectory(file);
   if (!projectDirectory) {
     throw new Error(`Couldn't find package.json file`);
   }
