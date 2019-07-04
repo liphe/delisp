@@ -522,12 +522,11 @@ function compileRuntimeUtils(
   return env.moduleFormat.importRuntimeUtils([
     "matchTag",
     "caseTag",
-    "pair",
-    "fst",
-    "snd",
+    "primPair",
+    "primFst",
+    "primSnd",
     "primaryValue",
     "values",
-    "mvbind",
     "bindPrimaryValue",
     "mvbind",
     "assert"

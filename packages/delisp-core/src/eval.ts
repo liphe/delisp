@@ -11,9 +11,9 @@ import { mapObject } from "./utils";
 import {
   caseTag,
   matchTag,
-  pair,
-  fst,
-  snd,
+  primPair,
+  primFst,
+  primSnd,
   values,
   primaryValue,
   bindPrimaryValue,
@@ -28,14 +28,14 @@ export function createContext() {
     // Primitives
     caseTag,
     matchTag,
-    pair,
-    fst,
-    snd,
+    primPair,
+    primFst,
+    primSnd,
     values,
     primaryValue,
     bindPrimaryValue,
     mvbind,
-    assert
+    assert,
   };
   vm.createContext(sandbox);
   return sandbox;
