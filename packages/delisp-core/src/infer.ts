@@ -922,15 +922,6 @@ function inferSyntax(
 // found, so they are supposed to be part of a global environment (or
 // non existing!).
 
-export interface ExternalEnvironment {
-  variables: {
-    [v: string]: TypeSchema;
-  };
-  types: {
-    [t: string]: Type;
-  };
-}
-
 export interface InternalTypeEnvironment {
   [t: string]: Type;
 }
