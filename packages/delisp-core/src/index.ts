@@ -1,8 +1,4 @@
-import { convert as convertSyntax } from "./convert";
-
-import { readFromString } from "./reader";
-
-export { collectConvertErrors } from "./convert";
+export { collectConvertErrors, readSyntax } from "./convert";
 
 export {
   compileToString,
@@ -35,10 +31,6 @@ export {
 export { default as primitives } from "./primitives";
 
 export { printHighlightedExpr } from "./error-report";
-
-export function readSyntax(source: string) {
-  return convertSyntax(readFromString(source));
-}
 
 export { findSyntaxByOffset, findSyntaxByRange } from "./syntax-utils";
 

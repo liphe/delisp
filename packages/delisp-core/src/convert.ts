@@ -1,5 +1,6 @@
 import { InvariantViolation, assertNever } from "./invariant";
 import { Location } from "./input";
+import { readFromString } from "./reader";
 import { printHighlightedExpr } from "./error-report";
 import {
   ASExpr,
@@ -808,4 +809,8 @@ export function collectConvertErrors(syntax: SyntaxWithErrors): string[] {
         return assertNever(syntax.node);
     }
   }
+}
+
+export function readSyntax(source: string) {
+  return convert(readFromString(source));
 }
