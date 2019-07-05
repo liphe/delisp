@@ -9,6 +9,7 @@ import {
   SConditional,
   SDefinition,
   SExport,
+  SImport,
   SFunction,
   SFunctionCall,
   SVariableReference,
@@ -46,6 +47,8 @@ import {
   staticDefinition
 } from "./compiler/definitions";
 import { cjs, esm, ModuleBackend } from "./compiler/modules";
+
+import { moduleImports, moduleExports } from "./module";
 
 import { member } from "./compiler/estree-utils";
 import {
@@ -538,6 +541,16 @@ function compileRuntimeUtils(
   ]);
 }
 
+function compileImports(
+  _imports: SImport[],
+  _env: Environment
+): Array<JS.Statement | JS.ModuleDeclaration> {
+  return [];
+  // return imports.map(i => {
+  //   env.moduleFormat.importName(i.node.variable.name);
+  // });
+}
+
 function compileExports(
   exps: SExport[],
   env: Environment
@@ -609,11 +622,14 @@ function compileModule(
       ...(includeRuntime
         ? [compileRuntime(env), compileRuntimeUtils(env)]
         : []),
+
+      ...compileImports(moduleImports(m), env),
+
       ...maybeMap(
         (syntax: Syntax) => compileTopLevel(syntax, env, false),
         m.body
       ),
-      ...compileExports(m.body.filter(isExport), env)
+      ...compileExports(moduleExports(m), env)
     ]
   };
 }
