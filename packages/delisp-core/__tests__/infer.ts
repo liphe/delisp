@@ -1,10 +1,7 @@
 import { isDeclaration, readSyntax } from "../src/index";
 import { Expression } from "../src/syntax";
-import {
-  ExternalEnvironment,
-  inferType,
-  InternalTypeEnvironment
-} from "../src/infer";
+import { inferType, InternalTypeEnvironment } from "../src/infer";
+import { ExternalEnvironment } from "../src/infer-environment";
 import { readType } from "../src/convert-type";
 import { printType } from "../src/type-printer";
 
@@ -283,7 +280,7 @@ describe("Type inference", () => {
     });
 
     describe("User-defined type", () => {
-      const env = { variables: {}, types: { ID: readType("number").mono } };
+      const env = { variables: {}, types: { ID: readType("number") } };
 
       it("should NOT be compatible", () => {
         expect(() => typeOf("(if true (the ID 5) 3)", env)).toThrow();
