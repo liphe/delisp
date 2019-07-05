@@ -26,7 +26,8 @@ export {
   isDefinition,
   isExpression,
   isExport,
-  isTypeAlias
+  isTypeAlias,
+  createImportSyntax
 } from "./syntax";
 export { default as primitives } from "./primitives";
 
@@ -43,6 +44,8 @@ export {
   moduleDefinitions,
   moduleDefinitionByName
 } from "./module";
+
+export { resolveModuleDependencies } from "./module-dependencies";
 
 export { generateTSModuleDeclaration } from "./typescript-generation";
 

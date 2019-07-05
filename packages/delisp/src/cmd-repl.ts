@@ -1,4 +1,3 @@
-import path from "path";
 import { Pair, TaggedValue } from "@delisp/runtime";
 
 import { CommandModule } from "yargs";
@@ -20,6 +19,7 @@ import {
   readSyntax,
   removeModuleDefinition,
   removeModuleTypeDefinition,
+  resolveModuleDependencies,
   moduleDefinitionByName,
   collectConvertErrors,
   defaultEnvironment,
@@ -30,31 +30,38 @@ import { Typed } from "@delisp/core/src/syntax";
 import { Module, Expression, Syntax } from "@delisp/core/src/syntax";
 
 import { readJSONFile } from "./fs-helpers";
-import { compileFile } from "./compile";
+import { getOutputFiles, compileFile } from "./compile";
 import * as theme from "./color-theme";
 
 import readline from "readline";
 
-import pkgdir from "./pkgdir";
+import { generatePreludeImports } from "./prelude";
 
 let rl: readline.Interface;
 const PROMPT = "λ ";
 
-let currentModule: Module = createModule();
+let currentModule = createModule();
 const context = createContext();
 
-async function loadModule(file: string): Promise<void> {
-  process.stdout.write(theme.info(`Compiling ${file}...`));
-  const { jsFile } = await compileFile(path.join(__dirname, "../../init.dl"), {
-    moduleFormat: "cjs",
-    tsDeclaration: false
-  });
-  process.stdout.write(theme.info("done\n"));
-  evaluateJS(`Object.assign(env, require("${jsFile}"))`, context);
+async function prepareModule() {
+  const imports = await generatePreludeImports();
+  currentModule = imports.reduce((m, i) => addToModule(m, i), currentModule);
+
+  const sources = [...new Set(imports.map(i => i.node.source))];
+  for (const file of sources) {
+    process.stdout.write(theme.info(`Compiling ${file}...`));
+    await compileFile(file + "", {
+      moduleFormat: "cjs",
+      tsDeclaration: false
+    });
+    process.stdout.write(theme.info("done\n"));
+  }
+
+  evaluateJS(`null`, context);
 }
 
 async function startREPL() {
-  await loadModule(path.join(__dirname, "../../init.dl"));
+  await prepareModule();
 
   rl = readline.createInterface({
     input: process.stdin,
@@ -146,6 +153,12 @@ function updateModule(syntax: Syntax) {
   }
 }
 
+async function resolveDependency(name: string) {
+  const { infoFile } = await getOutputFiles(name);
+  const content = await readJSONFile(infoFile);
+  return decodeExternalEnvironment(content);
+}
+
 type DelispEvalResult =
   | {
       tag: "expression";
@@ -171,13 +184,14 @@ const delispEval = async (syntax: Syntax): Promise<DelispEvalResult> => {
   let typedExpression: Expression<Typed> | undefined;
 
   try {
-    const initInfo: any = await readJSONFile(
-      path.resolve(pkgdir, ".delisp/build/init.json")
+    const externalEnvironment = await resolveModuleDependencies(
+      currentModule,
+      resolveDependency
     );
 
     const environment = mergeExternalEnvironments(
       defaultEnvironment,
-      decodeExternalEnvironment(initInfo)
+      externalEnvironment
     );
 
     const result = inferModule(currentModule, environment);

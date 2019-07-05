@@ -31,12 +31,10 @@ interface CompileOptions {
 interface CompileFileResult {
   jsFile: string;
   infoFile: string;
+  dtsFile: string;
 }
 
-export async function compileFile(
-  file: string,
-  { moduleFormat, tsDeclaration }: CompileOptions
-): Promise<CompileFileResult> {
+export async function getOutputFiles(file: string): Promise<CompileFileResult> {
   const projectDirectory = await findProjectDirectory(file);
   if (!projectDirectory) {
     throw new Error(`Couldn't find package.json file`);
@@ -52,6 +50,16 @@ export async function compileFile(
   );
   const jsFile = outFileSansExt + ".js";
   const infoFile = outFileSansExt + ".json";
+  const dtsFile = outFileSansExt + ".d.ts";
+
+  return { jsFile, infoFile, dtsFile };
+}
+
+export async function compileFile(
+  file: string,
+  { moduleFormat, tsDeclaration }: CompileOptions
+): Promise<CompileFileResult> {
+  const { jsFile, infoFile, dtsFile } = await getOutputFiles(file);
 
   const content = await fs.readFile(file, "utf8");
 
@@ -85,10 +93,9 @@ export async function compileFile(
   await fs.writeJSONFile(infoFile, moduleInt);
 
   if (tsDeclaration) {
-    const declarationFile = outFileSansExt + ".d.ts";
     const content = generateTSModuleDeclaration(typedModule);
-    await fs.writeFile(declarationFile, content);
+    await fs.writeFile(dtsFile, content);
   }
 
-  return { jsFile, infoFile };
+  return { jsFile, infoFile, dtsFile };
 }
