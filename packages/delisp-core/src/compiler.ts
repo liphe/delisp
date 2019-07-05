@@ -542,13 +542,12 @@ function compileRuntimeUtils(
 }
 
 function compileImports(
-  _imports: SImport[],
-  _env: Environment
+  imports: SImport[],
+  env: Environment
 ): Array<JS.Statement | JS.ModuleDeclaration> {
-  return [];
-  // return imports.map(i => {
-  //   env.moduleFormat.importName(i.node.variable.name);
-  // });
+  return imports.map(i =>
+    env.moduleFormat.importNames([i.node.variable.name], i.node.source)
+  );
 }
 
 function compileExports(
