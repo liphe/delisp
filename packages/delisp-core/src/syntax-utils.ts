@@ -221,11 +221,11 @@ function syntaxPathFromRange<I>(
   end: number
 ): Syntax<I> {
   const children = syntaxChildren(s);
-  if (!(s.location.start <= start && end < s.location.end)) {
+  if (!(s.location && s.location.start <= start && end < s.location.end)) {
     throw new InvariantViolation(`Offset is out of range.`);
   }
   for (const c of children) {
-    if (c.location.start <= start && end < c.location.end) {
+    if (c.location && c.location.start <= start && end < c.location.end) {
       return syntaxPathFromRange(c, start, end);
     }
   }
@@ -237,8 +237,8 @@ export function findSyntaxByRange<I>(
   start: number,
   end: number
 ): Syntax<I> | undefined {
-  const child = m.body.find(
-    e => e.location.start <= start && end < e.location.end
+  const child = m.body.find(e =>
+    e.location ? e.location.start <= start && end < e.location.end : false
   );
   if (!child) {
     return;

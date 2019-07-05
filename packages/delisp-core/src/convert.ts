@@ -702,7 +702,9 @@ function convertMap(map: ASExprMap): ExpressionWithErrors {
   });
 }
 
-function parseIdentifier(expr: ASExprSymbol): Identifier {
+function parseIdentifier(
+  expr: ASExprSymbol
+): Identifier & { location: Location } {
   return {
     tag: "identifier",
     name: expr.name,
@@ -717,7 +719,7 @@ function convertSymbol(expr: ASExprSymbol): ExpressionWithErrors {
       tag: "variable-reference",
       name: id.name
     },
-    id.location,
+    id.location!,
     []
   );
 }

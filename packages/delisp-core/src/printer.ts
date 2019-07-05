@@ -1,4 +1,4 @@
-import { assertNever } from "./invariant";
+import { InvariantViolation, assertNever } from "./invariant";
 
 import {
   nil,
@@ -55,6 +55,11 @@ function printExpr(expr: Expression): Doc {
   return foldExpr(expr, (e, source) => {
     switch (e.node.tag) {
       case "unknown": {
+        if (!e.location) {
+          throw new InvariantViolation(
+            `Unknown syntax node has no location information.`
+          );
+        }
         const { input, start, end } = e.location;
         return text(input.toString().slice(start, end), "unknown");
       }
@@ -307,10 +312,15 @@ export function pprintModuleAs<A>(
     m.body.map((s, i) => {
       let newlines;
       if (i > 0) {
-        const end = m.body[i - 1].location.end;
-        const start = s.location.start;
-        const between = s.location.input.toString().slice(end, start);
-        newlines = between.split("\n").length - 1;
+        const previousForm = m.body[i - 1];
+
+        const end = previousForm.location
+          ? previousForm.location.end
+          : undefined;
+        const start = s.location && s.location.start;
+        const between =
+          s.location && s.location.input.toString().slice(end, start);
+        newlines = between ? between.split("\n").length - 1 : 1;
       } else {
         newlines = 0;
       }
