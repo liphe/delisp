@@ -6,7 +6,7 @@ import { createImportSyntax, decodeExternalEnvironment } from "@delisp/core";
 import { getOutputFiles } from "./compile";
 
 export async function generatePreludeImports() {
-  const preludeFile = path.resolve(pkgdir, "init.dl");
+  const preludeFile = path.resolve(pkgdir, "lib/prelude.dl");
   const { infoFile } = await getOutputFiles(preludeFile);
   const preludeEnv = decodeExternalEnvironment(await readJSONFile(infoFile));
   const names = Object.keys(preludeEnv.variables);
