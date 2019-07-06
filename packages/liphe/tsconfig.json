@@ -2,6 +2,7 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "tsdist",
+    "noEmit": true,
     "jsx": "react"
   },
   "include": ["./src/"],

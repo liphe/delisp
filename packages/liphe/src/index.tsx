@@ -4,8 +4,10 @@ import { App } from "./App";
 
 import { State, reducer } from "./state";
 
+import code from "raw-loader!delisp/lib/prelude.dl";
+
 const initialState: State = {
-  code: ""
+  code
 };
 
 function AppWrapper() {
