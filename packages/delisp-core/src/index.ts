@@ -27,7 +27,8 @@ export {
   isExpression,
   isExport,
   isTypeAlias,
-  createImportSyntax
+  createImportSyntax,
+  Module
 } from "./syntax";
 export { default as primitives } from "./primitives";
 

@@ -26,7 +26,10 @@ export function readModule(str: string): Module<WithErrors, WithErrors> {
   };
 }
 
-export function addToModule(m: Module, s: Syntax): Module {
+export function addToModule<EInfo, SInfo>(
+  m: Module<EInfo, SInfo>,
+  s: Syntax<EInfo, SInfo>
+): Module<EInfo, SInfo> {
   return {
     tag: "module",
     body: [...m.body, s]

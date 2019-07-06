@@ -6,12 +6,16 @@ import {
   readModule,
   generateTSModuleDeclaration,
   getModuleExternalEnvironment,
-  encodeExternalEnvironment
+  encodeExternalEnvironment,
+  addToModule,
+  Module
 } from "@delisp/core";
 
 import * as fs from "./fs-helpers";
 import path from "path";
 import { promisify } from "util";
+
+import { generatePreludeImports } from "./prelude";
 
 import _mkdirp from "mkdirp";
 
@@ -45,6 +49,12 @@ export function getOutputFiles(file: string): CompileFileResult {
   return { jsFile, infoFile, dtsFile };
 }
 
+async function readModuleWithPrelude(content: string) {
+  const base: Module = readModule(content);
+  const imports = await generatePreludeImports();
+  return imports.reduce((m, i) => addToModule(m, i), base);
+}
+
 export async function compileFile(
   file: string,
   { moduleFormat, tsDeclaration }: CompileOptions
@@ -52,8 +62,7 @@ export async function compileFile(
   const { jsFile, infoFile, dtsFile } = await getOutputFiles(file);
 
   const content = await fs.readFile(file, "utf8");
-
-  const module = readModule(content);
+  const module = await readModuleWithPrelude(content);
 
   // Type check module
   const inferResult = inferModule(module);
