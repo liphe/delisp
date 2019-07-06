@@ -14,14 +14,8 @@ import path from "path";
 import { promisify } from "util";
 
 import _mkdirp from "mkdirp";
-import findUp from "find-up";
 
 const mkdirp = promisify(_mkdirp);
-
-async function findProjectDirectory(base: string) {
-  const projectDirectory = await findUp(["package.json"], { cwd: base });
-  return projectDirectory && path.dirname(projectDirectory);
-}
 
 interface CompileOptions {
   moduleFormat: "cjs" | "esm";
@@ -34,17 +28,13 @@ interface CompileFileResult {
   dtsFile: string;
 }
 
-export async function getOutputFiles(file: string): Promise<CompileFileResult> {
-  const projectDirectory = await findProjectDirectory(file);
-  if (!projectDirectory) {
-    throw new Error(`Couldn't find package.json file`);
-  }
-
-  const OUTPUT_DIR = path.join(projectDirectory, ".delisp", "build");
+export function getOutputFiles(file: string): CompileFileResult {
+  const base = path.dirname(file);
+  const OUTPUT_DIR = path.join(base, ".delisp", "build");
 
   const outFileSansExt = path.join(
     OUTPUT_DIR,
-    path.relative(projectDirectory, path.dirname(file)) +
+    path.relative(base, path.dirname(file)) +
       path.sep +
       path.basename(file, path.extname(file))
   );
@@ -83,7 +73,10 @@ export async function compileFile(
   await mkdirp(path.dirname(jsFile));
 
   const code = compileModuleToString(typedModule, {
-    esModule: moduleFormat === "esm"
+    esModule: moduleFormat === "esm",
+    getOutputFile(file: string): string {
+      return getOutputFiles(file).jsFile;
+    }
   });
   await fs.writeFile(jsFile, code);
 

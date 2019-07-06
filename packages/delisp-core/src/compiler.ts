@@ -72,6 +72,7 @@ interface EnvironmentBinding {
 export interface Environment {
   defs: DefinitionBackend;
   moduleFormat: ModuleBackend;
+  getOutputFile(string: string): string;
   bindings: {
     [symbol: string]: EnvironmentBinding;
   };
@@ -79,6 +80,7 @@ export interface Environment {
 
 export interface CompilerOptions {
   definitionContainer?: string;
+  getOutputFile(file: string): string;
   esModule?: boolean;
 }
 
@@ -547,8 +549,8 @@ function compileImports(
 ): Array<JS.Statement | JS.ModuleDeclaration> {
   return imports.map(i =>
     env.moduleFormat.importNames(
-      [i.node.variable.name],
-      i.node.source,
+      [identifierToJS(i.node.variable.name)],
+      env.getOutputFile(i.node.source),
       env.defs
     )
   );
@@ -581,7 +583,7 @@ function compileExports(
 
 export function moduleEnvironment(
   m: Module,
-  opts: CompilerOptions = {}
+  opts: CompilerOptions
 ): Environment {
   const moduleDefinitions = m.body
     .filter(isDefinition)
@@ -607,7 +609,8 @@ export function moduleEnvironment(
       ? dynamicDefinition(opts.definitionContainer)
       : staticDefinition,
     moduleFormat: opts.esModule ? esm : cjs,
-    bindings: { ...primitiveBindings, ...moduleBindings }
+    bindings: { ...primitiveBindings, ...moduleBindings },
+    getOutputFile: opts.getOutputFile
   };
 
   return initialEnv;
@@ -647,7 +650,7 @@ export function compileToString(syntax: Syntax, env: Environment): string {
 
 export function compileModuleToString(
   m: Module,
-  opts: CompilerOptions = {}
+  opts: CompilerOptions
 ): string {
   const env = moduleEnvironment(m, opts);
   const ast = compileModule(m, true, env);

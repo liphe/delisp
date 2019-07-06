@@ -91,7 +91,6 @@ export function dynamicDefinition(containerName: string): DefinitionBackend {
         type: "ExpressionStatement",
         expression: methodCall(identifier("Object"), "assign", [
           container,
-          obj,
           {
             type: "CallExpression",
             callee: arrowFunction(

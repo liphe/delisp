@@ -7,7 +7,7 @@ import {
   createContext,
   createModule,
   evaluate,
-  evaluateJS,
+  evaluateModule,
   inferModule,
   mergeExternalEnvironments,
   decodeExternalEnvironment,
@@ -43,6 +43,10 @@ const PROMPT = "λ ";
 let currentModule = createModule();
 const context = createContext();
 
+function getOutputFile(name: string): string {
+  return getOutputFiles(name).jsFile;
+}
+
 async function prepareModule() {
   const imports = await generatePreludeImports();
   currentModule = imports.reduce((m, i) => addToModule(m, i), currentModule);
@@ -57,7 +61,9 @@ async function prepareModule() {
     process.stdout.write(theme.info("done\n"));
   }
 
-  evaluateJS(`null`, context);
+  evaluateModule(currentModule, context, {
+    getOutputFile
+  });
 }
 
 async function startREPL() {
@@ -224,7 +230,10 @@ const delispEval = async (syntax: Syntax): Promise<DelispEvalResult> => {
   // Evaluation
   //
 
-  const env = moduleEnvironment(currentModule, { definitionContainer: "env" });
+  const env = moduleEnvironment(currentModule, {
+    definitionContainer: "env",
+    getOutputFile
+  });
   const value = evaluate(syntax, env, context);
 
   if (isExpression(syntax)) {
