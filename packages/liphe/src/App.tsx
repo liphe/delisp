@@ -11,16 +11,7 @@ import {
   inferModule,
   pprintAs,
   printType,
-  Type,
   Encoder,
-  exprFChildren,
-  SDefinition,
-  isDefinition,
-  isTypeAlias,
-  isExport,
-  // SExport,
-  // STypeAlias,
-  Expression,
   Typed
 } from "@delisp/core";
 
@@ -71,30 +62,7 @@ function ModuleExplorer({ module: m }: { module: Module<Typed> }) {
 }
 
 function SyntaxExplorer({ syntax }: { syntax: Syntax<Typed> }) {
-  if (isExpression(syntax)) {
-    return <ExpressionExplorer expr={syntax} />;
-  } else if (isDefinition(syntax)) {
-    return <DefinitionExplorer definition={syntax} />;
-  } else if (isExport(syntax)) {
-    return <GenericSyntaxExplorer syntax={syntax} />;
-  } else if (isTypeAlias(syntax)) {
-    return <GenericSyntaxExplorer syntax={syntax} />;
-  } else {
-    throw new Error(`??? TS is not detecting exhaustiveness.`);
-  }
-}
-
-function DefinitionExplorer({
-  definition
-}: {
-  definition: SDefinition<Typed>;
-}) {
-  return (
-    <div>
-      <span>Definition: {definition.node.variable.name}</span>
-      <ExpressionExplorer expr={definition.node.value} />
-    </div>
-  );
+  return <GenericSyntaxExplorer syntax={syntax} />;
 }
 
 const Editor = styled.textarea`
@@ -104,11 +72,10 @@ const Editor = styled.textarea`
   font-size: 1.5em;
 `;
 
-const Box = styled.div`
-  border: 1px solid;
-  margin: 10px;
+const Code = styled.pre`
+  background-color: white;
   padding: 5px;
-  background-color: rgba(200, 200, 255, 0.8);
+  font-family: courier;
 
   .delimiter {
     color: #bbb;
@@ -125,12 +92,6 @@ const Box = styled.div`
   .string {
     color: red;
   }
-`;
-
-const Code = styled.pre`
-  background-color: white;
-  padding: 5px;
-  font-family: courier;
 `;
 
 const Token = styled.span`
@@ -158,50 +119,8 @@ const PrettierEncoder: Encoder<React.ReactElement[]> = {
     args.flat(1)
 };
 
-function ExpressionExplorer({ expr }: { expr: Expression<Typed> }) {
-  const subexpr = exprFChildren(expr).map((e, i) => (
-    <ExpressionExplorer key={i} expr={e} />
-  ));
-  return (
-    <Box>
-      <Code>{pprintAs(expr, LINE_WIDTH, PrettierEncoder)}</Code>
-      {subexpr.length === 0 ? null : (
-        <details>
-          <summary>Subexpressions</summary>
-          {subexpr}
-        </details>
-      )}
-      <details>
-        <summary>Type</summary>
-        <TypeExplorer type={expr.info.type} />
-      </details>
-      <details>
-        <summary>Effect</summary>
-        <TypeExplorer type={expr.info.effect} />
-      </details>
-      <details>
-        <summary>Location</summary>
-        <UnknownExplorer value={expr.location} />
-      </details>
-      <div />
-    </Box>
-  );
-}
-
-function TypeExplorer({ type }: { type: Type }) {
-  return <Code>{printType(type, false)}</Code>;
-}
-
 function GenericSyntaxExplorer({ syntax }: { syntax: Syntax }) {
-  return (
-    <Box>
-      <Code>{pprintAs(syntax, LINE_WIDTH, PrettierEncoder)}</Code>
-    </Box>
-  );
-}
-
-function UnknownExplorer({ value }: { value: unknown }) {
-  return <pre>{JSON.stringify(value, null, 2)}</pre>;
+  return <Code>{pprintAs(syntax, LINE_WIDTH, PrettierEncoder)}</Code>;
 }
 
 export function App({
