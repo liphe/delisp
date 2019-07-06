@@ -19,7 +19,7 @@ interface SStringF {
 export interface Identifier {
   tag: "identifier";
   name: SVar;
-  location: Location;
+  location?: Location;
 }
 
 type SVar = string;
@@ -144,7 +144,7 @@ type AnyExpressionF<I = {}, E = Expression<I>> =
 
 interface Node<I, E> {
   node: E;
-  location: Location;
+  location?: Location;
   info: I;
 }
 
@@ -196,6 +196,13 @@ interface SDefinitionF<E> {
 export interface SDefinition<EInfo = {}, SInfo = {}>
   extends Node<SInfo, SDefinitionF<Expression<EInfo>>> {}
 
+interface SImportF<_E> {
+  tag: "import";
+  variable: Identifier;
+  source: string;
+}
+export interface SImport<I = {}> extends Node<I, SImportF<Expression<I>>> {}
+
 interface SExportF<_E> {
   tag: "export";
   value: Identifier;
@@ -213,6 +220,7 @@ export interface STypeAlias<I = {}>
 export type Declaration<EInfo = {}, SInfo = {}> =
   | SDefinition<EInfo, SInfo>
   | SExport<SInfo>
+  | SImport<SInfo>
   | STypeAlias<SInfo>;
 
 export type Syntax<EInfo = {}, SInfo = {}> =
@@ -222,6 +230,7 @@ export type Syntax<EInfo = {}, SInfo = {}> =
 export function isDeclaration<I>(syntax: Syntax<I>): syntax is Declaration<I> {
   return (
     syntax.node.tag === "definition" ||
+    syntax.node.tag === "import" ||
     syntax.node.tag === "export" ||
     syntax.node.tag === "type-alias"
   );
@@ -233,6 +242,10 @@ export function isExpression<I>(syntax: Syntax<I>): syntax is Expression<I> {
 
 export function isDefinition<I>(syntax: Syntax<I>): syntax is SDefinition<I> {
   return syntax.node.tag === "definition";
+}
+
+export function isImport<I>(syntax: Syntax<I>): syntax is SImport<I> {
+  return syntax.node.tag === "import";
 }
 
 export function isExport<I>(syntax: Syntax<I>): syntax is SExport<I> {
@@ -298,4 +311,18 @@ export class Typed {
   get type() {
     return this.resultingType;
   }
+}
+
+export function createImportSyntax(name: string, source: string): SImport {
+  return {
+    node: {
+      tag: "import",
+      variable: {
+        tag: "identifier",
+        name
+      },
+      source
+    },
+    info: {}
+  };
 }

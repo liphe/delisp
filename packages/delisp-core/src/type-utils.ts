@@ -132,15 +132,11 @@ export function listTypeVariables(type: Type): string[] {
 }
 
 export function generalize(t: Type, monovars: string[]): TypeSchema {
+  // All free variables in the type that are not in the set of
+  // monomorphic set must be polymorphic. So we generalize over
+  // them.
   const vars = listTypeVariables(t);
-  return {
-    tag: "type",
-    // All free variables in the type that are not in the set of
-    // monomorphic set must be polymorphic. So we generalize over
-    // them.
-    tvars: vars.filter(v => !monovars.includes(v)),
-    mono: t
-  };
+  return new TypeSchema(vars.filter(v => !monovars.includes(v)), t);
 }
 
 export function isWildcardTypeVarName(name: string): boolean {

@@ -38,10 +38,14 @@ export function printHighlightedSource(
 /** Print a error message with expr highlighted. */
 export function printHighlightedExpr(
   message: string,
-  location: Location,
+  location?: Location,
   end = false
 ) {
-  const source = location.input.toString();
-  const offset = end ? location.end - 1 : location.start;
-  return printHighlightedSource(message, source, offset);
+  if (location) {
+    const source = location.input.toString();
+    const offset = end ? location.end - 1 : location.start;
+    return printHighlightedSource(message, source, offset);
+  } else {
+    return message;
+  }
 }

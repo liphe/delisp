@@ -22,7 +22,7 @@ import {
   Typed
 } from "./syntax";
 
-import { Substitution, transformRecurType } from "./type-utils";
+import { Substitution, transformRecurType, generalize } from "./type-utils";
 
 import { printHighlightedExpr } from "./error-report";
 
@@ -45,7 +45,9 @@ import {
   tValues,
   TypeSchema
 } from "./types";
-import { difference, flatMap, mapObject, maybeMap } from "./utils";
+import { ExternalEnvironment } from "./infer-environment";
+
+import { fromEntries, difference, flatMap, mapObject, maybeMap } from "./utils";
 
 import {
   findInlinePrimitive,
@@ -66,8 +68,10 @@ import {
 
 import { applySubstitutionToExpr } from "./infer-subst";
 
-import { typeAnnotate } from "../src/infer-debug";
-import { pprint } from "../src/printer";
+import { typeAnnotate } from "./infer-debug";
+import { pprint } from "./printer";
+
+import { moduleExportedDefinitions } from "./module";
 
 const DEBUG = false;
 
@@ -891,6 +895,15 @@ function inferSyntax(
       assumptions: [],
       constraints: []
     };
+  } else if (syntax.node.tag === "import") {
+    return {
+      result: {
+        ...syntax,
+        node: syntax.node
+      },
+      assumptions: [],
+      constraints: []
+    };
   } else {
     return assertNever(syntax.node);
   }
@@ -908,15 +921,6 @@ function inferSyntax(
 // assumptions. Those assumptions are from variables we have not
 // found, so they are supposed to be part of a global environment (or
 // non existing!).
-
-export interface ExternalEnvironment {
-  variables: {
-    [v: string]: TypeSchema;
-  };
-  types: {
-    [t: string]: Type;
-  };
-}
 
 export interface InternalTypeEnvironment {
   [t: string]: Type;
@@ -974,6 +978,8 @@ function applySubstitutionToSyntax(
   } else if (s.node.tag === "export") {
     return s;
   } else if (s.node.tag === "type-alias") {
+    return s;
+  } else if (s.node.tag === "import") {
     return s;
   } else {
     return assertNever(s.node);
@@ -1247,5 +1253,21 @@ export function inferExpressionInModule(
         >;
       }
     )
+  };
+}
+
+export function getModuleExternalEnvironment(
+  m: Module<Typed>
+): ExternalEnvironment {
+  const defs = moduleExportedDefinitions(m);
+  const variables = fromEntries(
+    defs.map(d => [
+      d.node.variable.name,
+      generalize(d.node.value.info.resultingType, [])
+    ])
+  );
+  return {
+    variables,
+    types: {}
   };
 }

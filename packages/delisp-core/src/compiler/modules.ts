@@ -1,10 +1,24 @@
 import * as JS from "estree";
-import { identifier, literal, member, objectExpression } from "./estree-utils";
+import {
+  requireModule,
+  requireNames,
+  identifier,
+  literal,
+  member,
+  objectExpression
+} from "./estree-utils";
+import { DefinitionBackend } from "./definitions";
 
 export interface ModuleBackend {
   export(vars: string[]): JS.Statement | JS.ModuleDeclaration;
   importRuntime(localName: string): JS.Statement | JS.ModuleDeclaration;
   importRuntimeUtils(names: string[]): JS.Statement | JS.ModuleDeclaration;
+  // Import some names from a module in the current definition container
+  importNames(
+    names: string[],
+    source: string,
+    def: DefinitionBackend
+  ): JS.Statement | JS.ModuleDeclaration;
 }
 
 export const cjs: ModuleBackend = {
@@ -24,6 +38,7 @@ export const cjs: ModuleBackend = {
       }
     };
   },
+
   importRuntime(localName: string) {
     return {
       type: "VariableDeclaration",
@@ -32,45 +47,22 @@ export const cjs: ModuleBackend = {
         {
           type: "VariableDeclarator",
           id: identifier(localName),
-          init: member(
-            {
-              type: "CallExpression",
-              callee: identifier("require"),
-              arguments: [literal("@delisp/runtime")]
-            },
-            "default"
-          )
+          init: member(requireModule("@delisp/runtime"), "default")
         }
       ]
     };
   },
+
   importRuntimeUtils(names: string[]) {
-    return {
-      type: "VariableDeclaration",
-      kind: "const",
-      declarations: [
-        {
-          type: "VariableDeclarator",
-          id: {
-            type: "ObjectPattern",
-            properties: names.map(name => ({
-              type: "Property",
-              kind: "init",
-              key: identifier(name),
-              value: identifier(name),
-              computed: false,
-              method: false,
-              shorthand: true
-            }))
-          },
-          init: {
-            type: "CallExpression",
-            callee: identifier("require"),
-            arguments: [literal("@delisp/runtime")]
-          }
-        }
-      ]
-    };
+    return requireNames(names, "@delisp/runtime");
+  },
+
+  importNames(
+    names: string[],
+    source: string,
+    defs: DefinitionBackend
+  ): JS.Statement {
+    return defs.defineFromObject(names, requireModule(source));
   }
 };
 
@@ -113,5 +105,17 @@ export const esm: ModuleBackend = {
       })),
       source: literal("@delisp/runtime")
     };
+  },
+  importNames(
+    _names: string[],
+    _source: string,
+    _defs: DefinitionBackend
+  ): JS.Statement {
+    // TODO: For static compilation, this is easy as we can just
+    // generate import {} from "", but remember the target is the
+    // definitionsBackend!
+    throw new Error(
+      `Importing modules is not supported by the ESM module system yet.`
+    );
   }
 };

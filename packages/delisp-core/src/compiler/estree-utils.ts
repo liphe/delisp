@@ -128,3 +128,40 @@ export function objectExpression(properties: Property[]): JS.ObjectExpression {
     })
   };
 }
+
+export function requireModule(name: string): JS.Expression {
+  return {
+    type: "CallExpression",
+    callee: identifier("require"),
+    arguments: [literal(name)]
+  };
+}
+
+export function requireNames(names: string[], source: string): JS.Statement {
+  return {
+    type: "VariableDeclaration",
+    kind: "const",
+    declarations: [
+      {
+        type: "VariableDeclarator",
+        id: {
+          type: "ObjectPattern",
+          properties: names.map(name => ({
+            type: "Property",
+            kind: "init",
+            key: identifier(name),
+            value: identifier(name),
+            computed: false,
+            method: false,
+            shorthand: true
+          }))
+        },
+        init: {
+          type: "CallExpression",
+          callee: identifier("require"),
+          arguments: [literal(source)]
+        }
+      }
+    ]
+  };
+}

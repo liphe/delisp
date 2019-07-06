@@ -241,15 +241,15 @@ defineInlinePrimitive(
 // Tuples
 
 defineInlinePrimitive("pair", "(-> a b _ (* a b))", ([a, b]) => {
-  return primitiveCall("pair", a, b);
+  return primitiveCall("primPair", a, b);
 });
 
 defineInlinePrimitive("%fst", "(-> (* a b) _ a)", ([pair]) => {
-  return primitiveCall("fst", pair);
+  return primitiveCall("primFst", pair);
 });
 
 defineInlinePrimitive("%snd", "(-> (* a b) _ b)", ([pair]) => {
-  return primitiveCall("snd", pair);
+  return primitiveCall("primtSnd", pair);
 });
 
 defineInlinePrimitive(

@@ -29,7 +29,9 @@ async function buildModule(file: string): Promise<void> {
   const m = readModule(await readFile(file, "utf8"));
   const { typedModule } = inferModule(m);
 
-  const jscode = compileModuleToString(m);
+  const jscode = compileModuleToString(m, {
+    getOutputFile: name => name
+  });
   await writeFile(file.replace(/\.dl$/, ".js"), jscode);
 
   const tsdecl = generateTSModuleDeclaration(typedModule);

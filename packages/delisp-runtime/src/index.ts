@@ -46,15 +46,15 @@ export class Pair<A, B> {
   }
 }
 
-export function pair<A, B>(a: A, b: B): Pair<A, B> {
+export function primPair<A, B>(a: A, b: B): Pair<A, B> {
   return new Pair(a, b);
 }
 
-export function fst<A, B>(pair: Pair<A, B>): A {
+export function primFst<A, B>(pair: Pair<A, B>): A {
   return pair.fst;
 }
 
-export function snd<A, B>(pair: Pair<A, B>): B {
+export function primSnd<A, B>(pair: Pair<A, B>): B {
   return pair.snd;
 }
 

@@ -3,7 +3,11 @@
 //
 
 import * as vm from "vm";
-import { compileToString, Environment, moduleEnvironment } from "./compiler";
+import {
+  compileModuleToString,
+  compileToString,
+  Environment
+} from "./compiler";
 import primitives from "./primitives";
 import { Module, Syntax } from "./syntax";
 import { mapObject } from "./utils";
@@ -11,15 +15,19 @@ import { mapObject } from "./utils";
 import {
   caseTag,
   matchTag,
-  pair,
-  fst,
-  snd,
+  primPair,
+  primFst,
+  primSnd,
   values,
   primaryValue,
   bindPrimaryValue,
   mvbind,
   assert
 } from "@delisp/runtime";
+
+import { Host } from "./host";
+
+type Context = ReturnType<typeof createContext>;
 
 export function createContext() {
   const sandbox = {
@@ -28,14 +36,15 @@ export function createContext() {
     // Primitives
     caseTag,
     matchTag,
-    pair,
-    fst,
-    snd,
+    primPair,
+    primFst,
+    primSnd,
     values,
     primaryValue,
     bindPrimaryValue,
     mvbind,
-    assert
+    assert,
+    require
   };
   vm.createContext(sandbox);
   return sandbox;
@@ -44,16 +53,18 @@ export function createContext() {
 export function evaluate(
   syntax: Syntax,
   env: Environment,
-  context = createContext()
+  context: Context
 ): unknown {
   const code = compileToString(syntax, env);
   const result = vm.runInContext(code, context);
   return result;
 }
 
-export function evaluateModule(m: Module, context = createContext()): void {
-  const env = moduleEnvironment(m, { definitionContainer: "env" });
-  m.body.forEach(s => {
-    return evaluate(s, env, context);
+export function evaluateModule(m: Module, context: Context, host: Host): void {
+  const code = compileModuleToString(m, {
+    definitionContainer: "env",
+    getOutputFile: host.getOutputFile
   });
+  vm.runInContext(code, context);
+  return;
 }

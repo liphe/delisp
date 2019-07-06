@@ -2,12 +2,14 @@ import runtime from "@delisp/runtime";
 import {
   Expression,
   isDefinition,
+  isImport,
   isExport,
   isTypeAlias,
   Module,
   SConditional,
   SDefinition,
   SExport,
+  SImport,
   SFunction,
   SFunctionCall,
   SVariableReference,
@@ -46,6 +48,8 @@ import {
 } from "./compiler/definitions";
 import { cjs, esm, ModuleBackend } from "./compiler/modules";
 
+import { moduleImports, moduleExports } from "./module";
+
 import { member } from "./compiler/estree-utils";
 import {
   compileInlinePrimitive,
@@ -68,6 +72,7 @@ interface EnvironmentBinding {
 export interface Environment {
   defs: DefinitionBackend;
   moduleFormat: ModuleBackend;
+  getOutputFile(string: string): string;
   bindings: {
     [symbol: string]: EnvironmentBinding;
   };
@@ -75,6 +80,7 @@ export interface Environment {
 
 export interface CompilerOptions {
   definitionContainer?: string;
+  getOutputFile(file: string): string;
   esModule?: boolean;
 }
 
@@ -477,7 +483,11 @@ function compileTopLevel(
 ): JS.Statement | null {
   const typedSyntax = syntax as Syntax<Partial<Typed>, Partial<Typed>>;
 
-  if (isExport(typedSyntax) || isTypeAlias(typedSyntax)) {
+  if (
+    isImport(typedSyntax) ||
+    isExport(typedSyntax) ||
+    isTypeAlias(typedSyntax)
+  ) {
     // exports are compiled at the end of the module
     return null;
   }
@@ -522,16 +532,28 @@ function compileRuntimeUtils(
   return env.moduleFormat.importRuntimeUtils([
     "matchTag",
     "caseTag",
-    "pair",
-    "fst",
-    "snd",
+    "primPair",
+    "primFst",
+    "primSnd",
     "primaryValue",
     "values",
-    "mvbind",
     "bindPrimaryValue",
     "mvbind",
     "assert"
   ]);
+}
+
+function compileImports(
+  imports: SImport[],
+  env: Environment
+): Array<JS.Statement | JS.ModuleDeclaration> {
+  return imports.map(i =>
+    env.moduleFormat.importNames(
+      [identifierToJS(i.node.variable.name)],
+      env.getOutputFile(i.node.source),
+      env.defs
+    )
+  );
 }
 
 function compileExports(
@@ -561,7 +583,7 @@ function compileExports(
 
 export function moduleEnvironment(
   m: Module,
-  opts: CompilerOptions = {}
+  opts: CompilerOptions
 ): Environment {
   const moduleDefinitions = m.body
     .filter(isDefinition)
@@ -587,7 +609,8 @@ export function moduleEnvironment(
       ? dynamicDefinition(opts.definitionContainer)
       : staticDefinition,
     moduleFormat: opts.esModule ? esm : cjs,
-    bindings: { ...primitiveBindings, ...moduleBindings }
+    bindings: { ...primitiveBindings, ...moduleBindings },
+    getOutputFile: opts.getOutputFile
   };
 
   return initialEnv;
@@ -605,11 +628,14 @@ function compileModule(
       ...(includeRuntime
         ? [compileRuntime(env), compileRuntimeUtils(env)]
         : []),
+
+      ...compileImports(moduleImports(m), env),
+
       ...maybeMap(
         (syntax: Syntax) => compileTopLevel(syntax, env, false),
         m.body
       ),
-      ...compileExports(m.body.filter(isExport), env)
+      ...compileExports(moduleExports(m), env)
     ]
   };
 }
@@ -624,7 +650,7 @@ export function compileToString(syntax: Syntax, env: Environment): string {
 
 export function compileModuleToString(
   m: Module,
-  opts: CompilerOptions = {}
+  opts: CompilerOptions
 ): string {
   const env = moduleEnvironment(m, opts);
   const ast = compileModule(m, true, env);

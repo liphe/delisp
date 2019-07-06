@@ -1,8 +1,4 @@
-import { convert as convertSyntax } from "./convert";
-
-import { readFromString } from "./reader";
-
-export { collectConvertErrors } from "./convert";
+export { collectConvertErrors, readSyntax } from "./convert";
 
 export {
   compileToString,
@@ -14,25 +10,29 @@ export {
   inferType,
   inferModule,
   inferExpressionInModule,
-  defaultEnvironment
+  defaultEnvironment,
+  getModuleExternalEnvironment
 } from "./infer";
+export {
+  ExternalEnvironment,
+  encodeExternalEnvironment,
+  decodeExternalEnvironment,
+  mergeExternalEnvironments
+} from "./infer-environment";
 export { Type } from "./types";
 export { printType } from "./type-printer";
-export { generateModuleInterface } from "./type-module";
 export {
   isDeclaration,
   isDefinition,
   isExpression,
   isExport,
-  isTypeAlias
+  isTypeAlias,
+  createImportSyntax,
+  Module
 } from "./syntax";
 export { default as primitives } from "./primitives";
 
 export { printHighlightedExpr } from "./error-report";
-
-export function readSyntax(source: string) {
-  return convertSyntax(readFromString(source));
-}
 
 export { findSyntaxByOffset, findSyntaxByRange } from "./syntax-utils";
 
@@ -45,6 +45,8 @@ export {
   moduleDefinitions,
   moduleDefinitionByName
 } from "./module";
+
+export { resolveModuleDependencies } from "./module-dependencies";
 
 export { generateTSModuleDeclaration } from "./typescript-generation";
 

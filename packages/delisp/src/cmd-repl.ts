@@ -1,5 +1,3 @@
-import * as fs from "./fs-helpers";
-import path from "path";
 import { Pair, TaggedValue } from "@delisp/runtime";
 
 import { CommandModule } from "yargs";
@@ -10,15 +8,16 @@ import {
   evaluate,
   evaluateModule,
   inferModule,
+  mergeExternalEnvironments,
   inferExpressionInModule,
   isDefinition,
   isExpression,
   moduleEnvironment,
   printType,
-  readModule,
   readSyntax,
   removeModuleDefinition,
   removeModuleTypeDefinition,
+  resolveModuleDependencies,
   moduleDefinitionByName,
   collectConvertErrors,
   defaultEnvironment,
@@ -28,6 +27,9 @@ import {
 import { Typed } from "@delisp/core/src/syntax";
 import { Module, Expression, Syntax } from "@delisp/core/src/syntax";
 
+import { newModule } from "./module";
+import { resolveDependency } from "./compile";
+import { getOutputFiles } from "./compile-output";
 import * as theme from "./color-theme";
 
 import readline from "readline";
@@ -38,16 +40,19 @@ const PROMPT = "λ ";
 let currentModule: Module;
 const context = createContext();
 
-async function loadModule(file: string): Promise<Module> {
-  const code = await fs.readFile(path.join(file), "utf-8");
-  const m = readModule(code);
-  inferModule(m);
-  evaluateModule(m, context);
-  return m;
+function getOutputFile(name: string): string {
+  return getOutputFiles(name).jsFile;
+}
+
+async function prepareModule() {
+  currentModule = await newModule();
+  evaluateModule(currentModule, context, {
+    getOutputFile
+  });
 }
 
 async function startREPL() {
-  currentModule = await loadModule(path.join(__dirname, "../../init.dl"));
+  await prepareModule();
 
   rl = readline.createInterface({
     input: process.stdin,
@@ -61,7 +66,7 @@ async function startREPL() {
 }
 
 let inputBuffer = "";
-function handleLine(line: string) {
+async function handleLine(line: string) {
   try {
     inputBuffer += "\n" + line;
 
@@ -89,7 +94,7 @@ function handleLine(line: string) {
       });
     }
 
-    const evalResult = delispEval(syntax);
+    const evalResult = await delispEval(syntax);
     switch (evalResult.tag) {
       case "expression":
         console.log(
@@ -154,7 +159,7 @@ type DelispEvalResult =
       tag: "other";
     };
 
-const delispEval = (syntax: Syntax): DelispEvalResult => {
+const delispEval = async (syntax: Syntax): Promise<DelispEvalResult> => {
   updateModule(syntax);
 
   //
@@ -164,12 +169,22 @@ const delispEval = (syntax: Syntax): DelispEvalResult => {
   let typedExpression: Expression<Typed> | undefined;
 
   try {
-    const result = inferModule(currentModule);
+    const externalEnvironment = await resolveModuleDependencies(
+      currentModule,
+      resolveDependency
+    );
+
+    const environment = mergeExternalEnvironments(
+      defaultEnvironment,
+      externalEnvironment
+    );
+
+    const result = inferModule(currentModule, environment);
     typedModule = result.typedModule;
 
     const expressionResult =
       typedModule && isExpression(syntax)
-        ? inferExpressionInModule(syntax, typedModule, defaultEnvironment, true)
+        ? inferExpressionInModule(syntax, typedModule, environment, true)
         : undefined;
     typedExpression = expressionResult && expressionResult.typedExpression;
 
@@ -194,7 +209,10 @@ const delispEval = (syntax: Syntax): DelispEvalResult => {
   // Evaluation
   //
 
-  const env = moduleEnvironment(currentModule, { definitionContainer: "env" });
+  const env = moduleEnvironment(currentModule, {
+    definitionContainer: "env",
+    getOutputFile
+  });
   const value = evaluate(syntax, env, context);
 
   if (isExpression(syntax)) {

@@ -8,12 +8,13 @@
   },
   "scripts": {
     "build": "tsc --build",
+    "bootstrap": "delisp compile --no-prelude lib/prelude.dl",
     "test": "true"
   },
   "files": [
     "dist",
     "index.js",
-    "init.dl"
+    "lib/"
   ],
   "dependencies": {
     "@delisp/core": "^0.2.0",

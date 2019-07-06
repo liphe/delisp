@@ -1,12 +1,17 @@
 import { moduleEnvironment } from "../src/compiler";
-import { evaluate } from "../src/eval";
+import { createContext, evaluate } from "../src/eval";
 import { readSyntax } from "../src/index";
 import { createModule } from "../src/module";
 
 function evaluateString(str: string): unknown {
-  const env = moduleEnvironment(createModule());
+  const env = moduleEnvironment(createModule(), {
+    getOutputFile(name) {
+      return name;
+    }
+  });
   const s = readSyntax(str);
-  return evaluate(s, env);
+  const context = createContext();
+  return evaluate(s, env, context);
 }
 
 describe("Evaluation", () => {
