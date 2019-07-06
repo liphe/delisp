@@ -546,7 +546,11 @@ function compileImports(
   env: Environment
 ): Array<JS.Statement | JS.ModuleDeclaration> {
   return imports.map(i =>
-    env.moduleFormat.importNames([i.node.variable.name], i.node.source)
+    env.moduleFormat.importNames(
+      [i.node.variable.name],
+      i.node.source,
+      env.defs
+    )
   );
 }
 
