@@ -28,7 +28,8 @@ import { Typed } from "@delisp/core/src/syntax";
 import { Module, Expression, Syntax } from "@delisp/core/src/syntax";
 
 import { newModule } from "./module";
-import { resolveDependency, getOutputFiles } from "./compile";
+import { resolveDependency } from "./compile";
+import { getOutputFiles } from "./compile-output";
 import * as theme from "./color-theme";
 
 import readline from "readline";

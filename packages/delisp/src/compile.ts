@@ -21,35 +21,14 @@ import { CompileOptions } from "./compile-options";
 
 import _mkdirp from "mkdirp";
 
-const mkdirp = promisify(_mkdirp);
+import { CompileFileResult, getOutputFiles } from "./compile-output";
 
-interface CompileFileResult {
-  jsFile: string;
-  infoFile: string;
-  dtsFile: string;
-}
+const mkdirp = promisify(_mkdirp);
 
 export async function resolveDependency(name: string) {
   const { infoFile } = await getOutputFiles(name);
   const content = await fs.readJSONFile(infoFile);
   return decodeExternalEnvironment(content);
-}
-
-export function getOutputFiles(file: string): CompileFileResult {
-  const base = path.dirname(file);
-  const OUTPUT_DIR = path.join(base, ".delisp", "build");
-
-  const outFileSansExt = path.join(
-    OUTPUT_DIR,
-    path.relative(base, path.dirname(file)) +
-      path.sep +
-      path.basename(file, path.extname(file))
-  );
-  const jsFile = outFileSansExt + ".js";
-  const infoFile = outFileSansExt + ".json";
-  const dtsFile = outFileSansExt + ".d.ts";
-
-  return { jsFile, infoFile, dtsFile };
 }
 
 export async function compileFile(
