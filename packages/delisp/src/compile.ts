@@ -7,8 +7,12 @@ import {
   generateTSModuleDeclaration,
   getModuleExternalEnvironment,
   encodeExternalEnvironment,
+  defaultEnvironment,
+  resolveModuleDependencies,
   addToModule,
-  Module
+  Module,
+  decodeExternalEnvironment,
+  mergeExternalEnvironments
 } from "@delisp/core";
 
 import * as fs from "./fs-helpers";
@@ -31,6 +35,12 @@ interface CompileFileResult {
   jsFile: string;
   infoFile: string;
   dtsFile: string;
+}
+
+export async function resolveDependency(name: string) {
+  const { infoFile } = await getOutputFiles(name);
+  const content = await fs.readJSONFile(infoFile);
+  return decodeExternalEnvironment(content);
 }
 
 export function getOutputFiles(file: string): CompileFileResult {
@@ -71,7 +81,18 @@ export async function compileFile(
   const module = await loadModule(content, options);
 
   // Type check module
-  const inferResult = inferModule(module);
+
+  const externalEnvironment = await resolveModuleDependencies(
+    module,
+    resolveDependency
+  );
+
+  const environment = mergeExternalEnvironments(
+    defaultEnvironment,
+    externalEnvironment
+  );
+
+  const inferResult = inferModule(module, environment);
   const typedModule = inferResult.typedModule;
 
   // Check for unknown references

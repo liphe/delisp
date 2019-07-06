@@ -10,7 +10,6 @@ import {
   evaluateModule,
   inferModule,
   mergeExternalEnvironments,
-  decodeExternalEnvironment,
   inferExpressionInModule,
   isDefinition,
   isExpression,
@@ -29,8 +28,7 @@ import {
 import { Typed } from "@delisp/core/src/syntax";
 import { Module, Expression, Syntax } from "@delisp/core/src/syntax";
 
-import { readJSONFile } from "./fs-helpers";
-import { getOutputFiles, compileFile } from "./compile";
+import { resolveDependency, getOutputFiles, compileFile } from "./compile";
 import * as theme from "./color-theme";
 
 import readline from "readline";
@@ -158,12 +156,6 @@ function updateModule(syntax: Syntax) {
   } else {
     throw new Error(`I don't know how to handle this in the REPL.`);
   }
-}
-
-async function resolveDependency(name: string) {
-  const { infoFile } = await getOutputFiles(name);
-  const content = await readJSONFile(infoFile);
-  return decodeExternalEnvironment(content);
 }
 
 type DelispEvalResult =
