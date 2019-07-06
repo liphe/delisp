@@ -24,6 +24,8 @@ import {
   Typed
 } from "@delisp/core";
 
+const LINE_WIDTH = 40;
+
 type ASTResult =
   | { tag: "success"; module: Module<Typed> }
   | { tag: "error"; message: string };
@@ -74,9 +76,9 @@ function SyntaxExplorer({ syntax }: { syntax: Syntax<Typed> }) {
   } else if (isDefinition(syntax)) {
     return <DefinitionExplorer definition={syntax} />;
   } else if (isExport(syntax)) {
-    return <UnknownExplorer value={syntax} />;
+    return <GenericSyntaxExplorer syntax={syntax} />;
   } else if (isTypeAlias(syntax)) {
-    return <UnknownExplorer value={syntax} />;
+    return <GenericSyntaxExplorer syntax={syntax} />;
   } else {
     throw new Error(`??? TS is not detecting exhaustiveness.`);
   }
@@ -107,6 +109,10 @@ const Box = styled.div`
   margin: 10px;
   padding: 5px;
   background-color: rgba(200, 200, 255, 0.8);
+
+  .delimiter {
+    color: #bbb;
+  }
 
   .keyword {
     color: blue;
@@ -158,7 +164,7 @@ function ExpressionExplorer({ expr }: { expr: Expression<Typed> }) {
   ));
   return (
     <Box>
-      <Code>{pprintAs(expr, 80, PrettierEncoder)}</Code>
+      <Code>{pprintAs(expr, LINE_WIDTH, PrettierEncoder)}</Code>
       {subexpr.length === 0 ? null : (
         <details>
           <summary>Subexpressions</summary>
@@ -184,6 +190,14 @@ function ExpressionExplorer({ expr }: { expr: Expression<Typed> }) {
 
 function TypeExplorer({ type }: { type: Type }) {
   return <Code>{printType(type, false)}</Code>;
+}
+
+function GenericSyntaxExplorer({ syntax }: { syntax: Syntax }) {
+  return (
+    <Box>
+      <Code>{pprintAs(syntax, LINE_WIDTH, PrettierEncoder)}</Code>
+    </Box>
+  );
 }
 
 function UnknownExplorer({ value }: { value: unknown }) {
