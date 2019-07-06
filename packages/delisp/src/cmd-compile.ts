@@ -11,6 +11,11 @@ export const cmdCompile: CommandModule = {
         default: "cjs",
         describe: "Module format to use"
       })
+      .option("prelude", {
+        type: "boolean",
+        describe: "Include the Delisp prelude",
+        default: true
+      })
       .option("ts-declaration", {
         type: "boolean",
         describe: "Generate Typescript declaration file"
@@ -23,7 +28,8 @@ export const cmdCompile: CommandModule = {
       files.map(file =>
         compileFile(file, {
           moduleFormat: args.module as "cjs" | "esm",
-          tsDeclaration: args["ts-declaration"] ? true : false
+          tsDeclaration: args["ts-declaration"] ? true : false,
+          includePrelude: args["prelude"] as boolean
         })
       )
     ).catch(err => {

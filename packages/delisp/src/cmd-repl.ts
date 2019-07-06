@@ -56,7 +56,8 @@ async function prepareModule() {
     process.stdout.write(theme.info(`Compiling ${file}...`));
     await compileFile(file + "", {
       moduleFormat: "cjs",
-      tsDeclaration: false
+      tsDeclaration: false,
+      includePrelude: false
     });
     process.stdout.write(theme.info("done\n"));
   }

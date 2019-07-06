@@ -8,7 +8,7 @@
   },
   "scripts": {
     "build": "tsc --build",
-    "bootstrap": "delisp compile lib/prelude.dl",
+    "bootstrap": "delisp compile --no-prelude lib/prelude.dl",
     "test": "true"
   },
   "files": [

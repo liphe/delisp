@@ -24,6 +24,7 @@ const mkdirp = promisify(_mkdirp);
 interface CompileOptions {
   moduleFormat: "cjs" | "esm";
   tsDeclaration: boolean;
+  includePrelude: boolean;
 }
 
 interface CompileFileResult {
@@ -49,20 +50,25 @@ export function getOutputFiles(file: string): CompileFileResult {
   return { jsFile, infoFile, dtsFile };
 }
 
-async function readModuleWithPrelude(content: string) {
-  const base: Module = readModule(content);
-  const imports = await generatePreludeImports();
-  return imports.reduce((m, i) => addToModule(m, i), base);
+async function loadModule(content: string, options: CompileOptions) {
+  let m: Module = readModule(content);
+
+  if (options.includePrelude) {
+    const imports = await generatePreludeImports();
+    m = imports.reduce((m, i) => addToModule(m, i), m);
+  }
+
+  return m;
 }
 
 export async function compileFile(
   file: string,
-  { moduleFormat, tsDeclaration }: CompileOptions
+  options: CompileOptions
 ): Promise<CompileFileResult> {
   const { jsFile, infoFile, dtsFile } = await getOutputFiles(file);
 
   const content = await fs.readFile(file, "utf8");
-  const module = await readModuleWithPrelude(content);
+  const module = await loadModule(content, options);
 
   // Type check module
   const inferResult = inferModule(module);
@@ -82,7 +88,7 @@ export async function compileFile(
   await mkdirp(path.dirname(jsFile));
 
   const code = compileModuleToString(typedModule, {
-    esModule: moduleFormat === "esm",
+    esModule: options.moduleFormat === "esm",
     getOutputFile(file: string): string {
       return getOutputFiles(file).jsFile;
     }
@@ -94,7 +100,7 @@ export async function compileFile(
   );
   await fs.writeJSONFile(infoFile, moduleInt);
 
-  if (tsDeclaration) {
+  if (options.tsDeclaration) {
     const content = generateTSModuleDeclaration(typedModule);
     await fs.writeFile(dtsFile, content);
   }
