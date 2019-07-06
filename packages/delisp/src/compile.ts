@@ -3,14 +3,11 @@ import {
   inferModule,
   printHighlightedExpr,
   printType,
-  readModule,
   generateTSModuleDeclaration,
   getModuleExternalEnvironment,
   encodeExternalEnvironment,
   defaultEnvironment,
   resolveModuleDependencies,
-  addToModule,
-  Module,
   decodeExternalEnvironment,
   mergeExternalEnvironments
 } from "@delisp/core";
@@ -19,17 +16,12 @@ import * as fs from "./fs-helpers";
 import path from "path";
 import { promisify } from "util";
 
-import { generatePreludeImports } from "./prelude";
+import { loadModule } from "./module";
+import { CompileOptions } from "./compile-options";
 
 import _mkdirp from "mkdirp";
 
 const mkdirp = promisify(_mkdirp);
-
-interface CompileOptions {
-  moduleFormat: "cjs" | "esm";
-  tsDeclaration: boolean;
-  includePrelude: boolean;
-}
 
 interface CompileFileResult {
   jsFile: string;
@@ -58,17 +50,6 @@ export function getOutputFiles(file: string): CompileFileResult {
   const dtsFile = outFileSansExt + ".d.ts";
 
   return { jsFile, infoFile, dtsFile };
-}
-
-async function loadModule(content: string, options: CompileOptions) {
-  let m: Module = readModule(content);
-
-  if (options.includePrelude) {
-    const imports = await generatePreludeImports();
-    m = imports.reduce((m, i) => addToModule(m, i), m);
-  }
-
-  return m;
 }
 
 export async function compileFile(

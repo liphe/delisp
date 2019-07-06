@@ -5,7 +5,6 @@ import { CommandModule } from "yargs";
 import {
   addToModule,
   createContext,
-  createModule,
   evaluate,
   evaluateModule,
   inferModule,
@@ -28,17 +27,16 @@ import {
 import { Typed } from "@delisp/core/src/syntax";
 import { Module, Expression, Syntax } from "@delisp/core/src/syntax";
 
-import { resolveDependency, getOutputFiles, compileFile } from "./compile";
+import { newModule } from "./module";
+import { resolveDependency, getOutputFiles } from "./compile";
 import * as theme from "./color-theme";
 
 import readline from "readline";
 
-import { generatePreludeImports } from "./prelude";
-
 let rl: readline.Interface;
 const PROMPT = "λ ";
 
-let currentModule = createModule();
+let currentModule: Module;
 const context = createContext();
 
 function getOutputFile(name: string): string {
@@ -46,20 +44,7 @@ function getOutputFile(name: string): string {
 }
 
 async function prepareModule() {
-  const imports = await generatePreludeImports();
-  currentModule = imports.reduce((m, i) => addToModule(m, i), currentModule);
-
-  const sources = [...new Set(imports.map(i => i.node.source))];
-  for (const file of sources) {
-    process.stdout.write(theme.info(`Compiling ${file}...`));
-    await compileFile(file + "", {
-      moduleFormat: "cjs",
-      tsDeclaration: false,
-      includePrelude: false
-    });
-    process.stdout.write(theme.info("done\n"));
-  }
-
+  currentModule = await newModule();
   evaluateModule(currentModule, context, {
     getOutputFile
   });
