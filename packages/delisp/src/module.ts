@@ -1,6 +1,6 @@
-import { createModule, addToModule, readModule, Module } from "@delisp/core";
-import { generatePreludeImports } from "./prelude";
+import { addToModule, createModule, Module, readModule } from "@delisp/core";
 import { CompileOptions } from "./compile-options";
+import { generatePreludeImports } from "./prelude";
 
 export async function newModule() {
   const imports = await generatePreludeImports();

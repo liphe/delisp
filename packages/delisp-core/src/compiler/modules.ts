@@ -1,13 +1,13 @@
 import * as JS from "estree";
+import { DefinitionBackend } from "./definitions";
 import {
-  requireModule,
-  requireNames,
   identifier,
   literal,
   member,
-  objectExpression
+  objectExpression,
+  requireModule,
+  requireNames
 } from "./estree-utils";
-import { DefinitionBackend } from "./definitions";
 
 export interface ModuleBackend {
   export(vars: string[]): JS.Statement | JS.ModuleDeclaration;

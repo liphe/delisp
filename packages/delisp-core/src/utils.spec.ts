@@ -1,4 +1,5 @@
 import {
+  capitalize,
   difference,
   equals,
   flatMap,
@@ -8,8 +9,7 @@ import {
   mapObject,
   range,
   union,
-  unique,
-  capitalize
+  unique
 } from "./utils";
 
 describe("Utils", () => {

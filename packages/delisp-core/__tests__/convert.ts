@@ -1,4 +1,4 @@
-import { convert, collectConvertErrors } from "../src/convert";
+import { collectConvertErrors, convert } from "../src/convert";
 import { readFromString } from "../src/reader";
 
 describe("Convert", () => {

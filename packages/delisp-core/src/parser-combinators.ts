@@ -5,10 +5,9 @@
  * expected to parse to facilitate generating friendly error messages.
  */
 
-import { InvariantViolation } from "./invariant";
-
 import { printHighlightedSource } from "./error-report";
 import { Input, Location, Offset } from "./input";
+import { InvariantViolation } from "./invariant";
 
 export type ParserResult<A> = ParserSuccess<A> | ParserError;
 

@@ -1,8 +1,8 @@
+import { readType } from "../src/convert-type";
 import { isDeclaration, readSyntax } from "../src/index";
-import { Expression } from "../src/syntax";
 import { inferType, InternalTypeEnvironment } from "../src/infer";
 import { ExternalEnvironment } from "../src/infer-environment";
-import { readType } from "../src/convert-type";
+import { Expression } from "../src/syntax";
 import { printType } from "../src/type-printer";
 
 function readExpr(code: string): Expression {

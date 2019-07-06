@@ -1,8 +1,8 @@
+import { collectConvertErrors, readModule } from "@delisp/core";
+import createDebug from "debug";
 import { CommandModule } from "yargs";
 import * as fs from "./fs-helpers";
-import { readModule, collectConvertErrors } from "@delisp/core";
 
-import createDebug from "debug";
 const debug = createDebug(`delisp:cli:lint`);
 
 async function lintFile(file: string): Promise<string[]> {

@@ -1,27 +1,23 @@
 import {
   compileModuleToString,
-  inferModule,
-  printHighlightedExpr,
-  printType,
+  decodeExternalEnvironment,
+  defaultEnvironment,
+  encodeExternalEnvironment,
   generateTSModuleDeclaration,
   getModuleExternalEnvironment,
-  encodeExternalEnvironment,
-  defaultEnvironment,
-  resolveModuleDependencies,
-  decodeExternalEnvironment,
-  mergeExternalEnvironments
+  inferModule,
+  mergeExternalEnvironments,
+  printHighlightedExpr,
+  printType,
+  resolveModuleDependencies
 } from "@delisp/core";
-
-import * as fs from "./fs-helpers";
+import _mkdirp from "mkdirp";
 import path from "path";
 import { promisify } from "util";
-
-import { loadModule } from "./module";
 import { CompileOptions } from "./compile-options";
-
-import _mkdirp from "mkdirp";
-
 import { CompileFileResult, getOutputFiles } from "./compile-output";
+import * as fs from "./fs-helpers";
+import { loadModule } from "./module";
 
 const mkdirp = promisify(_mkdirp);
 

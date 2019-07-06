@@ -1,7 +1,7 @@
-import { Type, TypeSchema } from "./types";
-import { generalize, instantiate, transformRecurType } from "./type-utils";
 import { generateUniqueTVar } from "./type-generate";
 import { printType } from "./type-printer";
+import { generalize, instantiate, transformRecurType } from "./type-utils";
+import { Type, TypeSchema } from "./types";
 
 /** A template for a type, but it can contain the wildcard _
  *

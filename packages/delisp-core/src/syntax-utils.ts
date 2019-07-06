@@ -1,12 +1,12 @@
 import { assertNever, InvariantViolation } from "./invariant";
-import { flatten } from "./utils";
 import {
-  isExpression,
-  ExpressionF,
   Expression,
+  ExpressionF,
+  isExpression,
   Module,
   Syntax
 } from "./syntax";
+import { flatten } from "./utils";
 
 export function mapExpr<I, A, B>(
   expr: ExpressionF<I, A>,

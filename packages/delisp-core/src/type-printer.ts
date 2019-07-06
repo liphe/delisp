@@ -1,6 +1,6 @@
-import { range } from "./utils";
-import { TApplication, Type, TVar } from "./types";
 import { normalizeRow } from "./type-utils";
+import { TApplication, TVar, Type } from "./types";
+import { range } from "./utils";
 
 function typeIndexName(index: number): string {
   const alphabet = "αβγδεζηθικμνξοπρστυφχψ";

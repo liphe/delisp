@@ -1,20 +1,20 @@
 import * as JS from "estree";
+import { readType } from "../convert-type";
 import { InvariantViolation } from "../invariant";
 import { generateUniqueTVar } from "../type-generate";
-import { readType } from "../convert-type";
-import { isFunctionType, generalize } from "../type-utils";
 import { type } from "../type-tag";
-import { tRecord, TypeSchema, Type } from "../types";
+import { generalize, isFunctionType } from "../type-utils";
+import { tRecord, Type, TypeSchema } from "../types";
 import { range } from "../utils";
 import {
-  op,
-  member,
-  methodCall,
   arrowFunction,
   identifier,
   literal,
-  primitiveCall,
-  objectExpression
+  member,
+  methodCall,
+  objectExpression,
+  op,
+  primitiveCall
 } from "./estree-utils";
 
 type InlineHandler = (args: JS.Expression[]) => JS.Expression;

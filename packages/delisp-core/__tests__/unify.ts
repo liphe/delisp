@@ -1,13 +1,13 @@
+import { generateUniqueTVar } from "../src/type-generate";
 import {
-  tFn,
   tApp,
+  tFn,
   tNumber,
   tRecord,
   tUserDefined,
   tVar,
   tVector
 } from "../src/types";
-import { generateUniqueTVar } from "../src/type-generate";
 import { unify } from "../src/unify";
 
 describe("Unification", () => {

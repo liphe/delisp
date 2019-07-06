@@ -1,10 +1,9 @@
 import * as JS from "estree";
-
 import {
+  arrowFunction,
   identifier,
   member,
   methodCall,
-  arrowFunction,
   objectExpression
 } from "./estree-utils";
 

@@ -1,18 +1,16 @@
 import { InvariantViolation } from "./invariant";
-import { last, flatten } from "./utils";
 import { generateUniqueTVar } from "./type-generate";
-
 import {
+  emptyRow,
+  TApplication,
+  TConstant,
+  tValues,
+  TVar,
   Type,
   TypeF,
-  emptyRow,
-  TypeSchema,
-  TConstant,
-  TApplication,
-  TVar,
-  tValues
+  TypeSchema
 } from "./types";
-import { unique } from "./utils";
+import { flatten, last, unique } from "./utils";
 
 export function isTVar(t: Type): t is TVar {
   return t.node.tag === "type-variable";

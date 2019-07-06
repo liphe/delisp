@@ -1,10 +1,9 @@
-import { TypeSchema } from "./types";
+import { either, isLeft } from "fp-ts/lib/Either";
+import * as t from "io-ts";
+import { PathReporter } from "io-ts/lib/PathReporter";
 import { readType } from "./convert-type";
 import { printType } from "./type-printer";
-
-import { PathReporter } from "io-ts/lib/PathReporter";
-import * as t from "io-ts";
-import { isLeft, either } from "fp-ts/lib/Either";
+import { TypeSchema } from "./types";
 
 const TypeSchemaFromString = new t.Type<TypeSchema, string, unknown>(
   "TypeFromString",

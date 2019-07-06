@@ -1,8 +1,6 @@
-import { CommandModule } from "yargs";
-
-import * as fs from "./fs-helpers";
-
 import { pprintModule, readModule } from "@delisp/core";
+import { CommandModule } from "yargs";
+import * as fs from "./fs-helpers";
 
 async function formatFile(file: string): Promise<void> {
   const content = await fs.readFile(file, "utf8");

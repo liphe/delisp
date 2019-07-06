@@ -9,69 +9,61 @@
 //   https://pdfs.semanticscholar.org/8983/233b3dff2c5b94efb31235f62bddc22dc899.pdf
 //
 
-import { InvariantViolation, assertNever } from "./invariant";
-
+import {
+  findInlinePrimitive,
+  isInlinePrimitive
+} from "./compiler/inline-primitives";
+import { printHighlightedExpr } from "./error-report";
+import { typeAnnotate } from "./infer-debug";
+import { ExternalEnvironment } from "./infer-environment";
+import {
+  constEffect,
+  constEqual,
+  constExplicitInstance,
+  constImplicitInstance,
+  debugConstraints,
+  solve,
+  TConstraint
+} from "./infer-solver";
+import { applySubstitutionToExpr } from "./infer-subst";
+import { assertNever, InvariantViolation } from "./invariant";
+import { moduleExportedDefinitions } from "./module";
+import primitives from "./primitives";
+import { pprint } from "./printer";
 import {
   Expression,
   isExpression,
   isTypeAlias,
   Module,
-  SVariableReference,
   STypeAlias,
+  SVariableReference,
   Syntax,
   Typed
 } from "./syntax";
-
-import { Substitution, transformRecurType, generalize } from "./type-utils";
-
-import { printHighlightedExpr } from "./error-report";
-
 import { generateUniqueTVar } from "./type-generate";
-import { listTypeConstants } from "./type-utils";
 import { type } from "./type-tag";
-
+import {
+  generalize,
+  listTypeConstants,
+  Substitution,
+  transformRecurType
+} from "./type-utils";
 import {
   emptyRow,
-  Type,
   tBoolean,
+  tCases,
+  tEffect,
   tMultiValuedFunction,
   tNumber,
   tRecord,
-  tEffect,
-  tCases,
   tString,
+  tValues,
   tVector,
   tVoid,
-  tValues,
+  Type,
   TypeSchema
 } from "./types";
-import { ExternalEnvironment } from "./infer-environment";
-
-import { fromEntries, difference, flatMap, mapObject, maybeMap } from "./utils";
-
-import {
-  findInlinePrimitive,
-  isInlinePrimitive
-} from "./compiler/inline-primitives";
-
-import primitives from "./primitives";
-
-import {
-  TConstraint,
-  constEqual,
-  constEffect,
-  constImplicitInstance,
-  constExplicitInstance,
-  solve,
-  debugConstraints
-} from "./infer-solver";
-
-import { applySubstitutionToExpr } from "./infer-subst";
-
-import { typeAnnotate } from "./infer-debug";
-import { pprint } from "./printer";
-
-import { moduleExportedDefinitions } from "./module";
+import { difference, flatMap, fromEntries, mapObject, maybeMap } from "./utils";
 
 const DEBUG = false;
 

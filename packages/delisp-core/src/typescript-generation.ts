@@ -1,19 +1,16 @@
-import { InvariantViolation } from "./invariant";
-
 import { identifierToJS } from "./compiler/jsvariable";
-
+import { InvariantViolation } from "./invariant";
 import {
   isExport,
+  Module,
   SDefinition,
   STypeAlias,
   Syntax,
-  Typed,
-  Module
+  Typed
 } from "./syntax";
-
-import { Type, TypeSchema } from "./types";
-import { generalize, normalizeRow } from "./type-utils";
 import { printType } from "./type-printer";
+import { generalize, normalizeRow } from "./type-utils";
+import { Type, TypeSchema } from "./types";
 
 interface TAppHandler {
   (args: Type[], mapping: TSMapping): string;

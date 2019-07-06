@@ -1,13 +1,11 @@
-import mkdirp from "mkdirp";
-
 import childProcess from "child_process";
-import path from "path";
 import fs from "fs";
+import mkdirp from "mkdirp";
+import path from "path";
 import { promisify } from "util";
-
-import { readModule } from "../src/module";
 import { compileModuleToString } from "../src/compiler";
 import { inferModule } from "../src/infer";
+import { readModule } from "../src/module";
 import { generateTSModuleDeclaration } from "../src/typescript-generation";
 
 const exec = promisify(childProcess.exec);

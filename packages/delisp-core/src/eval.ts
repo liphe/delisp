@@ -2,30 +2,28 @@
 // Evaluation
 //
 
+import {
+  assert,
+  bindPrimaryValue,
+  caseTag,
+  matchTag,
+  mvbind,
+  primaryValue,
+  primFst,
+  primPair,
+  primSnd,
+  values
+} from "@delisp/runtime";
 import * as vm from "vm";
 import {
   compileModuleToString,
   compileToString,
   Environment
 } from "./compiler";
+import { Host } from "./host";
 import primitives from "./primitives";
 import { Module, Syntax } from "./syntax";
 import { mapObject } from "./utils";
-
-import {
-  caseTag,
-  matchTag,
-  primPair,
-  primFst,
-  primSnd,
-  values,
-  primaryValue,
-  bindPrimaryValue,
-  mvbind,
-  assert
-} from "@delisp/runtime";
-
-import { Host } from "./host";
 
 type Context = ReturnType<typeof createContext>;
 

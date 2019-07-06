@@ -1,7 +1,12 @@
-import { InvariantViolation, assertNever } from "./invariant";
-import { Location } from "./input";
-import { readFromString } from "./reader";
+import {
+  checkUserDefinedTypeName,
+  convert as convertType
+} from "./convert-type";
+import { ConvertError, parseRecord, ParseRecordResult } from "./convert-utils";
 import { printHighlightedExpr } from "./error-report";
+import { Location } from "./input";
+import { assertNever, InvariantViolation } from "./invariant";
+import { readFromString } from "./reader";
 import {
   ASExpr,
   ASExprList,
@@ -10,24 +15,18 @@ import {
   ASExprVector
 } from "./sexpr";
 import {
-  isExpression,
-  Identifier,
   Declaration,
   Expression,
-  SLetBindingF,
+  Identifier,
+  isExpression,
   LambdaList,
-  Syntax,
-  SMatchCaseF
+  SLetBindingF,
+  SMatchCaseF,
+  Syntax
 } from "./syntax";
-import { foldExpr, exprFChildren } from "./syntax-utils";
-import { maybeMap, flatten, last } from "./utils";
-
-import {
-  checkUserDefinedTypeName,
-  convert as convertType
-} from "./convert-type";
-import { ConvertError, parseRecord, ParseRecordResult } from "./convert-utils";
+import { exprFChildren, foldExpr } from "./syntax-utils";
 import { listTypeVariables } from "./type-utils";
+import { flatten, last, maybeMap } from "./utils";
 
 export interface WithErrors {
   errors: string[];

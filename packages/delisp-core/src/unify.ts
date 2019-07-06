@@ -14,7 +14,7 @@
 
 import { generateUniqueTVar } from "./type-generate";
 import { isTVar, Substitution } from "./type-utils";
-import { Type, RExtension, tRowExtension, TVar } from "./types";
+import { RExtension, tRowExtension, TVar, Type } from "./types";
 
 interface UnifySuccess {
   tag: "unify-success";

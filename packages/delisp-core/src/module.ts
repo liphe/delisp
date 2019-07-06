@@ -1,15 +1,15 @@
-import { WithErrors, convert } from "./convert";
+import { convert, WithErrors } from "./convert";
 import { readAllFromString } from "./reader";
 import {
-  Module,
-  Syntax,
-  SDefinition,
+  isDefinition,
   isExport,
   isImport,
+  isTypeAlias,
+  Module,
+  SDefinition,
   SExport,
   SImport,
-  isTypeAlias,
-  isDefinition
+  Syntax
 } from "./syntax";
 
 export function createModule(): Module {

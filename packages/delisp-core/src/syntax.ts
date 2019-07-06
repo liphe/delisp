@@ -1,6 +1,6 @@
 import { Location } from "./input";
-import { Type } from "./types";
 import { TypeWithWildcards } from "./type-wildcards";
+import { Type } from "./types";
 
 //
 // Expressions

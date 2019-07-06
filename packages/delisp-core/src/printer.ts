@@ -1,25 +1,23 @@
-import { InvariantViolation, assertNever } from "./invariant";
-
+import { assertNever, InvariantViolation } from "./invariant";
 import {
-  nil,
   align,
   concat,
   Doc,
+  encodeMany,
+  Encoder,
   group,
   groupalign,
   indent as indent_,
   join,
   line,
+  nil,
   prettyAs,
   space,
-  text,
-  Encoder,
-  encodeMany,
-  StringEncoder
+  StringEncoder,
+  text
 } from "./prettier";
-import { isExpression, Expression, Module, Syntax } from "./syntax";
+import { Expression, isExpression, Module, Syntax } from "./syntax";
 import { foldExpr } from "./syntax-utils";
-
 import { printType } from "./type-printer";
 
 function indent(x: Doc, level = 2): Doc {

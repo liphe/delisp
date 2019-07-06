@@ -1,8 +1,8 @@
+import { ExternalEnvironment } from "./infer-environment";
+import { moduleImports } from "./module";
 import { Module } from "./syntax";
 import { TypeSchema } from "./types";
-import { moduleImports } from "./module";
-import { ExternalEnvironment } from "./infer-environment";
-import { flatMap, unique, fromEntries } from "./utils";
+import { flatMap, fromEntries, unique } from "./utils";
 
 type Resolver = (file: string) => Promise<ExternalEnvironment>;
 

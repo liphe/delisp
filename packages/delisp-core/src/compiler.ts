@@ -1,67 +1,60 @@
 import runtime from "@delisp/runtime";
-import {
-  Expression,
-  isDefinition,
-  isImport,
-  isExport,
-  isTypeAlias,
-  Module,
-  SConditional,
-  SDefinition,
-  SExport,
-  SImport,
-  SFunction,
-  SFunctionCall,
-  SVariableReference,
-  SLet,
-  SMatch,
-  SCaseTag,
-  SRecord,
-  SValues,
-  SMultipleValueBind,
-  SVectorConstructor,
-  Syntax,
-  SDoBlock,
-  SUnknown,
-  Typed
-} from "./syntax";
-import { printType } from "./type-printer";
-
-import {
-  methodCall,
-  literal,
-  identifier,
-  primitiveCall,
-  objectExpression,
-  arrowFunction
-} from "./compiler/estree-utils";
-import { last, mapObject, maybeMap } from "./utils";
-
-import { InvariantViolation } from "./invariant";
-
-import { printHighlightedExpr } from "./error-report";
-
+import createDebug from "debug";
+import * as escodegen from "escodegen";
+import * as JS from "estree";
 import {
   DefinitionBackend,
   dynamicDefinition,
   staticDefinition
 } from "./compiler/definitions";
-import { cjs, esm, ModuleBackend } from "./compiler/modules";
-
-import { moduleImports, moduleExports } from "./module";
-
-import { member } from "./compiler/estree-utils";
+import {
+  arrowFunction,
+  identifier,
+  literal,
+  member,
+  methodCall,
+  objectExpression,
+  primitiveCall
+} from "./compiler/estree-utils";
 import {
   compileInlinePrimitive,
   isInlinePrimitive
 } from "./compiler/inline-primitives";
 import { identifierToJS } from "./compiler/jsvariable";
+import { cjs, esm, ModuleBackend } from "./compiler/modules";
+import { printHighlightedExpr } from "./error-report";
+import { InvariantViolation } from "./invariant";
+import { moduleExports, moduleImports } from "./module";
 import { pprint } from "./printer";
+import {
+  Expression,
+  isDefinition,
+  isExport,
+  isImport,
+  isTypeAlias,
+  Module,
+  SCaseTag,
+  SConditional,
+  SDefinition,
+  SDoBlock,
+  SExport,
+  SFunction,
+  SFunctionCall,
+  SImport,
+  SLet,
+  SMatch,
+  SMultipleValueBind,
+  SRecord,
+  SUnknown,
+  SValues,
+  SVariableReference,
+  SVectorConstructor,
+  Syntax,
+  Typed
+} from "./syntax";
+import { printType } from "./type-printer";
+import { last, mapObject, maybeMap } from "./utils";
 
-import * as escodegen from "escodegen";
-import * as JS from "estree";
-
-import createDebug from "debug";
 const debug = createDebug("delisp:compiler");
 
 interface EnvironmentBinding {

@@ -1,44 +1,40 @@
-import { capitalize } from "./utils";
 import { ConvertError, parseRecord } from "./convert-utils";
 import { printHighlightedExpr } from "./error-report";
 import { readFromString } from "./reader";
-import { last } from "./utils";
-import { normalizeValues as doNormalizeValues } from "./type-utils";
-
 import {
-  isSymbolOfName,
   ASExpr,
   ASExprList,
   ASExprMap,
   ASExprSymbol,
-  ASExprVector
+  ASExprVector,
+  isSymbolOfName
 } from "./sexpr";
-
+import { normalizeValues as doNormalizeValues } from "./type-utils";
+import { TypeWithWildcards } from "./type-wildcards";
 import {
   emptyRow,
-  TConstant,
-  TVar,
-  Type,
   tApp,
   tBoolean,
+  tcArrow,
+  tCases,
+  TConstant,
+  tcStar,
+  tEffect,
+  tMultiValuedFunction,
+  tNone,
   tNumber,
   tRecord,
-  tMultiValuedFunction,
-  tValues,
-  tCases,
-  tEffect,
   tString,
   tUserDefined,
+  tValues,
+  TVar,
   tVar,
   tVector,
   tVoid,
-  tNone,
-  tcArrow,
-  tcStar,
+  Type,
   TypeSchema
 } from "./types";
-
-import { TypeWithWildcards } from "./type-wildcards";
+import { capitalize, last } from "./utils";
 
 /** Return true if a symbol is a valid name for a user defined type, false otherwise. */
 export function userDefinedType(expr: ASExprSymbol): boolean {

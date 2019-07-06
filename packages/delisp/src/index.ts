@@ -1,9 +1,8 @@
 import yargs from "yargs";
-
 import { cmdCompile } from "./cmd-compile";
 import { cmdFormat } from "./cmd-format";
-import { cmdLint } from "./cmd-lint";
 import { cmdInferType } from "./cmd-infer-type";
+import { cmdLint } from "./cmd-lint";
 import { cmdREPL } from "./cmd-repl";
 
 require("source-map-support").install();

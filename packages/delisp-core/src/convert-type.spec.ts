@@ -1,7 +1,7 @@
 import { readFromString } from "../src/reader";
 import { convert as convert_ } from "./convert-type";
-import { tFn, tNumber, tString, tVar, Type } from "./types";
 import { printType } from "./type-printer";
+import { tFn, tNumber, tString, tVar, Type } from "./types";
 
 function readAndConvert(x: string) {
   return convert_(readFromString(x)).noWildcards();

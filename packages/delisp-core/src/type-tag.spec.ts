@@ -1,6 +1,6 @@
 import { type } from "./type-tag";
-import { tNumber, tValues, TApplication } from "./types";
-import { normalizeRow, isConstantApplicationType } from "./type-utils";
+import { isConstantApplicationType, normalizeRow } from "./type-utils";
+import { TApplication, tNumber, tValues } from "./types";
 import { last } from "./utils";
 
 describe("Type tag template", () => {

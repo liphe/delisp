@@ -1,6 +1,6 @@
 import { Expression, Typed } from "./syntax";
-import { applySubstitution, Substitution } from "./type-utils";
 import { transformRecurExpr } from "./syntax-utils";
+import { applySubstitution, Substitution } from "./type-utils";
 
 export function applySubstitutionToExpr(
   s: Expression<Typed>,

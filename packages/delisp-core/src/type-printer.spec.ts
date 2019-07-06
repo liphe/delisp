@@ -1,13 +1,13 @@
+import { printType } from "./type-printer";
 import {
+  tCases,
+  tEffect,
   tFn,
   tMultiValuedFunction,
   tValues,
-  tEffect,
-  tCases,
   tVar,
   tVoid
 } from "./types";
-import { printType } from "./type-printer";
 
 describe("Type printer", () => {
   test("effect types are printed properly", () => {

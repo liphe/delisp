@@ -1,5 +1,5 @@
 import { printHighlightedExpr } from "./error-report";
-import { ASExpr, ASExprSymbol, ASExprMap } from "./sexpr";
+import { ASExpr, ASExprMap, ASExprSymbol } from "./sexpr";
 import { duplicatedItemsBy, last } from "./utils";
 
 export class ConvertError extends Error {}

@@ -1,54 +1,47 @@
-export { collectConvertErrors, readSyntax } from "./convert";
-
 export {
-  compileToString,
   compileModuleToString,
+  compileToString,
   moduleEnvironment
 } from "./compiler";
+export { collectConvertErrors, readSyntax } from "./convert";
+export { printHighlightedExpr } from "./error-report";
 export { createContext, evaluate, evaluateModule } from "./eval";
 export {
-  inferType,
-  inferModule,
-  inferExpressionInModule,
   defaultEnvironment,
-  getModuleExternalEnvironment
+  getModuleExternalEnvironment,
+  inferExpressionInModule,
+  inferModule,
+  inferType
 } from "./infer";
 export {
-  ExternalEnvironment,
-  encodeExternalEnvironment,
   decodeExternalEnvironment,
+  encodeExternalEnvironment,
+  ExternalEnvironment,
   mergeExternalEnvironments
 } from "./infer-environment";
-export { Type } from "./types";
-export { printType } from "./type-printer";
 export {
+  addToModule,
+  createModule,
+  moduleDefinitionByName,
+  moduleDefinitions,
+  readModule,
+  removeModuleDefinition,
+  removeModuleTypeDefinition
+} from "./module";
+export { resolveModuleDependencies } from "./module-dependencies";
+export { Encoder } from "./prettier";
+export { default as primitives } from "./primitives";
+export { pprint, pprintAs, pprintModule, pprintModuleAs } from "./printer";
+export {
+  createImportSyntax,
   isDeclaration,
   isDefinition,
-  isExpression,
   isExport,
+  isExpression,
   isTypeAlias,
-  createImportSyntax,
   Module
 } from "./syntax";
-export { default as primitives } from "./primitives";
-
-export { printHighlightedExpr } from "./error-report";
-
 export { findSyntaxByOffset, findSyntaxByRange } from "./syntax-utils";
-
-export {
-  createModule,
-  readModule,
-  addToModule,
-  removeModuleDefinition,
-  removeModuleTypeDefinition,
-  moduleDefinitions,
-  moduleDefinitionByName
-} from "./module";
-
-export { resolveModuleDependencies } from "./module-dependencies";
-
+export { printType } from "./type-printer";
+export { Type } from "./types";
 export { generateTSModuleDeclaration } from "./typescript-generation";
-
-export { Encoder } from "./prettier";
-export { pprintAs, pprint, pprintModuleAs, pprintModule } from "./printer";

@@ -1,19 +1,19 @@
-import { assertNever } from "./invariant";
-import { Expression, Typed } from "./syntax";
-import { tVar, Type, TypeSchema } from "./types";
-import {
-  instantiate,
-  generalize,
-  applySubstitution,
-  Substitution,
-  listTypeVariables
-} from "./type-utils";
-import { pprint } from "./printer";
-import { printType } from "./type-printer";
-import { unify } from "./unify";
-import { flatMap, union, difference, intersection } from "./utils";
 import { printHighlightedExpr } from "./error-report";
 import { applySubstitutionToExpr } from "./infer-subst";
+import { assertNever } from "./invariant";
+import { pprint } from "./printer";
+import { Expression, Typed } from "./syntax";
+import { printType } from "./type-printer";
+import {
+  applySubstitution,
+  generalize,
+  instantiate,
+  listTypeVariables,
+  Substitution
+} from "./type-utils";
+import { tVar, Type, TypeSchema } from "./types";
+import { unify } from "./unify";
+import { difference, flatMap, intersection, union } from "./utils";
 
 type ConstraintKind = "expression-type" | "resulting-type";
 

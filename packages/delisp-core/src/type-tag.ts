@@ -1,7 +1,7 @@
-import { zip, fromEntries } from "./utils";
 import { readType } from "./convert-type";
+import { applySubstitution, normalizeValues } from "./type-utils";
 import { Type } from "./types";
-import { normalizeValues, applySubstitution } from "./type-utils";
+import { fromEntries, zip } from "./utils";
 
 export function type(
   chunks: TemplateStringsArray,

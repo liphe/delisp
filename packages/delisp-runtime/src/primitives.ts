@@ -1,8 +1,7 @@
-import { Primitives } from "./types";
-
 import booleanPrims from "./boolean";
-import vectorPrims from "./vector";
 import stringPrims from "./string";
+import { Primitives } from "./types";
+import vectorPrims from "./vector";
 
 const prims: Primitives = {
   "<": {

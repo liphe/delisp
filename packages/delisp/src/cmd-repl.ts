@@ -1,38 +1,32 @@
-import { Pair, TaggedValue } from "@delisp/runtime";
-
-import { CommandModule } from "yargs";
-
 import {
   addToModule,
+  collectConvertErrors,
   createContext,
+  defaultEnvironment,
   evaluate,
   evaluateModule,
-  inferModule,
-  mergeExternalEnvironments,
   inferExpressionInModule,
+  inferModule,
   isDefinition,
   isExpression,
+  mergeExternalEnvironments,
+  moduleDefinitionByName,
   moduleEnvironment,
   printType,
   readSyntax,
   removeModuleDefinition,
   removeModuleTypeDefinition,
   resolveModuleDependencies,
-  moduleDefinitionByName,
-  collectConvertErrors,
-  defaultEnvironment,
   Type
 } from "@delisp/core";
-
-import { Typed } from "@delisp/core/src/syntax";
-import { Module, Expression, Syntax } from "@delisp/core/src/syntax";
-
-import { newModule } from "./module";
+import { Expression, Module, Syntax, Typed } from "@delisp/core/src/syntax";
+import { Pair, TaggedValue } from "@delisp/runtime";
+import readline from "readline";
+import { CommandModule } from "yargs";
+import * as theme from "./color-theme";
 import { resolveDependency } from "./compile";
 import { getOutputFiles } from "./compile-output";
-import * as theme from "./color-theme";
-
-import readline from "readline";
+import { newModule } from "./module";
 
 let rl: readline.Interface;
 const PROMPT = "λ ";
