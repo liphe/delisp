@@ -547,24 +547,51 @@ defineToplevel("export", (export_, args, whole) => {
     );
   }
 
-  const [variable] = args;
+  const [spec] = args;
 
-  if (variable.tag !== "symbol") {
+  if (spec.tag === "symbol") {
+    return {
+      node: {
+        tag: "export",
+        identifiers: [parseIdentifier(spec)]
+      },
+      location: whole.location,
+      info: {
+        errors: []
+      }
+    };
+  } else if (spec.tag === "vector") {
+    spec.elements.forEach(spec => {
+      if (spec.tag !== "symbol") {
+        throw new ConvertError(
+          printHighlightedExpr(
+            "'export' expected a symbol of vector of symbols",
+            spec.location
+          )
+        );
+      }
+    });
+
+    const symbols = spec.elements as ASExprSymbol[];
+
+    return {
+      node: {
+        tag: "export",
+        identifiers: symbols.map(parseIdentifier)
+      },
+      location: whole.location,
+      info: {
+        errors: []
+      }
+    };
+  } else {
     throw new ConvertError(
-      printHighlightedExpr("'export' expected a symbol", variable.location)
+      printHighlightedExpr(
+        "'export' expected a symbol of vector of symbols",
+        spec.location
+      )
     );
   }
-
-  return {
-    node: {
-      tag: "export",
-      value: parseIdentifier(variable)
-    },
-    location: whole.location,
-    info: {
-      errors: []
-    }
-  };
 });
 
 defineToplevel("type", (type_, args, whole) => {

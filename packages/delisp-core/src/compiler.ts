@@ -28,7 +28,7 @@ import { moduleExports, moduleImports } from "./module";
 import { pprint } from "./printer";
 import * as S from "./syntax";
 import { printType } from "./type-printer";
-import { last, mapObject, maybeMap } from "./utils";
+import { last, mapObject, maybeMap, flatMap } from "./utils";
 
 const debug = createDebug("delisp:compiler");
 
@@ -528,19 +528,21 @@ function compileExports(
   exps: S.SExport[],
   env: Environment
 ): Array<JS.Statement | JS.ModuleDeclaration> {
-  const exportNames = exps.map(exp => {
-    const binding = lookupBindingOrError(exp.node.value.name, env);
-    if (!binding || binding.source !== "module") {
-      throw new Error(
-        printHighlightedExpr(
-          "You can only export user definitions",
-          exp.node.value.location
-        )
-      );
-    } else {
-      return binding.jsname;
+  const exportNames = flatMap(exp => exp.node.identifiers, exps).map(
+    identifier => {
+      const binding = lookupBindingOrError(identifier.name, env);
+      if (!binding || binding.source !== "module") {
+        throw new Error(
+          printHighlightedExpr(
+            "You can only export user definitions",
+            identifier.location
+          )
+        );
+      } else {
+        return binding.jsname;
+      }
     }
-  });
+  );
 
   if (exportNames.length > 0) {
     return [env.moduleFormat.export(exportNames)];

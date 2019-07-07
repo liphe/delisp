@@ -272,7 +272,17 @@ function print(form: S.Syntax): Doc {
         return list(
           text("export", "keyword", form),
           space,
-          text(form.node.value.name, "identifier")
+          form.node.identifiers.length === 1
+            ? printIdentifier(form.node.identifiers[0].name, form)
+            : group(
+                vector(
+                  align(
+                    ...form.node.identifiers.map(i =>
+                      printIdentifier(i.name, form)
+                    )
+                  )
+                )
+              )
         );
 
       case "type-alias":

@@ -209,7 +209,7 @@ export interface SImport<I = {}> extends Node<I, SImportF<Expression<I>>> {}
 
 interface SExportF<_E> {
   tag: "export";
-  value: Identifier;
+  identifiers: Identifier[];
 }
 export interface SExport<I = {}> extends Node<I, SExportF<Expression<I>>> {}
 

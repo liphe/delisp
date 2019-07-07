@@ -153,7 +153,11 @@ function exportIf(flag: boolean, code: string) {
 
 function isExported(name: string, m: Module): boolean {
   const exports = m.body.filter(isExport);
-  return exports.find(e => e.node.value.name === name) !== undefined;
+  return (
+    exports.find(
+      e => e.node.identifiers.find(i => i.name === name) !== undefined
+    ) !== undefined
+  );
 }
 
 /** Generate Typescript declaration module for a Delisp module. */

@@ -11,6 +11,7 @@ import {
   SImport,
   Syntax
 } from "./syntax";
+import { flatMap } from "./utils";
 
 export function createModule(): Module {
   return {
@@ -57,7 +58,9 @@ export function removeModuleTypeDefinition(m: Module, name: string): Module {
 export function moduleExportedDefinitions<A>(
   m: Module<A>
 ): Array<SDefinition<A>> {
-  const exported = moduleExports(m).map(e => e.node.value.name);
+  const exported = flatMap(e => e.node.identifiers, moduleExports(m)).map(
+    i => i.name
+  );
   return moduleDefinitions(m).filter(d =>
     exported.includes(d.node.variable.name)
   );

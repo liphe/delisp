@@ -1,25 +1,21 @@
 (define >>>
   (lambda (f1 f2)
     (lambda (x) (f2 (f1 x)))))
-(export >>>)
 
 (define over
   (lambda (lens fn x)
     (multiple-value-bind (current change)
         (lens x)
       (change (fn current)))))
-(export over)
 
 (define constantly
   (lambda (x) (lambda (y) x)))
-(export constantly)
 
 (define set
   (lambda (lens value container)
     (over lens
           (constantly value)
           container)))
-(export set)
 
 (define >>
   (lambda (outer inner)
@@ -31,26 +27,31 @@
           (values value
                   (>>> inner-update
                        outer-update)))))))
-(export >>)
 
 (define fst
   (lambda (p)
     (values (%fst p)
             (lambda (new-value)
               (pair new-value (%snd p))))))
-(export fst)
 
 (define snd
   (lambda (p)
     (values (%snd p)
             (lambda (new-value)
               (pair (%fst p) new-value)))))
-(export snd)
 
 (define string-ref
   (lambda (k) (substring k (+ k 1))))
-(export string-ref)
 
 (assert
  (string= "e" ((string-ref 1) "delisp"))
  "Expect string-ref lenses to work")
+
+(export [>>
+         fst
+         snd
+         string-ref
+         >>>
+         over
+         constantly
+         set])
