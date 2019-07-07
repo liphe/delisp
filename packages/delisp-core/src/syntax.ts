@@ -1,3 +1,7 @@
+//
+// This module is intended to be imported like `import * as S from "..."`
+//
+
 import { Location } from "./input";
 import { TypeWithWildcards } from "./type-wildcards";
 import { Type } from "./types";

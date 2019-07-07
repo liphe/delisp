@@ -1,6 +1,9 @@
 //
 // Types
 //
+//
+// This module is intended to be imported like `import * as T from "..."`
+//
 
 interface ConstantF<_T> {
   tag: "constant";
