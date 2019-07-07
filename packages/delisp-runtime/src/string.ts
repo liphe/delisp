@@ -3,7 +3,7 @@ import { Primitives } from "./types";
 function validBoundingIndex(str: string, start: number, end: number) {
   if (!(0 <= start && start <= end && end <= str.length)) {
     throw new Error(
-      `Invalid boudning indexes (${start}, ${end}) for the string ${str}.`
+      `Invalid bounding indexes (${start}, ${end}) for the string ${str}.`
     );
   }
 }
