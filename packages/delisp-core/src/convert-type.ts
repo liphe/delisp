@@ -46,7 +46,7 @@ function convertSymbol(expr: ASExprSymbol): T.Var | T.Constant {
     case "string":
       return T.string;
     case "void":
-      return T.tVoid;
+      return T.void;
     case "none":
       return T.none;
     case "*":
@@ -85,7 +85,7 @@ function convertCases(_op: ASExpr, args: ASExpr[]): T.Type {
 
   function parseCase(c: ASExpr): { label: string; type: T.Type } {
     if (c.tag === "symbol" && c.name.startsWith(":")) {
-      return { label: c.name, type: T.tVoid };
+      return { label: c.name, type: T.void };
     } else if (c.tag === "list") {
       if (c.elements.length !== 2) {
         throw new ConvertError(

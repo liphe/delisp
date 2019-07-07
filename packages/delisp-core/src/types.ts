@@ -78,7 +78,9 @@ export const cRecord = constant("record");
 // row -> *
 export const cCases = constant("cases");
 // *
-export const tVoid = constant("void");
+const tVoid = constant("void");
+export { tVoid as void };
+
 export const boolean = constant("boolean");
 export const number = constant("number");
 export const string = constant("string");

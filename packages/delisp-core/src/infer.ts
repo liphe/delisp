@@ -692,7 +692,7 @@ function infer(
         expr.node.value &&
         infer(expr.node.value, monovars, internalTypes, false);
 
-      const labelType = expr.node.value ? generateUniqueTVar() : T.tVoid;
+      const labelType = expr.node.value ? generateUniqueTVar() : T.void;
       const t = T.cases(
         [{ label: expr.node.label, type: labelType }],
         generateUniqueTVar()
