@@ -54,7 +54,7 @@ function convertSymbol(expr: ASExprSymbol): T.Var | T.Constant {
     default:
       return userDefinedType(expr)
         ? T.userDefined(expr.name)
-        : T.tVar(expr.name);
+        : T.var(expr.name);
   }
 }
 
@@ -69,7 +69,7 @@ function convertEffect(effects: ASExpr[]): T.Type {
   });
   const last = labels.slice(-2);
   if (last.length === 2 && last[0] === "|") {
-    return T.effect(labels.slice(0, -2), T.tVar(last[1]));
+    return T.effect(labels.slice(0, -2), T.var(last[1]));
   } else {
     return T.effect(labels);
   }

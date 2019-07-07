@@ -169,7 +169,7 @@ function activevars(constraints: TConstraint[]): string[] {
 }
 
 function substituteVar(tvarname: string, s: Substitution): string[] {
-  const tv = T.tVar(tvarname);
+  const tv = T.var(tvarname);
   return listTypeVariables(applySubstitution(tv, s));
 }
 

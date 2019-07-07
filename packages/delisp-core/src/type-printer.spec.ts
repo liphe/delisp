@@ -9,7 +9,7 @@ describe("Type printer", () => {
   });
 
   test("open effect types are printed properly", () => {
-    expect(printType(T.effect(["console", "async"], T.tVar("a")), false)).toBe(
+    expect(printType(T.effect(["console", "async"], T.var("a")), false)).toBe(
       "(effect console async | a)"
     );
   });
@@ -18,8 +18,8 @@ describe("Type printer", () => {
     expect(
       printType(
         T.cases(
-          [{ label: ":a", type: T.tVar("a") }, { label: ":b", type: T.void }],
-          T.tVar("c")
+          [{ label: ":a", type: T.var("a") }, { label: ":b", type: T.void }],
+          T.var("c")
         ),
         false
       )
@@ -27,12 +27,12 @@ describe("Type printer", () => {
   });
 
   test("print function types returning a single value", () => {
-    expect(printType(T.fn([], T.effect([]), T.tVar("a")), false)).toBe(
+    expect(printType(T.fn([], T.effect([]), T.var("a")), false)).toBe(
       "(-> (effect) a)"
     );
     expect(
       printType(
-        T.multiValuedFunction([], T.effect([]), T.values([T.tVar("a")])),
+        T.multiValuedFunction([], T.effect([]), T.values([T.var("a")])),
         false
       )
     ).toBe("(-> (effect) a)");
@@ -44,7 +44,7 @@ describe("Type printer", () => {
         T.multiValuedFunction(
           [],
           T.effect([]),
-          T.values([T.tVar("a"), T.tVar("a")])
+          T.values([T.var("a"), T.var("a")])
         ),
         false
       )

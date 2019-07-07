@@ -5,14 +5,14 @@ import {
   number,
   record,
   userDefined,
-  tVar,
+  var,
   vector
 } from "../src/types";
 import { unify } from "../src/unify";
 
 describe("Unification", () => {
   it("should perform an occur check", () => {
-    const t1 = tVar("t1");
+    const t1 = var("t1");
     const t2 = vector(t1);
     const result = unify(t1, t2, {});
     expect(result.tag).toBe("unify-occur-check-error");
@@ -20,20 +20,20 @@ describe("Unification", () => {
 
   describe("Application", () => {
     it("should catch function arity mismatches", () => {
-      const t1 = fn([number, number], tVar("_"), number);
-      const t2 = fn([number], tVar("_"), number);
+      const t1 = fn([number, number], var("_"), number);
+      const t2 = fn([number], var("_"), number);
       const result = unify(t1, t2, {});
       expect(result.tag).toBe("unify-mismatch-error");
     });
     it("should catch operator mismatches", () => {
       const t1 = vector(number);
-      const t2 = fn([], tVar("_"), number);
+      const t2 = fn([], var("_"), number);
       const result = unify(t1, t2, {});
       expect(result.tag).toBe("unify-mismatch-error");
     });
     it("should unify the operator", () => {
-      const t1 = tVar("r");
-      const t2 = tVar("r");
+      const t1 = var("r");
+      const t2 = var("r");
       const result = unify(app(t1), app(t2), {});
       expect(result.tag).toBe("unify-success");
     });
@@ -41,7 +41,7 @@ describe("Unification", () => {
 
   describe("Records", () => {
     it("with different head and same tail should not unify", () => {
-      const r = tVar("r");
+      const r = var("r");
       const t1 = record([{ label: ":x", type: number }], r);
       const t2 = record([{ label: ":y", type: number }], r);
       const result = unify(t1, t2, {});
@@ -49,7 +49,7 @@ describe("Unification", () => {
     });
 
     it("with multiple different head and same tail should not unify", () => {
-      const r = tVar("r");
+      const r = var("r");
       const t1 = record([{ label: ":x", type: number }], r);
       const t2 = record(
         [{ label: "z", type: number }, { label: ":y", type: number }],

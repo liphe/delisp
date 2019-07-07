@@ -91,7 +91,7 @@ const cEffect = constant("effect");
 // row -> values
 const cValues = constant("values");
 
-export function tVar(name: string, userSpecified = false): Var {
+function tvar(name: string, userSpecified = false): Var {
   return {
     node: {
       tag: "type-variable",
@@ -100,6 +100,7 @@ export function tVar(name: string, userSpecified = false): Var {
     }
   };
 }
+export { tvar as var };
 
 export function userDefined(name: string): Constant {
   return { node: { tag: "constant", name } };

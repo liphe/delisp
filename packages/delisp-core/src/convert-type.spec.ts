@@ -37,20 +37,20 @@ describe("convertType", () => {
   });
 
   it("should convert to symbols", () => {
-    expect(readAndConvert("a")).toMatchObject(T.tVar("a"));
-    expect(readAndConvert("  b  ")).toMatchObject(T.tVar("b"));
+    expect(readAndConvert("a")).toMatchObject(T.var("a"));
+    expect(readAndConvert("  b  ")).toMatchObject(T.var("b"));
   });
 
   it("should convert to functions", () => {
     expect(readAndConvert("  (->  string _ number)  ")).toMatchObject(
-      T.fn([T.string], T.tVar("_"), T.number)
+      T.fn([T.string], T.var("_"), T.number)
     );
 
     expect(readAndConvert("(-> string (-> string _ c) _ c)")).toMatchObject(
       T.fn(
-        [T.string, T.fn([T.string], T.tVar("_"), T.tVar("c"))],
-        T.tVar("_"),
-        T.tVar("c")
+        [T.string, T.fn([T.string], T.var("_"), T.var("c"))],
+        T.var("_"),
+        T.var("c")
       )
     );
   });
