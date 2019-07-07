@@ -11,29 +11,7 @@ import {
 } from "./sexpr";
 import { normalizeValues as doNormalizeValues } from "./type-utils";
 import { TypeWithWildcards } from "./type-wildcards";
-import {
-  emptyRow,
-  app,
-  boolean,
-  cArrow,
-  cases,
-  Constant,
-  cStar,
-  effect,
-  multiValuedFunction,
-  none,
-  number,
-  record,
-  string,
-  userDefined,
-  values,
-  Var,
-  tVar,
-  vector,
-  tVoid,
-  Type,
-  TypeSchema
-} from "./types";
+import * as T from "./types";
 import { capitalize, last } from "./utils";
 
 /** Return true if a symbol is a valid name for a user defined type, false otherwise. */
@@ -57,28 +35,30 @@ export function checkUserDefinedTypeName(expr: ASExprSymbol): void {
   }
 }
 
-function convertSymbol(expr: ASExprSymbol): Var | Constant {
+function convertSymbol(expr: ASExprSymbol): T.Var | T.Constant {
   switch (expr.name) {
     case "->":
-      return cArrow;
+      return T.cArrow;
     case "boolean":
-      return boolean;
+      return T.boolean;
     case "number":
-      return number;
+      return T.number;
     case "string":
-      return string;
+      return T.string;
     case "void":
-      return tVoid;
+      return T.tVoid;
     case "none":
-      return none;
+      return T.none;
     case "*":
-      return cStar;
+      return T.cStar;
     default:
-      return userDefinedType(expr) ? userDefined(expr.name) : tVar(expr.name);
+      return userDefinedType(expr)
+        ? T.userDefined(expr.name)
+        : T.tVar(expr.name);
   }
 }
 
-function convertEffect(effects: ASExpr[]): Type {
+function convertEffect(effects: ASExpr[]): T.Type {
   const labels = effects.map(e => {
     if (e.tag !== "symbol") {
       throw new ConvertError(
@@ -89,13 +69,13 @@ function convertEffect(effects: ASExpr[]): Type {
   });
   const last = labels.slice(-2);
   if (last.length === 2 && last[0] === "|") {
-    return effect(labels.slice(0, -2), tVar(last[1]));
+    return T.effect(labels.slice(0, -2), T.tVar(last[1]));
   } else {
-    return effect(labels);
+    return T.effect(labels);
   }
 }
 
-function convertCases(_op: ASExpr, args: ASExpr[]): Type {
+function convertCases(_op: ASExpr, args: ASExpr[]): T.Type {
   const lastArg = last(args);
   let tail: ASExpr | undefined;
 
@@ -103,9 +83,9 @@ function convertCases(_op: ASExpr, args: ASExpr[]): Type {
     tail = args.pop();
   }
 
-  function parseCase(c: ASExpr): { label: string; type: Type } {
+  function parseCase(c: ASExpr): { label: string; type: T.Type } {
     if (c.tag === "symbol" && c.name.startsWith(":")) {
-      return { label: c.name, type: tVoid };
+      return { label: c.name, type: T.tVoid };
     } else if (c.tag === "list") {
       if (c.elements.length !== 2) {
         throw new ConvertError(
@@ -130,20 +110,20 @@ function convertCases(_op: ASExpr, args: ASExpr[]): Type {
     }
   }
 
-  return cases(args.map(parseCase), tail && convert_(tail));
+  return T.cases(args.map(parseCase), tail && convert_(tail));
 }
 
-function convertValues(expr: ASExprList): Type {
+function convertValues(expr: ASExprList): T.Type {
   let args = expr.elements.slice(1);
-  let extending: Type | undefined = undefined;
+  let extending: T.Type | undefined = undefined;
   if (args.length > 2 && isSymbolOfName(args[args.length - 2], "|")) {
     extending = convert_(args[args.length - 1]);
     args = args.slice(0, -2);
   }
-  return values(args.map(convert_), extending);
+  return T.values(args.map(convert_), extending);
 }
 
-function convertList(expr: ASExprList): Type {
+function convertList(expr: ASExprList): T.Type {
   const [op, ...args] = expr.elements;
   if (isSymbolOfName(op, "effect")) {
     return convertEffect(args);
@@ -158,40 +138,40 @@ function convertList(expr: ASExprList): Type {
     const fnargs = args.slice(0, -2);
     const fneffect = args[args.length - 2];
     const fnout = args[args.length - 1];
-    return multiValuedFunction(
+    return T.multiValuedFunction(
       fnargs.map(convert_),
       convert_(fneffect),
       convert_(fnout)
     );
   } else {
     const opType = convert_(op);
-    return app(opType, ...args.map(convert_));
+    return T.app(opType, ...args.map(convert_));
   }
 }
 
-function convertVector(expr: ASExprVector): Type {
+function convertVector(expr: ASExprVector): T.Type {
   if (expr.elements.length !== 1) {
     throw new ConvertError(
       printHighlightedExpr("Expected exactly 1 argument", expr.location)
     );
   }
-  return vector(convert_(expr.elements[0]));
+  return T.vector(convert_(expr.elements[0]));
 }
 
-function convertMap(expr: ASExprMap): Type {
+function convertMap(expr: ASExprMap): T.Type {
   const { fields, tail } = parseRecord(expr);
 
-  return record(
+  return T.record(
     fields.map(({ label, value }) => ({
       label: label.name,
       type: convert_(value)
     })),
-    tail ? convert_(tail) : emptyRow
+    tail ? convert_(tail) : T.emptyRow
   );
 }
 
 /* Try to convert a S-Expression into a type. */
-function convert_(expr: ASExpr): Type {
+function convert_(expr: ASExpr): T.Type {
   switch (expr.tag) {
     case "list":
       return convertList(expr);
@@ -220,7 +200,7 @@ function convertToTypeWithWildcards(
 
 export { convertToTypeWithWildcards as convert };
 
-export function readType(source: string, normalizeValues = true): TypeSchema {
+export function readType(source: string, normalizeValues = true): T.TypeSchema {
   const t = convertToTypeWithWildcards(readFromString(source), normalizeValues);
   return t.generalize();
 }
