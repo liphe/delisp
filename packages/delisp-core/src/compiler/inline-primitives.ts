@@ -4,7 +4,7 @@ import { InvariantViolation } from "../invariant";
 import { generateUniqueTVar } from "../type-generate";
 import { type } from "../type-tag";
 import { generalize, isFunctionType } from "../type-utils";
-import { tRecord, Type, TypeSchema } from "../types";
+import * as T from "../types";
 import { range } from "../utils";
 import {
   arrowFunction,
@@ -20,7 +20,7 @@ import {
 type InlineHandler = (args: JS.Expression[]) => JS.Expression;
 
 interface InlinePrim {
-  type: TypeSchema;
+  type: T.TypeSchema;
   // This handler is invoked to generate the output JS when the
   // primitive is used in value position.
   valueHandler: InlineHandler;
@@ -38,7 +38,7 @@ const magicfuncs: MagicPrim[] = [];
 
 function createInlinePrimitive(
   name: string,
-  type: TypeSchema,
+  type: T.TypeSchema,
   valueHandler: InlineHandler,
   funcHandler: InlineHandler
 ) {
@@ -106,7 +106,7 @@ export function findInlinePrimitive(name: string): InlinePrim {
   );
 }
 
-function typeArity(type: Type): number {
+function typeArity(type: T.Type): number {
   if (isFunctionType(type)) {
     return type.node.args.length - 2;
   } else {
@@ -273,8 +273,11 @@ defineMagicPrimitive(
     const newFieldType = generateUniqueTVar();
 
     const extendsType = generateUniqueTVar();
-    const recordType = tRecord([{ label: name, type: fieldType }], extendsType);
-    const newRecordType = tRecord(
+    const recordType = T.tRecord(
+      [{ label: name, type: fieldType }],
+      extendsType
+    );
+    const newRecordType = T.tRecord(
       [{ label: name, type: newFieldType }],
       extendsType
     );

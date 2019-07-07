@@ -39,21 +39,8 @@ import {
   Substitution,
   transformRecurType
 } from "./type-utils";
-import {
-  emptyRow,
-  tBoolean,
-  tCases,
-  tEffect,
-  tMultiValuedFunction,
-  tNumber,
-  tRecord,
-  tString,
-  tValues,
-  tVector,
-  tVoid,
-  Type,
-  TypeSchema
-} from "./types";
+import * as T from "./types";
+import { Type } from "./types";
 import { difference, flatMap, fromEntries, mapObject, maybeMap } from "./utils";
 
 const DEBUG = false;
@@ -149,7 +136,7 @@ function infer(
   function singleType(effect: Type, type: Type): S.Typed {
     return new S.Typed({
       expressionType: type,
-      resultingType: multipleValues ? tValues([type]) : undefined,
+      resultingType: multipleValues ? T.tValues([type]) : undefined,
       effect
     });
   }
@@ -171,7 +158,7 @@ function infer(
         result: {
           ...expr,
           node: expr.node,
-          info: singleType(generateUniqueTVar(), tNumber)
+          info: singleType(generateUniqueTVar(), T.tNumber)
         },
         constraints: [],
         assumptions: []
@@ -181,7 +168,7 @@ function infer(
         result: {
           ...expr,
           node: expr.node,
-          info: singleType(generateUniqueTVar(), tString)
+          info: singleType(generateUniqueTVar(), T.tString)
         },
         constraints: [],
         assumptions: []
@@ -201,7 +188,7 @@ function infer(
             ...expr.node,
             values: inferredValues.result
           },
-          info: singleType(effect, tVector(t))
+          info: singleType(effect, T.tVector(t))
         },
         assumptions: inferredValues.assumptions,
         constraints: [
@@ -238,12 +225,12 @@ function infer(
           },
           info: singleType(
             effect,
-            tRecord(
+            T.tRecord(
               inferred.map(i => ({
                 label: i.label.name,
                 type: i.result.info.type
               })),
-              tailInferred ? tailRowType : emptyRow
+              tailInferred ? tailRowType : T.emptyRow
             )
           )
         },
@@ -258,7 +245,7 @@ function infer(
             ? [
                 constEqual(
                   tailInferred.result,
-                  tRecord(
+                  T.tRecord(
                     inferred.map(i => ({
                       label: i.label.name,
                       type: generateUniqueTVar()
@@ -342,7 +329,7 @@ function infer(
           ...condition.constraints,
           ...consequent.constraints,
           ...alternative.constraints,
-          constEqual(condition.result, tBoolean, "resulting-type"),
+          constEqual(condition.result, T.tBoolean, "resulting-type"),
           constEqual(consequent.result, t, "resulting-type"),
           constEqual(alternative.result, t, "resulting-type"),
 
@@ -358,7 +345,7 @@ function infer(
 
       const bodyEffect = generateUniqueTVar();
       const valuesType = generateUniqueTVar();
-      const fnType = tMultiValuedFunction(argtypes, bodyEffect, valuesType);
+      const fnType = T.tMultiValuedFunction(argtypes, bodyEffect, valuesType);
 
       const { result: typedBody, constraints, assumptions } = inferBody(
         expr.node.body,
@@ -404,7 +391,7 @@ function infer(
       const valuesType = type`(values ${primaryType} | _)`;
 
       const effect = generateUniqueTVar();
-      const tfn: Type = tMultiValuedFunction(
+      const tfn: Type = T.tMultiValuedFunction(
         iargs.result.map(a => a.info.type),
         effect,
         valuesType
@@ -516,7 +503,9 @@ function infer(
             }),
 
           // We require let-binding values to be free of effects
-          ...bindingsInfo.map(b => constEffect(b.inference.result, tEffect([])))
+          ...bindingsInfo.map(b =>
+            constEffect(b.inference.result, T.tEffect([]))
+          )
         ],
         assumptions: [
           ...bodyInference.assumptions.filter(v => !toBeBound(v.node.name)),
@@ -655,7 +644,7 @@ function infer(
           // that `match` is handling.
           constEqual(
             value.result,
-            tCases(
+            T.tCases(
               variantTypes,
               defaultCase ? generateUniqueTVar() : undefined
             ),
@@ -703,8 +692,8 @@ function infer(
         expr.node.value &&
         infer(expr.node.value, monovars, internalTypes, false);
 
-      const labelType = expr.node.value ? generateUniqueTVar() : tVoid;
-      const t = tCases(
+      const labelType = expr.node.value ? generateUniqueTVar() : T.tVoid;
+      const t = T.tCases(
         [{ label: expr.node.label, type: labelType }],
         generateUniqueTVar()
       );
@@ -737,7 +726,7 @@ function infer(
       const inference = inferMany(expr.node.values, monovars, internalTypes);
 
       const tPrimaryType = inference.result[0].info.resultingType;
-      const tValuesType = tValues(
+      const tValuesType = T.tValues(
         inference.result.map(r => r.info.resultingType)
       );
 
@@ -799,7 +788,7 @@ function infer(
 
         constraints: [
           ...form.constraints,
-          constEqual(form.result, tValues(variableTypes), "resulting-type"),
+          constEqual(form.result, T.tValues(variableTypes), "resulting-type"),
           constEffect(form.result, effect),
 
           ...body.constraints,
@@ -919,7 +908,7 @@ export interface InternalEnvironment {
 function lookupVariableType(
   varName: string,
   env: ExternalEnvironment
-): TypeSchema | null {
+): T.TypeSchema | null {
   const t = env.variables[varName];
   if (t) {
     return t;

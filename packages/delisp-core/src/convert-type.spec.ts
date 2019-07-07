@@ -1,14 +1,14 @@
 import { readFromString } from "../src/reader";
 import { convert as convert_ } from "./convert-type";
 import { printType } from "./type-printer";
-import { tFn, tNumber, tString, tVar, Type } from "./types";
+import * as T from "./types";
 
 function readAndConvert(x: string) {
   return convert_(readFromString(x)).noWildcards();
 }
 
 function failedType(x: string) {
-  let result: Type | string;
+  let result: T.Type | string;
 
   try {
     result = readAndConvert(x);
@@ -27,27 +27,31 @@ function failedType(x: string) {
 
 describe("convertType", () => {
   it("should convert to numbers", () => {
-    expect(readAndConvert("number")).toMatchObject(tNumber);
-    expect(readAndConvert("  number  ")).toMatchObject(tNumber);
+    expect(readAndConvert("number")).toMatchObject(T.tNumber);
+    expect(readAndConvert("  number  ")).toMatchObject(T.tNumber);
   });
 
   it("should convert to strings", () => {
-    expect(readAndConvert("string")).toMatchObject(tString);
-    expect(readAndConvert("  string  ")).toMatchObject(tString);
+    expect(readAndConvert("string")).toMatchObject(T.tString);
+    expect(readAndConvert("  string  ")).toMatchObject(T.tString);
   });
 
   it("should convert to symbols", () => {
-    expect(readAndConvert("a")).toMatchObject(tVar("a"));
-    expect(readAndConvert("  b  ")).toMatchObject(tVar("b"));
+    expect(readAndConvert("a")).toMatchObject(T.tVar("a"));
+    expect(readAndConvert("  b  ")).toMatchObject(T.tVar("b"));
   });
 
   it("should convert to functions", () => {
     expect(readAndConvert("  (->  string _ number)  ")).toMatchObject(
-      tFn([tString], tVar("_"), tNumber)
+      T.tFn([T.tString], T.tVar("_"), T.tNumber)
     );
 
     expect(readAndConvert("(-> string (-> string _ c) _ c)")).toMatchObject(
-      tFn([tString, tFn([tString], tVar("_"), tVar("c"))], tVar("_"), tVar("c"))
+      T.tFn(
+        [T.tString, T.tFn([T.tString], T.tVar("_"), T.tVar("c"))],
+        T.tVar("_"),
+        T.tVar("c")
+      )
     );
   });
 

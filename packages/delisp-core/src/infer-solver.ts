@@ -11,7 +11,7 @@ import {
   listTypeVariables,
   Substitution
 } from "./type-utils";
-import { tVar, Type, TypeSchema } from "./types";
+import * as T from "./types";
 import { unify } from "./unify";
 import { difference, flatMap, intersection, union } from "./utils";
 
@@ -31,11 +31,11 @@ interface TConstraintEqual {
   tag: "equal-constraint";
   kind: ConstraintKind;
   expr: Expression<Typed>;
-  t: Type;
+  t: T.Type;
 }
 export function constEqual(
   expr: Expression<Typed>,
-  t: Type,
+  t: T.Type,
   kind: ConstraintKind
 ): TConstraintEqual {
   return { tag: "equal-constraint", expr, t, kind };
@@ -46,11 +46,11 @@ export function constEqual(
 interface TConstraintEffect {
   tag: "equal-effect-constraint";
   expr: Expression<Typed>;
-  t: Type;
+  t: T.Type;
 }
 export function constEffect(
   expr: Expression<Typed>,
-  t: Type
+  t: T.Type
 ): TConstraintEffect {
   return { tag: "equal-effect-constraint", expr, t };
 }
@@ -62,12 +62,12 @@ export function constEffect(
 interface TConstraintExplicitInstance {
   tag: "explicit-instance-constraint";
   expr: Expression<Typed>;
-  t: TypeSchema;
+  t: T.TypeSchema;
   kind: ConstraintKind;
 }
 export function constExplicitInstance(
   expr: Expression<Typed>,
-  t: TypeSchema,
+  t: T.TypeSchema,
   kind: ConstraintKind
 ): TConstraintExplicitInstance {
   return { tag: "explicit-instance-constraint", expr, t, kind };
@@ -91,7 +91,7 @@ export function constExplicitInstance(
 interface TConstraintImplicitInstance {
   tag: "implicit-instance-constraint";
   expr: Expression<Typed>;
-  t: Type;
+  t: T.Type;
   monovars: string[];
   kind: ConstraintKind;
 }
@@ -99,7 +99,7 @@ interface TConstraintImplicitInstance {
 export function constImplicitInstance(
   expr: Expression<Typed>,
   monovars: string[],
-  t: Type,
+  t: T.Type,
   kind: ConstraintKind
 ): TConstraintImplicitInstance {
   return { tag: "implicit-instance-constraint", expr, monovars, t, kind };
@@ -144,7 +144,7 @@ export function debugConstraints(constraints: TConstraint[]) {
 // scheme. This is used to decide which _instance constraint_ of the
 // set can be solved first. See `solve`/`solvable` for further info.
 function activevars(constraints: TConstraint[]): string[] {
-  const equal = (t1: Type, t2: Type) => {
+  const equal = (t1: T.Type, t2: T.Type) => {
     return union(listTypeVariables(t1), listTypeVariables(t2));
   };
 
@@ -169,7 +169,7 @@ function activevars(constraints: TConstraint[]): string[] {
 }
 
 function substituteVar(tvarname: string, s: Substitution): string[] {
-  const tv = tVar(tvarname);
+  const tv = T.tVar(tvarname);
   return listTypeVariables(applySubstitution(tv, s));
 }
 
@@ -187,10 +187,10 @@ function removeSubstitution(s: Substitution, removeVars: string[]) {
 // Apply a substitution to a polytype, replacing only free variables
 // from the polytype.
 function applySubstitutionToPolytype(
-  t: TypeSchema,
+  t: T.TypeSchema,
   s: Substitution
-): TypeSchema {
-  return new TypeSchema(
+): T.TypeSchema {
+  return new T.TypeSchema(
     t.tvars,
     applySubstitution(t.mono, removeSubstitution(s, t.tvars))
   );
@@ -278,7 +278,7 @@ export function solve(
 
   const rest = constraints.filter(c => c !== constraint);
 
-  const solveEq = (exprType: Type, t: Type) => {
+  const solveEq = (exprType: T.Type, t: T.Type) => {
     const result = unify(exprType, t, solution);
     switch (result.tag) {
       case "unify-success": {

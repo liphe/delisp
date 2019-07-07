@@ -14,7 +14,7 @@
 
 import { generateUniqueTVar } from "./type-generate";
 import { isTVar, Substitution } from "./type-utils";
-import { RExtension, tRowExtension, TVar, Type } from "./types";
+import * as T from "./types";
 
 interface UnifySuccess {
   tag: "unify-success";
@@ -23,19 +23,19 @@ interface UnifySuccess {
 
 interface UnifyOccurCheckError {
   tag: "unify-occur-check-error";
-  variable: TVar;
-  t: Type;
+  variable: T.TVar;
+  t: T.Type;
 }
 
 interface UnifyMismatchError {
   tag: "unify-mismatch-error";
-  t1: Type;
-  t2: Type;
+  t1: T.Type;
+  t2: T.Type;
 }
 
 interface UnifyMissingValueError {
   tag: "unify-missing-value-error";
-  t: Type;
+  t: T.Type;
 }
 
 type UnifyError =
@@ -51,8 +51,8 @@ function success(s: Substitution): UnifyResult {
   };
 }
 
-function occurCheck(v: TVar, rootT: Type): UnifyOccurCheckError | null {
-  function check(t: Type): UnifyOccurCheckError | null {
+function occurCheck(v: T.TVar, rootT: T.Type): UnifyOccurCheckError | null {
+  function check(t: T.Type): UnifyOccurCheckError | null {
     if (t.node.tag === "type-variable" && t.node.name === v.node.name) {
       const err: UnifyOccurCheckError = {
         tag: "unify-occur-check-error",
@@ -72,7 +72,7 @@ function occurCheck(v: TVar, rootT: Type): UnifyOccurCheckError | null {
 
 //
 //
-function unifyVariable(v: TVar, t: Type, ctx: Substitution): UnifyResult {
+function unifyVariable(v: T.TVar, t: T.Type, ctx: Substitution): UnifyResult {
   if (v.node.name in ctx) {
     return unify(ctx[v.node.name], t, ctx);
   }
@@ -94,7 +94,11 @@ function unifyVariable(v: TVar, t: Type, ctx: Substitution): UnifyResult {
   }
 }
 
-function unifyArray(t1s: Type[], t2s: Type[], ctx: Substitution): UnifyResult {
+function unifyArray(
+  t1s: T.Type[],
+  t2s: T.Type[],
+  ctx: Substitution
+): UnifyResult {
   if (t1s.length === 0 && t2s.length === 0) {
     return success(ctx);
   } else if (t1s.length === 0) {
@@ -125,11 +129,11 @@ function unifyArray(t1s: Type[], t2s: Type[], ctx: Substitution): UnifyResult {
  * partially unify it with `row` (only the head of the extension).
  */
 function rewriteRowForLabel(
-  row: Type,
+  row: T.Type,
   label: string,
-  tail: TVar | undefined,
+  tail: T.TVar | undefined,
   ctx: Substitution
-): { row: RExtension; substitution: Substitution } | null {
+): { row: T.RExtension; substitution: Substitution } | null {
   if (row.node.tag === "type-variable") {
     // RULE (row-var)
     //
@@ -145,7 +149,7 @@ function rewriteRowForLabel(
 
     const gamma = generateUniqueTVar();
     const beta = generateUniqueTVar();
-    const theta = tRowExtension(label, gamma, beta);
+    const theta = T.tRowExtension(label, gamma, beta);
     return {
       row: theta,
       substitution: { ...ctx, [row.node.name]: theta }
@@ -175,10 +179,14 @@ function rewriteRowForLabel(
       // The resulting row, starts with the intended label, and
       // continues with the original label that we found.
       return {
-        row: tRowExtension(
+        row: T.tRowExtension(
           label,
           newRow.node.labelType,
-          tRowExtension(row.node.label, row.node.labelType, newRow.node.extends)
+          T.tRowExtension(
+            row.node.label,
+            row.node.labelType,
+            newRow.node.extends
+          )
         ),
         substitution: subs
       };
@@ -191,8 +199,8 @@ function rewriteRowForLabel(
 }
 
 function unifyRow(
-  row1: RExtension,
-  row2: RExtension,
+  row1: T.RExtension,
+  row2: T.RExtension,
   ctx: Substitution
 ): UnifyResult {
   const tail = row1.node.extends;
@@ -225,7 +233,7 @@ function unifyRow(
  * the most general one, in the sense that any other substitution can
  * be obtained as a composition of this one with another one.
  */
-export function unify(t1: Type, t2: Type, ctx: Substitution): UnifyResult {
+export function unify(t1: T.Type, t2: T.Type, ctx: Substitution): UnifyResult {
   // RULE (uni-const)
   if (t1.node.tag === "constant" && t2.node.tag === "constant") {
     return t1.node.name === t2.node.name
