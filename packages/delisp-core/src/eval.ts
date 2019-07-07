@@ -2,18 +2,7 @@
 // Evaluation
 //
 
-import {
-  assert,
-  bindPrimaryValue,
-  caseTag,
-  matchTag,
-  mvbind,
-  primaryValue,
-  primFst,
-  primPair,
-  primSnd,
-  values
-} from "@delisp/runtime";
+import * as runtime from "@delisp/runtime";
 import * as vm from "vm";
 import {
   compileModuleToString,
@@ -31,18 +20,8 @@ export function createContext() {
   const sandbox = {
     env: mapObject(primitives, p => p.value),
     console,
-    // Primitives
-    caseTag,
-    matchTag,
-    primPair,
-    primFst,
-    primSnd,
-    values,
-    primaryValue,
-    bindPrimaryValue,
-    mvbind,
-    assert,
-    require
+    require,
+    ...runtime
   };
   vm.createContext(sandbox);
   return sandbox;
