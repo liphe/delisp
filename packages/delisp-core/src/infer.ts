@@ -30,16 +30,7 @@ import { assertNever, InvariantViolation } from "./invariant";
 import { moduleExportedDefinitions } from "./module";
 import primitives from "./primitives";
 import { pprint } from "./printer";
-import {
-  Expression,
-  isExpression,
-  isTypeAlias,
-  Module,
-  STypeAlias,
-  SVariableReference,
-  Syntax,
-  Typed
-} from "./syntax";
+import * as S from "./syntax";
 import { generateUniqueTVar } from "./type-generate";
 import { type } from "./type-tag";
 import {
@@ -78,7 +69,7 @@ const DEBUG = false;
 // is normal to have multiple assumptions (instances) for the same
 // variable. Assumptions will be converted to additional constraints
 // at the end of the inference process.
-type TAssumption = SVariableReference<Typed>;
+type TAssumption = S.SVariableReference<S.Typed>;
 
 interface InferResult<A> {
   result: A;
@@ -87,13 +78,13 @@ interface InferResult<A> {
 }
 
 function inferMany(
-  exprs: Expression[],
+  exprs: S.Expression[],
   monovars: string[],
   internalTypes: InternalTypeEnvironment,
   options = {
     multipleValuedLastForm: false
   }
-): InferResult<Array<Expression<Typed>>> {
+): InferResult<Array<S.Expression<S.Typed>>> {
   const results = exprs.map((e, i) =>
     infer(
       e,
@@ -110,7 +101,7 @@ function inferMany(
 }
 
 function inferBody(
-  exprs: Expression[],
+  exprs: S.Expression[],
   monovars: string[],
   internalTypes: InternalTypeEnvironment,
   returnType: Type,
@@ -141,7 +132,7 @@ function inferBody(
 // Generate new types for an expression an all its subexpressions,
 // returning and a set of constraints and assumptions between them.
 function infer(
-  expr: Expression,
+  expr: S.Expression,
   // A set of type variables names whose type is monomorphic. That is
   // to say, all instances should have the same type. That is the set
   // of type variables introduced by lambda.
@@ -154,9 +145,9 @@ function infer(
   // depends on if the parent itself is multipleValued. If that's the
   // case, just pass the value down to the subexpressions.
   multipleValues: boolean
-): InferResult<Expression<Typed>> {
-  function singleType(effect: Type, type: Type): Typed {
-    return new Typed({
+): InferResult<S.Expression<S.Typed>> {
+  function singleType(effect: Type, type: Type): S.Typed {
+    return new S.Typed({
       expressionType: type,
       resultingType: multipleValues ? tValues([type]) : undefined,
       effect
@@ -337,7 +328,7 @@ function infer(
             consequent: consequent.result,
             alternative: alternative.result
           },
-          info: new Typed({
+          info: new S.Typed({
             effect,
             expressionType: t
           })
@@ -427,7 +418,7 @@ function infer(
             fn: ifn.result,
             args: iargs.result
           },
-          info: new Typed({
+          info: new S.Typed({
             effect,
             expressionType: valuesType,
             resultingType: multipleValues ? valuesType : primaryType
@@ -498,7 +489,7 @@ function infer(
             })),
             body: bodyInference.result
           },
-          info: new Typed({ effect, expressionType: t })
+          info: new S.Typed({ effect, expressionType: t })
         },
         constraints: [
           ...bodyInference.constraints,
@@ -556,7 +547,7 @@ function infer(
             ...expr.node,
             value: inferred.result
           },
-          info: new Typed({ effect, expressionType: t })
+          info: new S.Typed({ effect, expressionType: t })
         },
         assumptions: inferred.assumptions,
         constraints: [
@@ -586,7 +577,7 @@ function infer(
             body: body.result,
             returning: returning.result
           },
-          info: new Typed({
+          info: new S.Typed({
             effect,
             expressionType: returning.result.info.type
           })
@@ -652,7 +643,7 @@ function infer(
             })),
             defaultCase: defaultCase && defaultCase.result
           },
-          info: new Typed({ effect, expressionType: t })
+          info: new S.Typed({ effect, expressionType: t })
         },
 
         constraints: [
@@ -759,7 +750,7 @@ function infer(
             ...expr.node,
             values: inference.result
           },
-          info: new Typed({
+          info: new S.Typed({
             effect,
             expressionType: tValuesType,
             resultingType: multipleValues ? tValuesType : tPrimaryType
@@ -800,7 +791,7 @@ function infer(
             form: form.result,
             body: body.result
           },
-          info: new Typed({
+          info: new S.Typed({
             effect,
             expressionType: t
           })
@@ -836,10 +827,10 @@ function infer(
 }
 
 function inferSyntax(
-  syntax: Syntax,
+  syntax: S.Syntax,
   internalTypes: InternalTypeEnvironment
-): InferResult<Syntax<Typed>> {
-  if (isExpression(syntax)) {
+): InferResult<S.Syntax<S.Typed>> {
+  if (S.isExpression(syntax)) {
     const { result, assumptions, constraints } = infer(
       { ...syntax, node: { ...syntax.node } },
       [],
@@ -954,10 +945,10 @@ function assumptionsToConstraints(
 }
 
 function applySubstitutionToSyntax(
-  s: Syntax<Typed>,
+  s: S.Syntax<S.Typed>,
   env: Substitution
-): Syntax<Typed> {
-  if (isExpression(s)) {
+): S.Syntax<S.Typed> {
+  if (S.isExpression(s)) {
     return applySubstitutionToExpr(s, env);
   } else if (s.node.tag === "definition") {
     return {
@@ -984,11 +975,11 @@ export const defaultEnvironment: ExternalEnvironment = {
 };
 
 export function inferType(
-  expr: Expression,
+  expr: S.Expression,
   env: ExternalEnvironment = defaultEnvironment,
   internalTypes: InternalTypeEnvironment,
   multipleValues: boolean
-): Expression<Typed> {
+): S.Expression<S.Typed> {
   const { result: tmpExpr, constraints, assumptions } = infer(
     expr,
     [],
@@ -1051,11 +1042,11 @@ function groupAssumptions(
 }
 
 /** Check that there is no cycles in env, throwing an error otherwise. */
-function checkCircularTypes(allTypeAliases: STypeAlias[]) {
+function checkCircularTypes(allTypeAliases: S.STypeAlias[]) {
   // The type aliases reference each other and then form a directed
   // graph. Here we do a simple depth-first search, keeping track of
   // the path to report if we find any cycles.
-  function visit(typeAlias: STypeAlias, path: STypeAlias[]) {
+  function visit(typeAlias: S.STypeAlias, path: S.STypeAlias[]) {
     const index = path.indexOf(typeAlias);
     if (index < 0) {
       listTypeConstants(typeAlias.node.definition)
@@ -1106,8 +1097,8 @@ function expandTypeAliases(type: Type, env: InternalTypeEnvironment): Type {
 }
 
 /** Return an environment with the types defined in this module.  */
-function moduleInternalTypes(m: Module): InternalTypeEnvironment {
-  checkCircularTypes(m.body.filter(isTypeAlias));
+function moduleInternalTypes(m: S.Module): InternalTypeEnvironment {
+  checkCircularTypes(m.body.filter(S.isTypeAlias));
   return m.body.reduce((env, s) => {
     if (s.node.tag === "type-alias") {
       return { ...env, [s.node.alias.name]: s.node.definition };
@@ -1118,7 +1109,7 @@ function moduleInternalTypes(m: Module): InternalTypeEnvironment {
 }
 
 function getModuleInternalEnvironment(
-  m: Module<Typed>,
+  m: S.Module<S.Typed>,
   internalTypes: InternalTypeEnvironment
 ): InternalEnvironment {
   return {
@@ -1145,10 +1136,10 @@ function getModuleInternalEnvironment(
  * can be reported.
  */
 export function inferModule(
-  m: Module,
+  m: S.Module,
   externalEnv: ExternalEnvironment = defaultEnvironment
 ): {
-  typedModule: Module<Typed>;
+  typedModule: S.Module<S.Typed>;
   unknowns: TAssumption[];
 } {
   const internalTypes = moduleInternalTypes(m);
@@ -1189,8 +1180,8 @@ export function inferModule(
     },
     unknowns: assumptions.unknowns.map(
       (v): TAssumption => {
-        return applySubstitutionToExpr(v, solution) as SVariableReference<
-          Typed
+        return applySubstitutionToExpr(v, solution) as S.SVariableReference<
+          S.Typed
         >;
       }
     )
@@ -1200,12 +1191,12 @@ export function inferModule(
 /** Run the type inference in an expression in the context on a
  * module. */
 export function inferExpressionInModule(
-  expr: Expression,
-  m: Module<Typed>,
+  expr: S.Expression,
+  m: S.Module<S.Typed>,
   externalEnv: ExternalEnvironment = defaultEnvironment,
   multipleValues: boolean
 ): {
-  typedExpression: Expression<Typed>;
+  typedExpression: S.Expression<S.Typed>;
   unknowns: TAssumption[];
 } {
   const internalTypes = moduleInternalTypes(m);
@@ -1240,8 +1231,8 @@ export function inferExpressionInModule(
     typedExpression: applySubstitutionToExpr(inference.result, solution),
     unknowns: assumptions.unknowns.map(
       (v): TAssumption => {
-        return applySubstitutionToExpr(v, solution) as SVariableReference<
-          Typed
+        return applySubstitutionToExpr(v, solution) as S.SVariableReference<
+          S.Typed
         >;
       }
     )
@@ -1249,7 +1240,7 @@ export function inferExpressionInModule(
 }
 
 export function getModuleExternalEnvironment(
-  m: Module<Typed>
+  m: S.Module<S.Typed>
 ): ExternalEnvironment {
   const defs = moduleExportedDefinitions(m);
   const variables = fromEntries(

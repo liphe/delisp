@@ -16,7 +16,7 @@ import {
   StringEncoder,
   text
 } from "./prettier";
-import { Expression, isExpression, Module, Syntax } from "./syntax";
+import * as S from "./syntax";
 import { foldExpr } from "./syntax-utils";
 import { printType } from "./type-printer";
 
@@ -24,12 +24,12 @@ function indent(x: Doc, level = 2): Doc {
   return indent_(x, level);
 }
 
-function printString(str: string, source: Syntax): Doc {
+function printString(str: string, source: S.Syntax): Doc {
   const escaped = str.replace(/\n/g, "\\n").replace(/"/g, '\\"');
   return text(`"${escaped}"`, "string", source);
 }
 
-function printIdentifier(name: string, source?: Syntax): Doc {
+function printIdentifier(name: string, source?: S.Syntax): Doc {
   return text(name, "identifier", source);
 }
 
@@ -49,7 +49,7 @@ function lines(...docs: Doc[]): Doc {
   return concat(line, join(docs, line));
 }
 
-function printExpr(expr: Expression): Doc {
+function printExpr(expr: S.Expression): Doc {
   return foldExpr(expr, (e, source) => {
     switch (e.node.tag) {
       case "unknown": {
@@ -242,8 +242,8 @@ function printExpr(expr: Expression): Doc {
   });
 }
 
-function print(form: Syntax): Doc {
-  if (isExpression(form)) {
+function print(form: S.Syntax): Doc {
+  if (S.isExpression(form)) {
     return printExpr(form);
   } else {
     switch (form.node.tag) {
@@ -293,7 +293,7 @@ function print(form: Syntax): Doc {
 }
 
 export function pprintAs<A>(
-  form: Syntax,
+  form: S.Syntax,
   lineWidth: number,
   encoder: Encoder<A>
 ): A {
@@ -301,7 +301,7 @@ export function pprintAs<A>(
 }
 
 export function pprintModuleAs<A>(
-  m: Module,
+  m: S.Module,
   lineWidth: number,
   encoder: Encoder<A>
 ): A {
@@ -333,10 +333,10 @@ export function pprintModuleAs<A>(
   );
 }
 
-export function pprint(form: Syntax, lineWidth: number): string {
+export function pprint(form: S.Syntax, lineWidth: number): string {
   return prettyAs(print(form), lineWidth, StringEncoder);
 }
 
-export function pprintModule(m: Module, lineWidth: number): string {
+export function pprintModule(m: S.Module, lineWidth: number): string {
   return pprintModuleAs(m, lineWidth, StringEncoder);
 }
