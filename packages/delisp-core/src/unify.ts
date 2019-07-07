@@ -23,7 +23,7 @@ interface UnifySuccess {
 
 interface UnifyOccurCheckError {
   tag: "unify-occur-check-error";
-  variable: T.TVar;
+  variable: T.Var;
   t: T.Type;
 }
 
@@ -51,7 +51,7 @@ function success(s: Substitution): UnifyResult {
   };
 }
 
-function occurCheck(v: T.TVar, rootT: T.Type): UnifyOccurCheckError | null {
+function occurCheck(v: T.Var, rootT: T.Type): UnifyOccurCheckError | null {
   function check(t: T.Type): UnifyOccurCheckError | null {
     if (t.node.tag === "type-variable" && t.node.name === v.node.name) {
       const err: UnifyOccurCheckError = {
@@ -72,7 +72,7 @@ function occurCheck(v: T.TVar, rootT: T.Type): UnifyOccurCheckError | null {
 
 //
 //
-function unifyVariable(v: T.TVar, t: T.Type, ctx: Substitution): UnifyResult {
+function unifyVariable(v: T.Var, t: T.Type, ctx: Substitution): UnifyResult {
   if (v.node.name in ctx) {
     return unify(ctx[v.node.name], t, ctx);
   }
@@ -131,7 +131,7 @@ function unifyArray(
 function rewriteRowForLabel(
   row: T.Type,
   label: string,
-  tail: T.TVar | undefined,
+  tail: T.Var | undefined,
   ctx: Substitution
 ): { row: T.RExtension; substitution: Substitution } | null {
   if (row.node.tag === "type-variable") {
@@ -149,7 +149,7 @@ function rewriteRowForLabel(
 
     const gamma = generateUniqueTVar();
     const beta = generateUniqueTVar();
-    const theta = T.tRowExtension(label, gamma, beta);
+    const theta = T.rowExtension(label, gamma, beta);
     return {
       row: theta,
       substitution: { ...ctx, [row.node.name]: theta }
@@ -179,10 +179,10 @@ function rewriteRowForLabel(
       // The resulting row, starts with the intended label, and
       // continues with the original label that we found.
       return {
-        row: T.tRowExtension(
+        row: T.rowExtension(
           label,
           newRow.node.labelType,
-          T.tRowExtension(
+          T.rowExtension(
             row.node.label,
             row.node.labelType,
             newRow.node.extends

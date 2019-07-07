@@ -273,11 +273,11 @@ defineMagicPrimitive(
     const newFieldType = generateUniqueTVar();
 
     const extendsType = generateUniqueTVar();
-    const recordType = T.tRecord(
+    const recordType = T.record(
       [{ label: name, type: fieldType }],
       extendsType
     );
-    const newRecordType = T.tRecord(
+    const newRecordType = T.record(
       [{ label: name, type: newFieldType }],
       extendsType
     );

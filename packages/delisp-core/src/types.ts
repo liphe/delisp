@@ -2,18 +2,18 @@
 // Types
 //
 
-interface TConstantF<_T> {
+interface ConstantF<_T> {
   tag: "constant";
   name: string;
 }
 
-interface TApplicationF<T> {
+interface ApplicationF<T> {
   tag: "application";
   op: T;
   args: T[];
 }
 
-interface TVarF<_T> {
+interface VarF<_T> {
   tag: "type-variable";
   name: string;
   userSpecified: boolean;
@@ -31,15 +31,15 @@ interface RExtensionF<T> {
 }
 
 type RowF<T> = REmptyF<T> | RExtensionF<T>;
-type AnyTypeF<T = Type> = TConstantF<T> | TApplicationF<T> | TVarF<T> | RowF<T>;
+type AnyTypeF<T = Type> = ConstantF<T> | ApplicationF<T> | VarF<T> | RowF<T>;
 
 interface Node<A> {
   node: A;
 }
 
-export interface TConstant extends Node<TConstantF<Type>> {}
-export interface TApplication extends Node<TApplicationF<Type>> {}
-export interface TVar extends Node<TVarF<Type>> {}
+export interface Constant extends Node<ConstantF<Type>> {}
+export interface Application extends Node<ApplicationF<Type>> {}
+export interface Var extends Node<VarF<Type>> {}
 export interface REmpty extends Node<REmptyF<Type>> {}
 export interface RExtension extends Node<RExtensionF<Type>> {}
 export interface Row extends Node<RowF<Type>> {}
@@ -61,35 +61,35 @@ export class TypeSchema {
 // Constructor helpers
 //
 
-function tConstant(name: string): TConstant {
+function constant(name: string): Constant {
   return { node: { tag: "constant", name } };
 }
 
 // * ... -> effect -> *
-export const tcArrow = tConstant("->");
+export const cArrow = constant("->");
 
 // * ... -> *
-export const tcStar = tConstant("*");
+export const cStar = constant("*");
 
 // * -> *
-export const tcVector = tConstant("vector");
+export const cVector = constant("vector");
 // row -> *
-export const tcRecord = tConstant("record");
+export const cRecord = constant("record");
 // row -> *
-export const tcCases = tConstant("cases");
+export const cCases = constant("cases");
 // *
-export const tVoid = tConstant("void");
-export const tBoolean = tConstant("boolean");
-export const tNumber = tConstant("number");
-export const tString = tConstant("string");
-export const tNone = tConstant("none");
+export const tVoid = constant("void");
+export const boolean = constant("boolean");
+export const number = constant("number");
+export const string = constant("string");
+export const none = constant("none");
 
 // row -> effect
-const tcEffect = tConstant("effect");
+const cEffect = constant("effect");
 // row -> values
-const tcValues = tConstant("values");
+const cValues = constant("values");
 
-export function tVar(name: string, userSpecified = false): TVar {
+export function tVar(name: string, userSpecified = false): Var {
   return {
     node: {
       tag: "type-variable",
@@ -99,11 +99,11 @@ export function tVar(name: string, userSpecified = false): TVar {
   };
 }
 
-export function tUserDefined(name: string): TConstant {
+export function userDefined(name: string): Constant {
   return { node: { tag: "constant", name } };
 }
 
-export function tApp(op: Type, ...args: Type[]): Type {
+export function app(op: Type, ...args: Type[]): Type {
   return {
     node: {
       tag: "application",
@@ -113,15 +113,15 @@ export function tApp(op: Type, ...args: Type[]): Type {
   };
 }
 
-export function tVector(t: Type): Type {
-  return tApp(tcVector, t);
+export function vector(t: Type): Type {
+  return app(cVector, t);
 }
 
 export const emptyRow: REmpty = {
   node: { tag: "empty-row" }
 };
 
-export const tRowExtension = (
+export const rowExtension = (
   label: string,
   labelType: Type,
   row: Type
@@ -134,56 +134,56 @@ export const tRowExtension = (
   }
 });
 
-export function tRow(
+export function row(
   fields: Array<{ label: string; type: Type }>,
   extending: Type = emptyRow
 ): Type {
   return fields.reduceRight(
-    (row: Type, { label, type }): Row => tRowExtension(label, type, row),
+    (row: Type, { label, type }): Row => rowExtension(label, type, row),
     extending
   );
 }
 
-export function tEffect(labels: string[], extending: Type = emptyRow): Type {
-  return tApp(
-    tcEffect,
-    tRow(labels.map(label => ({ label, type: tVoid })), extending)
+export function effect(labels: string[], extending: Type = emptyRow): Type {
+  return app(
+    cEffect,
+    row(labels.map(label => ({ label, type: tVoid })), extending)
   );
 }
 
-export function tRecord(
+export function record(
   fields: Array<{ label: string; type: Type }>,
   extending: Type = emptyRow
 ): Type {
-  return tApp(tcRecord, tRow(fields, extending));
+  return app(cRecord, row(fields, extending));
 }
 
-export function tCases(
+export function cases(
   variants: Array<{ label: string; type: Type }>,
   extending: Type = emptyRow
 ): Type {
-  return tApp(tcCases, tRow(variants, extending));
+  return app(cCases, row(variants, extending));
 }
 
-export function tProduct(types: Type[]) {
-  return tApp(tcStar, ...types);
+export function product(types: Type[]) {
+  return app(cStar, ...types);
 }
 
-export function tValues(types: Type[], extending: Type = emptyRow): Type {
-  return tApp(
-    tcValues,
-    tRow(types.map((type, i) => ({ label: String(i), type })), extending)
+export function values(types: Type[], extending: Type = emptyRow): Type {
+  return app(
+    cValues,
+    row(types.map((type, i) => ({ label: String(i), type })), extending)
   );
 }
 
-export function tMultiValuedFunction(
+export function multiValuedFunction(
   args: Type[],
   effect: Type,
   out: Type
 ): Type {
-  return tApp(tcArrow, ...args, effect, out);
+  return app(cArrow, ...args, effect, out);
 }
 
-export function tFn(args: Type[], effect: Type, out: Type): Type {
-  return tMultiValuedFunction(args, effect, tValues([out]));
+export function fn(args: Type[], effect: Type, out: Type): Type {
+  return multiValuedFunction(args, effect, values([out]));
 }

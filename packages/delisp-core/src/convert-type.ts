@@ -13,23 +13,23 @@ import { normalizeValues as doNormalizeValues } from "./type-utils";
 import { TypeWithWildcards } from "./type-wildcards";
 import {
   emptyRow,
-  tApp,
-  tBoolean,
-  tcArrow,
-  tCases,
-  TConstant,
-  tcStar,
-  tEffect,
-  tMultiValuedFunction,
-  tNone,
-  tNumber,
-  tRecord,
-  tString,
-  tUserDefined,
-  tValues,
-  TVar,
+  app,
+  boolean,
+  cArrow,
+  cases,
+  Constant,
+  cStar,
+  effect,
+  multiValuedFunction,
+  none,
+  number,
+  record,
+  string,
+  userDefined,
+  values,
+  Var,
   tVar,
-  tVector,
+  vector,
   tVoid,
   Type,
   TypeSchema
@@ -57,24 +57,24 @@ export function checkUserDefinedTypeName(expr: ASExprSymbol): void {
   }
 }
 
-function convertSymbol(expr: ASExprSymbol): TVar | TConstant {
+function convertSymbol(expr: ASExprSymbol): Var | Constant {
   switch (expr.name) {
     case "->":
-      return tcArrow;
+      return cArrow;
     case "boolean":
-      return tBoolean;
+      return boolean;
     case "number":
-      return tNumber;
+      return number;
     case "string":
-      return tString;
+      return string;
     case "void":
       return tVoid;
     case "none":
-      return tNone;
+      return none;
     case "*":
-      return tcStar;
+      return cStar;
     default:
-      return userDefinedType(expr) ? tUserDefined(expr.name) : tVar(expr.name);
+      return userDefinedType(expr) ? userDefined(expr.name) : tVar(expr.name);
   }
 }
 
@@ -89,9 +89,9 @@ function convertEffect(effects: ASExpr[]): Type {
   });
   const last = labels.slice(-2);
   if (last.length === 2 && last[0] === "|") {
-    return tEffect(labels.slice(0, -2), tVar(last[1]));
+    return effect(labels.slice(0, -2), tVar(last[1]));
   } else {
-    return tEffect(labels);
+    return effect(labels);
   }
 }
 
@@ -130,7 +130,7 @@ function convertCases(_op: ASExpr, args: ASExpr[]): Type {
     }
   }
 
-  return tCases(args.map(parseCase), tail && convert_(tail));
+  return cases(args.map(parseCase), tail && convert_(tail));
 }
 
 function convertValues(expr: ASExprList): Type {
@@ -140,7 +140,7 @@ function convertValues(expr: ASExprList): Type {
     extending = convert_(args[args.length - 1]);
     args = args.slice(0, -2);
   }
-  return tValues(args.map(convert_), extending);
+  return values(args.map(convert_), extending);
 }
 
 function convertList(expr: ASExprList): Type {
@@ -158,14 +158,14 @@ function convertList(expr: ASExprList): Type {
     const fnargs = args.slice(0, -2);
     const fneffect = args[args.length - 2];
     const fnout = args[args.length - 1];
-    return tMultiValuedFunction(
+    return multiValuedFunction(
       fnargs.map(convert_),
       convert_(fneffect),
       convert_(fnout)
     );
   } else {
     const opType = convert_(op);
-    return tApp(opType, ...args.map(convert_));
+    return app(opType, ...args.map(convert_));
   }
 }
 
@@ -175,13 +175,13 @@ function convertVector(expr: ASExprVector): Type {
       printHighlightedExpr("Expected exactly 1 argument", expr.location)
     );
   }
-  return tVector(convert_(expr.elements[0]));
+  return vector(convert_(expr.elements[0]));
 }
 
 function convertMap(expr: ASExprMap): Type {
   const { fields, tail } = parseRecord(expr);
 
-  return tRecord(
+  return record(
     fields.map(({ label, value }) => ({
       label: label.name,
       type: convert_(value)

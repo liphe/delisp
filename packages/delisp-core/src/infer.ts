@@ -136,7 +136,7 @@ function infer(
   function singleType(effect: Type, type: Type): S.Typed {
     return new S.Typed({
       expressionType: type,
-      resultingType: multipleValues ? T.tValues([type]) : undefined,
+      resultingType: multipleValues ? T.values([type]) : undefined,
       effect
     });
   }
@@ -158,7 +158,7 @@ function infer(
         result: {
           ...expr,
           node: expr.node,
-          info: singleType(generateUniqueTVar(), T.tNumber)
+          info: singleType(generateUniqueTVar(), T.number)
         },
         constraints: [],
         assumptions: []
@@ -168,7 +168,7 @@ function infer(
         result: {
           ...expr,
           node: expr.node,
-          info: singleType(generateUniqueTVar(), T.tString)
+          info: singleType(generateUniqueTVar(), T.string)
         },
         constraints: [],
         assumptions: []
@@ -188,7 +188,7 @@ function infer(
             ...expr.node,
             values: inferredValues.result
           },
-          info: singleType(effect, T.tVector(t))
+          info: singleType(effect, T.vector(t))
         },
         assumptions: inferredValues.assumptions,
         constraints: [
@@ -225,7 +225,7 @@ function infer(
           },
           info: singleType(
             effect,
-            T.tRecord(
+            T.record(
               inferred.map(i => ({
                 label: i.label.name,
                 type: i.result.info.type
@@ -245,7 +245,7 @@ function infer(
             ? [
                 constEqual(
                   tailInferred.result,
-                  T.tRecord(
+                  T.record(
                     inferred.map(i => ({
                       label: i.label.name,
                       type: generateUniqueTVar()
@@ -329,7 +329,7 @@ function infer(
           ...condition.constraints,
           ...consequent.constraints,
           ...alternative.constraints,
-          constEqual(condition.result, T.tBoolean, "resulting-type"),
+          constEqual(condition.result, T.boolean, "resulting-type"),
           constEqual(consequent.result, t, "resulting-type"),
           constEqual(alternative.result, t, "resulting-type"),
 
@@ -345,7 +345,7 @@ function infer(
 
       const bodyEffect = generateUniqueTVar();
       const valuesType = generateUniqueTVar();
-      const fnType = T.tMultiValuedFunction(argtypes, bodyEffect, valuesType);
+      const fnType = T.multiValuedFunction(argtypes, bodyEffect, valuesType);
 
       const { result: typedBody, constraints, assumptions } = inferBody(
         expr.node.body,
@@ -391,7 +391,7 @@ function infer(
       const valuesType = type`(values ${primaryType} | _)`;
 
       const effect = generateUniqueTVar();
-      const tfn: Type = T.tMultiValuedFunction(
+      const tfn: Type = T.multiValuedFunction(
         iargs.result.map(a => a.info.type),
         effect,
         valuesType
@@ -504,7 +504,7 @@ function infer(
 
           // We require let-binding values to be free of effects
           ...bindingsInfo.map(b =>
-            constEffect(b.inference.result, T.tEffect([]))
+            constEffect(b.inference.result, T.effect([]))
           )
         ],
         assumptions: [
@@ -644,7 +644,7 @@ function infer(
           // that `match` is handling.
           constEqual(
             value.result,
-            T.tCases(
+            T.cases(
               variantTypes,
               defaultCase ? generateUniqueTVar() : undefined
             ),
@@ -693,7 +693,7 @@ function infer(
         infer(expr.node.value, monovars, internalTypes, false);
 
       const labelType = expr.node.value ? generateUniqueTVar() : T.tVoid;
-      const t = T.tCases(
+      const t = T.cases(
         [{ label: expr.node.label, type: labelType }],
         generateUniqueTVar()
       );
@@ -726,7 +726,7 @@ function infer(
       const inference = inferMany(expr.node.values, monovars, internalTypes);
 
       const tPrimaryType = inference.result[0].info.resultingType;
-      const tValuesType = T.tValues(
+      const tValuesType = T.values(
         inference.result.map(r => r.info.resultingType)
       );
 
@@ -788,7 +788,7 @@ function infer(
 
         constraints: [
           ...form.constraints,
-          constEqual(form.result, T.tValues(variableTypes), "resulting-type"),
+          constEqual(form.result, T.values(variableTypes), "resulting-type"),
           constEffect(form.result, effect),
 
           ...body.constraints,

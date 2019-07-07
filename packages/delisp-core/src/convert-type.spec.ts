@@ -27,13 +27,13 @@ function failedType(x: string) {
 
 describe("convertType", () => {
   it("should convert to numbers", () => {
-    expect(readAndConvert("number")).toMatchObject(T.tNumber);
-    expect(readAndConvert("  number  ")).toMatchObject(T.tNumber);
+    expect(readAndConvert("number")).toMatchObject(T.number);
+    expect(readAndConvert("  number  ")).toMatchObject(T.number);
   });
 
   it("should convert to strings", () => {
-    expect(readAndConvert("string")).toMatchObject(T.tString);
-    expect(readAndConvert("  string  ")).toMatchObject(T.tString);
+    expect(readAndConvert("string")).toMatchObject(T.string);
+    expect(readAndConvert("  string  ")).toMatchObject(T.string);
   });
 
   it("should convert to symbols", () => {
@@ -43,12 +43,12 @@ describe("convertType", () => {
 
   it("should convert to functions", () => {
     expect(readAndConvert("  (->  string _ number)  ")).toMatchObject(
-      T.tFn([T.tString], T.tVar("_"), T.tNumber)
+      T.fn([T.string], T.tVar("_"), T.number)
     );
 
     expect(readAndConvert("(-> string (-> string _ c) _ c)")).toMatchObject(
-      T.tFn(
-        [T.tString, T.tFn([T.tString], T.tVar("_"), T.tVar("c"))],
+      T.fn(
+        [T.string, T.fn([T.string], T.tVar("_"), T.tVar("c"))],
         T.tVar("_"),
         T.tVar("c")
       )

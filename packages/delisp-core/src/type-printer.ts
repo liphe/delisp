@@ -12,7 +12,7 @@ function typeIndexName(index: number): string {
 function createVariableNormalizer() {
   let variables: string[] = [];
 
-  return (t: T.TVar): string => {
+  return (t: T.Var): string => {
     let idx = variables.indexOf(t.node.name);
     if (idx === -1) {
       idx = variables.length;
@@ -24,7 +24,7 @@ function createVariableNormalizer() {
 
 function printValuesType(
   fnout: T.Type,
-  normalizeVar: (t: T.TVar) => string,
+  normalizeVar: (t: T.Var) => string,
   simplify = false
 ): string {
   const row = normalizeRow(fnout);
@@ -55,8 +55,8 @@ function printValuesType(
 }
 
 function printApplicationType(
-  type: T.TApplication,
-  normalizeVar: (t: T.TVar) => string,
+  type: T.Application,
+  normalizeVar: (t: T.Var) => string,
   simplify = false
 ): string {
   function genericApp(op: T.Type, args: T.Type[]): string {
@@ -137,7 +137,7 @@ function printApplicationType(
 
 function _printType(
   type: T.Type,
-  normalizeVar: (t: T.TVar) => string,
+  normalizeVar: (t: T.Var) => string,
   simplify = false
 ): string {
   switch (type.node.tag) {
@@ -160,7 +160,7 @@ function _printType(
 function printTypeWithOptionalNormalization(rawType: T.Type, normalize = true) {
   const normalizeVar = normalize
     ? createVariableNormalizer()
-    : (t: T.TVar) => t.node.name;
+    : (t: T.Var) => t.node.name;
   return _printType(rawType, normalizeVar);
 }
 

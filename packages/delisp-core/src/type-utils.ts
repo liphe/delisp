@@ -2,17 +2,17 @@ import { InvariantViolation } from "./invariant";
 import { generateUniqueTVar } from "./type-generate";
 import {
   emptyRow,
-  TApplication,
-  TConstant,
-  tValues,
-  TVar,
+  Application,
+  Constant,
+  values,
+  Var,
   Type,
   TypeF,
   TypeSchema
 } from "./types";
 import { flatten, last, unique } from "./utils";
 
-export function isTVar(t: Type): t is TVar {
+export function isTVar(t: Type): t is Var {
   return t.node.tag === "type-variable";
 }
 
@@ -28,7 +28,7 @@ export function isConstantApplicationType(t: Type, opname: string) {
   );
 }
 
-export function isFunctionType(t: Type): t is TApplication {
+export function isFunctionType(t: Type): t is Application {
   return isConstantApplicationType(t, "->");
 }
 
@@ -105,7 +105,7 @@ export function applySubstitution(t: Type, env: Substitution): Type {
 }
 
 // Return user defined types
-export function listTypeConstants(type: Type): TConstant[] {
+export function listTypeConstants(type: Type): Constant[] {
   return foldType(type, t => {
     return t.node.tag === "constant"
       ? [
@@ -197,7 +197,7 @@ export function normalizeValues(type: Type): Type {
         return {
           node: {
             ...t.node,
-            args: [...t.node.args.slice(0, -1), tValues([out])]
+            args: [...t.node.args.slice(0, -1), values([out])]
           }
         };
       }
