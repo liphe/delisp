@@ -1,17 +1,11 @@
 import { assertNever, InvariantViolation } from "./invariant";
-import {
-  Expression,
-  ExpressionF,
-  isExpression,
-  Module,
-  Syntax
-} from "./syntax";
+import * as S from "./syntax";
 import { flatten } from "./utils";
 
 export function mapExpr<I, A, B>(
-  expr: ExpressionF<I, A>,
+  expr: S.ExpressionF<I, A>,
   fn: (x: A) => B
-): ExpressionF<I, B> {
+): S.ExpressionF<I, B> {
   switch (expr.node.tag) {
     case "string":
     case "number":
@@ -137,7 +131,7 @@ export function mapExpr<I, A, B>(
   }
 }
 
-export function exprFChildren<I, E>(e: ExpressionF<I, E>): E[] {
+export function exprFChildren<I, E>(e: S.ExpressionF<I, E>): E[] {
   switch (e.node.tag) {
     case "string":
     case "number":
@@ -176,28 +170,30 @@ export function exprFChildren<I, E>(e: ExpressionF<I, E>): E[] {
 }
 
 export function foldExpr<I, A>(
-  expr: Expression<I>,
-  fn: (e: ExpressionF<I, A>, original: Expression<I>) => A
+  expr: S.Expression<I>,
+  fn: (e: S.ExpressionF<I, A>, original: S.Expression<I>) => A
 ): A {
   return fn(mapExpr(expr, e => foldExpr(e, fn)), expr);
 }
 
 export function transformRecurExpr<I>(
-  s: Expression<I>,
-  fn: (node: Expression<I>) => Expression<I>
-): Expression<I> {
+  s: S.Expression<I>,
+  fn: (node: S.Expression<I>) => S.Expression<I>
+): S.Expression<I> {
   return foldExpr(
     s,
-    (n: ExpressionF<I, Expression<I>>): Expression<I> => fn(n)
+    (n: S.ExpressionF<I, S.Expression<I>>): S.Expression<I> => fn(n)
   );
 }
 
-export function expressionChildren<I>(e: Expression<I>): Array<Expression<I>> {
+export function expressionChildren<I>(
+  e: S.Expression<I>
+): Array<S.Expression<I>> {
   return exprFChildren(e);
 }
 
-export function syntaxChildren<I>(s: Syntax<I>): Array<Expression<I>> {
-  if (isExpression(s)) {
+export function syntaxChildren<I>(s: S.Syntax<I>): Array<S.Expression<I>> {
+  if (S.isExpression(s)) {
     return expressionChildren({ ...s, node: s.node });
   } else {
     switch (s.node.tag) {
@@ -216,10 +212,10 @@ export function syntaxChildren<I>(s: Syntax<I>): Array<Expression<I>> {
 }
 
 function syntaxPathFromRange<I>(
-  s: Syntax<I>,
+  s: S.Syntax<I>,
   start: number,
   end: number
-): Syntax<I> {
+): S.Syntax<I> {
   const children = syntaxChildren(s);
   if (!(s.location && s.location.start <= start && end < s.location.end)) {
     throw new InvariantViolation(`Offset is out of range.`);
@@ -233,10 +229,10 @@ function syntaxPathFromRange<I>(
 }
 
 export function findSyntaxByRange<I>(
-  m: Module<I>,
+  m: S.Module<I>,
   start: number,
   end: number
-): Syntax<I> | undefined {
+): S.Syntax<I> | undefined {
   const child = m.body.find(e =>
     e.location ? e.location.start <= start && end < e.location.end : false
   );
@@ -247,8 +243,8 @@ export function findSyntaxByRange<I>(
 }
 
 export function findSyntaxByOffset<I>(
-  m: Module<I>,
+  m: S.Module<I>,
   offset: number
-): Syntax<I> | undefined {
+): S.Syntax<I> | undefined {
   return findSyntaxByRange(m, offset, offset);
 }
