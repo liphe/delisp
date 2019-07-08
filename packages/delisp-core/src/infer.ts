@@ -944,7 +944,7 @@ function applySubstitutionToSyntax(
       ...s,
       node: {
         ...s.node,
-        identifiers: applySubstitutionToExpr(s.node.value, env)
+        value: applySubstitutionToExpr(s.node.value, env)
       }
     };
   } else if (s.node.tag === "export") {
