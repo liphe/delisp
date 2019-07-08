@@ -465,13 +465,13 @@ function compileTopLevel(
 
   if (S.isDefinition(typedSyntax)) {
     js = compileDefinition(typedSyntax, env);
-    type = typedSyntax.node.value.info.type;
+    type = typedSyntax.node.value.info.resultingType;
   } else {
     js = {
       type: "ExpressionStatement",
       expression: compile(typedSyntax, env, multipleValues)
     };
-    type = typedSyntax.info.type;
+    type = typedSyntax.info.resultingType;
   }
 
   return {

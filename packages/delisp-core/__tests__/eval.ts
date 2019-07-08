@@ -89,10 +89,10 @@ describe("Evaluation", () => {
   });
 
   describe("lists", () => {
-    expect(evaluateString("(empty? nil)")).toBe(true);
-    expect(evaluateString("(not (empty? (cons 1 nil)))")).toBe(true);
-    expect(evaluateString("(first (cons 1 nil))")).toBe(1);
-    expect(evaluateString("(rest (cons 1 nil))")).toEqual([]);
+    expect(evaluateString("(empty? [])")).toBe(true);
+    expect(evaluateString("(not (empty? (cons 1 [])))")).toBe(true);
+    expect(evaluateString("(first (cons 1 []))")).toBe(1);
+    expect(evaluateString("(rest (cons 1 []))")).toEqual([]);
   });
 
   describe("conditionals", () => {

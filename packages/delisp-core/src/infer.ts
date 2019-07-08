@@ -228,7 +228,7 @@ function infer(
             T.record(
               inferred.map(i => ({
                 label: i.label.name,
-                type: i.result.info.type
+                type: i.result.info.resultingType
               })),
               tailInferred ? tailRowType : T.emptyRow
             )
@@ -392,7 +392,7 @@ function infer(
 
       const effect = generateUniqueTVar();
       const tfn: Type = T.multiValuedFunction(
-        iargs.result.map(a => a.info.type),
+        iargs.result.map(a => a.info.resultingType),
         effect,
         valuesType
       );
@@ -497,7 +497,7 @@ function infer(
               return constImplicitInstance(
                 v,
                 monovars,
-                bInfo.inference.result.info.type,
+                bInfo.inference.result.info.resultingType,
                 "expression-type"
               );
             }),
@@ -568,7 +568,7 @@ function infer(
           },
           info: new S.Typed({
             effect,
-            expressionType: returning.result.info.type
+            expressionType: returning.result.info.resultingType
           })
         },
 
@@ -1106,7 +1106,7 @@ function getModuleInternalEnvironment(
       if (s.node.tag === "definition") {
         return {
           ...env,
-          [s.node.variable.name]: s.node.value.info.type
+          [s.node.variable.name]: s.node.value.info.resultingType
         };
       } else {
         return env;

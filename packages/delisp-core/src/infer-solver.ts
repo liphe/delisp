@@ -106,7 +106,9 @@ export function constImplicitInstance(
 }
 
 function exprType(expr: Expression<Typed>, kind: ConstraintKind) {
-  return kind === "resulting-type" ? expr.info.type : expr.info.expressionType;
+  return kind === "resulting-type"
+    ? expr.info.resultingType
+    : expr.info.expressionType;
 }
 
 export function debugConstraints(constraints: TConstraint[]) {

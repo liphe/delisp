@@ -310,11 +310,6 @@ export class Typed {
   get resultingType() {
     return this._resultingType || this.expressionType;
   }
-
-  // Compatibility
-  get type() {
-    return this.resultingType;
-  }
 }
 
 export function createImportSyntax(name: string, source: string): SImport {

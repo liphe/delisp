@@ -7,7 +7,7 @@ export function typeAnnotate(expr: Expression<Typed>): Expression {
     return {
       node: {
         tag: "type-annotation",
-        typeWithWildcards: new TypeWithWildcards(e.info.type),
+        typeWithWildcards: new TypeWithWildcards(e.info.resultingType),
         value: e
       },
       info: {},

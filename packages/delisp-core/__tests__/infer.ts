@@ -23,7 +23,7 @@ function typeOf(
 ): string {
   const syntax = readExpr(str);
   const typedExpr = inferType(syntax, externalEnv, internalEnv, multipleValues);
-  const result = printType(typedExpr.info.type);
+  const result = printType(typedExpr.info.resultingType);
   return result;
 }
 
