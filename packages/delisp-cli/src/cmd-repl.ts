@@ -189,7 +189,7 @@ const delispEval = async (syntax: Syntax): Promise<DelispEvalResult> => {
       console.warn(
         theme.warn(
           `Unknown variable ${v.node.name} expected with type ${printType(
-            v.info.type
+            v.info.resultingType
           )}`
         )
       );
@@ -213,13 +213,13 @@ const delispEval = async (syntax: Syntax): Promise<DelispEvalResult> => {
     return {
       tag: "expression",
       value,
-      type: typedExpression && typedExpression.info.type
+      type: typedExpression && typedExpression.info.resultingType
     };
   } else if (isDefinition(syntax)) {
     const name = syntax.node.variable.name;
     const definition =
       typedModule && (moduleDefinitionByName(name, typedModule) || undefined);
-    const type = definition && definition.node.value.info.type;
+    const type = definition && definition.node.value.info.resultingType;
     return { tag: "definition", name, type };
   } else {
     return { tag: "other" };
