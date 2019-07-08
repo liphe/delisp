@@ -211,13 +211,13 @@ exports[`Convert Error messages generate nice error messages for invalid exports
 `;
 
 exports[`Convert Error messages generate nice error messages for invalid exports 2`] = `
-"file:1:9: 'export' expected a symbol
+"file:1:9: 'export' expected a symbol of vector of symbols
 (export 1)
 --------^"
 `;
 
 exports[`Convert Error messages generate nice error messages for invalid exports 3`] = `
-"file:1:9: 'export' expected a symbol
+"file:1:9: 'export' expected a symbol of vector of symbols
 (export (+ 1 2))
 --------^"
 `;
