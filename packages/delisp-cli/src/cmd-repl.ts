@@ -6,6 +6,7 @@ import {
   evaluate,
   evaluateModule,
   inferExpressionInModule,
+  ExternalEnvironment,
   inferModule,
   isDefinition,
   isExpression,
@@ -110,10 +111,21 @@ async function handleLine(line: string) {
   }
 }
 
-function completer(input: string): [string[], string] {
+async function completer(
+  input: string,
+  callback: (err: null, result: [string[], string]) => void
+) {
   const defs = currentModule.body.filter(isDefinition);
-  const completions = defs.map(d => d.node.variable.name);
-  return [completions, input];
+  const internalCompletions = defs.map(d => d.node.variable.name);
+
+  const externalEnv = await moduleExternalEnvironment(currentModule);
+  const externalCompletions = Object.keys(externalEnv.variables);
+
+  const candidates = [...internalCompletions, ...externalCompletions];
+
+  const completions = candidates.filter(opt => opt.startsWith(input));
+
+  return callback(null, [completions, input]);
 }
 
 // Update `currentModule` with the syntax as introduced in the REPL.
@@ -153,6 +165,22 @@ type DelispEvalResult =
       tag: "other";
     };
 
+async function moduleExternalEnvironment(
+  m: Module
+): Promise<ExternalEnvironment> {
+  const externalEnvironment = await resolveModuleDependencies(
+    m,
+    resolveDependency
+  );
+
+  const environment = mergeExternalEnvironments(
+    defaultEnvironment,
+    externalEnvironment
+  );
+
+  return environment;
+}
+
 const delispEval = async (syntax: Syntax): Promise<DelispEvalResult> => {
   updateModule(syntax);
 
@@ -163,16 +191,7 @@ const delispEval = async (syntax: Syntax): Promise<DelispEvalResult> => {
   let typedExpression: Expression<Typed> | undefined;
 
   try {
-    const externalEnvironment = await resolveModuleDependencies(
-      currentModule,
-      resolveDependency
-    );
-
-    const environment = mergeExternalEnvironments(
-      defaultEnvironment,
-      externalEnvironment
-    );
-
+    const environment = await moduleExternalEnvironment(currentModule);
     const result = inferModule(currentModule, environment);
     typedModule = result.typedModule;
 
