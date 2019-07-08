@@ -1,11 +1,6 @@
 import { Primitives } from "./types";
 
 const vectorPrims: Primitives = {
-  nil: {
-    type: "[a]",
-    value: []
-  },
-
   cons: {
     type: "(-> a [a] _ [a])",
     value: <T>(_values: unknown, a: T, list: T[]): T[] => [a, ...list]
