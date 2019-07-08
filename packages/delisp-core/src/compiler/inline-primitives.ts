@@ -241,6 +241,22 @@ defineInlinePrimitive("zero?", "(-> number _ boolean)", ([x]) =>
   op("===", x, literal(0))
 );
 
+defineInlinePrimitive("<=", "(-> number number _ boolean)", ([x, y]) =>
+  op("<=", x, y)
+);
+
+defineInlinePrimitive("<", "(-> number number _ boolean)", ([x, y]) =>
+  op("<", x, y)
+);
+
+defineInlinePrimitive(">", "(-> number number _ boolean)", ([x, y]) =>
+  op(">", x, y)
+);
+
+defineInlinePrimitive(">=", "(-> number number _ boolean)", ([x, y]) =>
+  op(">=", x, y)
+);
+
 defineInlinePrimitive("string=", "(-> string string _ boolean)", ([x, y]) =>
   op("===", x, y)
 );

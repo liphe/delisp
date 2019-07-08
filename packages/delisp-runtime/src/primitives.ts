@@ -3,11 +3,6 @@ import { Primitives } from "./types";
 import vectorPrims from "./vector";
 
 const prims: Primitives = {
-  "<": {
-    type: "(-> number number _ boolean)",
-    value: (_values: unknown, a: number, b: number) => a < b
-  },
-
   unknown: {
     type: "(-> string string number number _ a)",
     value: (
