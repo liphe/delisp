@@ -301,6 +301,19 @@ defineInlinePrimitive(
   }
 );
 
+//
+// Vectors
+//
+
+defineInlinePrimitive("cons", "(-> a [a] _ [a])", ([x, lst]) => ({
+  type: "ArrayExpression",
+  elements: [x, { type: "SpreadElement", argument: lst }]
+}));
+
+defineInlinePrimitive("empty?", "(-> [a] _ boolean)", ([lst]) =>
+  op("===", member(lst, "length"), literal(0))
+);
+
 /*
 matches `:foo` and inlines the lens with type
 

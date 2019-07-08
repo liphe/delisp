@@ -1,11 +1,6 @@
 import { Primitives } from "./types";
 
 const vectorPrims: Primitives = {
-  cons: {
-    type: "(-> a [a] _ [a])",
-    value: <T>(_values: unknown, a: T, list: T[]): T[] => [a, ...list]
-  },
-
   first: {
     type: "(-> [a] (effect exp | _) (values a (-> a _ [a])))",
     value: <T>(values: any, list: T[]): T => {
@@ -31,11 +26,6 @@ const vectorPrims: Primitives = {
         throw Error("Cannot get first element of empty list");
       }
     }
-  },
-
-  "empty?": {
-    type: "(-> [a] _ boolean)",
-    value: <T>(_values: unknown, list: T[]): boolean => list.length === 0
   }
 };
 
