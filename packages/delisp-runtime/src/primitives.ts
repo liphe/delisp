@@ -1,4 +1,3 @@
-import booleanPrims from "./boolean";
 import stringPrims from "./string";
 import { Primitives } from "./types";
 import vectorPrims from "./vector";
@@ -21,7 +20,6 @@ const prims: Primitives = {
     }
   },
 
-  ...booleanPrims,
   ...vectorPrims,
   ...stringPrims
 };

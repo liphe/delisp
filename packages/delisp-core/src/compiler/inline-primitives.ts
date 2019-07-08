@@ -13,6 +13,7 @@ import {
   member,
   methodCall,
   objectExpression,
+  op1,
   op,
   primitiveCall
 } from "./estree-utils";
@@ -142,6 +143,30 @@ definePrimitiveValue("true", "boolean", () => {
 definePrimitiveValue("false", "boolean", () => {
   return literal(false);
 });
+
+defineInlinePrimitive("not", "(-> boolean _ boolean)", ([x]) => op1("!", x));
+
+defineInlinePrimitive(
+  "and",
+  "(-> boolean boolean _ boolean)",
+  ([left, right]) => ({
+    type: "LogicalExpression",
+    operator: "&&",
+    left,
+    right
+  })
+);
+
+defineInlinePrimitive(
+  "or",
+  "(-> boolean bolean _ boolean)",
+  ([left, right]) => ({
+    type: "LogicalExpression",
+    operator: "||",
+    left,
+    right
+  })
+);
 
 definePrimitiveValue("none", "none", () => {
   return identifier("undefined");

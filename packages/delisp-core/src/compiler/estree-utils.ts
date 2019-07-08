@@ -84,6 +84,13 @@ export function identifier(name: string): JS.Identifier {
   };
 }
 
+export function op1(
+  operator: JS.UnaryOperator,
+  argument: JS.Expression
+): JS.UnaryExpression {
+  return { type: "UnaryExpression", operator, prefix: true, argument };
+}
+
 export function op(
   operator: JS.BinaryOperator,
   left: JS.Expression,
