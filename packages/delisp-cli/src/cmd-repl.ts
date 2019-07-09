@@ -33,7 +33,7 @@ let rl: readline.Interface;
 const PROMPT = "λ ";
 
 let currentModule: Module;
-const context = createContext();
+const context = createContext(require);
 
 function getOutputFile(name: string): string {
   return getOutputFiles(name).jsFile;

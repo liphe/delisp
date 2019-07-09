@@ -16,11 +16,11 @@ import { mapObject } from "./utils";
 
 type Context = ReturnType<typeof createContext>;
 
-export function createContext() {
+export function createContext(requireFn: (id: string) => any) {
   const sandbox = {
     env: mapObject(primitives, p => p.value),
     console,
-    require,
+    require: requireFn,
     ...runtime
   };
   vm.createContext(sandbox);

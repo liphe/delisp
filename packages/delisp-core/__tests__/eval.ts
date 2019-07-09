@@ -10,7 +10,7 @@ function evaluateString(str: string): unknown {
     }
   });
   const s = readSyntax(str);
-  const context = createContext();
+  const context = createContext(() => null);
   return evaluate(s, env, context);
 }
 
