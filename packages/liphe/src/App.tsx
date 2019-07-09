@@ -101,20 +101,29 @@ const Token = styled.span`
 `;
 
 const PrettierEncoder: Encoder<React.ReactElement[]> = {
-  fromString: (x: string, kind: string, source?: Syntax<Typed>) => [
-    <Token
-      data-source={source}
-      className={kind}
-      onClick={() => {
-        console.log({ source });
-      }}
-      title={
-        source && isExpression(source) ? printType(source.info.type) : undefined
-      }
-    >
-      {x}
-    </Token>
-  ],
+  fromString: function PrettierEncoder(
+    x: string,
+    kind: string,
+    source?: Syntax<Typed>
+  ) {
+    return [
+      // eslint-disable-next-line react/jsx-key
+      <Token
+        data-source={source}
+        className={kind}
+        onClick={() => {
+          console.log({ source });
+        }}
+        title={
+          source && isExpression(source)
+            ? printType(source.info.resultingType)
+            : undefined
+        }
+      >
+        {x}
+      </Token>
+    ];
+  },
   concat: (...args: React.ReactElement[][]): React.ReactElement[] =>
     args.flat(1)
 };

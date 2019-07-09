@@ -2,7 +2,8 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "declaration": true
+    "declaration": true,
+    "module": "es2015"
   },
   "include": ["./src/", ],
   "exclude": ["node_modules", "**/*.spec.ts"],

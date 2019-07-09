@@ -1,11 +1,11 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "tsdist",
-    "noEmit": true,
-    "jsx": "react"
+    "outDir": "dist-ts",
+    "jsx": "react",
+    "module": "es2015"
   },
-  "include": ["./src/"],
+  "include": ["src/"],
   "references": [
     { "path": "../delisp-core/tsconfig.build.json" }
   ]
