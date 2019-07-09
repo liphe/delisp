@@ -6,7 +6,7 @@ module.exports = {
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
   collectCoverageFrom: ["src/**/*.ts"],
   verbose: true,
-  testPathIgnorePatterns: ["fixtures"],
+  testPathIgnorePatterns: ["fixtures", "dist", "dist-test"],
   globals: {
     "ts-jest": {
       tsConfig: "tsconfig.build.json"
