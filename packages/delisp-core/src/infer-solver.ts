@@ -15,13 +15,12 @@ import * as T from "./types";
 import { unify } from "./unify";
 import { difference, flatMap, intersection, union } from "./utils";
 
-type ConstraintKind = "expression-type" | "resulting-type";
+type ConstraintKind = "expression-type" | "resulting-type" | "effect-type";
 
 // Constraints impose which types should be equal (unified) and which
 // types are instances of other types.
 export type TConstraint =
   | TConstraintEqual
-  | TConstraintEffect
   | TConstraintImplicitInstance
   | TConstraintExplicitInstance;
 
@@ -41,18 +40,11 @@ export function constEqual(
   return { tag: "equal-constraint", expr, t, kind };
 }
 
-// A constraint stating that an expression's effect should be equal to
-// a given type.
-interface TConstraintEffect {
-  tag: "equal-effect-constraint";
-  expr: Expression<Typed>;
-  t: T.Type;
-}
 export function constEffect(
   expr: Expression<Typed>,
   t: T.Type
-): TConstraintEffect {
-  return { tag: "equal-effect-constraint", expr, t };
+): TConstraintEqual {
+  return constEqual(expr, t, "effect-type");
 }
 
 // A constriant stating that an expression's type is an instance of
@@ -106,9 +98,14 @@ export function constImplicitInstance(
 }
 
 function exprType(expr: Expression<Typed>, kind: ConstraintKind) {
-  return kind === "resulting-type"
-    ? expr.info.resultingType
-    : expr.info.expressionType;
+  switch (kind) {
+    case "resulting-type":
+      return expr.info.resultingType;
+    case "expression-type":
+      return expr.info.expressionType;
+    case "effect-type":
+      return expr.info.effect;
+  }
 }
 
 export function debugConstraints(constraints: TConstraint[]) {
@@ -121,8 +118,6 @@ export function debugConstraints(constraints: TConstraint[]) {
             false
           )} is ${printType(c.t, false)}`
         );
-      case "equal-effect-constraint":
-        return `${pprint(c.expr, 40)} has effect ${printType(c.t, false)}`;
       case "implicit-instance-constraint":
         return console.log(
           `${pprint(c.expr, 40)} is implicit instance of ${printType(
@@ -154,8 +149,6 @@ function activevars(constraints: TConstraint[]): string[] {
     switch (c.tag) {
       case "equal-constraint":
         return equal(exprType(c.expr, c.kind), c.t);
-      case "equal-effect-constraint":
-        return equal(c.expr.info.effect, c.t);
       case "implicit-instance-constraint":
         return union(
           listTypeVariables(exprType(c.expr, c.kind)),
@@ -210,12 +203,6 @@ function applySubstitutionToConstraint(
         t: applySubstitution(c.t, s),
         kind: c.kind
       };
-    case "equal-effect-constraint":
-      return {
-        tag: "equal-effect-constraint",
-        expr: applySubstitutionToExpr(c.expr, s),
-        t: applySubstitution(c.t, s)
-      };
     case "implicit-instance-constraint":
       return {
         tag: "implicit-instance-constraint",
@@ -259,7 +246,6 @@ export function solve(
   function solvable(c: TConstraint): boolean {
     switch (c.tag) {
       case "equal-constraint":
-      case "equal-effect-constraint":
       case "explicit-instance-constraint":
         return true;
       case "implicit-instance-constraint":
@@ -339,15 +325,7 @@ ${printType(applySubstitution(exprType, solution), false)}
 
   switch (constraint.tag) {
     case "equal-constraint": {
-      return solveEq(
-        constraint.kind === "expression-type"
-          ? constraint.expr.info.expressionType
-          : constraint.expr.info.resultingType,
-        constraint.t
-      );
-    }
-    case "equal-effect-constraint": {
-      return solveEq(constraint.expr.info.effect, constraint.t);
+      return solveEq(exprType(constraint.expr, constraint.kind), constraint.t);
     }
     case "explicit-instance-constraint": {
       return solve(
