@@ -46,6 +46,7 @@ interface SFunctionCallF<E> {
 }
 
 export interface LambdaList {
+  tag: "function-lambda-list";
   positionalArgs: Identifier[];
   location: Location;
 }
@@ -62,6 +63,7 @@ interface SVectorConstructorF<E> {
 }
 
 export interface SLetBindingF<E> {
+  tag: "let-bindings-binding";
   variable: Identifier;
   value: E;
 }

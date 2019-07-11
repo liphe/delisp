@@ -138,6 +138,7 @@ function parseLambdaList(ll: ASExpr): LambdaList {
   });
 
   return {
+    tag: "function-lambda-list",
     positionalArgs: symbols.map(parseIdentifier),
     location: ll.location
   };
@@ -241,6 +242,7 @@ function parseLetBindings(
     );
   }
   return bindings.fields.map(field => ({
+    tag: "let-bindings-binding",
     variable: parseIdentifier(field.label),
     value: convertExpr(field.value)
   }));
