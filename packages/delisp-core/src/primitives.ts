@@ -1,5 +1,5 @@
 import { primitives } from "@delisp/runtime";
-import { readType } from "./convert-type";
+import { readType } from "./type-convert";
 import { TypeSchema } from "./types";
 import { mapObject } from "./utils";
 

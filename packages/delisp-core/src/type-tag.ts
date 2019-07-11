@@ -1,4 +1,4 @@
-import { readType } from "./convert-type";
+import { readType } from "./type-convert";
 import { applySubstitution, normalizeValues } from "./type-utils";
 import { Type } from "./types";
 import { fromEntries, zip } from "./utils";

@@ -1,5 +1,5 @@
 import * as JS from "estree";
-import { readType } from "../convert-type";
+import { readType } from "../type-convert";
 import { InvariantViolation } from "../invariant";
 import { generateUniqueTVar } from "../type-generate";
 import { type } from "../type-tag";

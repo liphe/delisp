@@ -1,4 +1,4 @@
-import { readType } from "../src/convert-type";
+import { readType } from "../src/type-convert";
 import { isDeclaration, readSyntax } from "../src/index";
 import { inferType, InternalTypeEnvironment } from "../src/infer";
 import { ExternalEnvironment } from "../src/infer-environment";

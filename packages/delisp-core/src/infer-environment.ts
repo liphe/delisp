@@ -1,7 +1,7 @@
 import { either, isLeft } from "fp-ts/lib/Either";
 import * as t from "io-ts";
 import { PathReporter } from "io-ts/lib/PathReporter";
-import { readType } from "./convert-type";
+import { readType } from "./type-convert";
 import { printType } from "./type-printer";
 import { TypeSchema } from "./types";
 

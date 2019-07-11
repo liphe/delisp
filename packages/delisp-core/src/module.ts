@@ -1,4 +1,4 @@
-import { convert, WithErrors } from "./convert";
+import { convert, WithErrors } from "./syntax-convert";
 import { readAllFromString } from "./reader";
 import {
   isDefinition,

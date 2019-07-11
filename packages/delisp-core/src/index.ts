@@ -3,7 +3,7 @@ export {
   compileToString,
   moduleEnvironment
 } from "./compiler";
-export { collectConvertErrors, readSyntax } from "./convert";
+export { collectConvertErrors, readSyntax } from "./syntax-convert";
 export { printHighlightedExpr } from "./error-report";
 export { createContext, evaluate, evaluateModule } from "./eval";
 export {

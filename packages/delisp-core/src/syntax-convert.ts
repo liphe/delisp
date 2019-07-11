@@ -1,7 +1,7 @@
 import {
   checkUserDefinedTypeName,
   convert as convertType
-} from "./convert-type";
+} from "./type-convert";
 import { ConvertError, parseRecord, ParseRecordResult } from "./convert-utils";
 import { printHighlightedExpr } from "./error-report";
 import { Location } from "./input";

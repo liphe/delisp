@@ -1,5 +1,5 @@
 import { readFromString } from "../src/reader";
-import { convert as convert_ } from "./convert-type";
+import { convert as convert_ } from "./type-convert";
 import { printType } from "./type-printer";
 import * as T from "./types";
 
