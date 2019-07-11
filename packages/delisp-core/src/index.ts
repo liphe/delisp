@@ -34,14 +34,25 @@ export { default as primitives } from "./primitives";
 export { pprint, pprintAs, pprintModule, pprintModuleAs } from "./printer";
 export {
   createImportSyntax,
+  Declaration,
+  Expression,
   isDeclaration,
   isDefinition,
   isExport,
   isExpression,
   isTypeAlias,
-  Module
+  Module,
+  SDefinition,
+  SExport,
+  STypeAlias,
+  Syntax,
+  Typed
 } from "./syntax";
-export { findSyntaxByOffset, findSyntaxByRange } from "./syntax-utils";
+export {
+  exprFChildren,
+  findSyntaxByOffset,
+  findSyntaxByRange
+} from "./syntax-utils";
 export { printType } from "./type-printer";
 export { Type } from "./types";
 export { generateTSModuleDeclaration } from "./typescript-generation";
