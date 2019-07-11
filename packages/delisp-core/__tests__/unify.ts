@@ -1,6 +1,6 @@
 import { generateUniqueTVar } from "../src/type-generate";
 import * as T from "../src/types";
-import { unify } from "../src/unify";
+import { unify } from "../src/type-unify";
 
 describe("Unification", () => {
   it("should perform an occur check", () => {

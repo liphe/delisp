@@ -12,7 +12,7 @@ import {
   Substitution
 } from "./type-utils";
 import * as T from "./types";
-import { unify } from "./unify";
+import { unify } from "./type-unify";
 import { difference, flatMap, intersection, union } from "./utils";
 
 type ConstraintKind = "expression-type" | "resulting-type" | "effect-type";
