@@ -29,8 +29,12 @@ function printString(str: string, source: S.Syntax): Doc {
   return text(`"${escaped}"`, ["string"], source);
 }
 
-function printIdentifier(name: string, source?: S.Syntax): Doc {
-  return text(name, ["identifier"], source);
+function printIdentifier(
+  name: string,
+  source?: S.Syntax,
+  kinds: string[] = []
+): Doc {
+  return text(name, ["identifier", ...kinds], source);
 }
 
 function keyword(name: string, source?: S.Syntax): Doc {
@@ -122,7 +126,7 @@ function printExpr(expr: S.Expression): Doc {
             list(
               align(
                 ...e.node.lambdaList.positionalArgs.map(x =>
-                  printIdentifier(x.name)
+                  printIdentifier(x.name, undefined, ["argument"])
                 )
               )
             )
@@ -144,7 +148,13 @@ function printExpr(expr: S.Expression): Doc {
           map(
             align(
               ...e.node.bindings.map(b =>
-                concat(printIdentifier(b.variable.name), space, b.value)
+                concat(
+                  printIdentifier(b.variable.name, undefined, [
+                    "lexical-variable-declaration"
+                  ]),
+                  space,
+                  b.value
+                )
               )
             )
           ),
@@ -226,7 +236,9 @@ function printExpr(expr: S.Expression): Doc {
           // List of variables
           list(
             join(
-              e.node.variables.map(v => printIdentifier(v.name, source)),
+              e.node.variables.map(v =>
+                printIdentifier(v.name, source, ["lexical-variable-definition"])
+              ),
               space
             )
           ),
@@ -247,7 +259,9 @@ function print(form: S.Syntax): Doc {
           list(
             keyword("define", form),
             space,
-            printIdentifier(form.node.variable.name),
+            printIdentifier(form.node.variable.name, undefined, [
+              "variable-definition"
+            ]),
             indent(concat(line, print(form.node.value)))
           )
         );
@@ -285,7 +299,7 @@ function print(form: S.Syntax): Doc {
           list(
             keyword("type", form),
             space,
-            printIdentifier(form.node.alias.name),
+            printIdentifier(form.node.alias.name, undefined, ["definition"]),
             indent(
               concat(
                 line,

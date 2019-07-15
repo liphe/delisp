@@ -83,6 +83,10 @@ const Code = styled.pre`
     color: #bbb;
   }
 
+  .variable-definition {
+    color: #c42;
+  }
+
   .keyword {
     color: blue;
   }
