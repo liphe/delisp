@@ -409,5 +409,10 @@ describe("Type inference", () => {
       const typedExpr = inferType(expr, emptyExternalEnv, {}, false);
       expect(typedExpr).toHaveProperty(["node", "tag"], "type-annotation");
     });
+
+    it("Annotations can statethe same type for an expression with different variable names", () => {
+      const env = { variables: { id: readType("(-> a1 b1 a1)") }, types: {} };
+      expect(typeOf("(the (-> a2 b2 a2) id)", env)).toBe("(-> α β α)");
+    });
   });
 });

@@ -249,7 +249,7 @@ export function unify(t1: T.Type, t2: T.Type, ctx: Substitution): UnifyResult {
     t2.node.tag === "type-variable" &&
     t2.node.userSpecified
   ) {
-    return t1 === t2
+    return t1.node.name === t2.node.name
       ? success(ctx)
       : {
           tag: "unify-mismatch-error",
