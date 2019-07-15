@@ -11,6 +11,8 @@
 
 import { InvariantViolation } from "./invariant";
 
+type Kind = string[];
+
 interface DocNil {
   tag: "nil";
 }
@@ -19,7 +21,7 @@ interface DocText {
   content: string;
   next: Doc;
   source?: unknown;
-  kind: string;
+  kind: Kind;
 }
 interface DocLine {
   tag: "line";
@@ -54,7 +56,7 @@ export const nil: Doc = { tag: "nil" };
 //
 
 /** A document consisting of a literal string. */
-export function text(content: string, kind: string, source?: unknown): Doc {
+export function text(content: string, kind: Kind, source?: unknown): Doc {
   if (content.includes("\n")) {
     throw new Error(`Newline is not allowed in a call to 'text'`);
   }
@@ -185,7 +187,7 @@ function flatten(doc: Doc): Doc {
       return {
         tag: "text",
         content: " ",
-        kind: "space",
+        kind: ["space"],
         next: flatten(doc.next)
       };
     case "union":
@@ -256,7 +258,7 @@ export function group(doc: Doc, width?: number): Doc {
 //
 
 /** A space. */
-export const space = text(" ", "space");
+export const space = text(" ", ["space"]);
 
 /** Concatenate a sequence of documents with a separator.
  * @description
@@ -370,7 +372,7 @@ function repeatChar(ch: string, n: number): string {
  * For an example, look at `StringEncoder`.
  */
 export interface Encoder<A> {
-  fromString(text: string, kind: string, source?: unknown): A;
+  fromString(text: string, kind: Kind, source?: unknown): A;
   concat(...args: A[]): A;
 }
 
@@ -386,7 +388,7 @@ export const StringEncoder: Encoder<string> = {
 /** Like `.join(sep)` but it works for an arbitrary encoder. */
 export function encodeMany<A>(encoder: Encoder<A>, args: A[], separator: A): A {
   if (args.length === 0) {
-    return encoder.fromString("", "");
+    return encoder.fromString("", []);
   } else if (args.length === 1) {
     return args[0];
   } else {
@@ -404,7 +406,7 @@ function layout<A>(
 ): A {
   switch (doc.tag) {
     case "nil":
-      return encoder.fromString("", "");
+      return encoder.fromString("", []);
     case "text":
       return encoder.concat(
         encoder.fromString(doc.content, doc.kind, doc.source),
@@ -412,8 +414,11 @@ function layout<A>(
       );
     case "line":
       return encoder.concat(
-        encoder.fromString("\n", "space"),
-        encoder.fromString(repeatChar(" ", indentation), "indentation"),
+        encoder.fromString("\n", ["space"]),
+        encoder.fromString(repeatChar(" ", indentation), [
+          "space",
+          "indentation"
+        ]),
         layout(doc.next, indentation, 0, encoder)
       );
     case "union":
@@ -426,15 +431,14 @@ function layout<A>(
             layout(doc.root, indentation + alignment, 0, encoder),
             ...doc.docs.map(d =>
               encoder.concat(
-                encoder.fromString(
-                  repeatChar(" ", indentation + alignment),
+                encoder.fromString(repeatChar(" ", indentation + alignment), [
                   "space"
-                ),
+                ]),
                 layout(d, indentation + alignment, 0, encoder)
               )
             )
           ],
-          encoder.fromString("\n", "space")
+          encoder.fromString("\n", ["space"])
         ),
         layout(doc.next, indentation, alignment, encoder)
       );

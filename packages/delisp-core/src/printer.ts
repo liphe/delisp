@@ -26,27 +26,31 @@ function indent(x: Doc, level = 2): Doc {
 
 function printString(str: string, source: S.Syntax): Doc {
   const escaped = str.replace(/\n/g, "\\n").replace(/"/g, '\\"');
-  return text(`"${escaped}"`, "string", source);
+  return text(`"${escaped}"`, ["string"], source);
 }
 
 function printIdentifier(name: string, source?: S.Syntax): Doc {
-  return text(name, "identifier", source);
+  return text(name, ["identifier"], source);
 }
 
 function list(...docs: Doc[]): Doc {
-  return concat(text("(", "delimiter"), ...docs, text(")", "delimiter"));
+  return concat(text("(", ["delimiter"]), ...docs, text(")", ["delimiter"]));
 }
 
 function vector(...docs: Doc[]): Doc {
-  return concat(text("[", "delimiter"), ...docs, text("]", "delimiter"));
+  return concat(text("[", ["delimiter"]), ...docs, text("]", ["delimiter"]));
 }
 
 function map(...docs: Doc[]): Doc {
-  return concat(text("{", "delimiter"), ...docs, text("}", "delimiter"));
+  return concat(text("{", ["delimiter"]), ...docs, text("}", ["delimiter"]));
 }
 
 function lines(...docs: Doc[]): Doc {
   return concat(line, join(docs, line));
+}
+
+function printCase(pattern: Doc, body: Doc[]) {
+  return group(concat(list(pattern, indent(concat(line, join(body, line))))));
 }
 
 function printExpr(expr: S.Expression): Doc {
@@ -59,12 +63,12 @@ function printExpr(expr: S.Expression): Doc {
           );
         }
         const { input, start, end } = e.location;
-        return text(input.toString().slice(start, end), "unknown");
+        return text(input.toString().slice(start, end), ["unknown"]);
       }
       case "string":
         return printString(e.node.value, source);
       case "number":
-        return text(String(e.node.value), "number", source);
+        return text(String(e.node.value), ["number"], source);
       case "vector": {
         return group(vector(align(...e.node.values)));
       }
@@ -75,10 +79,10 @@ function printExpr(expr: S.Expression): Doc {
               join(
                 [
                   ...e.node.fields.map(({ label, value }) =>
-                    concat(text(label.name, "label"), space, value)
+                    concat(text(label.name, ["label"]), space, value)
                   ),
                   ...(e.node.extends
-                    ? [concat(text("|", "label-ext"), space, e.node.extends)]
+                    ? [concat(text("|", ["label-ext"]), space, e.node.extends)]
                     : [])
                 ],
                 line
@@ -94,7 +98,7 @@ function printExpr(expr: S.Expression): Doc {
         return group(
           list(
             concat(
-              text("if", "keyword", source),
+              text("if", ["keyword"], source),
               space,
               align(e.node.condition, e.node.consequent, e.node.alternative)
             )
@@ -108,7 +112,7 @@ function printExpr(expr: S.Expression): Doc {
       case "function":
         const singleBody = e.node.body.length === 1;
         const doc = list(
-          text("lambda", "keyword", source),
+          text("lambda", ["keyword"], source),
           space,
           group(
             list(
@@ -131,12 +135,12 @@ function printExpr(expr: S.Expression): Doc {
 
       case "let-bindings":
         return list(
-          text("let", "keyword", source),
+          text("let", ["keyword"], source),
           space,
           map(
             align(
               ...e.node.bindings.map(b =>
-                concat(text(b.variable.name, "identifier"), space, b.value)
+                concat(printIdentifier(b.variable.name), space, b.value)
               )
             )
           ),
@@ -146,9 +150,9 @@ function printExpr(expr: S.Expression): Doc {
       case "type-annotation":
         return group(
           list(
-            text("the", "keyword", source),
+            text("the", ["keyword"], source),
             space,
-            text(e.node.typeWithWildcards.print(), "type"),
+            text(e.node.typeWithWildcards.print(), ["type"]),
             indent(concat(line, e.node.value))
           )
         );
@@ -156,21 +160,15 @@ function printExpr(expr: S.Expression): Doc {
       case "do-block":
         return list(
           concat(
-            text("do", "keyword", source),
+            text("do", ["keyword"], source),
             indent(concat(line, join([...e.node.body, e.node.returning], line)))
           )
         );
 
-      case "match":
-        function printCase(pattern: Doc, body: Doc[]) {
-          return group(
-            concat(list(pattern, indent(concat(line, join(body, line)))))
-          );
-        }
-
+      case "match": {
         return list(
           concat(
-            text("match", "keyword", source),
+            text("match", ["keyword"], source),
             space,
             e.node.value,
             indent(
@@ -181,7 +179,7 @@ function printExpr(expr: S.Expression): Doc {
                     ...e.node.cases.map(c => {
                       return printCase(
                         map(
-                          text(c.label, "keyword"),
+                          text(c.label, ["keyword"]),
                           space,
                           printIdentifier(c.variable.name)
                         ),
@@ -191,7 +189,7 @@ function printExpr(expr: S.Expression): Doc {
 
                     e.node.defaultCase
                       ? printCase(
-                          text(":default", "keyword"),
+                          text(":default", ["keyword"]),
                           e.node.defaultCase
                         )
                       : nil
@@ -202,13 +200,14 @@ function printExpr(expr: S.Expression): Doc {
             )
           )
         );
+      }
 
       case "case":
         return group(
           list(
-            text("case", "keyword", source),
+            text("case", ["keyword"], source),
             space,
-            text(e.node.label, "label"),
+            text(e.node.label, ["label"]),
             e.node.value ? indent(concat(line, e.node.value)) : nil
           )
         );
@@ -217,7 +216,7 @@ function printExpr(expr: S.Expression): Doc {
         return group(
           list(
             groupalign(
-              text("values", "keyword", source),
+              text("values", ["keyword"], source),
               align(...e.node.values)
             )
           )
@@ -226,7 +225,7 @@ function printExpr(expr: S.Expression): Doc {
 
       case "multiple-value-bind":
         return list(
-          text("multiple-value-bind", "keyword", source),
+          text("multiple-value-bind", ["keyword"], source),
           space,
           // List of variables
           list(
@@ -250,7 +249,7 @@ function print(form: S.Syntax): Doc {
       case "definition":
         return group(
           list(
-            text("define", "keyword", form),
+            text("define", ["keyword"], form),
             space,
             printIdentifier(form.node.variable.name),
             indent(concat(line, print(form.node.value)))
@@ -259,18 +258,18 @@ function print(form: S.Syntax): Doc {
 
       case "import":
         return list(
-          text("import", "keyword", form),
+          text("import", ["keyword"], form),
           space,
-          text(form.node.variable.name, "identifier"),
+          printIdentifier(form.node.variable.name),
           space,
-          text(":from", "keyword"),
+          text(":from", ["keyword"]),
           space,
           printString(form.node.source, form)
         );
 
       case "export":
         return list(
-          text("export", "keyword", form),
+          text("export", ["keyword"], form),
           space,
           form.node.identifiers.length === 1
             ? printIdentifier(form.node.identifiers[0].name, form)
@@ -288,11 +287,14 @@ function print(form: S.Syntax): Doc {
       case "type-alias":
         return group(
           list(
-            text("type", "keyword", form),
+            text("type", ["keyword"], form),
             space,
-            text(form.node.alias.name, "identifier"),
+            printIdentifier(form.node.alias.name),
             indent(
-              concat(line, text(printType(form.node.definition, false), "type"))
+              concat(
+                line,
+                text(printType(form.node.definition, false), ["type"])
+              )
             )
           )
         );
@@ -318,7 +320,7 @@ export function pprintModuleAs<A>(
   return encodeMany(
     encoder,
     m.body.map((s, i) => {
-      let newlines;
+      let newlines: number;
       if (i > 0) {
         const previousForm = m.body[i - 1];
 
@@ -335,11 +337,11 @@ export function pprintModuleAs<A>(
 
       const nl =
         newlines > 1
-          ? encoder.fromString("\n", "space")
-          : encoder.fromString("", "");
+          ? encoder.fromString("\n", ["space"])
+          : encoder.fromString("", []);
       return encoder.concat(nl, pprintAs(s, lineWidth, encoder));
     }),
-    encoder.fromString("\n", "space")
+    encoder.fromString("\n", ["space"])
   );
 }
 

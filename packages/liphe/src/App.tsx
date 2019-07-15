@@ -105,13 +105,13 @@ const Token = styled.span`
 const PrettierEncoder: Encoder<React.ReactElement[]> = {
   fromString: function PrettierEncoder(
     x: string,
-    kind: string,
+    kind: string[],
     source?: Syntax<Typed>
   ) {
     return [
       <Token
         data-source={source}
-        className={kind}
+        className={kind.join(" ")}
         onClick={() => {
           console.log({ source });
         }}
