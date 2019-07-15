@@ -8,7 +8,8 @@
     "build": "tsc --build packages/",
     "bootstrap": "yarn workspace delisp run bootstrap",
     "lint": "eslint --ext .ts,.tsx .",
-    "test": "yarn workspaces run test"
+    "test": "yarn workspaces run test",
+    "publish": "yarn build; yarn bootstrap; lerna publish"
   },
   "devDependencies": {
     "@types/jest": "^24.0.13",
