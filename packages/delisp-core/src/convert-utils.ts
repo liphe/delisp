@@ -35,9 +35,7 @@ export function parseRecord(expr: ASExprMap): ParseRecordResult {
       const field = invalidFields[0];
       throw new ConvertError(
         printHighlightedExpr(
-          `'${
-            field.label.name
-          }' is not a valid field name. Fields should start with ':' (colon).`,
+          `'${field.label.name}' is not a valid field name. Fields should start with ':' (colon).`,
           field.label.location
         )
       );

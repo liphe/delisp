@@ -133,24 +133,22 @@ const symbol: Parser<ASExprSymbol> = atLeastOne(
 const numberOrSymbol: Parser<ASExprSymbol | ASExprNumber> = atLeastOne(
   alternatives(alphanumeric, specialChar)
 )
-  .map(
-    (chars, location): ASExprSymbol | ASExprNumber => {
-      const str = chars.join("");
-      if (/^\-?[0-9]+(\.[0-9]+)?$/.test(str)) {
-        return {
-          tag: "number",
-          value: parseFloat(str),
-          location
-        };
-      } else {
-        return {
-          tag: "symbol",
-          name: str,
-          location
-        };
-      }
+  .map((chars, location): ASExprSymbol | ASExprNumber => {
+    const str = chars.join("");
+    if (/^\-?[0-9]+(\.[0-9]+)?$/.test(str)) {
+      return {
+        tag: "number",
+        value: parseFloat(str),
+        location
+      };
+    } else {
+      return {
+        tag: "symbol",
+        name: str,
+        location
+      };
     }
-  )
+  })
   .description("number or symbol");
 
 //

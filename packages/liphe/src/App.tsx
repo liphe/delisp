@@ -1,3 +1,5 @@
+/* eslint-disable react/jsx-key */
+
 import React from "react";
 import styled from "styled-components";
 
@@ -107,7 +109,6 @@ const PrettierEncoder: Encoder<React.ReactElement[]> = {
     source?: Syntax<Typed>
   ) {
     return [
-      // eslint-disable-next-line react/jsx-key
       <Token
         data-source={source}
         className={kind}
@@ -150,3 +151,5 @@ export function App({
     </div>
   );
 }
+
+/* eslint-enable react/jsx-key */
