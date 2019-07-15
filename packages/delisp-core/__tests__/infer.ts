@@ -410,9 +410,16 @@ describe("Type inference", () => {
       expect(typedExpr).toHaveProperty(["node", "tag"], "type-annotation");
     });
 
-    it("Annotations can statethe same type for an expression with different variable names", () => {
+    it("Annotations can state the same type for an expression with different variable names", () => {
       const env = { variables: { id: readType("(-> a1 b1 a1)") }, types: {} };
       expect(typeOf("(the (-> a2 b2 a2) id)", env)).toBe("(-> α β α)");
+    });
+
+    it("User-specified type variables do not propagate to conflict with each other", () => {
+      const env = { variables: { id: readType("(-> a b a)") }, types: {} };
+      expect(typeOf("(the (-> c d c) (the (-> a b a) id))", env)).toBe(
+        "(-> α β α)"
+      );
     });
   });
 });

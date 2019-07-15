@@ -88,9 +88,27 @@ function unifyVariable(v: T.Var, t: T.Type, ctx: Substitution): UnifyResult {
     const err = occurCheck(v, t);
     if (err) {
       return err;
-    } else {
-      return success({ ...ctx, [v.node.name]: t });
     }
+    // User-specified variables, also known as 'rigid variables', are
+    // type variables that the user has specified as part of a type
+    // annotation. We differentiate those from ordinary type variables
+    // to prevent this from type checking:
+    //
+    // (the a 3)
+    //
+    // The variable `a`, being user specified, shouldn't unify with 3,
+    // as the user should not specify types more general than the
+    // actual type of the expression.
+    //
+    if (v.node.userSpecified) {
+      return {
+        tag: "unify-mismatch-error",
+        t1: v,
+        t2: t
+      };
+    }
+
+    return success({ ...ctx, [v.node.name]: t });
   }
 }
 
@@ -243,30 +261,6 @@ export function unify(t1: T.Type, t2: T.Type, ctx: Substitution): UnifyResult {
           t1,
           t2
         };
-  } else if (
-    // User-specified variables, also known as 'rigid variables', are
-    // type variables that the user has specified as part of a type
-    // annotation. We differentiate those from ordinary type variables
-    // to prevent this from type checking:
-    //
-    // (the a 3)
-    //
-    // The variable `a`, being user specified, shouldn't unify with 3,
-    // as the user should not specify types more general than the
-    // actual type of the expression.
-    //
-    t1.node.tag === "type-variable" &&
-    t1.node.userSpecified &&
-    t2.node.tag === "type-variable" &&
-    t2.node.userSpecified
-  ) {
-    return t1.node.name === t2.node.name
-      ? success(ctx)
-      : {
-          tag: "unify-mismatch-error",
-          t1,
-          t2
-        };
   } else if (t1.node.tag === "application" && t2.node.tag === "application") {
     // RULE: (uni-app)
     return unifyArray(
@@ -274,10 +268,10 @@ export function unify(t1: T.Type, t2: T.Type, ctx: Substitution): UnifyResult {
       [t2.node.op, ...t2.node.args],
       ctx
     );
-  } else if (t1.node.tag === "type-variable" && !t1.node.userSpecified) {
+  } else if (t1.node.tag === "type-variable") {
     // RULE: (uni-varl)
     return unifyVariable({ node: t1.node }, { node: t2.node }, ctx);
-  } else if (t2.node.tag === "type-variable" && !t2.node.userSpecified) {
+  } else if (t2.node.tag === "type-variable") {
     // RULE: (uni-varr)
     return unifyVariable({ node: t2.node }, { node: t1.node }, ctx);
   } else if (t1.node.tag === "empty-row" && t2.node.tag === "empty-row") {

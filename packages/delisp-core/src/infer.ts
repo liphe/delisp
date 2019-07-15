@@ -525,6 +525,11 @@ function infer(
       const effect = generateUniqueTVar();
 
       const t = expandTypeAliases(
+        // Note that the type variables specified by the user are
+        // user-specified (or rigid) variables. It is important that
+        // we instantiate this type in order to create fresh
+        // user-specified variables to avoid possible name clashes as
+        // type variables are compared by name.
         expr.node.typeWithWildcards.instantiate(),
         internalTypes
       );
