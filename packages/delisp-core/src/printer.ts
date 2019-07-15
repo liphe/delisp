@@ -58,7 +58,7 @@ function lines(...docs: Doc[]): Doc {
 }
 
 function printCase(pattern: Doc, body: Doc[]) {
-  return group(concat(list(pattern, indent(concat(line, join(body, line))))));
+  return group(concat(list(pattern, indent(lines(...body)))));
 }
 
 function printExpr(expr: S.Expression): Doc {
@@ -175,7 +175,7 @@ function printExpr(expr: S.Expression): Doc {
         return list(
           concat(
             keyword("do", source),
-            indent(concat(line, join([...e.node.body, e.node.returning], line)))
+            indent(lines(...e.node.body, e.node.returning))
           )
         );
 
@@ -243,7 +243,7 @@ function printExpr(expr: S.Expression): Doc {
             )
           ),
           indent(concat(line, e.node.form), 4),
-          indent(concat(line, join(e.node.body, line)))
+          indent(lines(...e.node.body))
         );
     }
   });
