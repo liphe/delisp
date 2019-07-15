@@ -244,6 +244,17 @@ export function unify(t1: T.Type, t2: T.Type, ctx: Substitution): UnifyResult {
           t2
         };
   } else if (
+    // User-specified variables, also known as 'rigid variables', are
+    // type variables that the user has specified as part of a type
+    // annotation. We differentiate those from ordinary type variables
+    // to prevent this from type checking:
+    //
+    // (the a 3)
+    //
+    // The variable `a`, being user specified, shouldn't unify with 3,
+    // as the user should not specify types more general than the
+    // actual type of the expression.
+    //
     t1.node.tag === "type-variable" &&
     t1.node.userSpecified &&
     t2.node.tag === "type-variable" &&

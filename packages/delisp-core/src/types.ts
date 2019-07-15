@@ -19,6 +19,9 @@ interface ApplicationF<T> {
 interface VarF<_T> {
   tag: "type-variable";
   name: string;
+  // True if a variable has been originated as part of a
+  // user-specified type annotation. Those variables have special
+  // treatment during type inference.
   userSpecified: boolean;
 }
 
