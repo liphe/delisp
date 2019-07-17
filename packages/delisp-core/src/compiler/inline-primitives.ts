@@ -290,7 +290,7 @@ defineInlinePrimitive("%fst", "(-> (* a b) _ a)", ([pair]) => {
 });
 
 defineInlinePrimitive("%snd", "(-> (* a b) _ b)", ([pair]) => {
-  return primitiveCall("primtSnd", pair);
+  return primitiveCall("primSnd", pair);
 });
 
 defineInlinePrimitive(
@@ -337,9 +337,9 @@ defineMagicPrimitive(
     );
 
     const lensType = generalize(
-      type`(-> ${recordType} 
-               _ 
-               (values ${fieldType} 
+      type`(-> ${recordType}
+               _
+               (values ${fieldType}
                        (-> ${newFieldType} _ ${newRecordType})))`,
       []
     );
