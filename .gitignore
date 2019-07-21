@@ -5,3 +5,4 @@ coverage
 .vscode
 .delisp/
 dist-ts/
+result*
