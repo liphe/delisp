@@ -26,6 +26,7 @@ expect.extend({
   }
 });
 
+/* eslint-disable @typescript-eslint/no-namespace */
 declare global {
   namespace jest {
     interface Matchers<R> {
@@ -33,6 +34,7 @@ declare global {
     }
   }
 }
+/* eslint-enable @typescript-eslint/no-namespace */
 
 function readExpr(code: string): Expression {
   const syntax = readSyntax(code);
