@@ -9,9 +9,10 @@ const {
 let state = initialState;
 
 const id = x => x;
+const ctx = {};
 
-state = reducer(id, state, addTodo(id, "Write todo app!"));
-state = reducer(id, state, completeAll(id));
-state = reducer(id, state, addTodo(id, "Complete more todos"));
+state = reducer(id, ctx, state, addTodo(id, ctx, "Write todo app!"));
+state = reducer(id, ctx, state, completeAll(id, ctx));
+state = reducer(id, ctx, state, addTodo(id, ctx, "Complete more todos"));
 
-showTodos(id, state);
+showTodos(id, ctx, state);
