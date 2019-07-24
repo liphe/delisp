@@ -31,6 +31,10 @@ import { moduleExportedDefinitions } from "./module";
 import primitives from "./primitives";
 import { pprint } from "./printer";
 import * as S from "./syntax";
+import {
+  lambdaListAllArguments,
+  funcallAllArguments
+} from "./syntax-functions";
 import { generateUniqueTVar } from "./type-generate";
 import { type } from "./type-tag";
 import {
@@ -340,7 +344,9 @@ function infer(
       };
     }
     case "function": {
-      const fnargs = expr.node.lambdaList.positionalArgs.map(a => a.name);
+      const fnargs = lambdaListAllArguments(expr.node.lambdaList).map(
+        a => a.name
+      );
       const argtypes = fnargs.map(_ => generateUniqueTVar());
 
       const bodyEffect = generateUniqueTVar();
@@ -385,7 +391,11 @@ function infer(
 
     case "function-call": {
       const ifn = infer(expr.node.fn, monovars, internalTypes, false);
-      const iargs = inferMany(expr.node.args, monovars, internalTypes);
+      const iargs = inferMany(
+        funcallAllArguments({ ...expr, node: { ...expr.node } }),
+        monovars,
+        internalTypes
+      );
 
       const primaryType = generateUniqueTVar();
       const valuesType = type`(values ${primaryType} | _)`;
@@ -403,7 +413,7 @@ function infer(
           node: {
             ...expr.node,
             fn: ifn.result,
-            args: iargs.result
+            userArguments: iargs.result.slice(1) // don't include the context argument
           },
           info: new S.Typed({
             effect,

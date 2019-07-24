@@ -38,7 +38,7 @@ export function mapExpr<I, A, B>(
         node: {
           ...expr.node,
           fn: fn(expr.node.fn),
-          args: expr.node.args.map(fn)
+          userArguments: expr.node.userArguments.map(fn)
         }
       };
     case "conditional":
@@ -141,7 +141,7 @@ export function exprFChildren<I, E>(e: S.ExpressionF<I, E>): E[] {
     case "conditional":
       return [e.node.condition, e.node.consequent, e.node.alternative];
     case "function-call":
-      return [e.node.fn, ...e.node.args];
+      return [e.node.fn, ...e.node.userArguments];
     case "function":
       return e.node.body;
     case "vector":

@@ -83,6 +83,7 @@ describe("Type inference", () => {
           "+": readType("(-> ctx number number _ number)"),
           const: readType("(-> ctx1 a _ (-> ctx2 b _ a))")
         },
+
         types: {}
       };
       expect(typeOf("(+ 1 2)", env)).toBeType("number");

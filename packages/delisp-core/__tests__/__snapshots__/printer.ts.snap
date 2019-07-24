@@ -8,8 +8,7 @@ exports[`Pretty Printer shold print definitions beautifully 1`] = `
 exports[`Pretty Printer shold print definitions beautifully 2`] = `
 "
 (define x
-  (lambda (*context*
-           aaa
+  (lambda (aaa
            bbb
            ccc
            ddd
@@ -38,7 +37,7 @@ exports[`Pretty Printer shold print definitions beautifully 2`] = `
 
 exports[`Pretty Printer should align nested function calls 1`] = `
 "
-(funcall *context*
+(funcall aaaaa
          aaaaa
          aaaaa
          aaaaa
@@ -46,8 +45,7 @@ exports[`Pretty Printer should align nested function calls 1`] = `
          aaaaa
          aaaaa
          aaaaa
-         aaaaa
-         (fxyz *context* 0 111 222)
+         (fxyz 0 111 222)
          aaaaa
          aaaaa
          aaaaa
@@ -59,17 +57,15 @@ exports[`Pretty Printer should align nested function calls 1`] = `
 
 exports[`Pretty Printer should align nested function calls 2`] = `
 "
-(funcall *context* aaaaa aaaaa aaaaa (fxyz *context* 0 111 222))"
+(funcall aaaaa aaaaa aaaaa (fxyz 0 111 222))"
 `;
 
 exports[`Pretty Printer should align nested function calls 3`] = `
 "
-(funcall *context*
+(funcall aaaaa
          aaaaa
          aaaaa
-         aaaaa
-         (fxyz *context*
-               0
+         (fxyz 0
                111
                222
                333
@@ -93,20 +89,7 @@ exports[`Pretty Printer should break long bodies in match expressions 1`] = `
 "
 (match value
   ({:version number}
-    (+ *context*
-       1234
-       1234
-       1234
-       1234
-       1234
-       123
-       1234
-       1234
-       1234
-       1234
-       1234
-       1234
-       number))
+    (+ 1234 1234 1234 1234 1234 123 1234 1234 1234 1234 1234 1234 number))
   ({:unrelesed _} () number))"
 `;
 
@@ -120,13 +103,11 @@ ccc"
 exports[`Pretty Printer should place all arguments of a function call in the next line if necessary 1`] = `
 "
 (this-is-a-very-long-and-ugly-function-name
- *context*
- (axbxcxd *context*
-          (a *context* b c d)
-          (a *context* b c d)
-          (a *context* b c d)
-          (a *context* b c d)
-          (a *context* b c d)))"
+ (axbxcxd (a b c d)
+          (a b c d)
+          (a b c d)
+          (a b c d)
+          (a b c d)))"
 `;
 
 exports[`Pretty Printer should preserve some empty lines 1`] = `
@@ -149,14 +130,11 @@ exports[`Pretty Printer should pretty match expressions 1`] = `
 
 exports[`Pretty Printer should pretty print a combination of lambda and function call 1`] = `
 "
-(foo *context*
-     (lambda (*context* x y z)
-       (funcall *context*
+(foo (lambda (x y z)
+       (funcall aaaaa
                 aaaaa
                 aaaaa
-                aaaaa
-                (fxyz *context*
-                      0
+                (fxyz 0
                       111
                       222
                       333
@@ -179,8 +157,8 @@ exports[`Pretty Printer should pretty print a combination of lambda and function
 exports[`Pretty Printer should pretty print do blocks 1`] = `
 "
 (do
-  (print *context* \\"hello\\")
-  (print *context* \\"bye bye!\\"))"
+  (print \\"hello\\")
+  (print \\"bye bye!\\"))"
 `;
 
 exports[`Pretty Printer should pretty print tag forms 1`] = `
@@ -207,12 +185,8 @@ exports[`Pretty Printer should pretty print type type applications 1`] = `
 exports[`Pretty Printer should print amll real code beautifully 1`] = `
 "
 (define bq-frob
-  (lambda (*context* x)
-    (and *context*
-         (consp *context* x)
-         (or *context*
-             (eq *context* (car *context* x) *comma*)
-             (eq *context* (car *context* x) *comma-atsign*)))))"
+  (lambda (x)
+    (and (consp x) (or (eq (car x) *comma*) (eq (car x) *comma-atsign*)))))"
 `;
 
 exports[`Pretty Printer should print conditional expressions nicely 1`] = `
@@ -229,17 +203,8 @@ exports[`Pretty Printer should print conditional expressions nicely 2`] = `
 
 exports[`Pretty Printer should print deeply nested function calls nicely 1`] = `
 "
-(function-call-1 *context*
-                 (function-call-2 *context*
-                                  (function-call-3 *context*
-                                                   (function-call-4
-                                                    *context*
-                                                    (function-call-5 *context*
-                                                                     3
-                                                                     4
-                                                                     5
-                                                                     6
-                                                                     7))))
+(function-call-1 (function-call-2 (function-call-3 (function-call-4
+                                                    (function-call-5 3 4 5 6 7))))
                  30)"
 `;
 
@@ -260,36 +225,18 @@ exports[`Pretty Printer should print extended records 1`] = `
 
 exports[`Pretty Printer should print lambda abstractions beautifully 1`] = `
 "
-(lambda (*context* aaa bbb ccc) xxx)"
+(lambda (aaa bbb ccc) xxx)"
 `;
 
 exports[`Pretty Printer should print lambda abstractions beautifully 2`] = `
 "
-(lambda (*context*
-         aaa
-         bbb
-         ccc
-         ddd
-         eee
-         fff
-         ggg
-         hhh
-         iii
-         jjj
-         kkk
-         lll
-         mmm
-         nnn
-         ooo
-         ppp
-         qqq)
+(lambda (aaa bbb ccc ddd eee fff ggg hhh iii jjj kkk lll mmm nnn ooo ppp qqq)
   xxx)"
 `;
 
 exports[`Pretty Printer should print lambda abstractions beautifully 3`] = `
 "
-(lambda (*context*
-         aaa
+(lambda (aaa
          bbb
          ccc
          ddd
@@ -319,39 +266,37 @@ exports[`Pretty Printer should print lambda abstractions beautifully 3`] = `
 exports[`Pretty Printer should print lambda with multiple forms 1`] = `
 "
 (define hello
-  (lambda (*context* x)
-    (print *context* x)
-    (print *context* x)
-    (print *context* x)
-    (print *context* x)
-    (print *context* x)
-    (print *context* x)))"
+  (lambda (x)
+    (print x)
+    (print x)
+    (print x)
+    (print x)
+    (print x)
+    (print x)))"
 `;
 
 exports[`Pretty Printer should print let expressions nicely 1`] = `
 "
 (let {x 10
       y 20}
-  (+ *context* x y))"
+  (+ x y))"
 `;
 
 exports[`Pretty Printer should print records with nested expressions 1`] = `
 "
 {:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 20
- :z (* *context* 10 (+ *context* 1 2))}"
+ :z (* 10 (+ 1 2))}"
 `;
 
 exports[`Pretty Printer should some real code 1`] = `
 "
 (define maptree
-  (lambda (*context* fn x)
-    (if (atom *context* x)
-        (funcall *context* fn x)
-        (let {a (funcall *context* fn (car *context* x))
-              d (maptree *context* fn (cdr *context* x))}
-          (if (and *context*
-                   (eql *context* a (car *context* x))
-                   (eql *context* d (cdr *context* x)))
+  (lambda (fn x)
+    (if (atom x)
+        (funcall fn x)
+        (let {a (funcall fn (car x))
+              d (maptree fn (cdr x))}
+          (if (and (eql a (car x)) (eql d (cdr x)))
               x
-              (cons *context* a d))))))"
+              (cons a d))))))"
 `;

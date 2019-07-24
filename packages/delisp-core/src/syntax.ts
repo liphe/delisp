@@ -42,12 +42,18 @@ interface SConditionalF<E> {
 interface SFunctionCallF<E> {
   tag: "function-call";
   fn: E;
-  args: E[];
+  // User provided function arguments for this function call. This is
+  // internal. Use functions from syntax-functions to get this
+  // information.
+  userArguments: E[];
 }
 
 export interface LambdaList {
   tag: "function-lambda-list";
-  positionalArgs: Identifier[];
+  // The user-provided arguments for the lambda-list. This is
+  // internal. Use functions from syntax-function to get this
+  // information.
+  userPositionalArguments: Identifier[];
   location: Location;
 }
 

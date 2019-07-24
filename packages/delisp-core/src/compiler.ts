@@ -27,6 +27,11 @@ import { InvariantViolation } from "./invariant";
 import { moduleExports, moduleImports } from "./module";
 import { pprint } from "./printer";
 import * as S from "./syntax";
+import {
+  funcallAllArguments,
+  lambdaListAllArguments
+} from "./syntax-functions";
+import { Type } from "./types";
 import { printType } from "./type-printer";
 import { last, mapObject, maybeMap, flatMap } from "./utils";
 
@@ -99,12 +104,12 @@ function compileLambda(
   env: Environment,
   _multipleValues: boolean
 ): JS.ArrowFunctionExpression {
-  const newEnv = fn.node.lambdaList.positionalArgs.reduce(
+  const newEnv = lambdaListAllArguments(fn.node.lambdaList).reduce(
     (e, param) => addBinding(param.name, e),
     env
   );
 
-  const jsargs = fn.node.lambdaList.positionalArgs.map(
+  const jsargs = lambdaListAllArguments(fn.node.lambdaList).map(
     (param): JS.Pattern =>
       identifier(lookupBindingOrError(param.name, newEnv).jsname)
   );
@@ -119,7 +124,9 @@ function compileFunctionCall(
   env: Environment,
   multipleValues: boolean
 ): JS.Expression {
-  const compiledArgs = funcall.node.args.map(arg => compile(arg, env, false));
+  const compiledArgs = funcallAllArguments(funcall).map(arg =>
+    compile(arg, env, false)
+  );
   if (
     funcall.node.fn.node.tag === "variable-reference" &&
     isInlinePrimitive(funcall.node.fn.node.name)
@@ -461,7 +468,7 @@ function compileTopLevel(
   }
 
   let js: JS.Statement;
-  let type;
+  let type: Type | undefined;
 
   if (S.isDefinition(typedSyntax)) {
     js = compileDefinition(typedSyntax, env);

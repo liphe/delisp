@@ -125,7 +125,7 @@ function printExpr(expr: S.Expression): Doc {
           group(
             list(
               align(
-                ...e.node.lambdaList.positionalArgs.map(x =>
+                ...e.node.lambdaList.userPositionalArguments.map(x =>
                   printIdentifier(x.name, undefined, ["argument"])
                 )
               )
@@ -137,7 +137,7 @@ function printExpr(expr: S.Expression): Doc {
 
       case "function-call": {
         const fn = e.node.fn;
-        const args = e.node.args;
+        const args = e.node.userArguments;
         return group(list(groupalign(fn, align(...args))));
       }
 

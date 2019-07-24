@@ -28,11 +28,6 @@ import { exprFChildren, foldExpr } from "./syntax-utils";
 import { listTypeVariables } from "./type-utils";
 import { flatten, last, maybeMap } from "./utils";
 
-const contextIdentifier: Identifier = {
-  tag: "identifier",
-  name: "*context*"
-};
-
 export interface WithErrors {
   errors: string[];
 }
@@ -144,7 +139,7 @@ function parseLambdaList(ll: ASExpr): LambdaList {
 
   return {
     tag: "function-lambda-list",
-    positionalArgs: [contextIdentifier, ...symbols.map(parseIdentifier)],
+    userPositionalArguments: symbols.map(parseIdentifier),
     location: ll.location
   };
 }
@@ -711,13 +706,7 @@ function convertList(list: ASExprList): ExpressionWithErrors {
     return successFrom(list, {
       tag: "function-call",
       fn: convertExpr(fn),
-      args: [
-        successFrom(list, {
-          tag: "variable-reference",
-          name: contextIdentifier.name
-        }),
-        ...args.map(convertExpr)
-      ]
+      userArguments: args.map(convertExpr)
     });
   }
 }
