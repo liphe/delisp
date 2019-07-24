@@ -5,6 +5,35 @@ import { ExternalEnvironment } from "../src/infer-environment";
 import { Expression } from "../src/syntax";
 import { printType } from "../src/type-printer";
 
+function normalizeType(t: string): string {
+  return printType(readType(t).mono);
+}
+
+expect.extend({
+  toBeType(received, type) {
+    const expected = normalizeType(type);
+    if (expected === received) {
+      return {
+        message: () => `works`,
+        pass: true
+      };
+    } else {
+      return {
+        message: () => `Received: ${received}\nExpected: ${expected}`,
+        pass: false
+      };
+    }
+  }
+});
+
+declare global {
+  namespace jest {
+    interface Matchers<R> {
+      toBeType(t: string): R;
+    }
+  }
+}
+
 function readExpr(code: string): Expression {
   const syntax = readSyntax(code);
   if (isDeclaration(syntax)) {
@@ -30,17 +59,17 @@ function typeOf(
 describe("Type inference", () => {
   describe("Numbers", () => {
     it("should self-evaluate", () => {
-      expect(typeOf("0")).toBe("number");
-      expect(typeOf("1")).toBe("number");
-      expect(typeOf("-1")).toBe("number");
+      expect(typeOf("0")).toBeType("number");
+      expect(typeOf("1")).toBeType("number");
+      expect(typeOf("-1")).toBeType("number");
     });
   });
 
   describe("Strings", () => {
     it("should self-evaluate", () => {
-      expect(typeOf('""')).toBe("string");
-      expect(typeOf('"foo"')).toBe("string");
-      expect(typeOf('"a\\nb"')).toBe("string");
+      expect(typeOf('""')).toBeType("string");
+      expect(typeOf('"foo"')).toBeType("string");
+      expect(typeOf('"a\\nb"')).toBeType("string");
     });
   });
 
@@ -48,18 +77,20 @@ describe("Type inference", () => {
     it("should have the right type", () => {
       const env = {
         variables: {
-          length: readType("(-> string _ int)"),
-          "+": readType("(-> number number _ number)"),
-          const: readType("(-> a _ (-> b _ a))")
+          length: readType("(-> ctx string _ int)"),
+          "+": readType("(-> ctx number number _ number)"),
+          const: readType("(-> ctx1 a _ (-> ctx2 b _ a))")
         },
         types: {}
       };
-      expect(typeOf("(+ 1 2)", env)).toBe("number");
-      expect(typeOf("(+ (+ 1 1) 2)", env)).toBe("number");
-      expect(typeOf("(lambda (x) (+ x 1))", env)).toBe("(-> number α number)");
-      expect(typeOf("(const 5)", env)).toBe("(-> α β number)");
-      expect(typeOf(`((const 5) "foo")`, env)).toBe("number");
-      expect(typeOf(`(+ ((const 5) "foo") ((const 5) 23))`, env)).toBe(
+      expect(typeOf("(+ 1 2)", env)).toBeType("number");
+      expect(typeOf("(+ (+ 1 1) 2)", env)).toBeType("number");
+      expect(typeOf("(lambda (x) (+ x 1))", env)).toBeType(
+        "(-> ctx number α number)"
+      );
+      expect(typeOf("(const 5)", env)).toBeType("(-> ctx α γ number)");
+      expect(typeOf(`((const 5) "foo")`, env)).toBeType("number");
+      expect(typeOf(`(+ ((const 5) "foo") ((const 5) 23))`, env)).toBeType(
         "number"
       );
 
@@ -68,66 +99,68 @@ describe("Type inference", () => {
 
     describe("Lambda abstractions", () => {
       it("should infer the right type", () => {
-        expect(typeOf("(lambda (x) x)")).toBe("(-> α β α)");
-        expect(typeOf("(lambda (x y) y)")).toBe("(-> α β γ β)");
-        expect(typeOf("(lambda (f x) (f x))")).toBe(
-          "(-> (-> α β (values γ | δ)) α β (values γ | δ))"
+        expect(typeOf("(lambda (x) x)")).toBeType("(-> ctx β γ β)");
+        expect(typeOf("(lambda (x y) y)")).toBeType("(-> ctx α β γ β)");
+        expect(typeOf("(lambda (f x) (f x))")).toBeType(
+          "(-> ctx (-> ctx x e (values r | rs)) x e (values r | rs))"
         );
-        expect(typeOf("(lambda (x) (lambda (y) x))")).toBe(
-          "(-> α β (-> γ δ α))"
+        expect(typeOf("(lambda (x) (lambda (y) x))")).toBeType(
+          "(-> ctx1 α β (-> ctx2 γ δ α))"
         );
         // lambda-bound variables should be monomorphic
         expect(() => typeOf(`(lambda (f) ((f "foo") (f 0)))`)).toThrow();
       });
 
       it("should return the type of the last form", () => {
-        expect(typeOf("(lambda (x) 1)")).toBe("(-> α β number)");
+        expect(typeOf("(lambda (x) 1)")).toBeType("(-> ctx α β number)");
       });
     });
 
     describe("Let polymorphism", () => {
       it("should generalize basic types in let", () => {
-        expect(typeOf("(let {id (lambda (x) x)} id)")).toBe("(-> α β α)");
+        expect(typeOf("(let {id (lambda (x) x)} id)")).toBeType(
+          "(-> ctx α β α)"
+        );
       });
 
       it("should shadow inline primitivres", () => {
-        expect(typeOf("(let {+ 10} +)")).toBe("number");
+        expect(typeOf("(let {+ 10} +)")).toBeType("number");
       });
     });
 
     describe("Lists", () => {
       it("should infer the type of empty vector", () => {
-        expect(typeOf("[]")).toBe("[α]");
+        expect(typeOf("[]")).toBeType("[α]");
       });
       it("should infer the type of a vector of numbers", () => {
-        expect(typeOf("[1 2 3]")).toBe("[number]");
+        expect(typeOf("[1 2 3]")).toBeType("[number]");
       });
       it("should infer the type of nested vectors", () => {
-        expect(typeOf("[[1] [2] [3]]")).toBe("[[number]]");
+        expect(typeOf("[[1] [2] [3]]")).toBeType("[[number]]");
       });
     });
 
     describe("Records", () => {
       it("should infer the type of exact records", () => {
-        expect(typeOf('{:x 10 :y "hello"}')).toBe("{:x number :y string}");
+        expect(typeOf('{:x 10 :y "hello"}')).toBeType("{:x number :y string}");
       });
       it("should infer the type of a lenses", () => {
-        expect(typeOf(":x")).toBe(
-          "(-> {:x α | β} γ (values α (-> δ ε {:x δ | β})))"
+        expect(typeOf(":x")).toBeType(
+          "(-> ctx1 {:x α | β} γ (values α (-> ctx2 δ ε {:x δ | β})))"
         );
-        expect(typeOf(":foo")).toBe(
-          "(-> {:foo α | β} γ (values α (-> δ ε {:foo δ | β})))"
+        expect(typeOf(":foo")).toBeType(
+          "(-> ctx1 {:foo α | β} γ (values α (-> ctx2 δ ε {:foo δ | β})))"
         );
-        expect(typeOf("(if true :x :y)")).toBe(
-          "(-> {:x α :y α | β} γ (values α (-> α δ {:x α :y α | β})))"
+        expect(typeOf("(if true :x :y)")).toBeType(
+          "(-> ctx1 {:x α :y α | β} γ (values α (-> ctx2 α δ {:x α :y α | β})))"
         );
       });
       it("should be able to access the field", () => {
-        expect(typeOf("(:x {:x 5})", undefined, undefined, true)).toBe(
-          "(values number (-> α β {:x α}))"
+        expect(typeOf("(:x {:x 5})", undefined, undefined, true)).toBeType(
+          "(values number (-> ctx α β {:x α}))"
         );
-        expect(typeOf("(lambda (f) (f {:x 5 :y 6}))")).toBe(
-          "(-> (-> {:x number :y number} α (values β | γ)) α (values β | γ))"
+        expect(typeOf("(lambda (f) (f {:x 5 :y 6}))")).toBeType(
+          "(-> ctx (-> ctx {:x number :y number} α (values β | γ)) α (values β | γ))"
         );
       });
       it("should throw an error when trying to access unknown fields", () => {
@@ -135,11 +168,13 @@ describe("Type inference", () => {
         expect(() => typeOf("(:x {})")).toThrow();
       });
       it("should infer the type of updating record fields", () => {
-        expect(typeOf("{:x 2 | {:x 1}}")).toBe("{:x number}");
-        expect(typeOf('{:x "foo" | {:x 1}}')).toBe("{:x string}");
-        expect(typeOf("{:x 3 | (if true {:x 1} {:x 2})}")).toBe("{:x number}");
-        expect(typeOf("(lambda (r v) {:x v | r})")).toBe(
-          "(-> {:x α | β} γ δ {:x γ | β})"
+        expect(typeOf("{:x 2 | {:x 1}}")).toBeType("{:x number}");
+        expect(typeOf('{:x "foo" | {:x 1}}')).toBeType("{:x string}");
+        expect(typeOf("{:x 3 | (if true {:x 1} {:x 2})}")).toBeType(
+          "{:x number}"
+        );
+        expect(typeOf("(lambda (r v) {:x v | r})")).toBeType(
+          "(-> ctx {:x α | β} γ δ {:x γ | β})"
         );
       });
       it("should not allow to extend a record", () => {
@@ -151,18 +186,20 @@ describe("Type inference", () => {
       });
 
       it("infer the selector type of record lenses", () => {
-        expect(typeOf("(multiple-value-bind (x _) (:x {:x 20}) x)")).toBe(
+        expect(typeOf("(multiple-value-bind (x _) (:x {:x 20}) x)")).toBeType(
           "number"
         );
-        expect(typeOf("(multiple-value-bind (_ u) (:x {:x 20}) u)")).toBe(
-          "(-> α β {:x α})"
+        expect(typeOf("(multiple-value-bind (_ u) (:x {:x 20}) u)")).toBeType(
+          "(-> ctx α β {:x α})"
         );
       });
     });
 
     describe("Cases", () => {
       it("should infer the type of injected cases", () => {
-        expect(typeOf("(case :version 0)")).toBe("(cases (:version number) α)");
+        expect(typeOf("(case :version 0)")).toBeType(
+          "(cases (:version number) α)"
+        );
       });
       it("should infer the type of match", () => {
         expect(
@@ -172,7 +209,9 @@ describe("Type inference", () => {
     ({:version number} number)
     ({:unreleased _} -1)))
 `)
-        ).toBe("(-> (cases (:version number) (:unreleased α)) β number)");
+        ).toBeType(
+          "(-> ctx (cases (:version number) (:unreleased α)) β number)"
+        );
       });
 
       it("match can handle cases", () => {
@@ -181,7 +220,7 @@ describe("Type inference", () => {
 (match (case :version 2)
   ({:version number} number)
   ({:unreleased _} -1))`)
-        ).toBe("number");
+        ).toBeType("number");
       });
 
       it("unexpected cases are not allowed", () => {
@@ -211,7 +250,9 @@ describe("Type inference", () => {
     ({:unreleased _} -1)
     (:default -2)))
 `)
-        ).toBe("(-> (cases (:version number) (:unreleased α) β) γ number)");
+        ).toBeType(
+          "(-> ctx (cases (:version number) (:unreleased α) β) γ number)"
+        );
       });
 
       it("match can handle a default case", () => {
@@ -222,60 +263,62 @@ describe("Type inference", () => {
     ({:foo _} "hello")
     (:default state)))
 `)
-        ).toBe("(-> string (cases (:foo α) β) γ string)");
+        ).toBeType("(-> ctx string (cases (:foo α) β) γ string)");
       });
     });
 
     describe("Conditionals", () => {
       it("should infer the right type when both branches return the same type", () => {
-        expect(typeOf("(if true 1 0)")).toBe("number");
+        expect(typeOf("(if true 1 0)")).toBeType("number");
       });
       it("should ensure both branches' types are instantiated properly", () => {
-        expect(typeOf("(if true [] [1])")).toBe("[number]");
+        expect(typeOf("(if true [] [1])")).toBeType("[number]");
       });
     });
 
     describe("Type annotations", () => {
       it("user-specified variables can specialize inferred types", () => {
-        expect(typeOf("(the [number] [])")).toBe("[number]");
+        expect(typeOf("(the [number] [])")).toBeType("[number]");
       });
 
       it("user-specified variables can be isomorphic to inferred types", () => {
-        expect(typeOf("(the [a] [])")).toBe("[α]");
+        expect(typeOf("(the [a] [])")).toBeType("[α]");
       });
 
       it("user-specified variables cannot generalize inferred types", () => {
         expect(() => typeOf(`(the a 3)`)).toThrow();
         expect(() =>
-          typeOf(`(the (-> a a) (the (-> string string) (lambda (x) x)))`)
+          typeOf(
+            `(the (-> ctx a a) (the (-> ctx string string) (lambda (x) x)))`
+          )
         ).toThrow();
       });
 
       it("supports partial type annotations", () => {
-        expect(typeOf('(the [_a] ["foo"])')).toBe("[string]");
-        expect(typeOf("(the (-> _a _ _b) (lambda (x) 42))")).toBe(
-          "(-> α β number)"
+        expect(typeOf('(the [_a] ["foo"])')).toBeType("[string]");
+        expect(typeOf("(the (-> ctx _a _ _b) (lambda (x) 42))")).toBeType(
+          "(-> ctx α β number)"
         );
-        expect(typeOf("(the (-> _a _ _b) (lambda (x) (+ x 42)))")).toBe(
-          "(-> number α number)"
+        expect(typeOf("(the (-> ctx _a _ _b) (lambda (x) (+ x 42)))")).toBeType(
+          "(-> ctx number α number)"
         );
 
-        expect(typeOf(`(lambda (f) ((the (-> _a _b _c _d) f) 42 "foo"))`)).toBe(
-          "(-> (-> number string α β) α β)"
-        );
+        expect(
+          typeOf(`(lambda (f) ((the (-> cstx _a _b _c _d) f) 42 "foo"))`)
+        ).toBeType("(-> ctx (-> ctx number string α β) α β)");
         expect(() =>
-          typeOf(`(lambda (f) ((the (-> _a _a _ _c) f) 42 "foo"))`)
+          typeOf(`(lambda (f) ((the (-> ctx _a _a _ _c) f) 42 "foo"))`)
         ).toThrow();
 
-        expect(typeOf(`(lambda (f) ((the (-> _ _ _e _) f) 42 "foo"))`)).toBe(
-          "(-> (-> number string α β) α β)"
-        );
+        expect(
+          typeOf(`(lambda (f) ((the (-> ctx _ _ _e _) f) 42 "foo"))`)
+        ).toBeType("(-> ctx (-> ctx number string α β) α β)");
       });
 
       it.skip("`_` should not be equal to any named wildcard _<name>", () => {
-        expect(typeOf(`(the (-> _ __t1) (lambda (x) (print x) 42))`)).toBe(
-          "(-> string number)"
-        );
+        expect(
+          typeOf(`(the (-> ctx _ __t1) (lambda (x) (print x) 42))`)
+        ).toBeType("(-> ctx string number)");
       });
     });
 
@@ -287,7 +330,9 @@ describe("Type inference", () => {
       });
 
       it("should NOT expand to their definition", () => {
-        expect(typeOf("(lambda (x) (the ID x))", env)).toBe("(-> ID α ID)");
+        expect(typeOf("(lambda (x) (the ID x))", env)).toBeType(
+          "(-> ctx ID α ID)"
+        );
       });
     });
 
@@ -299,15 +344,15 @@ describe("Type inference", () => {
       };
 
       it("should be compatible if they are internal", () => {
-        expect(typeOf("(if true (the ID 5) 3)", env, intEnv)).not.toBe("α");
+        expect(typeOf("(if true (the ID 5) 3)", env, intEnv)).not.toBeType("α");
       });
 
       it("should expand to their definition if they are internal", () => {
-        expect(typeOf("(the ID 5)", env, intEnv)).toBe("number");
+        expect(typeOf("(the ID 5)", env, intEnv)).toBeType("number");
       });
 
       it("should be compatible when defined as a record", () => {
-        expect(typeOf('(the Person {:name "david"})', env, intEnv)).toBe(
+        expect(typeOf('(the Person {:name "david"})', env, intEnv)).toBeType(
           "{:name string}"
         );
       });
@@ -315,11 +360,11 @@ describe("Type inference", () => {
 
     describe("Do blocks", () => {
       it("type is the type of the last form", () => {
-        expect(typeOf("(do 1 2 3)")).toBe("number");
+        expect(typeOf("(do 1 2 3)")).toBeType("number");
       });
       it("constraint types properly", () => {
-        expect(typeOf("(lambda (x) (print x) x)")).toBe(
-          "(-> string (effect console | α) string)"
+        expect(typeOf("(lambda (x) (print x) x)")).toBeType(
+          "(-> ctx string (effect console | α) string)"
         );
       });
     });
@@ -334,15 +379,15 @@ describe("Type inference", () => {
               (* n (f (- n 1)))))}
   f)
 `)
-        ).toBe("(-> number α number)");
+        ).toBeType("(-> ctx number α number)");
       });
 
       it("basic polymorphic function on lists should work", () => {
         const env = {
           variables: {
-            "empty?": readType("(-> [a] _ boolean)"),
-            "+": readType("(-> number number _ number)"),
-            rest: readType("(-> [a] (effect exp | _) [a])")
+            "empty?": readType("(-> ctx [a] _ boolean)"),
+            "+": readType("(-> ctx number number _ number)"),
+            rest: readType("(-> ctx [a] (effect exp | _) [a])")
           },
           types: {}
         };
@@ -358,7 +403,7 @@ describe("Type inference", () => {
           `,
             env
           )
-        ).toBe("(-> [α] (effect exp | β) number)");
+        ).toBeType("(-> ctx [α] (effect exp | β) number)");
       });
     });
   });
@@ -373,25 +418,27 @@ describe("Type inference", () => {
     x))
 `
         )
-      ).toBe("(-> (-> (effect) (values α | β)) γ α)");
+      ).toBeType("(-> ctx (-> ctx (effect) (values α | β)) γ α)");
     });
   });
 
   describe("Multiple Values", () => {
     it("should infer the primary type of a values form in an argument position", () => {
-      expect(typeOf(`(+ 1 (values 2 3)))`)).toBe("number");
-      expect(typeOf(`(lambda (x) (values (values x x))))`)).toBe("(-> α β α)");
+      expect(typeOf(`(+ 1 (values 2 3)))`)).toBeType("number");
+      expect(typeOf(`(lambda (x) (values (values x x))))`)).toBeType(
+        "(-> ctx α β α)"
+      );
     });
 
     it("should infer the type of a function with multiple values", () => {
-      expect(typeOf(`(lambda (x) (values x "foo"))`)).toBe(
-        "(-> α β (values α string))"
+      expect(typeOf(`(lambda (x) (values x "foo"))`)).toBeType(
+        "(-> ctx α β (values α string))"
       );
     });
 
     it("infer multiple values of a function call in tail-position", () => {
-      expect(typeOf(`(lambda (f) (f))`)).toBe(
-        `(-> (-> α (values β | γ)) α (values β | γ))`
+      expect(typeOf(`(lambda (f) (f))`)).toBeType(
+        `(-> ctx (-> ctx α (values β | γ)) α (values β | γ))`
       );
     });
 
@@ -399,7 +446,7 @@ describe("Type inference", () => {
       const result = typeOf(
         `(multiple-value-bind (x y) (values "foo" 2) (pair x y))`
       );
-      expect(result).toBe(`(* string number)`);
+      expect(result).toBeType(`(* string number)`);
     });
   });
 
@@ -411,15 +458,20 @@ describe("Type inference", () => {
     });
 
     it("Annotations can state the same type for an expression with different variable names", () => {
-      const env = { variables: { id: readType("(-> a1 b1 a1)") }, types: {} };
-      expect(typeOf("(the (-> a2 b2 a2) id)", env)).toBe("(-> α β α)");
+      const env = {
+        variables: { id: readType("(-> ctx a1 b1 a1)") },
+        types: {}
+      };
+      expect(typeOf("(the (-> ctx a2 b2 a2) id)", env)).toBeType(
+        "(-> ctx α β α)"
+      );
     });
 
     it("User-specified type variables do not propagate to conflict with each other", () => {
-      const env = { variables: { id: readType("(-> a b a)") }, types: {} };
-      expect(typeOf("(the (-> c d c) (the (-> a b a) id))", env)).toBe(
-        "(-> α β α)"
-      );
+      const env = { variables: { id: readType("(-> ctx a b a)") }, types: {} };
+      expect(
+        typeOf("(the (-> ctx c d c) (the (-> ctx a b a) id))", env)
+      ).toBeType("(-> ctx α β α)");
     });
   });
 });
