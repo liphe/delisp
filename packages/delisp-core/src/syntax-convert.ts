@@ -28,6 +28,11 @@ import { exprFChildren, foldExpr } from "./syntax-utils";
 import { listTypeVariables } from "./type-utils";
 import { flatten, last, maybeMap } from "./utils";
 
+const contextIdentifier: Identifier = {
+  tag: "identifier",
+  name: "*context*"
+};
+
 export interface WithErrors {
   errors: string[];
 }
@@ -139,7 +144,7 @@ function parseLambdaList(ll: ASExpr): LambdaList {
 
   return {
     tag: "function-lambda-list",
-    positionalArgs: symbols.map(parseIdentifier),
+    positionalArgs: [contextIdentifier, ...symbols.map(parseIdentifier)],
     location: ll.location
   };
 }
@@ -464,10 +469,10 @@ defineConversion("multiple-value-bind", (_mvbind, args, whole) => {
   if (args.length < 3) {
     throw new ConvertError(
       printHighlightedExpr(
-        `Ill-formed form. 
+        `Ill-formed form.
 
-(multiple-value-bind (variable1 variable2 ...) 
-    form 
+(multiple-value-bind (variable1 variable2 ...)
+    form
   ...body)`,
         whole.location
       )
@@ -706,7 +711,13 @@ function convertList(list: ASExprList): ExpressionWithErrors {
     return successFrom(list, {
       tag: "function-call",
       fn: convertExpr(fn),
-      args: args.map(convertExpr)
+      args: [
+        successFrom(list, {
+          tag: "variable-reference",
+          name: contextIdentifier.name
+        }),
+        ...args.map(convertExpr)
+      ]
     });
   }
 }

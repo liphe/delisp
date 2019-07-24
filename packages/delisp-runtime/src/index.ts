@@ -69,8 +69,8 @@ export function primaryValue(x: unknown, ..._others: unknown[]): unknown {
 // bit of a hack for toplevel function calls
 export const values = primaryValue;
 
-export function bindPrimaryValue(fn: Function): Function {
-  return (...args: unknown[]) => fn(primaryValue, ...args);
+export function bindPrimaryValue(fn: Function, ctx: unknown): Function {
+  return (...args: unknown[]) => fn(primaryValue, ctx, ...args);
 }
 
 export function mvbind(
