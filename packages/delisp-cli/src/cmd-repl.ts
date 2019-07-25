@@ -1,7 +1,7 @@
 import {
   addToModule,
   collectConvertErrors,
-  createContext,
+  createSandbox,
   defaultEnvironment,
   evaluate,
   evaluateModule,
@@ -33,7 +33,7 @@ let rl: readline.Interface;
 const PROMPT = "λ ";
 
 let currentModule: Module;
-const context = createContext(require);
+const sandbox = createSandbox(require);
 
 function getOutputFile(name: string): string {
   return getOutputFiles(name).jsFile;
@@ -41,7 +41,7 @@ function getOutputFile(name: string): string {
 
 async function prepareModule() {
   currentModule = await newModule();
-  evaluateModule(currentModule, context, {
+  evaluateModule(currentModule, sandbox, {
     getOutputFile
   });
 }
@@ -226,7 +226,7 @@ const delispEval = async (syntax: Syntax): Promise<DelispEvalResult> => {
     definitionContainer: "env",
     getOutputFile
   });
-  const value = evaluate(syntax, env, context);
+  const value = evaluate(syntax, env, sandbox);
 
   if (isExpression(syntax)) {
     return {

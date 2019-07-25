@@ -139,7 +139,7 @@ function parseLambdaList(ll: ASExpr): LambdaList {
 
   return {
     tag: "function-lambda-list",
-    positionalArgs: symbols.map(parseIdentifier),
+    userPositionalArguments: symbols.map(parseIdentifier),
     location: ll.location
   };
 }
@@ -464,10 +464,10 @@ defineConversion("multiple-value-bind", (_mvbind, args, whole) => {
   if (args.length < 3) {
     throw new ConvertError(
       printHighlightedExpr(
-        `Ill-formed form. 
+        `Ill-formed form.
 
-(multiple-value-bind (variable1 variable2 ...) 
-    form 
+(multiple-value-bind (variable1 variable2 ...)
+    form
   ...body)`,
         whole.location
       )
@@ -706,7 +706,7 @@ function convertList(list: ASExprList): ExpressionWithErrors {
     return successFrom(list, {
       tag: "function-call",
       fn: convertExpr(fn),
-      args: args.map(convertExpr)
+      userArguments: args.map(convertExpr)
     });
   }
 }

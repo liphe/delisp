@@ -1,19 +1,40 @@
-import { addToModule, createModule, Module, readModule } from "@delisp/core";
+import {
+  addToModule,
+  createModule,
+  Module,
+  readModule,
+  readSyntax
+} from "@delisp/core";
 import { CompileOptions } from "./compile-options";
 import { generatePreludeImports } from "./prelude";
 
-export async function newModule() {
+async function addPreludetoModule(m: Module): Promise<Module> {
   const imports = await generatePreludeImports();
-  return imports.reduce((m, i) => addToModule(m, i), createModule());
+  return imports.reduce((m, i) => addToModule(m, i), m);
 }
 
-export async function loadModule(content: string, options: CompileOptions) {
+function addRootContextToModule(m: Module): Module {
+  return addToModule(m, readSyntax("(define *context* {})"));
+}
+
+export async function newModule(): Promise<Module> {
+  let m = createModule();
+  m = await addPreludetoModule(m);
+  m = addRootContextToModule(m);
+  return m;
+}
+
+export async function loadModule(
+  content: string,
+  options: CompileOptions
+): Promise<Module> {
   let m: Module = readModule(content);
 
   if (options.includePrelude) {
-    const imports = await generatePreludeImports();
-    m = imports.reduce((m, i) => addToModule(m, i), m);
+    m = await addPreludetoModule(m);
   }
+
+  m = addRootContextToModule(m);
 
   return m;
 }

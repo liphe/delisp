@@ -45,9 +45,6 @@
 (define string-ref
   (lambda (k) (substring k (+ k 1))))
 
-(assert
- (string= "e" ((string-ref 1) "delisp"))
- "Expect string-ref lenses to work")
 
 (export [id
          >>
