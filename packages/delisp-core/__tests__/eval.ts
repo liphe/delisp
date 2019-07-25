@@ -1,5 +1,5 @@
 import { moduleEnvironment } from "../src/compiler";
-import { createContext, evaluate } from "../src/eval";
+import { createSandbox, evaluate } from "../src/eval";
 import { readSyntax } from "../src/index";
 import { createModule } from "../src/module";
 
@@ -10,8 +10,8 @@ function evaluateString(str: string): unknown {
     }
   });
   const s = readSyntax(str);
-  const context = createContext(() => null);
-  return evaluate(s, env, context);
+  const sandbox = createSandbox(() => null);
+  return evaluate(s, env, sandbox);
 }
 
 describe("Evaluation", () => {

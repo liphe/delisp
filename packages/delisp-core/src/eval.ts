@@ -14,9 +14,9 @@ import primitives from "./primitives";
 import { Module, Syntax } from "./syntax";
 import { mapObject } from "./utils";
 
-type Context = ReturnType<typeof createContext>;
+type Sandbox = ReturnType<typeof createSandbox>;
 
-export function createContext(requireFn: (id: string) => any) {
+export function createSandbox(requireFn: (id: string) => any) {
   const sandbox = {
     env: mapObject(primitives, p => p.value),
     console,
@@ -30,18 +30,18 @@ export function createContext(requireFn: (id: string) => any) {
 export function evaluate(
   syntax: Syntax,
   env: Environment,
-  context: Context
+  sandbox: Sandbox
 ): unknown {
   const code = compileToString(syntax, env);
-  const result = vm.runInContext(code, context);
+  const result = vm.runInContext(code, sandbox);
   return result;
 }
 
-export function evaluateModule(m: Module, context: Context, host: Host): void {
+export function evaluateModule(m: Module, sandbox: Sandbox, host: Host): void {
   const code = compileModuleToString(m, {
     definitionContainer: "env",
     getOutputFile: host.getOutputFile
   });
-  vm.runInContext(code, context);
+  vm.runInContext(code, sandbox);
   return;
 }

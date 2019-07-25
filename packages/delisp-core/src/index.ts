@@ -5,7 +5,7 @@ export {
 } from "./compiler";
 export { collectConvertErrors, readSyntax } from "./syntax-convert";
 export { printHighlightedExpr } from "./error-report";
-export { createContext, evaluate, evaluateModule } from "./eval";
+export { createSandbox, evaluate, evaluateModule } from "./eval";
 export {
   defaultEnvironment,
   getModuleExternalEnvironment,
