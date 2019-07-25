@@ -157,4 +157,15 @@ describe("Evaluation", () => {
       ).toBe(10);
     });
   });
+
+  describe("Context argument", () => {
+    it("should work across functions", () => {
+      expect(
+        evaluateString(`
+(let {f (lambda () *context*)}
+  (let {*context* 10}
+  (f)))`)
+      ).toBe(10);
+    });
+  });
 });

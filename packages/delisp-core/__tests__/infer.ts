@@ -453,6 +453,13 @@ describe("Type inference", () => {
     });
   });
 
+  describe(`Context argument`, () => {
+    it("should infer the type of the context argument automatically", () => {
+      const result = typeOf(`(lambda (x) (+ *context* x))`);
+      expect(result).toBeType(`(-> number number e number)`);
+    });
+  });
+
   describe("Regressions", () => {
     it("(the _ _) type annotations should keep the type annotation node in the AST", () => {
       const expr = readExpr("(the number 10)");
