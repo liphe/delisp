@@ -12,7 +12,7 @@ const stringPrims: Primitives = {
   substring: {
     type:
       "(-> _ctx1 number number _ (-> _ctx2 string _ (values string (-> _ctx3 string _ string))))",
-    value: (_values: unknown, start: number, end: number) => {
+    value: (_values: unknown, _ctx: unknown, start: number, end: number) => {
       return (values: any, str: string) => {
         validBoundingIndex(str, start, end);
         const value = str.slice(start, end);
