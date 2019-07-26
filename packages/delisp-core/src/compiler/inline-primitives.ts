@@ -110,6 +110,13 @@ export function findInlinePrimitive(name: string): InlinePrim {
 
 function typeArity(type: T.Type): number {
   if (isFunctionType(type)) {
+    // A type signature has 3 more elements than the arity of the
+    // function:
+    //    (-> context arg1 arg2 effect output)
+    //
+    // - context
+    // - effect
+    // - output
     return type.node.args.length - 3;
   } else {
     return 0;
