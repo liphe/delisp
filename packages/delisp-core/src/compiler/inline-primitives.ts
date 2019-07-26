@@ -17,7 +17,6 @@ import {
   op,
   primitiveCall
 } from "./estree-utils";
-import { identifierToJS } from "./jsvariable";
 
 type InlineHandler = (args: JS.Expression[]) => JS.Expression;
 
@@ -70,10 +69,7 @@ function defineInlinePrimitive(
      function. */
   const valueHandler: InlineHandler = () => {
     const identifiers = range(arity).map(i => identifier(`x${i}`));
-    const identifiersAndContext = [
-      identifier(identifierToJS("*context*")),
-      ...identifiers
-    ];
+    const identifiersAndContext = [identifier("*context*"), ...identifiers];
     return {
       type: "ArrowFunctionExpression",
       params: [identifier("values"), ...identifiersAndContext],
@@ -383,11 +379,7 @@ defineMagicPrimitive(
 
     const handler = () =>
       arrowFunction(
-        [
-          identifier("values"),
-          identifier(identifierToJS("*context*")),
-          identifier("obj")
-        ],
+        [identifier("values"), identifier("*context*"), identifier("obj")],
         [
           primitiveCall(
             "values",
@@ -395,7 +387,7 @@ defineMagicPrimitive(
             arrowFunction(
               [
                 identifier("values"),
-                identifier(identifierToJS("*context*")),
+                identifier("*context*"),
                 identifier("val")
               ],
               [

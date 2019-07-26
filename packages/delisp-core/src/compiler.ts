@@ -20,7 +20,6 @@ import {
   compileInlinePrimitive,
   isInlinePrimitive
 } from "./compiler/inline-primitives";
-import { identifierToJS } from "./compiler/jsvariable";
 import { cjs, esm, ModuleBackend } from "./compiler/modules";
 import { printHighlightedExpr } from "./error-report";
 import { InvariantViolation } from "./invariant";
@@ -38,7 +37,7 @@ import { last, mapObject, maybeMap, flatMap } from "./utils";
 const debug = createDebug("delisp:compiler");
 
 interface EnvironmentBinding {
-  jsname: string;
+  name: string;
   source: "lexical" | "module" | "primitive";
 }
 
@@ -62,7 +61,7 @@ function addBinding(varName: string, env: Environment): Environment {
     ...env,
     bindings: {
       ...env.bindings,
-      [varName]: { jsname: identifierToJS(varName), source: "lexical" }
+      [varName]: { name: varName, source: "lexical" }
     }
   };
 }
@@ -111,7 +110,7 @@ function compileLambda(
 
   const jsargs = lambdaListAllArguments(fn.node.lambdaList).map(
     (param): JS.Pattern =>
-      identifier(lookupBindingOrError(param.name, newEnv).jsname)
+      identifier(lookupBindingOrError(param.name, newEnv).name)
   );
 
   const body = compileBody(fn.node.body, newEnv, true);
@@ -152,7 +151,7 @@ function compilePrimitive(name: string, env: Environment): JS.Expression {
   const binding = lookupBindingOrError(name, env);
   switch (binding.source) {
     case "primitive":
-      return member(identifier("env"), binding.jsname);
+      return member(identifier("env"), binding.name);
     default:
       throw new Error(`${name} is not a valid primitive`);
   }
@@ -169,17 +168,17 @@ function compileVariable(
     if (isInlinePrimitive(ref.node.name)) {
       return compileInlinePrimitive(ref.node.name, [], "value");
     } else {
-      return env.defs.access(identifierToJS(ref.node.name));
+      return env.defs.access(ref.node.name);
     }
   }
 
   switch (binding.source) {
     case "primitive":
-      return member(identifier("env"), binding.jsname);
+      return member(identifier("env"), binding.name);
     case "module":
-      return env.defs.access(binding.jsname);
+      return env.defs.access(binding.name);
     case "lexical":
-      return identifier(binding.jsname);
+      return identifier(binding.name);
   }
 }
 
@@ -208,7 +207,7 @@ function compileLetBindings(
 
   const params = expr.node.bindings.map(
     (b): JS.Pattern =>
-      identifier(lookupBindingOrError(b.variable.name, newenv).jsname)
+      identifier(lookupBindingOrError(b.variable.name, newenv).name)
   );
 
   return {
@@ -309,7 +308,7 @@ function compileMatch(
       expr.node.cases.map(c => ({
         key: c.label,
         value: arrowFunction(
-          [identifier(identifierToJS(c.variable.name))],
+          [identifier(c.variable.name)],
           (() => {
             const newenv = addBinding(c.variable.name, env);
             return compileBody(c.body, newenv, multipleValues);
@@ -360,7 +359,7 @@ function compileMultipleValueBind(
   }, env);
 
   const params = expr.node.variables.map(v =>
-    identifier(lookupBindingOrError(v.name, newenv).jsname)
+    identifier(lookupBindingOrError(v.name, newenv).name)
   );
 
   const continuation = arrowFunction(
@@ -447,7 +446,7 @@ export function compile(
 
 function compileDefinition(def: S.SDefinition, env: Environment): JS.Statement {
   const value = compile(def.node.value, env, false);
-  const name = lookupBindingOrError(def.node.variable.name, env).jsname;
+  const name = lookupBindingOrError(def.node.variable.name, env).name;
   return env.defs.define(name, value);
 }
 
@@ -524,7 +523,7 @@ function compileImports(
 ): Array<JS.Statement | JS.ModuleDeclaration> {
   return imports.map(i =>
     env.moduleFormat.importNames(
-      [identifierToJS(i.node.variable.name)],
+      [i.node.variable.name],
       env.getOutputFile(i.node.source),
       env.defs
     )
@@ -546,7 +545,7 @@ function compileExports(
           )
         );
       } else {
-        return binding.jsname;
+        return binding.name;
       }
     }
   );
@@ -568,7 +567,7 @@ export function moduleEnvironment(
   const moduleBindings = moduleDefinitions.reduce(
     (d, decl) => ({
       ...d,
-      [decl]: { jsname: identifierToJS(decl), source: "module" }
+      [decl]: { name: decl, source: "module" }
     }),
     {}
   );
@@ -576,7 +575,7 @@ export function moduleEnvironment(
   const primitiveBindings = mapObject(
     runtime,
     (_, key: string): EnvironmentBinding => ({
-      jsname: key,
+      name: key,
       source: "primitive"
     })
   );

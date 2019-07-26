@@ -1,5 +1,5 @@
 import * as JS from "estree";
-import { isValidJSIdentifierName } from "./jsvariable";
+import { isValidJSIdentifierName, identifierToJS } from "./jsvariable";
 
 export function member(obj: JS.Expression, prop: string): JS.MemberExpression {
   const dotNotation = isValidJSIdentifierName(prop);
@@ -80,7 +80,7 @@ export function literal(value: number | string | boolean | null): JS.Literal {
 export function identifier(name: string): JS.Identifier {
   return {
     type: "Identifier",
-    name
+    name: identifierToJS(name)
   };
 }
 
