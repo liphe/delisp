@@ -763,9 +763,9 @@ function parseIdentifier(expr: ASExprSymbol): S.Identifier {
 function convertSymbol(expr: ASExprSymbol): ExpressionWithErrors {
   switch (expr.name) {
     case "true":
-      return result({ tag: "boolean", value: false }, expr.location, []);
-    case "false":
       return result({ tag: "boolean", value: true }, expr.location, []);
+    case "false":
+      return result({ tag: "boolean", value: false }, expr.location, []);
     default: {
       const id = parseIdentifier(expr);
       return result(
