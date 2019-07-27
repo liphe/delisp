@@ -138,7 +138,7 @@ definePrimitiveValue("none", "none", () => {
 
 defineInlinePrimitive(
   "print",
-  "(-> _ctx string (effect console | _) none)",
+  "(-> _ctx string (effect console <| _) none)",
   ([_ctx, ...args]) => {
     return methodCall(identifier("console"), "log", args);
   }
@@ -164,7 +164,7 @@ defineInlinePrimitive(
 
 defineInlinePrimitive(
   "map",
-  "(-> _ctx (-> _ctx a e (values b | _)) [a] e [b])",
+  "(-> _ctx (-> _ctx a e (values b <| _)) [a] e [b])",
   ([ctx, fn, vec]) => {
     return methodCall(vec, "map", [primitiveCall("bindPrimaryValue", fn, ctx)]);
   }
@@ -172,7 +172,7 @@ defineInlinePrimitive(
 
 defineInlinePrimitive(
   "filter",
-  "(-> _ctx (-> _ctx a _ (values boolean | _)) [a] _ [a])",
+  "(-> _ctx (-> _ctx a _ (values boolean <| _)) [a] _ [a])",
   ([ctx, predicate, vec]) => {
     return methodCall(vec, "filter", [
       primitiveCall("bindPrimaryValue", predicate, ctx)
@@ -182,7 +182,7 @@ defineInlinePrimitive(
 
 defineInlinePrimitive(
   "fold",
-  "(-> _ctx (-> _ctx b a _ (values b | _)) [a] b _ b)",
+  "(-> _ctx (-> _ctx b a _ (values b <| _)) [a] b _ b)",
   ([ctx, fn, vec, init]) => {
     return methodCall(vec, "reduce", [
       primitiveCall("bindPrimaryValue", fn, ctx),
@@ -287,7 +287,7 @@ defineInlinePrimitive("%snd", "(-> _ctx (* a b) _ b)", ([_ctx, pair]) => {
 
 defineInlinePrimitive(
   "assert",
-  "(-> _ctx boolean string (effect exp | _) none)",
+  "(-> _ctx boolean string (effect exp <| _) none)",
   ([_ctx, x, msg]) => {
     return primitiveCall("assert", x, msg);
   }

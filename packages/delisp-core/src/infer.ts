@@ -221,7 +221,7 @@ function infer(
 
       const tailInferred =
         expr.node.source &&
-        infer(expr.node.source, monovars, internalTypes, false);
+        infer(expr.node.source.expression, monovars, internalTypes, false);
       const tailRowType = generateUniqueTVar();
 
       const effect = generateUniqueTVar();
@@ -235,7 +235,11 @@ function infer(
               label,
               value
             })),
-            source: tailInferred && tailInferred.result
+            source: tailInferred &&
+              expr.node.source && {
+                extending: expr.node.source.extending,
+                expression: tailInferred.result
+              }
           },
           info: singleType(
             effect,
@@ -255,15 +259,17 @@ function infer(
         constraints: [
           ...flatMap(i => i.constraints, inferred),
           ...(tailInferred ? tailInferred.constraints : []),
-          ...(tailInferred
+          ...(tailInferred && expr.node.source
             ? [
                 constEqual(
                   tailInferred.result,
                   T.record(
-                    inferred.map(i => ({
-                      label: i.label.name,
-                      type: generateUniqueTVar()
-                    })),
+                    expr.node.source.extending
+                      ? []
+                      : inferred.map(i => ({
+                          label: i.label.name,
+                          type: generateUniqueTVar()
+                        })),
                     tailRowType
                   ),
                   "resulting-type"
@@ -433,7 +439,7 @@ function infer(
       );
 
       const primaryType = generateUniqueTVar();
-      const valuesType = type`(values ${primaryType} | _)`;
+      const valuesType = type`(values ${primaryType} <| _)`;
 
       const effect = generateUniqueTVar();
       const tfn: Type = T.multiValuedFunction(

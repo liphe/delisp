@@ -68,7 +68,12 @@ function convertEffect(effects: ASExpr[]): T.Type {
     return e.name;
   });
   const last = labels.slice(-2);
+
   if (last.length === 2 && last[0] === "|") {
+    throw new ConvertError(`Wrong effect separator`);
+  }
+
+  if (last.length === 2 && last[0] === "<|") {
     return T.effect(labels.slice(0, -2), T.var(last[1]));
   } else {
     return T.effect(labels);
@@ -116,7 +121,7 @@ function convertCases(_op: ASExpr, args: ASExpr[]): T.Type {
 function convertValues(expr: ASExprList): T.Type {
   let args = expr.elements.slice(1);
   let extending: T.Type | undefined = undefined;
-  if (args.length > 2 && isSymbolOfName(args[args.length - 2], "|")) {
+  if (args.length > 2 && isSymbolOfName(args[args.length - 2], "<|")) {
     extending = convert_(args[args.length - 1]);
     args = args.slice(0, -2);
   }
@@ -161,12 +166,18 @@ function convertVector(expr: ASExprVector): T.Type {
 function convertMap(expr: ASExprMap): T.Type {
   const { fields, tail } = parseRecord(expr);
 
+  if (tail && tail.separator.name !== "<|") {
+    throw new ConvertError(
+      `Expected record extension operator "<|", but found "${tail.separator.name}.`
+    );
+  }
+
   return T.record(
     fields.map(({ label, value }) => ({
       label: label.name,
       type: convert_(value)
     })),
-    tail ? convert_(tail) : T.emptyRow
+    tail ? convert_(tail.expression) : T.emptyRow
   );
 }
 

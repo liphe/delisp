@@ -56,12 +56,12 @@ describe("convertType", () => {
   });
 
   it("should read extensible record", () => {
-    expect(readAndConvert("{:x number :y number | a}")).toMatchSnapshot();
+    expect(readAndConvert("{:x number :y number <| a}")).toMatchSnapshot();
   });
 
   it("should fail for invalid syntax of extensible records", () => {
     expect(() => {
-      readAndConvert("{| a :x number}");
+      readAndConvert("{<| a :x number}");
     }).toThrow();
   });
 
@@ -93,7 +93,7 @@ describe("convertType", () => {
     });
 
     it("should convert open effect with multiple labels", () => {
-      expect(readAndConvert("(effect console async | a)")).toMatchSnapshot();
+      expect(readAndConvert("(effect console async <| a)")).toMatchSnapshot();
     });
   });
 
@@ -129,7 +129,7 @@ describe("convertType", () => {
     });
 
     it("should read open value types", () => {
-      expect(readAndConvert("(values string | a)")).toMatchSnapshot();
+      expect(readAndConvert("(values string <| a)")).toMatchSnapshot();
     });
   });
 });

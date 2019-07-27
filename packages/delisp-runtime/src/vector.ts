@@ -2,7 +2,7 @@ import { Primitives } from "./types";
 
 const vectorPrims: Primitives = {
   first: {
-    type: "(-> _ctx1 [a] (effect exp | _) (values a (-> _ctx2 a _ [a])))",
+    type: "(-> _ctx1 [a] (effect exp <| _) (values a (-> _ctx2 a _ [a])))",
     value: <T>(values: any, _ctx: unknown, list: T[]): T => {
       if (list.length > 0) {
         return values(list[0], (_values: unknown, newValue: T) => {
@@ -15,7 +15,7 @@ const vectorPrims: Primitives = {
   },
 
   rest: {
-    type: "(-> _ctx1 [a] (effect exp | _) (values [a] (-> _ctx2 [a] _ [a])))",
+    type: "(-> _ctx1 [a] (effect exp <| _) (values [a] (-> _ctx2 [a] _ [a])))",
     value: <T>(values: any, _ctx: unknown, list: T[]): T[] => {
       if (list.length > 0) {
         const [head, ...rest] = list;

@@ -81,7 +81,7 @@ function printExpr(expr: S.Expression): Doc {
         return group(vector(align(...e.node.values)));
       case "boolean":
         return text(e.node.value.toString(), ["boolean"], source);
-      case "record": {
+      case "record":
         return group(
           map(
             align(
@@ -91,7 +91,15 @@ function printExpr(expr: S.Expression): Doc {
                     concat(text(label.name, ["label"]), space, value)
                   ),
                   ...(e.node.source
-                    ? [concat(text("|", ["label-ext"]), space, e.node.source)]
+                    ? [
+                        concat(
+                          text(e.node.source.extending ? "<|" : "|", [
+                            "label-ext"
+                          ]),
+                          space,
+                          e.node.source.expression
+                        )
+                      ]
                     : [])
                 ],
                 line
@@ -99,7 +107,6 @@ function printExpr(expr: S.Expression): Doc {
             )
           )
         );
-      }
       case "record-get":
         return group(
           list(

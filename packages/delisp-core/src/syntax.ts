@@ -91,7 +91,10 @@ interface SRecordF<E> {
     label: Identifier;
     value: E;
   }>;
-  source?: E;
+  source?: {
+    extending: boolean;
+    expression: E;
+  };
 }
 
 interface SRecordGetF<E> {

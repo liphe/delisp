@@ -748,7 +748,21 @@ function convertMap(map: ASExprMap): ExpressionWithErrors {
       label: parseIdentifier(f.label),
       value: convertExpr(f.value)
     })),
-    source: tail && convertExpr(tail)
+    source: tail && {
+      extending: (() => {
+        switch (tail.separator.name) {
+          case "<|":
+            return true;
+          case "|":
+            return false;
+          default:
+            throw new ConvertError(
+              `Invalid record separator ${tail.separator.name}`
+            );
+        }
+      })(),
+      expression: convertExpr(tail.expression)
+    }
   });
 }
 

@@ -30,7 +30,10 @@ export function mapExpr<I, A, B>(
             ...f,
             value: fn(f.value)
           })),
-          source: expr.node.source && fn(expr.node.source)
+          source: expr.node.source && {
+            extending: expr.node.source.extending,
+            expression: fn(expr.node.source.expression)
+          }
         }
       };
     case "record-get":
@@ -159,7 +162,10 @@ export function exprFChildren<I, E>(e: S.ExpressionF<I, E>): E[] {
     case "let-bindings":
       return [...e.node.bindings.map(b => b.value), ...e.node.body];
     case "record":
-      return [...e.node.fields.map(f => f.value)];
+      return [
+        ...e.node.fields.map(f => f.value),
+        ...(e.node.source ? [e.node.source.expression] : [])
+      ];
     case "record-get":
       return [e.node.value];
     case "type-annotation":
