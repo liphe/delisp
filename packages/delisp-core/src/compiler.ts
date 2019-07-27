@@ -144,7 +144,7 @@ function compileFunctionCall(
 }
 
 /** Compile a inline primitive with a set of parameters. */
-export function compileInlinePrimitive(
+function compileInlinePrimitive(
   name: string,
   args: JS.Expression[]
 ): JS.Expression {
@@ -152,7 +152,7 @@ export function compileInlinePrimitive(
   return prim.funcHandler(args);
 }
 
-export function compileInlineValue(name: string): JS.Expression {
+function compileInlineValue(name: string): JS.Expression {
   const prim = findInlinePrimitive(name);
   return prim.valueHandler([]);
 }
@@ -172,8 +172,14 @@ function compileVariable(
   env: Environment,
   _multipleValues: boolean
 ): JS.Expression {
-  const binding = lookupBinding(ref.node.name, env);
+  if (ref.node.name === "true") {
+    return literal(true);
+  }
+  if (ref.node.name === "false") {
+    return literal(false);
+  }
 
+  const binding = lookupBinding(ref.node.name, env);
   if (!binding) {
     if (isInlinePrimitive(ref.node.name)) {
       return compileInlineValue(ref.node.name);
@@ -181,7 +187,6 @@ function compileVariable(
       return env.defs.access(ref.node.name);
     }
   }
-
   switch (binding.source) {
     case "primitive":
       return member(identifier("env"), binding.name);

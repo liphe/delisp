@@ -127,14 +127,6 @@ function typeArity(type: T.Type): number {
 // Primitives
 //
 
-definePrimitiveValue("true", "boolean", () => {
-  return literal(true);
-});
-
-definePrimitiveValue("false", "boolean", () => {
-  return literal(false);
-});
-
 defineInlinePrimitive("not", "(-> _ctx boolean _ boolean)", ([_ctx, x]) =>
   op1("!", x)
 );
