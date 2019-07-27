@@ -17,7 +17,7 @@ import {
   primitiveCall
 } from "./compiler/estree-utils";
 import {
-  compileInlinePrimitive,
+  findInlinePrimitive,
   isInlinePrimitive
 } from "./compiler/inline-primitives";
 import { cjs, esm, ModuleBackend } from "./compiler/modules";
@@ -130,11 +130,7 @@ function compileFunctionCall(
     funcall.node.fn.node.tag === "variable-reference" &&
     isInlinePrimitive(funcall.node.fn.node.name)
   ) {
-    return compileInlinePrimitive(
-      funcall.node.fn.node.name,
-      compiledArgs,
-      "funcall"
-    );
+    return compileInlinePrimitive(funcall.node.fn.node.name, compiledArgs);
   } else {
     return {
       type: "CallExpression",
@@ -145,6 +141,20 @@ function compileFunctionCall(
       ]
     };
   }
+}
+
+/** Compile a inline primitive with a set of parameters. */
+export function compileInlinePrimitive(
+  name: string,
+  args: JS.Expression[]
+): JS.Expression {
+  const prim = findInlinePrimitive(name);
+  return prim.funcHandler(args);
+}
+
+export function compileInlineValue(name: string): JS.Expression {
+  const prim = findInlinePrimitive(name);
+  return prim.valueHandler([]);
 }
 
 function compilePrimitive(name: string, env: Environment): JS.Expression {
@@ -166,7 +176,7 @@ function compileVariable(
 
   if (!binding) {
     if (isInlinePrimitive(ref.node.name)) {
-      return compileInlinePrimitive(ref.node.name, [], "value");
+      return compileInlineValue(ref.node.name);
     } else {
       return env.defs.access(ref.node.name);
     }

@@ -123,23 +123,6 @@ function typeArity(type: T.Type): number {
   }
 }
 
-/** Compile a inline primitive with a set of parameters.
- *
- *
- */
-export function compileInlinePrimitive(
-  name: string,
-  args: JS.Expression[],
-  position: "funcall" | "value"
-): JS.Expression {
-  const prim = findInlinePrimitive(name);
-  if (position === "funcall") {
-    return prim.funcHandler(args);
-  } else {
-    return prim.valueHandler(args);
-  }
-}
-
 //
 // Primitives
 //
