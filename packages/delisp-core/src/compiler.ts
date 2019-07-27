@@ -268,10 +268,14 @@ function compileRecord(
     })
   );
 
-  if (expr.node.extends) {
+  if (expr.node.source) {
+    // NOTE: we do not care if the record is being extended or updated
+    // here. As we do not provide a `delete` operation on records, the
+    // previous values are not recoverable anyway so we can just
+    // update it.
     return methodCall(identifier("Object"), "assign", [
       objectExpression([]),
-      compile(expr.node.extends, env, false),
+      compile(expr.node.source.expression, env, false),
       newObj
     ]);
   } else {

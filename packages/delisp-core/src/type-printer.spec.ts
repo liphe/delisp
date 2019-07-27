@@ -10,7 +10,7 @@ describe("Type printer", () => {
 
   test("open effect types are printed properly", () => {
     expect(printType(T.effect(["console", "async"], T.var("a")), false)).toBe(
-      "(effect console async | a)"
+      "(effect console async <| a)"
     );
   });
 

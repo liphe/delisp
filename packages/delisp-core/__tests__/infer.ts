@@ -112,7 +112,7 @@ describe("Type inference", () => {
         expect(typeOf("(lambda (x) x)")).toBeType("(-> ctx β γ β)");
         expect(typeOf("(lambda (x y) y)")).toBeType("(-> ctx α β γ β)");
         expect(typeOf("(lambda (f x) (f x))")).toBeType(
-          "(-> ctx (-> ctx x e (values r | rs)) x e (values r | rs))"
+          "(-> ctx (-> ctx x e (values r <| rs)) x e (values r <| rs))"
         );
         expect(typeOf("(lambda (x) (lambda (y) x))")).toBeType(
           "(-> ctx1 α β (-> ctx2 γ δ α))"
@@ -156,13 +156,13 @@ describe("Type inference", () => {
       });
       it("should infer the type of a lenses", () => {
         expect(typeOf(":x")).toBeType(
-          "(-> ctx1 {:x α | β} γ (values α (-> ctx2 δ ε {:x δ | β})))"
+          "(-> ctx1 {:x α <| β} γ (values α (-> ctx2 δ ε {:x δ <| β})))"
         );
         expect(typeOf(":foo")).toBeType(
-          "(-> ctx1 {:foo α | β} γ (values α (-> ctx2 δ ε {:foo δ | β})))"
+          "(-> ctx1 {:foo α <| β} γ (values α (-> ctx2 δ ε {:foo δ <| β})))"
         );
         expect(typeOf("(if true :x :y)")).toBeType(
-          "(-> ctx1 {:x α :y α | β} γ (values α (-> ctx2 α δ {:x α :y α | β})))"
+          "(-> ctx1 {:x α :y α <| β} γ (values α (-> ctx2 α δ {:x α :y α <| β})))"
         );
       });
       it("should be able to access the field", () => {
@@ -170,7 +170,7 @@ describe("Type inference", () => {
           "(values number (-> ctx α β {:x α}))"
         );
         expect(typeOf("(lambda (f) (f {:x 5 :y 6}))")).toBeType(
-          "(-> ctx (-> ctx {:x number :y number} α (values β | γ)) α (values β | γ))"
+          "(-> ctx (-> ctx {:x number :y number} α (values β <| γ)) α (values β <| γ))"
         );
       });
       it("should throw an error when trying to access unknown fields", () => {
@@ -184,7 +184,7 @@ describe("Type inference", () => {
           "{:x number}"
         );
         expect(typeOf("(lambda (r v) {:x v | r})")).toBeType(
-          "(-> ctx {:x α | β} γ δ {:x γ | β})"
+          "(-> ctx {:x α <| β} γ δ {:x γ <| β})"
         );
       });
       it("should not allow to extend a record", () => {
@@ -374,7 +374,7 @@ describe("Type inference", () => {
       });
       it("constraint types properly", () => {
         expect(typeOf("(lambda (x) (print x) x)")).toBeType(
-          "(-> ctx string (effect console | α) string)"
+          "(-> ctx string (effect console <| α) string)"
         );
       });
     });
@@ -397,7 +397,7 @@ describe("Type inference", () => {
           variables: {
             "empty?": readType("(-> ctx [a] _ boolean)"),
             "+": readType("(-> ctx number number _ number)"),
-            rest: readType("(-> ctx [a] (effect exp | _) [a])")
+            rest: readType("(-> ctx [a] (effect exp <| _) [a])")
           },
           types: {}
         };
@@ -413,7 +413,7 @@ describe("Type inference", () => {
           `,
             env
           )
-        ).toBeType("(-> ctx [α] (effect exp | β) number)");
+        ).toBeType("(-> ctx [α] (effect exp <| β) number)");
       });
     });
   });
@@ -428,7 +428,7 @@ describe("Type inference", () => {
     x))
 `
         )
-      ).toBeType("(-> ctx (-> ctx (effect) (values α | β)) γ α)");
+      ).toBeType("(-> ctx (-> ctx (effect) (values α <| β)) γ α)");
     });
   });
 
@@ -448,7 +448,7 @@ describe("Type inference", () => {
 
     it("infer multiple values of a function call in tail-position", () => {
       expect(typeOf(`(lambda (f) (f))`)).toBeType(
-        `(-> ctx (-> ctx α (values β | γ)) α (values β | γ))`
+        `(-> ctx (-> ctx α (values β <| γ)) α (values β <| γ))`
       );
     });
 

@@ -48,7 +48,7 @@ function printValuesType(
         .join(" ") +
       (row.extends.node.tag === "empty-row"
         ? ""
-        : " | " + _printType(row.extends, normalizeVar)) +
+        : " <| " + _printType(row.extends, normalizeVar)) +
       ")"
     );
   }
@@ -78,7 +78,7 @@ function printApplicationType(
           .join(" ");
         const extension =
           row.extends.node.tag !== "empty-row"
-            ? ` | ${_printType(row.extends, normalizeVar)}`
+            ? ` <| ${_printType(row.extends, normalizeVar)}`
             : "";
         return `{${fields}${extension}}`;
       }
@@ -89,7 +89,7 @@ function printApplicationType(
         const extending =
           row.extends.node.tag === "empty-row"
             ? ""
-            : " | " + _printType(row.extends, normalizeVar);
+            : " <| " + _printType(row.extends, normalizeVar);
 
         return `(effect${fields}${extending})`;
       }
@@ -153,7 +153,7 @@ function _printType(
       return `(#<row-extend> ${type.node.label} ${_printType(
         type.node.labelType,
         normalizeVar
-      )} | ${_printType(type.node.extends, normalizeVar)}})`;
+      )} <| ${_printType(type.node.extends, normalizeVar)}})`;
   }
 }
 

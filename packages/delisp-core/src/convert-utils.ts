@@ -9,7 +9,10 @@ export interface ParseRecordResult {
     label: ASExprSymbol;
     value: ASExpr;
   }>;
-  tail: ASExpr | undefined;
+  tail?: {
+    separator: ASExprSymbol;
+    expression: ASExpr;
+  };
 }
 
 export function parseRecord(expr: ASExprMap): ParseRecordResult {
@@ -20,10 +23,14 @@ export function parseRecord(expr: ASExprMap): ParseRecordResult {
       return { fields: expr.fields };
     } else {
       const lastField = last(expr.fields)!;
-      return lastField.label.name === "|"
+      const lastFieldLabel = lastField.label.name;
+      return lastFieldLabel === "|" || lastFieldLabel === "<|"
         ? {
             fields: expr.fields.slice(0, -1),
-            tail: lastField.value
+            tail: {
+              separator: lastField.label,
+              expression: lastField.value
+            }
           }
         : { fields: expr.fields };
     }
