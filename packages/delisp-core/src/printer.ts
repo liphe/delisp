@@ -77,9 +77,10 @@ function printExpr(expr: S.Expression): Doc {
         return printString(e.node.value, source);
       case "number":
         return text(String(e.node.value), ["number"], source);
-      case "vector": {
+      case "vector":
         return group(vector(align(...e.node.values)));
-      }
+      case "boolean":
+        return text(e.node.value.toString(), ["boolean"], source);
       case "record": {
         return group(
           map(

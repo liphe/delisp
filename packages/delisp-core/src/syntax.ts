@@ -20,6 +20,11 @@ interface SStringF {
   value: string;
 }
 
+interface SBooleanF {
+  tag: "boolean";
+  value: boolean;
+}
+
 export interface Identifier {
   tag: "identifier";
   name: SVar;
@@ -145,6 +150,7 @@ interface SUnknownF<_E> {
 type AnyExpressionF<I = {}, E = Expression<I>> =
   | SNumberF
   | SStringF
+  | SBooleanF
   | SVariableReferenceF
   | SConditionalF<E>
   | SFunctionCallF<E>

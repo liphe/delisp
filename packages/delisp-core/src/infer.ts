@@ -177,6 +177,16 @@ function infer(
         constraints: [],
         assumptions: []
       };
+    case "boolean":
+      return {
+        result: {
+          ...expr,
+          node: expr.node,
+          info: singleType(generateUniqueTVar(), T.boolean)
+        },
+        constraints: [],
+        assumptions: []
+      };
     case "vector": {
       const inferredValues = inferMany(
         expr.node.values,
@@ -297,38 +307,20 @@ function infer(
     }
 
     case "variable-reference": {
-      // as we found a variable, and because we lack an
-      // 'environment/context', we generate a new type and add an
-      // assumption for this variable.
-      if (expr.node.name === "true" || expr.node.name === "false") {
-        const effect = generateUniqueTVar();
-        return {
-          result: {
-            ...expr,
-            node: {
-              ...expr.node
-            },
-            info: singleType(effect, T.boolean)
-          },
-          constraints: [],
-          assumptions: []
-        };
-      } else {
-        const t = generateUniqueTVar();
-        const effect = generateUniqueTVar();
-        const typedVar = {
-          ...expr,
-          node: {
-            ...expr.node
-          },
-          info: singleType(effect, t)
-        };
-        return {
-          result: typedVar,
-          constraints: [],
-          assumptions: [typedVar]
-        };
-      }
+      const t = generateUniqueTVar();
+      const effect = generateUniqueTVar();
+      const typedVar = {
+        ...expr,
+        node: {
+          ...expr.node
+        },
+        info: singleType(effect, t)
+      };
+      return {
+        result: typedVar,
+        constraints: [],
+        assumptions: [typedVar]
+      };
     }
     case "conditional": {
       const condition = infer(

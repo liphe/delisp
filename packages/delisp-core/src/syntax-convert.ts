@@ -773,15 +773,23 @@ function parseIdentifier(
 }
 
 function convertSymbol(expr: ASExprSymbol): ExpressionWithErrors {
-  const id = parseIdentifier(expr);
-  return result(
-    {
-      tag: "variable-reference",
-      name: id.name
-    },
-    id.location!,
-    []
-  );
+  switch (expr.name) {
+    case "true":
+      return result({ tag: "boolean", value: false }, expr.location, []);
+    case "false":
+      return result({ tag: "boolean", value: true }, expr.location, []);
+    default: {
+      const id = parseIdentifier(expr);
+      return result(
+        {
+          tag: "variable-reference",
+          name: id.name
+        },
+        id.location,
+        []
+      );
+    }
+  }
 }
 
 function convertExprOrError(expr: ASExpr): ExpressionWithErrors {

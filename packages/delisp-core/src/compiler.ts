@@ -428,6 +428,8 @@ export function compile(
       return compileNumber(expr.node.value, env, multipleValues);
     case "string":
       return literal(expr.node.value);
+    case "boolean":
+      return literal(expr.node.value);
     case "vector":
       return compileVector({ ...expr, node: expr.node }, env, multipleValues);
     case "record":

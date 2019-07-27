@@ -9,6 +9,7 @@ export function mapExpr<I, A, B>(
   switch (expr.node.tag) {
     case "string":
     case "number":
+    case "boolean":
     case "variable-reference":
     case "unknown":
       return { ...expr, node: expr.node };
@@ -143,6 +144,7 @@ export function exprFChildren<I, E>(e: S.ExpressionF<I, E>): E[] {
   switch (e.node.tag) {
     case "string":
     case "number":
+    case "boolean":
     case "variable-reference":
     case "unknown":
       return [];
