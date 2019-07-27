@@ -30,7 +30,7 @@ export function mapExpr<I, A, B>(
             ...f,
             value: fn(f.value)
           })),
-          extends: expr.node.extends && fn(expr.node.extends)
+          source: expr.node.source && fn(expr.node.source)
         }
       };
     case "record-get":

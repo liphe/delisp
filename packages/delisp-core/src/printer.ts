@@ -90,8 +90,8 @@ function printExpr(expr: S.Expression): Doc {
                   ...e.node.fields.map(({ label, value }) =>
                     concat(text(label.name, ["label"]), space, value)
                   ),
-                  ...(e.node.extends
-                    ? [concat(text("|", ["label-ext"]), space, e.node.extends)]
+                  ...(e.node.source
+                    ? [concat(text("|", ["label-ext"]), space, e.node.source)]
                     : [])
                 ],
                 line

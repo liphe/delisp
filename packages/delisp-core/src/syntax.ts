@@ -91,7 +91,7 @@ interface SRecordF<E> {
     label: Identifier;
     value: E;
   }>;
-  extends?: E;
+  source?: E;
 }
 
 interface SRecordGetF<E> {

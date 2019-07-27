@@ -268,10 +268,10 @@ function compileRecord(
     })
   );
 
-  if (expr.node.extends) {
+  if (expr.node.source) {
     return methodCall(identifier("Object"), "assign", [
       objectExpression([]),
-      compile(expr.node.extends, env, false),
+      compile(expr.node.source, env, false),
       newObj
     ]);
   } else {

@@ -748,7 +748,7 @@ function convertMap(map: ASExprMap): ExpressionWithErrors {
       label: parseIdentifier(f.label),
       value: convertExpr(f.value)
     })),
-    extends: tail && convertExpr(tail)
+    source: tail && convertExpr(tail)
   });
 }
 

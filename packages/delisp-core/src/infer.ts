@@ -220,8 +220,8 @@ function infer(
       }));
 
       const tailInferred =
-        expr.node.extends &&
-        infer(expr.node.extends, monovars, internalTypes, false);
+        expr.node.source &&
+        infer(expr.node.source, monovars, internalTypes, false);
       const tailRowType = generateUniqueTVar();
 
       const effect = generateUniqueTVar();
@@ -235,7 +235,7 @@ function infer(
               label,
               value
             })),
-            extends: tailInferred && tailInferred.result
+            source: tailInferred && tailInferred.result
           },
           info: singleType(
             effect,
