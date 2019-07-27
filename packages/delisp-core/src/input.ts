@@ -30,3 +30,9 @@ export class Input {
     return this.input;
   }
 }
+
+export const nolocation: Location = {
+  input: new Input(""),
+  start: 0,
+  end: 0
+};

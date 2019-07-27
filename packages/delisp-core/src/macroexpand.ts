@@ -70,7 +70,8 @@ export function macroexpandSyntax(
       },
       info: {
         errors: []
-      }
+      },
+      location: syntax.location
     };
   } else if (
     S.isExport(syntax) ||

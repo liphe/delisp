@@ -4,7 +4,7 @@ import {
 } from "./type-convert";
 import { ConvertError, parseRecord, ParseRecordResult } from "./convert-utils";
 import { printHighlightedExpr } from "./error-report";
-import { Location } from "./input";
+import { nolocation, Location } from "./input";
 import { assertNever, InvariantViolation } from "./invariant";
 import { readFromString } from "./reader";
 import {
@@ -882,13 +882,15 @@ export function createImportSyntax(
       tag: "import",
       variable: {
         tag: "identifier",
-        name
+        name,
+        location: nolocation
       },
       source
     },
     info: {
       errors: []
-    }
+    },
+    location: nolocation
   };
 }
 

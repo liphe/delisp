@@ -23,7 +23,7 @@ interface SStringF {
 export interface Identifier {
   tag: "identifier";
   name: SVar;
-  location?: Location;
+  location: Location;
 }
 
 type SVar = string;
@@ -163,7 +163,7 @@ type AnyExpressionF<I = {}, E = Expression<I>> =
 
 interface Node<I, E> {
   node: E;
-  location?: Location;
+  location: Location;
   info: I;
 }
 
