@@ -1,5 +1,30 @@
 import * as JS from "estree";
-import { isValidJSIdentifierName, identifierToJS } from "./jsvariable";
+import {
+  isValidJSIdentifierName,
+  identifierToJS,
+  identifierToJSName
+} from "./jsvariable";
+
+export function literal(value: number | string | boolean | null): JS.Literal {
+  return {
+    type: "Literal",
+    value
+  };
+}
+
+export function identifier(name: string): JS.Identifier {
+  return {
+    type: "Identifier",
+    name: identifierToJS(name)
+  };
+}
+
+export function identifierName(name: string): JS.Identifier {
+  return {
+    type: "Identifier",
+    name: identifierToJSName(name)
+  };
+}
 
 export function member(obj: JS.Expression, prop: string): JS.MemberExpression {
   const dotNotation = isValidJSIdentifierName(prop);
@@ -7,7 +32,7 @@ export function member(obj: JS.Expression, prop: string): JS.MemberExpression {
     type: "MemberExpression",
     computed: !dotNotation,
     object: obj,
-    property: dotNotation ? identifier(prop) : literal(prop)
+    property: dotNotation ? identifierName(prop) : literal(prop)
   };
 }
 
@@ -70,20 +95,6 @@ export function arrowFunction(
   }
 }
 
-export function literal(value: number | string | boolean | null): JS.Literal {
-  return {
-    type: "Literal",
-    value
-  };
-}
-
-export function identifier(name: string): JS.Identifier {
-  return {
-    type: "Identifier",
-    name: identifierToJS(name)
-  };
-}
-
 export function op1(
   operator: JS.UnaryOperator,
   argument: JS.Expression
@@ -119,17 +130,17 @@ export function objectExpression(properties: Property[]): JS.ObjectExpression {
   return {
     type: "ObjectExpression",
     properties: properties.map(p => {
-      const validIdentifier = isValidJSIdentifierName(p.key);
+      const validIdentifierName = isValidJSIdentifierName(p.key);
       return {
         type: "Property",
         kind: "init",
         method: false,
         computed: false,
         shorthand:
-          validIdentifier &&
+          validIdentifierName &&
           p.value.type === "Identifier" &&
           p.value.name === p.key,
-        key: validIdentifier ? identifier(p.key) : literal(p.key),
+        key: validIdentifierName ? identifierName(p.key) : literal(p.key),
         value: p.value
       };
     })

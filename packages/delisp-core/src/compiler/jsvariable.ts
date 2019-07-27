@@ -63,6 +63,8 @@ export function isValidJSIdentifier(x: string): boolean {
   return isValidJSIdentifierName(x) && !reservedWords.includes(x);
 }
 
+// This function should be injective so there is no collisions and the
+// output should be a valid variable name.
 export function escapeIdentifier(x: string): string {
   // This prefix is intended to avoid generating reserved Javascript
   // keywords. For instance, the Delisp variable `const` will be
@@ -114,9 +116,24 @@ export function escapeIdentifier(x: string): string {
   return `${prefix}${escapeName(x)}`;
 }
 
-// Convert a Delisp variable name to Javascript. This function should
-// be injective so there is no collisions and the output should be a
-// valid variable name.
+/** Convert a Delisp variable name to Javascript identifier.
+ *
+ * @description
+ * This is intended to be used for function and variable names. For
+ * properties, use `identifierToJSName` instead.
+ *
+ */
 export function identifierToJS(x: string): string {
   return isValidJSIdentifier(x) ? x : escapeIdentifier(x);
+}
+
+/** Convert a Delisp variable name to Javascript property.
+ *
+ * @description
+ * This is intended to be used for properties. For variables and function
+ * names, use `identifierToJS` instead.
+ *
+ */
+export function identifierToJSName(x: string): string {
+  return isValidJSIdentifierName(x) ? x : escapeIdentifier(x);
 }
