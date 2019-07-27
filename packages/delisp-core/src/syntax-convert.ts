@@ -14,17 +14,7 @@ import {
   ASExprSymbol,
   ASExprVector
 } from "./sexpr";
-import {
-  Declaration,
-  Expression,
-  Identifier,
-  isExpression,
-  LambdaList,
-  SLetBindingF,
-  SImport,
-  SMatchCaseF,
-  Syntax
-} from "./syntax";
+import * as S from "./syntax";
 import { exprFChildren, foldExpr } from "./syntax-utils";
 import { listTypeVariables } from "./type-utils";
 import { flatten, last, maybeMap } from "./utils";
@@ -33,9 +23,9 @@ export interface WithErrors {
   errors: string[];
 }
 
-type ExpressionWithErrors = Expression<WithErrors>;
-type DeclarationWithErrors = Declaration<WithErrors, WithErrors>;
-type SyntaxWithErrors = Syntax<WithErrors, WithErrors>;
+type ExpressionWithErrors = S.Expression<WithErrors>;
+type DeclarationWithErrors = S.Declaration<WithErrors, WithErrors>;
+type SyntaxWithErrors = S.Syntax<WithErrors, WithErrors>;
 
 function result(
   node: ExpressionWithErrors["node"],
@@ -105,7 +95,7 @@ function parseBody(anchor: ASExpr, exprs: ASExpr[]): ExpressionWithErrors[] {
 // The format of lambda lists are (a b c ... &rest z)
 //
 
-function parseLambdaList(ll: ASExpr): LambdaList {
+function parseLambdaList(ll: ASExpr): S.LambdaList {
   if (ll.tag !== "list") {
     throw new ConvertError(
       printHighlightedExpr("Expected a list of arguments", ll.location)
@@ -267,7 +257,7 @@ defineConversion("$get", ($get_, args, whole) => {
 
 function parseLetBindings(
   bindings: ASExpr
-): Array<SLetBindingF<ExpressionWithErrors>> {
+): Array<S.SLetBindingF<ExpressionWithErrors>> {
   if (bindings.tag !== "map") {
     throw new ConvertError(
       printHighlightedExpr(`'let' bindings should be a map`, bindings.location)
@@ -430,7 +420,7 @@ defineConversion("match", (_match, args, whole) => {
     };
   }
 
-  const cases = maybeMap<ASExpr, SMatchCaseF<Expression<WithErrors>>>(c => {
+  const cases = maybeMap<ASExpr, S.SMatchCaseF<S.Expression<WithErrors>>>(c => {
     if (c.tag !== "list") {
       errors.push("invalid pattern");
       return null;
@@ -762,9 +752,7 @@ function convertMap(map: ASExprMap): ExpressionWithErrors {
   });
 }
 
-function parseIdentifier(
-  expr: ASExprSymbol
-): Identifier & { location: Location } {
+function parseIdentifier(expr: ASExprSymbol): S.Identifier {
   return {
     tag: "identifier",
     name: expr.name,
@@ -862,7 +850,7 @@ function collectConvertExprErrors(expr: ExpressionWithErrors): string[] {
 }
 
 export function collectConvertErrors(syntax: SyntaxWithErrors): string[] {
-  if (isExpression(syntax)) {
+  if (S.isExpression(syntax)) {
     return collectConvertExprErrors(syntax);
   } else {
     switch (syntax.node.tag) {
@@ -884,7 +872,7 @@ export function collectConvertErrors(syntax: SyntaxWithErrors): string[] {
 export function createImportSyntax(
   name: string,
   source: string
-): SImport<WithErrors> {
+): S.SImport<WithErrors> {
   return {
     node: {
       tag: "import",
