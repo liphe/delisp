@@ -16,6 +16,13 @@ function evaluateString(str: string): unknown {
 }
 
 describe("Evaluation", () => {
+  describe("Booleans", () => {
+    it("should self-evaluate", () => {
+      expect(evaluateString("true")).toBe(true);
+      expect(evaluateString("false")).toBe(false);
+    });
+  });
+
   describe("Numbers", () => {
     it("should self-evaluate", () => {
       expect(evaluateString("0")).toBe(0);
@@ -167,6 +174,24 @@ describe("Evaluation", () => {
   (let {*context* 10}
   (f)))`)
       ).toBe(10);
+    });
+  });
+
+  describe("Match and case", () => {
+    it("should do basic pattern matching", () => {
+      expect(
+        evaluateString(`
+(match (case :increase 10)
+  ({:increase x} (+ x 1))
+  ({:decrease x} (- x 1)))`)
+      ).toBe(11);
+
+      expect(
+        evaluateString(`
+(match (case :decrease 10)
+  ({:increase x} (+ x 1))
+  ({:decrease x} (- x 1)))`)
+      ).toBe(9);
     });
   });
 });

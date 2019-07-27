@@ -153,6 +153,11 @@ Object {
 }
 `;
 
+exports[`convertType Effects extensible effects can't be written with | separator 1`] = `
+"
+Wrong effect separator"
+`;
+
 exports[`convertType Effects should convert effect with multiple labels 1`] = `
 Object {
   "node": Object {
@@ -410,6 +415,11 @@ Object {
     "tag": "application",
   },
 }
+`;
+
+exports[`convertType extensible records can't be written with | separator 1`] = `
+"
+Expected record extension operator \\"<|\\", but found \\"|."
 `;
 
 exports[`convertType should detect incorrect types 1`] = `

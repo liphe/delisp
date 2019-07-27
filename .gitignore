@@ -4,3 +4,4 @@ yarn-error.log
 coverage
 .vscode
 .delisp/
+dist-ts/

@@ -172,13 +172,6 @@ function compileVariable(
   env: Environment,
   _multipleValues: boolean
 ): JS.Expression {
-  if (ref.node.name === "true") {
-    return literal(true);
-  }
-  if (ref.node.name === "false") {
-    return literal(false);
-  }
-
   const binding = lookupBinding(ref.node.name, env);
   if (!binding) {
     if (isInlinePrimitive(ref.node.name)) {

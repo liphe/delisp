@@ -41,6 +41,10 @@ describe("convertType", () => {
     expect(readAndConvert("  b  ")).toMatchObject(T.var("b"));
   });
 
+  it("should convert void", () => {
+    expect(readAndConvert("void")).toMatchObject(T.void);
+  });
+
   it("should convert to functions", () => {
     expect(readAndConvert("  (->  string _ number)  ")).toMatchObject(
       T.fn([T.string], T.var("_"), T.number)
@@ -57,6 +61,10 @@ describe("convertType", () => {
 
   it("should read extensible record", () => {
     expect(readAndConvert("{:x number :y number <| a}")).toMatchSnapshot();
+  });
+
+  it("extensible records can't be written with | separator", () => {
+    expect(failedType("{:x number :y number | a}")).toMatchSnapshot();
   });
 
   it("should fail for invalid syntax of extensible records", () => {
@@ -94,6 +102,10 @@ describe("convertType", () => {
 
     it("should convert open effect with multiple labels", () => {
       expect(readAndConvert("(effect console async <| a)")).toMatchSnapshot();
+    });
+
+    it("extensible effects can't be written with | separator", () => {
+      expect(failedType("(effect console | a)")).toMatchSnapshot();
     });
   });
 
