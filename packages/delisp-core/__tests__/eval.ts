@@ -1,6 +1,7 @@
 import { moduleEnvironment } from "../src/compiler";
 import { createSandbox, evaluate } from "../src/eval";
 import { readSyntax } from "../src/index";
+import { macroexpandSyntax } from "../src/index";
 import { createModule } from "../src/module";
 
 function evaluateString(str: string): unknown {
@@ -9,7 +10,7 @@ function evaluateString(str: string): unknown {
       return name;
     }
   });
-  const s = readSyntax(`(let {*context* {}} ${str})`);
+  const s = macroexpandSyntax(readSyntax(`(let {*context* {}} ${str})`));
   const sandbox = createSandbox(() => null);
   return evaluate(s, env, sandbox);
 }

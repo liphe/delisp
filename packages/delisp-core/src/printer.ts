@@ -99,6 +99,18 @@ function printExpr(expr: S.Expression): Doc {
           )
         );
       }
+      case "record-get":
+        return group(
+          list(
+            concat(
+              keyword("$get", source),
+              space,
+              text(e.node.field.name, ["label"], e),
+              space,
+              e.node.value
+            )
+          )
+        );
       case "variable-reference":
         return printIdentifier(e.node.name, { ...e, node: e.node });
 

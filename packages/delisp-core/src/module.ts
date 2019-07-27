@@ -13,7 +13,7 @@ import {
 } from "./syntax";
 import { flatMap } from "./utils";
 
-export function createModule(): Module {
+export function createModule<I, E>(): Module<I, E> {
   return {
     tag: "module",
     body: []

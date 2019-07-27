@@ -21,6 +21,7 @@ import {
   isExpression,
   LambdaList,
   SLetBindingF,
+  SImport,
   SMatchCaseF,
   Syntax
 } from "./syntax";
@@ -227,6 +228,37 @@ defineConversion("if", (if_, args, whole) => {
       condition,
       consequent,
       alternative
+    },
+    whole.location,
+    errors
+  );
+});
+
+defineConversion("$get", ($get_, args, whole) => {
+  const errors = checkArguments($get_, args, {
+    atLeast: 2,
+    atMost: 2,
+    fewArguments: `'$get' needs exactly 2 arguments, got ${args.length}`,
+    manyArguments: `'$get' needs exactly 2 arguments, got ${args.length}`
+  });
+
+  const [keyForm, valueForm] = args;
+
+  if (keyForm.tag !== "symbol" || !keyForm.name.startsWith(":")) {
+    throw new ConvertError(`Invalid tag!`);
+  }
+
+  const value = convertExpr(valueForm);
+
+  return result(
+    {
+      tag: "record-get",
+      field: {
+        tag: "identifier",
+        name: keyForm.name,
+        location: keyForm.location
+      },
+      value
     },
     whole.location,
     errors
@@ -769,7 +801,7 @@ function convertExprOrError(expr: ASExpr): ExpressionWithErrors {
   }
 }
 
-function convertExpr(expr: ASExpr): ExpressionWithErrors {
+export function convertExpr(expr: ASExpr): ExpressionWithErrors {
   try {
     return convertExprOrError(expr);
   } catch (err) {
@@ -839,6 +871,25 @@ export function collectConvertErrors(syntax: SyntaxWithErrors): string[] {
         return assertNever(syntax.node);
     }
   }
+}
+
+export function createImportSyntax(
+  name: string,
+  source: string
+): SImport<WithErrors> {
+  return {
+    node: {
+      tag: "import",
+      variable: {
+        tag: "identifier",
+        name
+      },
+      source
+    },
+    info: {
+      errors: []
+    }
+  };
 }
 
 export function readSyntax(source: string) {

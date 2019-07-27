@@ -89,6 +89,12 @@ interface SRecordF<E> {
   extends?: E;
 }
 
+interface SRecordGetF<E> {
+  tag: "record-get";
+  field: Identifier;
+  value: E;
+}
+
 interface STypeAnnotationF<E> {
   tag: "type-annotation";
   value: E;
@@ -146,6 +152,7 @@ type AnyExpressionF<I = {}, E = Expression<I>> =
   | SVectorConstructorF<E>
   | SLetF<E>
   | SRecordF<E>
+  | SRecordGetF<E>
   | STypeAnnotationF<E>
   | SDoBlockF<E>
   | SMatchF<E>
@@ -179,6 +186,8 @@ export interface SFunction<I = {}> extends Node<I, SFunctionF<Expression<I>>> {}
 export interface SLet<I = {}> extends Node<I, SLetF<Expression<I>>> {}
 
 export interface SRecord<I = {}> extends Node<I, SRecordF<Expression<I>>> {}
+export interface SRecordGet<I = {}>
+  extends Node<I, SRecordGetF<Expression<I>>> {}
 
 export interface SVectorConstructor<I = {}>
   extends Node<I, SVectorConstructorF<Expression<I>>> {}
@@ -318,18 +327,4 @@ export class Typed {
   get resultingType() {
     return this._resultingType || this.expressionType;
   }
-}
-
-export function createImportSyntax(name: string, source: string): SImport {
-  return {
-    node: {
-      tag: "import",
-      variable: {
-        tag: "identifier",
-        name
-      },
-      source
-    },
-    info: {}
-  };
 }

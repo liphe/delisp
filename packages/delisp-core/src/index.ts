@@ -3,7 +3,12 @@ export {
   compileToString,
   moduleEnvironment
 } from "./compiler";
-export { collectConvertErrors, readSyntax } from "./syntax-convert";
+export {
+  createImportSyntax,
+  WithErrors,
+  collectConvertErrors,
+  readSyntax
+} from "./syntax-convert";
 export { printHighlightedExpr } from "./error-report";
 export { createSandbox, evaluate, evaluateModule } from "./eval";
 export {
@@ -33,7 +38,6 @@ export { Encoder } from "./prettier";
 export { default as primitives } from "./primitives";
 export { pprint, pprintAs, pprintModule, pprintModuleAs } from "./printer";
 export {
-  createImportSyntax,
   Declaration,
   Expression,
   isDeclaration,
@@ -56,3 +60,8 @@ export {
 export { printType } from "./type-printer";
 export { Type } from "./types";
 export { generateTSModuleDeclaration } from "./typescript-generation";
+export {
+  macroexpandModule,
+  macroexpandSyntax,
+  macroexpandExpression
+} from "./macroexpand";

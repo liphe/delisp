@@ -266,26 +266,69 @@ function infer(
         ]
       };
     }
+
+    case "record-get": {
+      const label = expr.node.field.name;
+      const labelType = generateUniqueTVar();
+      const effect = generateUniqueTVar();
+
+      const value = infer(expr.node.value, monovars, internalTypes, false);
+
+      const recordType = T.record(
+        [{ label, type: labelType }],
+        generateUniqueTVar()
+      );
+
+      return {
+        result: {
+          ...expr,
+          node: {
+            ...expr.node,
+            value: value.result
+          },
+          info: singleType(effect, labelType)
+        },
+        constraints: [
+          ...value.constraints,
+          constEqual(value.result, recordType, "resulting-type")
+        ],
+        assumptions: value.assumptions
+      };
+    }
+
     case "variable-reference": {
       // as we found a variable, and because we lack an
       // 'environment/context', we generate a new type and add an
       // assumption for this variable.
-
-      const t = generateUniqueTVar();
-
-      const effect = generateUniqueTVar();
-      const typedVar = {
-        ...expr,
-        node: {
-          ...expr.node
-        },
-        info: singleType(effect, t)
-      };
-      return {
-        result: typedVar,
-        constraints: [],
-        assumptions: [typedVar]
-      };
+      if (expr.node.name === "true" || expr.node.name === "false") {
+        const effect = generateUniqueTVar();
+        return {
+          result: {
+            ...expr,
+            node: {
+              ...expr.node
+            },
+            info: singleType(effect, T.boolean)
+          },
+          constraints: [],
+          assumptions: []
+        };
+      } else {
+        const t = generateUniqueTVar();
+        const effect = generateUniqueTVar();
+        const typedVar = {
+          ...expr,
+          node: {
+            ...expr.node
+          },
+          info: singleType(effect, t)
+        };
+        return {
+          result: typedVar,
+          constraints: [],
+          assumptions: [typedVar]
+        };
+      }
     }
     case "conditional": {
       const condition = infer(

@@ -246,6 +246,13 @@ function compileVector(
   };
 }
 
+function labelToPropertyName(label: S.Identifier): string {
+  if (!label.name.startsWith(":")) {
+    throw new InvariantViolation(`Invalid record label ${label}.`);
+  }
+  return label.name.replace(/^:/, "");
+}
+
 function compileRecord(
   expr: S.SRecord,
   env: Environment,
@@ -253,10 +260,7 @@ function compileRecord(
 ): JS.Expression {
   const newObj = objectExpression(
     expr.node.fields.map(({ label, value }) => {
-      if (!label.name.startsWith(":")) {
-        throw new InvariantViolation(`Invalid record ${label}`);
-      }
-      const name = label.name.replace(/^:/, "");
+      const name = labelToPropertyName(label);
       return {
         key: name,
         value: compile(value, env, multipleValues)
@@ -273,6 +277,16 @@ function compileRecord(
   } else {
     return newObj;
   }
+}
+
+function compileRecordGet(
+  expr: S.SRecordGet,
+  env: Environment,
+  _multipleValues: boolean
+) {
+  const name = labelToPropertyName(expr.node.field);
+  const record = compile(expr.node.value, env, false);
+  return member(record, name);
 }
 
 function compileNumber(
@@ -418,6 +432,12 @@ export function compile(
       return compileVector({ ...expr, node: expr.node }, env, multipleValues);
     case "record":
       return compileRecord({ ...expr, node: expr.node }, env, multipleValues);
+    case "record-get":
+      return compileRecordGet(
+        { ...expr, node: expr.node },
+        env,
+        multipleValues
+      );
     case "variable-reference":
       return compileVariable({ ...expr, node: expr.node }, env, multipleValues);
     case "conditional":

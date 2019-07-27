@@ -10,6 +10,7 @@ import {
   inferModule,
   isDefinition,
   isExpression,
+  macroexpandSyntax,
   mergeExternalEnvironments,
   moduleDefinitionByName,
   moduleEnvironment,
@@ -67,7 +68,7 @@ async function handleLine(line: string) {
 
     let syntax;
     try {
-      syntax = readSyntax(inputBuffer);
+      syntax = macroexpandSyntax(readSyntax(inputBuffer));
     } catch (err) {
       if (err.incomplete) {
         rl.setPrompt(process.env.INSIDE_EMACS ? "" : "... ");

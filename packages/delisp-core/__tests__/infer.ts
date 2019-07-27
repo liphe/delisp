@@ -1,8 +1,9 @@
 import { readType } from "../src/type-convert";
-import { isDeclaration, readSyntax } from "../src/index";
 import { inferType, InternalTypeEnvironment } from "../src/infer";
 import { ExternalEnvironment } from "../src/infer-environment";
-import { Expression } from "../src/syntax";
+import { Expression, isDeclaration } from "../src/syntax";
+import { WithErrors, readSyntax } from "../src/syntax-convert";
+import { macroexpandExpression } from "../src/macroexpand";
 import { printType } from "../src/type-printer";
 
 function normalizeType(t: string): string {
@@ -36,7 +37,7 @@ declare global {
 }
 /* eslint-enable @typescript-eslint/no-namespace */
 
-function readExpr(code: string): Expression {
+function readExpr(code: string): Expression<WithErrors> {
   const syntax = readSyntax(code);
   if (isDeclaration(syntax)) {
     throw new Error(`Not an expression!`);
@@ -53,7 +54,13 @@ function typeOf(
   multipleValues = false
 ): string {
   const syntax = readExpr(str);
-  const typedExpr = inferType(syntax, externalEnv, internalEnv, multipleValues);
+  const expandedSyntax = macroexpandExpression(syntax);
+  const typedExpr = inferType(
+    expandedSyntax,
+    externalEnv,
+    internalEnv,
+    multipleValues
+  );
   const result = printType(typedExpr.info.resultingType);
   return result;
 }

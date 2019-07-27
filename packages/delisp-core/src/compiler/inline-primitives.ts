@@ -1,18 +1,14 @@
 import * as JS from "estree";
 import { readType } from "../type-convert";
 import { InvariantViolation } from "../invariant";
-import { generateUniqueTVar } from "../type-generate";
-import { type } from "../type-tag";
-import { generalize, isFunctionType } from "../type-utils";
+import { isFunctionType } from "../type-utils";
 import * as T from "../types";
 import { range } from "../utils";
 import {
-  arrowFunction,
   identifier,
   literal,
   member,
   methodCall,
-  objectExpression,
   op1,
   op,
   primitiveCall
@@ -30,12 +26,7 @@ interface InlinePrim {
   funcHandler: InlineHandler;
 }
 
-interface MagicPrim {
-  matches: (name: string) => boolean;
-  createPrimitive: (name: string) => InlinePrim;
-}
 const inlinefuncs = new Map<string, InlinePrim>();
-const magicfuncs: MagicPrim[] = [];
 
 function createInlinePrimitive(
   name: string,
@@ -81,31 +72,19 @@ function defineInlinePrimitive(
   createInlinePrimitive(name, type, valueHandler, handle);
 }
 
-function defineMagicPrimitive(
-  matches: MagicPrim["matches"],
-  createPrimitive: MagicPrim["createPrimitive"]
-) {
-  magicfuncs.push({ matches, createPrimitive });
-}
-
 export function isInlinePrimitive(name: string) {
-  return inlinefuncs.has(name) || magicfuncs.some(f => f.matches(name));
+  return inlinefuncs.has(name);
 }
 
 export function findInlinePrimitive(name: string): InlinePrim {
   const prim = inlinefuncs.get(name);
   if (prim) {
     return prim;
+  } else {
+    throw new InvariantViolation(
+      `${name} is not an primitive inline function call`
+    );
   }
-
-  const magicPrim = magicfuncs.find(f => f.matches(name));
-  if (magicPrim) {
-    return magicPrim.createPrimitive(name);
-  }
-
-  throw new InvariantViolation(
-    `${name} is not an primitive inline function call`
-  );
 }
 
 function typeArity(type: T.Type): number {
@@ -325,78 +304,4 @@ defineInlinePrimitive("cons", "(-> _ctx a [a] _ [a])", ([_ctx, x, lst]) => ({
 
 defineInlinePrimitive("empty?", "(-> _ctx [a] _ boolean)", ([_ctx, lst]) =>
   op("===", member(lst, "length"), literal(0))
-);
-
-/*
-matches `:foo` and inlines the lens with type
-
-  (-> a _ (values b (-> c d)))
-
-*/
-defineMagicPrimitive(
-  name => name[0] === ":" && name.length > 1,
-  name => {
-    const fieldType = generateUniqueTVar();
-    const newFieldType = generateUniqueTVar();
-
-    const extendsType = generateUniqueTVar();
-    const recordType = T.record(
-      [{ label: name, type: fieldType }],
-      extendsType
-    );
-    const newRecordType = T.record(
-      [{ label: name, type: newFieldType }],
-      extendsType
-    );
-
-    const lensType = generalize(
-      type`(-> _ctx1 ${recordType}
-               _
-               (values ${fieldType}
-                       (-> _ctx2 ${newFieldType} _ ${newRecordType})))`,
-      []
-    );
-
-    const jsname = name.replace(/^:/, "");
-
-    const handler = () =>
-      arrowFunction(
-        [identifier("values"), identifier("*context*"), identifier("obj")],
-        [
-          primitiveCall(
-            "values",
-            member(identifier("obj"), jsname),
-            arrowFunction(
-              [
-                identifier("values"),
-                identifier("*context*"),
-                identifier("val")
-              ],
-              [
-                methodCall(identifier("Object"), "assign", [
-                  objectExpression([]),
-                  identifier("obj"),
-                  objectExpression([
-                    {
-                      key: jsname,
-                      value: identifier("val")
-                    }
-                  ])
-                ])
-              ]
-            )
-          )
-        ]
-      );
-
-    return {
-      type: lensType,
-      valueHandler: handler,
-      funcHandler: args => ({
-        type: "CallExpression",
-        callee: handler(),
-        arguments: [identifier("values"), ...args]
-      })
-    };
-  }
 );
