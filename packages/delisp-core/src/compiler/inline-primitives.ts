@@ -117,6 +117,12 @@ defineInlinePrimitive(
 );
 
 defineInlinePrimitive(
+  "number->string",
+  "(-> _ctx number _ string)",
+  ([_ctx, x]) => primitiveCall("String", x)
+);
+
+defineInlinePrimitive(
   "map",
   "(-> _ctx (-> _ctx a e (values b <| _)) [a] e [b])",
   ([ctx, fn, vec]) => {
