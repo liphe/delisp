@@ -27,32 +27,44 @@ export function createSandbox(requireFn: (id: string) => any) {
   return sandbox;
 }
 
-export async function evaluate(
-  syntax: S.Syntax,
+function compileAndRun(s: S.Syntax, env: Environment, sandbox: Sandbox) {
+  const code = compileToString(s, env);
+  return vm.runInContext(code, sandbox);
+}
+
+export async function evaluateExpression(
+  expression: S.Expression,
   env: Environment,
   sandbox: Sandbox
 ): Promise<unknown> {
-  if (!S.isExpression(syntax)) {
-    throw new Error(`Definitions aren't supported in the REPL.`);
-  }
-
-  const wrappedSyntax: S.Expression = {
+  const wrapped: S.Expression = {
     node: {
       tag: "function",
       lambdaList: {
         tag: "function-lambda-list",
         positionalArguments: [],
-        location: syntax.location
+        location: expression.location
       },
-      body: [syntax]
+      body: [expression]
     },
     info: {},
-    location: syntax.location
+    location: expression.location
   };
+  const result = compileAndRun(wrapped, env, sandbox);
+  return result((x: unknown) => x, {});
+}
 
-  const code = compileToString(wrappedSyntax, env);
-  const result = vm.runInContext(code, sandbox);
-  return result((x: any) => x, {});
+export async function evaluate(
+  syntax: S.Syntax,
+  env: Environment,
+  sandbox: Sandbox
+): Promise<unknown> {
+  if (S.isExpression(syntax)) {
+    return evaluateExpression(syntax, env, sandbox);
+  } else {
+    const result = compileAndRun(syntax, env, sandbox);
+    return result;
+  }
 }
 
 export function evaluateModule(
