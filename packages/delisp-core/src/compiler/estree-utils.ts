@@ -191,7 +191,3 @@ export function awaitExpr(expr: JS.Expression): JS.Expression {
     argument: expr
   };
 }
-
-export function awaitArray(expr: JS.Expression): JS.Expression {
-  return awaitExpr(methodCall(identifier("Promise"), "all", [expr]));
-}

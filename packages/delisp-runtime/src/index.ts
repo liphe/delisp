@@ -98,3 +98,34 @@ export function assert(x: boolean, message: string) {
     throw new Error(message);
   }
 }
+
+//
+// Async primitives
+//
+
+export function promiseMap<A, B>(
+  array: A[],
+  f: (x: A) => Promise<B>
+): Promise<B[]> {
+  return Promise.all(array.map(f));
+}
+
+export async function promiseReduce<A, B>(
+  array: A[],
+  reducer: (x: B, y: A) => Promise<B>,
+  initial: B
+): Promise<B> {
+  let value: B = initial;
+  for (const elem of array) {
+    value = await reducer(value, elem);
+  }
+  return value;
+}
+
+export async function promiseFilter<A>(
+  array: A[],
+  predicate: (x: A) => Promise<boolean>
+): Promise<A[]> {
+  const flags = await Promise.all(array.map(predicate));
+  return array.filter((_, i) => flags[i]);
+}

@@ -158,12 +158,11 @@ function compileInlineValue(name: string): JS.Expression {
      will be created so the inlined primitive can be used as a
      function. */
   const identifiers = range(prim.arity).map(i => identifier(`x${i}`));
-  return {
-    type: "ArrowFunctionExpression",
-    params: [identifier("values"), ...identifiers],
-    body: prim.funcHandler(identifiers),
-    expression: true
-  };
+  return arrowFunction(
+    [identifier("values"), ...identifiers],
+    [prim.funcHandler(identifiers)],
+    { async: true }
+  );
 }
 
 function compilePrimitive(name: string, env: Environment): JS.Expression {
@@ -572,7 +571,10 @@ function compileRuntimeUtils(
     "values",
     "bindPrimaryValue",
     "mvbind",
-    "assert"
+    "assert",
+    "promiseMap",
+    "promiseReduce",
+    "promiseFilter"
   ]);
 }
 
