@@ -8,7 +8,6 @@ import {
   literal,
   member,
   methodCall,
-  awaitExpr,
   op1,
   op,
   primitiveCall
@@ -126,12 +125,10 @@ defineInlinePrimitive(
   "map",
   "(-> _ctx (-> _ctx a e (values b <| _)) [a] e [b])",
   ([ctx, fn, vec]) => {
-    return awaitExpr(
-      primitiveCall(
-        "promiseMap",
-        vec,
-        primitiveCall("bindPrimaryValue", fn, ctx)
-      )
+    return primitiveCall(
+      "promiseMap",
+      vec,
+      primitiveCall("bindPrimaryValue", fn, ctx)
     );
   }
 );
@@ -140,12 +137,10 @@ defineInlinePrimitive(
   "map/seq",
   "(-> _ctx (-> _ctx a e (values b <| _)) [a] e [b])",
   ([ctx, fn, vec]) => {
-    return awaitExpr(
-      primitiveCall(
-        "promiseMapSeq",
-        vec,
-        primitiveCall("bindPrimaryValue", fn, ctx)
-      )
+    return primitiveCall(
+      "promiseMapSeq",
+      vec,
+      primitiveCall("bindPrimaryValue", fn, ctx)
     );
   }
 );
@@ -154,7 +149,7 @@ defineInlinePrimitive(
   "sleep",
   "(-> _ctx number (effect async <| _) none)",
   ([_ctx, ms]) => {
-    return awaitExpr(primitiveCall("promiseDelay", ms));
+    return primitiveCall("promiseDelay", ms);
   }
 );
 
@@ -162,12 +157,10 @@ defineInlinePrimitive(
   "filter",
   "(-> _ctx (-> _ctx a _ (values boolean <| _)) [a] _ [a])",
   ([ctx, predicate, vec]) => {
-    return awaitExpr(
-      primitiveCall(
-        "promiseFilter",
-        vec,
-        primitiveCall("bindPrimaryValue", predicate, ctx)
-      )
+    return primitiveCall(
+      "promiseFilter",
+      vec,
+      primitiveCall("bindPrimaryValue", predicate, ctx)
     );
   }
 );
@@ -176,13 +169,11 @@ defineInlinePrimitive(
   "fold",
   "(-> _ctx (-> _ctx b a _ (values b <| _)) [a] b _ b)",
   ([ctx, fn, vec, init]) => {
-    return awaitExpr(
-      primitiveCall(
-        "promiseReduce",
-        vec,
-        primitiveCall("bindPrimaryValue", fn, ctx),
-        init
-      )
+    return primitiveCall(
+      "promiseReduce",
+      vec,
+      primitiveCall("bindPrimaryValue", fn, ctx),
+      init
     );
   }
 );
