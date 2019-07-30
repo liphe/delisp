@@ -129,3 +129,9 @@ export async function promiseFilter<A>(
   const flags = await Promise.all(array.map(predicate));
   return array.filter((_, i) => flags[i]);
 }
+
+export function promiseDelay(ms: number): Promise<void> {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
+}

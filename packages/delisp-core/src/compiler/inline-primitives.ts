@@ -131,6 +131,14 @@ defineInlinePrimitive(
 );
 
 defineInlinePrimitive(
+  "sleep",
+  "(-> _ctx number (effect async <| _) none)",
+  ([_ctx, ms]) => {
+    return awaitExpr(primitiveCall("promiseDelay", ms));
+  }
+);
+
+defineInlinePrimitive(
   "filter",
   "(-> _ctx (-> _ctx a _ (values boolean <| _)) [a] _ [a])",
   ([ctx, predicate, vec]) => {

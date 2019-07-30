@@ -574,7 +574,8 @@ function compileRuntimeUtils(
     "assert",
     "promiseMap",
     "promiseReduce",
-    "promiseFilter"
+    "promiseFilter",
+    "promiseDelay"
   ]);
 }
 
