@@ -73,9 +73,9 @@ export function bindPrimaryValue(fn: Function, ctx: unknown): Function {
   return (...args: unknown[]) => fn(primaryValue, ctx, ...args);
 }
 
-export function mvbind(
-  form: (values: any, ...args: any[]) => any,
-  cont: (...results: any[]) => any
+export async function mvbind(
+  form: (values: any, ...args: any[]) => Promise<any>,
+  cont: (...results: any[]) => Promise<any>
 ) {
   let valuesCalled = false;
 
@@ -84,7 +84,7 @@ export function mvbind(
     return cont(...results);
   };
 
-  const result = form(values);
+  const result = await form(values);
 
   if (valuesCalled) {
     return result;
