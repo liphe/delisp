@@ -110,6 +110,17 @@ export function promiseMap<A, B>(
   return Promise.all(array.map(f));
 }
 
+export async function promiseMapSeq<A, B>(
+  array: A[],
+  f: (x: A) => Promise<B>
+): Promise<B[]> {
+  let results: B[] = [];
+  for (const elm of array) {
+    results.push(await f(elm));
+  }
+  return results;
+}
+
 export async function promiseReduce<A, B>(
   array: A[],
   reducer: (x: B, y: A) => Promise<B>,

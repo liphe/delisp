@@ -137,6 +137,20 @@ defineInlinePrimitive(
 );
 
 defineInlinePrimitive(
+  "map/seq",
+  "(-> _ctx (-> _ctx a e (values b <| _)) [a] e [b])",
+  ([ctx, fn, vec]) => {
+    return awaitExpr(
+      primitiveCall(
+        "promiseMapSeq",
+        vec,
+        primitiveCall("bindPrimaryValue", fn, ctx)
+      )
+    );
+  }
+);
+
+defineInlinePrimitive(
   "sleep",
   "(-> _ctx number (effect async <| _) none)",
   ([_ctx, ms]) => {
