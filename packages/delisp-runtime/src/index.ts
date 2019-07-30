@@ -20,10 +20,10 @@ export class TaggedValue {
   }
 }
 
-export function matchTag(
+export function matchTag<T>(
   obj: TaggedValue,
-  cases: { [label: string]: (value: unknown) => unknown },
-  defaultCase?: () => unknown
+  cases: { [label: string]: (value: unknown) => T },
+  defaultCase?: () => T
 ): unknown {
   const handler = cases[obj.tag] || defaultCase;
   return handler(obj.value);
