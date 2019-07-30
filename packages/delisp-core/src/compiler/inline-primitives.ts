@@ -8,6 +8,8 @@ import {
   literal,
   member,
   methodCall,
+  awaitExpr,
+  awaitArray,
   op1,
   op,
   primitiveCall
@@ -119,7 +121,9 @@ defineInlinePrimitive(
   "map",
   "(-> _ctx (-> _ctx a e (values b <| _)) [a] e [b])",
   ([ctx, fn, vec]) => {
-    return methodCall(vec, "map", [primitiveCall("bindPrimaryValue", fn, ctx)]);
+    return awaitArray(
+      methodCall(vec, "map", [primitiveCall("bindPrimaryValue", fn, ctx)])
+    );
   }
 );
 
@@ -127,7 +131,7 @@ defineInlinePrimitive(
   "filter",
   "(-> _ctx (-> _ctx a _ (values boolean <| _)) [a] _ [a])",
   ([ctx, predicate, vec]) => {
-    return methodCall(vec, "filter", [
+    return methodCall(awaitArray(vec), "filter", [
       primitiveCall("bindPrimaryValue", predicate, ctx)
     ]);
   }

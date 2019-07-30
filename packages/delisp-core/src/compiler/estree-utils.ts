@@ -54,7 +54,8 @@ export function methodCall(
  * last one. */
 export function arrowFunction(
   args: JS.Pattern[],
-  body: JS.Expression[]
+  body: JS.Expression[],
+  options: { async: boolean } = { async: false }
 ): JS.ArrowFunctionExpression {
   if (body.length === 0) {
     throw new Error(`Empty body`);
@@ -68,7 +69,7 @@ export function arrowFunction(
       body: expr,
       generator: false,
       expression: true,
-      async: false
+      async: options.async
     };
   } else {
     const middle: JS.Statement[] = body.slice(0, -1).map(e => ({
@@ -90,7 +91,7 @@ export function arrowFunction(
       },
       generator: false,
       expression: false,
-      async: false
+      async: options.async
     };
   }
 }
@@ -182,4 +183,15 @@ export function requireNames(names: string[], source: string): JS.Statement {
       }
     ]
   };
+}
+
+export function awaitExpr(expr: JS.Expression): JS.Expression {
+  return {
+    type: "AwaitExpression",
+    argument: expr
+  };
+}
+
+export function awaitArray(expr: JS.Expression): JS.Expression {
+  return awaitExpr(methodCall(identifier("Promise"), "all", [expr]));
 }

@@ -13,6 +13,7 @@ import {
   literal,
   member,
   methodCall,
+  awaitExpr,
   objectExpression,
   primitiveCall
 } from "./compiler/estree-utils";
@@ -112,7 +113,9 @@ function compileLambda(
 
   const body = compileBody(fn.node.body, newEnv, true);
 
-  return arrowFunction([identifier("values"), ...jsargs], body);
+  return arrowFunction([identifier("values"), ...jsargs], body, {
+    async: true
+  });
 }
 
 function compileFunctionCall(
@@ -228,7 +231,8 @@ function compileLetBindings(
     type: "CallExpression",
     callee: arrowFunction(
       params,
-      compileBody(expr.node.body, newenv, multipleValues)
+      compileBody(expr.node.body, newenv, multipleValues),
+      { async: true }
     ),
     arguments: expr.node.bindings.map(b => compile(b.value, env, false))
   };
@@ -330,7 +334,9 @@ function compileMatch(
 ): JS.Expression {
   const defaultCase =
     expr.node.defaultCase &&
-    arrowFunction([], compileBody(expr.node.defaultCase, env, multipleValues));
+    arrowFunction([], compileBody(expr.node.defaultCase, env, multipleValues), {
+      async: true
+    });
 
   return primitiveCall(
     "matchTag",
@@ -344,7 +350,8 @@ function compileMatch(
           (() => {
             const newenv = addBinding(c.variable.name, env);
             return compileBody(c.body, newenv, multipleValues);
-          })()
+          })(),
+          { async: true }
         )
       }))
     ),
@@ -384,7 +391,8 @@ function compileMultipleValueBind(
 ): JS.Expression {
   const form = arrowFunction(
     [identifier("values")],
-    [compile(expr.node.form, env, true)]
+    [compile(expr.node.form, env, true)],
+    { async: true }
   );
   const newenv = expr.node.variables.reduce((env, v) => {
     return addBinding(v.name, env);
@@ -396,7 +404,8 @@ function compileMultipleValueBind(
 
   const continuation = arrowFunction(
     params,
-    compileBody(expr.node.body, newenv, multipleValues)
+    compileBody(expr.node.body, newenv, multipleValues),
+    { async: true }
   );
 
   return primitiveCall("mvbind", form, continuation);
@@ -419,7 +428,7 @@ function compileUnknown(
   };
 }
 
-export function compile(
+export function compileSync(
   expr: S.Expression,
   env: Environment,
   multipleValues: boolean
@@ -486,8 +495,16 @@ export function compile(
   }
 }
 
+export function compile(
+  expr: S.Expression,
+  env: Environment,
+  multipleValues: boolean
+): JS.Expression {
+  return awaitExpr(compileSync(expr, env, multipleValues));
+}
+
 function compileDefinition(def: S.SDefinition, env: Environment): JS.Statement {
-  const value = compile(def.node.value, env, false);
+  const value = compileSync(def.node.value, env, false);
   const name = lookupBindingOrError(def.node.variable.name, env).name;
   return env.defs.define(name, value);
 }
@@ -517,7 +534,7 @@ function compileTopLevel(
   } else {
     js = {
       type: "ExpressionStatement",
-      expression: compile(typedSyntax, env, multipleValues)
+      expression: compileSync(typedSyntax, env, multipleValues)
     };
     type = typedSyntax.info.resultingType;
   }

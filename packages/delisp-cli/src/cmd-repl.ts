@@ -228,7 +228,7 @@ const delispEval = async (syntax: Syntax): Promise<DelispEvalResult> => {
     definitionContainer: "env",
     getOutputFile
   });
-  const value = evaluate(syntax, env, sandbox);
+  const value = await evaluate(syntax, env, sandbox);
 
   if (isExpression(syntax)) {
     return {
