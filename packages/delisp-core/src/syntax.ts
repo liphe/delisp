@@ -25,6 +25,10 @@ interface SBooleanF {
   value: boolean;
 }
 
+interface SNoneF {
+  tag: "none";
+}
+
 export interface Identifier {
   tag: "identifier";
   name: SVar;
@@ -154,6 +158,7 @@ type AnyExpressionF<I = {}, E = Expression<I>> =
   | SNumberF
   | SStringF
   | SBooleanF
+  | SNoneF
   | SVariableReferenceF
   | SConditionalF<E>
   | SFunctionCallF<E>

@@ -38,15 +38,6 @@ function createInlinePrimitive(
   return inlinefuncs.set(name, prim);
 }
 
-function definePrimitiveValue(
-  name: string,
-  typespec: string,
-  handle: InlineHandler
-) {
-  const type = readType(typespec);
-  return createInlinePrimitive(name, type, handle, handle);
-}
-
 function defineInlinePrimitive(
   name: string,
   typespec: string,
@@ -131,10 +122,6 @@ defineInlinePrimitive(
     right
   })
 );
-
-definePrimitiveValue("none", "none", () => {
-  return identifier("undefined");
-});
 
 defineInlinePrimitive(
   "print",

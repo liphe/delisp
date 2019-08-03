@@ -187,6 +187,16 @@ function infer(
         constraints: [],
         assumptions: []
       };
+    case "none":
+      return {
+        result: {
+          ...expr,
+          node: expr.node,
+          info: singleType(generateUniqueTVar(), T.none)
+        },
+        constraints: [],
+        assumptions: []
+      };
     case "vector": {
       const inferredValues = inferMany(
         expr.node.values,

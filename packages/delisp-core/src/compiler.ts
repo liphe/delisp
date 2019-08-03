@@ -427,6 +427,8 @@ export function compile(
       return literal(expr.node.value);
     case "boolean":
       return literal(expr.node.value);
+    case "none":
+      return identifier("undefined");
     case "vector":
       return compileVector({ ...expr, node: expr.node }, env, multipleValues);
     case "record":

@@ -81,6 +81,8 @@ function printExpr(expr: S.Expression): Doc {
         return group(vector(align(...e.node.values)));
       case "boolean":
         return text(e.node.value.toString(), ["boolean"], source);
+      case "none":
+        return text("none", ["none"], source);
       case "record":
         return group(
           map(

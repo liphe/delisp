@@ -780,6 +780,8 @@ function convertSymbol(expr: ASExprSymbol): ExpressionWithErrors {
       return result({ tag: "boolean", value: true }, expr.location, []);
     case "false":
       return result({ tag: "boolean", value: false }, expr.location, []);
+    case "none":
+      return result({ tag: "none" }, expr.location, []);
     default: {
       const id = parseIdentifier(expr);
       return result(
