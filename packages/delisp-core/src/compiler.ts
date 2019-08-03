@@ -30,9 +30,9 @@ import {
   funcallAllArguments,
   lambdaListAllArguments
 } from "./syntax-functions";
-import { Type } from "./types";
 import { printType } from "./type-printer";
-import { last, mapObject, maybeMap, flatMap } from "./utils";
+import { Type } from "./types";
+import { flatMap, last, mapObject, maybeMap, range } from "./utils";
 
 const debug = createDebug("delisp:compiler");
 
@@ -154,7 +154,17 @@ function compileInlinePrimitive(
 
 function compileInlineValue(name: string): JS.Expression {
   const prim = findInlinePrimitive(name);
-  return prim.valueHandler([]);
+  /* If the primitive is used in a value position, a wrapper function
+     will be created so the inlined primitive can be used as a
+     function. */
+  const identifiers = range(prim.arity).map(i => identifier(`x${i}`));
+  const identifiersAndContext = [identifier("*context*"), ...identifiers];
+  return {
+    type: "ArrowFunctionExpression",
+    params: [identifier("values"), ...identifiersAndContext],
+    body: prim.funcHandler(identifiersAndContext),
+    expression: true
+  };
 }
 
 function compilePrimitive(name: string, env: Environment): JS.Expression {

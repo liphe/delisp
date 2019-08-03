@@ -3,7 +3,6 @@ import { readType } from "../type-convert";
 import { InvariantViolation } from "../invariant";
 import { isFunctionType } from "../type-utils";
 import * as T from "../types";
-import { range } from "../utils";
 import {
   identifier,
   literal,
@@ -18,9 +17,8 @@ type InlineHandler = (args: JS.Expression[]) => JS.Expression;
 
 interface InlinePrim {
   type: T.TypeSchema;
-  // This handler is invoked to generate the output JS when the
-  // primitive is used in value position.
-  valueHandler: InlineHandler;
+  // The number of arguments the inline primitive takes
+  arity: number;
   // This handler is invoked to generate the output JS when the
   // primitive is used in function position.
   funcHandler: InlineHandler;
@@ -28,39 +26,15 @@ interface InlinePrim {
 
 const inlinefuncs = new Map<string, InlinePrim>();
 
-function createInlinePrimitive(
-  name: string,
-  type: T.TypeSchema,
-  valueHandler: InlineHandler,
-  funcHandler: InlineHandler
-) {
-  const prim: InlinePrim = { type, valueHandler, funcHandler };
-  return inlinefuncs.set(name, prim);
-}
-
 function defineInlinePrimitive(
   name: string,
   typespec: string,
-  handle: InlineHandler
+  funcHandler: InlineHandler
 ) {
   const type = readType(typespec);
   const arity = typeArity(type.mono);
-
-  /* If the primitive is used in a value position, a wrapper function
-     will be created so the inlined primitive can be used as a
-     function. */
-  const valueHandler: InlineHandler = () => {
-    const identifiers = range(arity).map(i => identifier(`x${i}`));
-    const identifiersAndContext = [identifier("*context*"), ...identifiers];
-    return {
-      type: "ArrowFunctionExpression",
-      params: [identifier("values"), ...identifiersAndContext],
-      body: handle(identifiersAndContext),
-      expression: true
-    };
-  };
-
-  createInlinePrimitive(name, type, valueHandler, handle);
+  const prim: InlinePrim = { type, arity, funcHandler };
+  inlinefuncs.set(name, prim);
 }
 
 export function isInlinePrimitive(name: string) {
