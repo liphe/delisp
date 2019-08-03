@@ -61,13 +61,15 @@ export function findInlinePrimitive(name: string): InlinePrim {
 // Primitives
 //
 
-defineInlinePrimitive("not", "(-> _ctx boolean _ boolean)", ([_ctx, x]) =>
-  op1("!", x)
+defineInlinePrimitive(
+  "not",
+  "(-> _ctx boolean (effect) boolean)",
+  ([_ctx, x]) => op1("!", x)
 );
 
 defineInlinePrimitive(
   "and",
-  "(-> _ctx boolean boolean _ boolean)",
+  "(-> _ctx boolean boolean (effect) boolean)",
   ([_ctx, left, right]) => ({
     type: "LogicalExpression",
     operator: "&&",
@@ -78,7 +80,7 @@ defineInlinePrimitive(
 
 defineInlinePrimitive(
   "or",
-  "(-> _ctx boolean bolean _ boolean)",
+  "(-> _ctx boolean boolean (effect) boolean)",
   ([_ctx, left, right]) => ({
     type: "LogicalExpression",
     operator: "||",
@@ -89,7 +91,7 @@ defineInlinePrimitive(
 
 defineInlinePrimitive(
   "print",
-  "(-> _ctx string (effect console <| _) none)",
+  "(-> _ctx string (effect console) none)",
   ([_ctx, ...args]) => {
     return methodCall(identifier("console"), "log", args);
   }
@@ -97,19 +99,19 @@ defineInlinePrimitive(
 
 defineInlinePrimitive(
   "+",
-  "(-> _ctx number number _ number)",
+  "(-> _ctx number number (effect) number)",
   ([_ctx, ...args]) => op("+", args[0], args[1])
 );
 
 defineInlinePrimitive(
   "-",
-  "(-> _ctx number number _ number)",
+  "(-> _ctx number number (effect) number)",
   ([_ctx, ...args]) => op("-", args[0], args[1])
 );
 
 defineInlinePrimitive(
   "*",
-  "(-> _ctx number number _ number)",
+  "(-> _ctx number number (effect) number)",
   ([_ctx, ...args]) => op("*", args[0], args[1])
 );
 
@@ -144,101 +146,121 @@ defineInlinePrimitive(
 
 defineInlinePrimitive(
   "append",
-  "(-> _ctx [a] [a] _ [a])",
+  "(-> _ctx [a] [a] (effect) [a])",
   ([_ctx, vec1, vec2]) => {
     return methodCall(vec1, "concat", [vec2]);
   }
 );
 
-defineInlinePrimitive("reverse", "(-> _ctx [a] _ [a])", ([_ctx, vec]) => {
-  return methodCall(methodCall(vec, "slice", []), "reverse", []);
-});
+defineInlinePrimitive(
+  "reverse",
+  "(-> _ctx [a] (effect) [a])",
+  ([_ctx, vec]) => {
+    return methodCall(methodCall(vec, "slice", []), "reverse", []);
+  }
+);
 
-defineInlinePrimitive("length", "(-> _ctx [a] _ number)", ([_ctx, vec]) =>
-  member(vec, "length")
+defineInlinePrimitive(
+  "length",
+  "(-> _ctx [a] (effect) number)",
+  ([_ctx, vec]) => member(vec, "length")
 );
 
 defineInlinePrimitive(
   "=",
-  "(-> _ctx number number _ boolean)",
+  "(-> _ctx number number (effect) boolean)",
   ([_ctx, x, y]) => op("===", x, y)
 );
 
-defineInlinePrimitive("zero?", "(-> _ctx number _ boolean)", ([_ctx, x]) =>
-  op("===", x, literal(0))
+defineInlinePrimitive(
+  "zero?",
+  "(-> _ctx number (effect) boolean)",
+  ([_ctx, x]) => op("===", x, literal(0))
 );
 
 defineInlinePrimitive(
   "<=",
-  "(-> _ctx number number _ boolean)",
+  "(-> _ctx number number (effect) boolean)",
   ([_ctx, x, y]) => op("<=", x, y)
 );
 
 defineInlinePrimitive(
   "<",
-  "(-> _ctx number number _ boolean)",
+  "(-> _ctx number number (effect) boolean)",
   ([_ctx, x, y]) => op("<", x, y)
 );
 
 defineInlinePrimitive(
   ">",
-  "(-> _ctx number number _ boolean)",
+  "(-> _ctx number number (effect) boolean)",
   ([_ctx, x, y]) => op(">", x, y)
 );
 
 defineInlinePrimitive(
   ">=",
-  "(-> _ctx number number _ boolean)",
+  "(-> _ctx number number (effect) boolean)",
   ([_ctx, x, y]) => op(">=", x, y)
 );
 
 defineInlinePrimitive(
   "string=",
-  "(-> _ctx string string _ boolean)",
+  "(-> _ctx string string (effect) boolean)",
   ([_ctx, x, y]) => op("===", x, y)
 );
 
 defineInlinePrimitive(
   "string-length",
-  "(-> _ctx string _ number)",
+  "(-> _ctx string (effect) number)",
   ([_ctx, str]) => member(str, "length")
 );
 
 defineInlinePrimitive(
   "string-upcase",
-  "(-> _ctx string _ string)",
+  "(-> _ctx string (effect) string)",
   ([_ctx, str]) => methodCall(str, "toUpperCase", [])
 );
 
 defineInlinePrimitive(
   "string-downcase",
-  "(-> _ctx string _ string)",
+  "(-> _ctx string (effect) string)",
   ([_ctx, str]) => methodCall(str, "toLowerCase", [])
 );
 
 defineInlinePrimitive(
   "string-append",
-  "(-> _ctx string string _ string)",
+  "(-> _ctx string string (effect) string)",
   ([_ctx, str1, str2]) => op("+", str1, str2)
 );
 
 // Tuples
 
-defineInlinePrimitive("pair", "(-> _ctx a b _ (* a b))", ([_ctx, a, b]) => {
-  return primitiveCall("primPair", a, b);
-});
+defineInlinePrimitive(
+  "pair",
+  "(-> _ctx a b (effect) (* a b))",
+  ([_ctx, a, b]) => {
+    return primitiveCall("primPair", a, b);
+  }
+);
 
-defineInlinePrimitive("%fst", "(-> _ctx (* a b) _ a)", ([_ctx, pair]) => {
-  return primitiveCall("primFst", pair);
-});
+defineInlinePrimitive(
+  "%fst",
+  "(-> _ctx (* a b) (effect) a)",
+  ([_ctx, pair]) => {
+    return primitiveCall("primFst", pair);
+  }
+);
 
-defineInlinePrimitive("%snd", "(-> _ctx (* a b) _ b)", ([_ctx, pair]) => {
-  return primitiveCall("primSnd", pair);
-});
+defineInlinePrimitive(
+  "%snd",
+  "(-> _ctx (* a b) (effect) b)",
+  ([_ctx, pair]) => {
+    return primitiveCall("primSnd", pair);
+  }
+);
 
 defineInlinePrimitive(
   "assert",
-  "(-> _ctx boolean string (effect exp <| _) none)",
+  "(-> _ctx boolean string (effect exp) none)",
   ([_ctx, x, msg]) => {
     return primitiveCall("assert", x, msg);
   }
@@ -248,11 +270,17 @@ defineInlinePrimitive(
 // Vectors
 //
 
-defineInlinePrimitive("cons", "(-> _ctx a [a] _ [a])", ([_ctx, x, lst]) => ({
-  type: "ArrayExpression",
-  elements: [x, { type: "SpreadElement", argument: lst }]
-}));
+defineInlinePrimitive(
+  "cons",
+  "(-> _ctx a [a] (effect) [a])",
+  ([_ctx, x, lst]) => ({
+    type: "ArrayExpression",
+    elements: [x, { type: "SpreadElement", argument: lst }]
+  })
+);
 
-defineInlinePrimitive("empty?", "(-> _ctx [a] _ boolean)", ([_ctx, lst]) =>
-  op("===", member(lst, "length"), literal(0))
+defineInlinePrimitive(
+  "empty?",
+  "(-> _ctx [a] (effect) boolean)",
+  ([_ctx, lst]) => op("===", member(lst, "length"), literal(0))
 );

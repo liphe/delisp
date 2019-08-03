@@ -11,7 +11,7 @@ function validBoundingIndex(str: string, start: number, end: number) {
 const stringPrims: Primitives = {
   substring: {
     type:
-      "(-> _ctx1 number number _ (-> _ctx2 string _ (values string (-> _ctx3 string _ string))))",
+      "(-> _ctx1 number number (effect) (-> _ctx2 string (effect) (values string (-> _ctx3 string (effect) string))))",
     value: (_values: unknown, _ctx: unknown, start: number, end: number) => {
       return (values: any, str: string) => {
         validBoundingIndex(str, start, end);
