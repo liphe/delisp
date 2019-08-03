@@ -458,6 +458,12 @@ describe("Type inference", () => {
       );
       expect(result).toBeType(`(* string number)`);
     });
+
+    it("infer the effect of a field selector", () => {
+      expect(typeOf(`(lambda () ($get :x {:x (print "foo")}))`)).toBeType(
+        `(-> ctx (effect console <| e) none)`
+      );
+    });
   });
 
   describe(`Context argument`, () => {

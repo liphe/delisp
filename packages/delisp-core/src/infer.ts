@@ -306,7 +306,8 @@ function infer(
         },
         constraints: [
           ...value.constraints,
-          constEqual(value.result, recordType, "resulting-type")
+          constEqual(value.result, recordType, "resulting-type"),
+          constEffect(value.result, effect)
         ],
         assumptions: value.assumptions
       };
