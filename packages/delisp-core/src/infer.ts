@@ -23,7 +23,10 @@ import {
   solve,
   TConstraint
 } from "./infer-solver";
-import { applySubstitutionToExpr } from "./infer-subst";
+import {
+  applySubstitutionToExpr,
+  applySubstitutionToSyntax
+} from "./infer-subst";
 import { assertNever, InvariantViolation } from "./invariant";
 import { moduleExportedDefinitions } from "./module";
 import primitives from "./primitives";
@@ -37,7 +40,6 @@ import { type } from "./type-tag";
 import {
   generalize,
   listTypeConstants,
-  Substitution,
   transformRecurType
 } from "./type-utils";
 import * as T from "./types";
@@ -980,31 +982,6 @@ function assumptionsToConstraints(
     const t = lookupVariableType(a.node.name, env);
     return t && constExplicitInstance(a, t, "expression-type");
   }, assumptions);
-}
-
-function applySubstitutionToSyntax(
-  s: S.Syntax<S.Typed>,
-  env: Substitution
-): S.Syntax<S.Typed> {
-  if (S.isExpression(s)) {
-    return applySubstitutionToExpr(s, env);
-  } else if (s.node.tag === "definition") {
-    return {
-      ...s,
-      node: {
-        ...s.node,
-        value: applySubstitutionToExpr(s.node.value, env)
-      }
-    };
-  } else if (s.node.tag === "export") {
-    return s;
-  } else if (s.node.tag === "type-alias") {
-    return s;
-  } else if (s.node.tag === "import") {
-    return s;
-  } else {
-    return assertNever(s.node);
-  }
 }
 
 export const defaultEnvironment: ExternalEnvironment = {
