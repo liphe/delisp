@@ -90,11 +90,17 @@ interface TConstraintImplicitInstance {
 
 export function constImplicitInstance(
   expr: Expression<Typed>,
-  monovars: string[],
+  monovars: T.Var[],
   t: T.Type,
   kind: ConstraintKind
 ): TConstraintImplicitInstance {
-  return { tag: "implicit-instance-constraint", expr, monovars, t, kind };
+  return {
+    tag: "implicit-instance-constraint",
+    expr,
+    monovars: monovars.map(v => v.node.name),
+    t,
+    kind
+  };
 }
 
 function exprType(expr: Expression<Typed>, kind: ConstraintKind) {

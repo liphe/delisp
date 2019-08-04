@@ -275,6 +275,17 @@ describe("Type inference", () => {
 `)
         ).toBeType("(-> ctx string (cases (:foo α) β) γ string)");
       });
+
+      it("match case variables should not be visible outside of the body", () => {
+        expect(() =>
+          typeOf(`
+(match (case :version 1)
+  ({:version v}
+    v)
+  (:default
+    (string-length v)))`)
+        ).toThrow();
+      });
     });
 
     describe("Conditionals", () => {

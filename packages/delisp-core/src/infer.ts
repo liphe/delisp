@@ -70,7 +70,7 @@ interface InferResult<A> {
 
 function inferMany(
   exprs: S.Expression[],
-  monovars: string[],
+  monovars: T.Var[],
   internalTypes: InternalTypeEnvironment,
   options = {
     multipleValuedLastForm: false
@@ -93,7 +93,7 @@ function inferMany(
 
 function inferBody(
   exprs: S.Expression[],
-  monovars: string[],
+  monovars: T.Var[],
   internalTypes: InternalTypeEnvironment,
   returnType: Type,
   effectType: Type,
@@ -127,7 +127,7 @@ function infer(
   // A set of type variables names whose type is monomorphic. That is
   // to say, all instances should have the same type. That is the set
   // of type variables introduced by lambda.
-  monovars: string[],
+  monovars: T.Var[],
   // Known type aliases that must be expanded
   internalTypes: InternalTypeEnvironment,
 
@@ -407,7 +407,7 @@ function infer(
 
       const { result: typedBody, constraints, assumptions } = inferBody(
         expr.node.body,
-        [...monovars, ...argtypes.map(v => v.node.name)],
+        [...monovars, ...argtypes],
         internalTypes,
         valuesType,
         bodyEffect,
@@ -657,16 +657,30 @@ function infer(
       const effect = generateUniqueTVar();
 
       const cases = expr.node.cases.map(c => {
+        const vartype = generateUniqueTVar();
+        const { result, constraints, assumptions } = inferBody(
+          c.body,
+          [...monovars, vartype],
+          internalTypes,
+          t,
+          effect,
+          multipleValues
+        );
         return {
           ...c,
-          infer: inferBody(
-            c.body,
-            [...monovars, c.variable.name],
-            internalTypes,
-            t,
-            effect,
-            multipleValues
-          )
+          vartype,
+          infer: {
+            result,
+            constraints: [
+              ...constraints,
+              ...assumptions
+                .filter(a => a.node.name === c.variable.name)
+                .map(a => constEqual(a, vartype, "expression-type"))
+            ],
+            assumptions: assumptions.filter(
+              a => a.node.name !== c.variable.name
+            )
+          }
         };
       });
 
@@ -681,9 +695,9 @@ function infer(
           multipleValues
         );
 
-      const variantTypes = expr.node.cases.map(c => ({
+      const variantTypes = cases.map(c => ({
         label: c.label,
-        type: generateUniqueTVar()
+        type: c.vartype
       }));
 
       return {
@@ -706,7 +720,6 @@ function infer(
           ...value.constraints,
           ...flatMap(c => c.infer.constraints, cases),
           ...(defaultCase ? defaultCase.constraints : []),
-
           // Value must produce a value of type with all the variants
           // that `match` is handling.
           constEqual(
@@ -717,38 +730,12 @@ function infer(
             ),
             "resulting-type"
           ),
-          constEffect(value.result, effect),
-
-          ...flatMap(c => {
-            return [
-              // The pattern variable of each case must be the same
-              // type as the variant we are handling.
-              ...flatMap(a => {
-                if (a.node.name === c.variable.name) {
-                  const variant = variantTypes.find(v => v.label === c.label);
-                  if (!variant) {
-                    throw new InvariantViolation(
-                      `Unknown invariant case ${c.label}`
-                    );
-                  }
-                  return [constEqual(a, variant.type, "expression-type")];
-                } else {
-                  return [];
-                }
-              }, c.infer.assumptions)
-            ];
-          }, cases),
-
-          ...(defaultCase ? defaultCase.constraints : [])
+          constEffect(value.result, effect)
         ],
 
         assumptions: [
           ...value.assumptions,
-          ...flatMap(
-            c =>
-              c.infer.assumptions.filter(a => a.node.name !== c.variable.name),
-            cases
-          ),
+          ...flatMap(c => c.infer.assumptions, cases),
           ...(defaultCase ? defaultCase.assumptions : [])
         ]
       };
@@ -832,7 +819,7 @@ function infer(
       const form = infer(expr.node.form, monovars, internalTypes, true);
       const body = inferBody(
         expr.node.body,
-        [...monovars, ...expr.node.variables.map(v => v.name)],
+        [...monovars, ...variableTypes],
         internalTypes,
         t,
         effect,
