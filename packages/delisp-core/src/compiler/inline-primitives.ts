@@ -1,7 +1,7 @@
 import * as JS from "estree";
 import { readType } from "../type-convert";
 import { InvariantViolation } from "../invariant";
-import { isFunctionType } from "../type-utils";
+import { isFunctionType, typeArity } from "../type-utils";
 import * as T from "../types";
 import {
   identifier,
@@ -32,6 +32,11 @@ function defineInlinePrimitive(
   funcHandler: InlineHandler
 ) {
   const type = readType(typespec);
+  if (!isFunctionType(type.mono)) {
+    throw new Error(
+      `Inline primitives must be functions, but the primitive "${name}" was declared with type "${typespec}".`
+    );
+  }
   const arity = typeArity(type.mono);
   const prim: InlinePrim = { type, arity, funcHandler };
   inlinefuncs.set(name, prim);
@@ -49,21 +54,6 @@ export function findInlinePrimitive(name: string): InlinePrim {
     throw new InvariantViolation(
       `${name} is not an primitive inline function call`
     );
-  }
-}
-
-function typeArity(type: T.Type): number {
-  if (isFunctionType(type)) {
-    // A type signature has 3 more elements than the arity of the
-    // function:
-    //    (-> context arg1 arg2 effect output)
-    //
-    // - context
-    // - effect
-    // - output
-    return type.node.args.length - 3;
-  } else {
-    return 0;
   }
 }
 

@@ -194,7 +194,7 @@ export function normalizeValues(type: T.Type): T.Type {
         return {
           node: {
             ...t.node,
-            args: [...t.node.args.slice(0, -1), values([out])]
+            args: [...t.node.args.slice(0, -1), T.values([out])]
           }
         };
       }
@@ -202,4 +202,16 @@ export function normalizeValues(type: T.Type): T.Type {
       return t;
     }
   });
+}
+
+/** Decompose a function type into arguments, effect and output. */
+export function decomposeFunctionType(type: T.Application) {
+  const args = type.node.args.slice(0, -2);
+  const [effect, output] = type.node.args.slice(-2);
+  return { args, effect, output };
+}
+
+/** Return the number of input arguments of a function type. */
+export function typeArity(type: T.Application): number {
+  return decomposeFunctionType(type).args.length;
 }
