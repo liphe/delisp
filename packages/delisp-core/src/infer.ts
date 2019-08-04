@@ -491,7 +491,7 @@ function infer(
       //
       // That means that, for example,
       //
-      // (let ((id (lambda (x) x)))
+      // (let {id (lambda (x) x)}
       //   (id "foo")
       //   (id 0))
       //
