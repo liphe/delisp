@@ -1,26 +1,20 @@
 import { InvariantViolation } from "./invariant";
 import { generateUniqueTVar } from "./type-generate";
-import {
-  emptyRow,
-  Application,
-  Constant,
-  values,
-  Var,
-  Type,
-  TypeF,
-  TypeSchema
-} from "./types";
+import * as T from "./types";
 import { flatten, last, unique } from "./utils";
 
-export function isTVar(t: Type): t is Var {
+export function isTVar(t: T.Type): t is T.Var {
   return t.node.tag === "type-variable";
 }
 
-export function onlyPrimaryType(t: Type): Type {
+export function onlyPrimaryType(t: T.Type): T.Type {
   return { ...t, node: { ...t.node } };
 }
 
-export function isConstantApplicationType(t: Type, opname: string) {
+export function isConstantApplicationType(
+  t: T.Type,
+  opname: string
+): t is T.Application {
   return (
     t.node.tag === "application" &&
     t.node.op.node.tag === "constant" &&
@@ -28,11 +22,11 @@ export function isConstantApplicationType(t: Type, opname: string) {
   );
 }
 
-export function isFunctionType(t: Type): t is Application {
+export function isFunctionType(t: T.Type): t is T.Application {
   return isConstantApplicationType(t, "->");
 }
 
-export function typeChildren<A>(type: TypeF<A[]>): A[] {
+export function typeChildren<A>(type: T.TypeF<A[]>): A[] {
   switch (type.node.tag) {
     case "constant":
     case "type-variable":
@@ -45,7 +39,7 @@ export function typeChildren<A>(type: TypeF<A[]>): A[] {
   }
 }
 
-export function mapType<A, B>(type: TypeF<A>, fn: (x: A) => B): TypeF<B> {
+export function mapType<A, B>(type: T.TypeF<A>, fn: (x: A) => B): T.TypeF<B> {
   switch (type.node.tag) {
     case "constant":
     case "type-variable":
@@ -76,20 +70,23 @@ export function mapType<A, B>(type: TypeF<A>, fn: (x: A) => B): TypeF<B> {
   }
 }
 
-export function foldType<A>(type: Type, fn: (t: TypeF<A>) => A): A {
+export function foldType<A>(type: T.Type, fn: (t: T.TypeF<A>) => A): A {
   return fn(mapType(type, t => foldType(t, fn)));
 }
 
-export function transformRecurType(type: Type, fn: (t: Type) => Type): Type {
-  const node = foldType(type, (t: Type): Type => fn(t));
+export function transformRecurType(
+  type: T.Type,
+  fn: (t: T.Type) => T.Type
+): T.Type {
+  const node = foldType(type, (t: T.Type): T.Type => fn(t));
   return node;
 }
 
 export interface Substitution {
-  [t: string]: Type;
+  [t: string]: T.Type;
 }
 
-export function applySubstitution(t: Type, env: Substitution): Type {
+export function applySubstitution(t: T.Type, env: Substitution): T.Type {
   return transformRecurType(t, t1 => {
     if (t1.node.tag === "type-variable") {
       if (t1.node.name in env) {
@@ -105,7 +102,7 @@ export function applySubstitution(t: Type, env: Substitution): Type {
 }
 
 // Return user defined types
-export function listTypeConstants(type: Type): Constant[] {
+export function listTypeConstants(type: T.Type): T.Constant[] {
   return foldType(type, t => {
     return t.node.tag === "constant"
       ? [
@@ -121,7 +118,7 @@ export function listTypeConstants(type: Type): Constant[] {
 }
 
 // Return the list of type variables in the order they show up
-export function listTypeVariables(type: Type): string[] {
+export function listTypeVariables(type: T.Type): string[] {
   return foldType(type, t => {
     return t.node.tag === "type-variable"
       ? [t.node.name]
@@ -129,19 +126,19 @@ export function listTypeVariables(type: Type): string[] {
   });
 }
 
-export function generalize(t: Type, monovars: string[]): TypeSchema {
+export function generalize(t: T.Type, monovars: string[]): T.TypeSchema {
   // All free variables in the type that are not in the set of
   // monomorphic set must be polymorphic. So we generalize over
   // them.
   const vars = listTypeVariables(t);
-  return new TypeSchema(vars.filter(v => !monovars.includes(v)), t);
+  return new T.TypeSchema(vars.filter(v => !monovars.includes(v)), t);
 }
 
 export function isWildcardTypeVarName(name: string): boolean {
   return name.startsWith("_");
 }
 
-export function instantiate(t: TypeSchema, userSpecified = false): Type {
+export function instantiate(t: T.TypeSchema, userSpecified = false): T.Type {
   const subst = t.tvars.reduce((s, vname) => {
     return {
       ...s,
@@ -154,10 +151,10 @@ export function instantiate(t: TypeSchema, userSpecified = false): Type {
 }
 
 export function normalizeRow(
-  type: Type
+  type: T.Type
 ): {
-  fields: Array<{ label: string; labelType: Type }>;
-  extends: Type;
+  fields: Array<{ label: string; labelType: T.Type }>;
+  extends: T.Type;
 } {
   if (
     type.node.tag !== "empty-row" &&
@@ -168,7 +165,7 @@ export function normalizeRow(
   }
   switch (type.node.tag) {
     case "empty-row":
-      return { fields: [], extends: emptyRow };
+      return { fields: [], extends: T.emptyRow };
     case "type-variable":
       return { fields: [], extends: type };
     case "row-extension":
@@ -187,7 +184,7 @@ export function normalizeRow(
  *
  * @description Transform a type to ensure only VALUES type or type
  * variables appear in the codomain of functions types. */
-export function normalizeValues(type: Type): Type {
+export function normalizeValues(type: T.Type): T.Type {
   return foldType(type, t => {
     if (isFunctionType(t)) {
       const out = last(t.node.args)!;
