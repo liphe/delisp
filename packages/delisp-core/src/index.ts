@@ -15,8 +15,7 @@ export {
   defaultEnvironment,
   getModuleExternalEnvironment,
   inferExpressionInModule,
-  inferModule,
-  inferType
+  inferModule
 } from "./infer";
 export {
   decodeExternalEnvironment,

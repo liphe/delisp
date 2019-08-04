@@ -1,7 +1,12 @@
 import { readType } from "../src/type-convert";
-import { inferType, InternalTypeEnvironment } from "../src/infer";
+import {
+  defaultEnvironment,
+  inferExpressionInModule,
+  inferModule
+} from "../src/infer";
 import { ExternalEnvironment } from "../src/infer-environment";
-import { Expression, isDeclaration } from "../src/syntax";
+import * as S from "../src/syntax";
+import { createModule, readModule } from "../src/module";
 import { WithErrors, readSyntax } from "../src/syntax-convert";
 import { macroexpandExpression } from "../src/macroexpand";
 import { printType } from "../src/type-printer";
@@ -27,6 +32,23 @@ expect.extend({
   }
 });
 
+function inferType(
+  expr: S.Expression,
+  env: ExternalEnvironment = defaultEnvironment,
+  m: S.Module<S.Typed, {}> = createModule(),
+  multipleValues: boolean
+): S.Expression<S.Typed> {
+  const infer = inferExpressionInModule(expr, m, env, multipleValues);
+
+  const unknowns = infer.unknowns.filter(u => u.node.name !== "*context*");
+  if (unknowns.length > 0) {
+    throw new Error(
+      `Unknown variables ${infer.unknowns.map(v => v.node.name).join(" ")}`
+    );
+  }
+  return infer.typedExpression;
+}
+
 /* eslint-disable @typescript-eslint/no-namespace */
 declare global {
   namespace jest {
@@ -37,9 +59,9 @@ declare global {
 }
 /* eslint-enable @typescript-eslint/no-namespace */
 
-function readExpr(code: string): Expression<WithErrors> {
+function readExpr(code: string): S.Expression<WithErrors> {
   const syntax = readSyntax(code);
-  if (isDeclaration(syntax)) {
+  if (S.isDeclaration(syntax)) {
     throw new Error(`Not an expression!`);
   }
   return syntax;
@@ -50,15 +72,19 @@ const emptyExternalEnv: ExternalEnvironment = { variables: {}, types: {} };
 function typeOf(
   str: string,
   externalEnv: ExternalEnvironment = emptyExternalEnv,
-  internalEnv: InternalTypeEnvironment = {},
+  moduleCode: string = "",
   multipleValues = false
 ): string {
   const syntax = readExpr(str);
   const expandedSyntax = macroexpandExpression(syntax);
+
+  const m = readModule(moduleCode);
+  const { typedModule } = inferModule(m, externalEnv);
+
   const typedExpr = inferType(
     expandedSyntax,
     externalEnv,
-    internalEnv,
+    typedModule,
     multipleValues
   );
   const result = printType(typedExpr.info.resultingType);
@@ -359,21 +385,21 @@ describe("Type inference", () => {
 
     describe("Type aliases", () => {
       const env = { variables: {}, types: {} };
-      const intEnv: InternalTypeEnvironment = {
-        ID: readType("number").mono,
-        Person: readType("{:name string}").mono
-      };
+      const m = `
+        (type ID number)
+        (type Person {:name string})
+      `;
 
       it("should be compatible if they are internal", () => {
-        expect(typeOf("(if true (the ID 5) 3)", env, intEnv)).not.toBeType("α");
+        expect(typeOf("(if true (the ID 5) 3)", env, m)).not.toBeType("α");
       });
 
       it("should expand to their definition if they are internal", () => {
-        expect(typeOf("(the ID 5)", env, intEnv)).toBeType("number");
+        expect(typeOf("(the ID 5)", env, m)).toBeType("number");
       });
 
       it("should be compatible when defined as a record", () => {
-        expect(typeOf('(the Person {:name "david"})', env, intEnv)).toBeType(
+        expect(typeOf('(the Person {:name "david"})', env, m)).toBeType(
           "{:name string}"
         );
       });
@@ -393,13 +419,16 @@ describe("Type inference", () => {
     describe("Recursion", () => {
       it("type is inferred for simple functions", () => {
         expect(
-          typeOf(`
-(let {f (lambda (n)
-          (if (= n 0)
-              1
-              (* n (f (- n 1)))))}
-  f)
-`)
+          typeOf(
+            "f",
+            undefined,
+            `
+(define f
+  (lambda (n)
+    (if (= n 0)
+        1
+        (* n (f (- n 1))))))`
+          )
         ).toBeType("(-> ctx number α number)");
       });
 
@@ -415,14 +444,15 @@ describe("Type inference", () => {
 
         expect(
           typeOf(
+            "f",
+            env,
             `
-          (let {f (lambda (l)
-                    (if (empty? l)
-                        0
-                        (+ 1 (f (rest l)))))}
-            f)
-          `,
-            env
+(define f
+  (lambda (l)
+    (if (empty? l)
+        0
+        (+ 1 (f (rest l))))))
+`
           )
         ).toBeType("(-> ctx [α] (effect exp <| β) number)");
       });
@@ -487,7 +517,7 @@ describe("Type inference", () => {
   describe("Regressions", () => {
     it("(the _ _) type annotations should keep the type annotation node in the AST", () => {
       const expr = readExpr("(the number 10)");
-      const typedExpr = inferType(expr, emptyExternalEnv, {}, false);
+      const typedExpr = inferType(expr, emptyExternalEnv, undefined, false);
       expect(typedExpr).toHaveProperty(["node", "tag"], "type-annotation");
     });
 

@@ -14,14 +14,12 @@ import {
   isInlinePrimitive
 } from "./compiler/inline-primitives";
 import { printHighlightedExpr } from "./error-report";
-import { typeAnnotate } from "./infer-debug";
 import { ExternalEnvironment } from "./infer-environment";
 import {
   constEffect,
   constEqual,
   constExplicitInstance,
   constImplicitInstance,
-  debugConstraints,
   solve,
   TConstraint
 } from "./infer-solver";
@@ -29,7 +27,6 @@ import { applySubstitutionToExpr } from "./infer-subst";
 import { assertNever, InvariantViolation } from "./invariant";
 import { moduleExportedDefinitions } from "./module";
 import primitives from "./primitives";
-import { pprint } from "./printer";
 import * as S from "./syntax";
 import {
   lambdaListAllArguments,
@@ -46,8 +43,6 @@ import {
 import * as T from "./types";
 import { Type } from "./types";
 import { difference, flatMap, fromEntries, mapObject, maybeMap } from "./utils";
-
-const DEBUG = false;
 
 // The type inference process is split in two stages. Firstly, `infer`
 // will run through the syntax it will generate dummy type variables,
@@ -1016,45 +1011,6 @@ export const defaultEnvironment: ExternalEnvironment = {
   variables: mapObject(primitives, prim => prim.type),
   types: {}
 };
-
-export function inferType(
-  expr: S.Expression,
-  env: ExternalEnvironment = defaultEnvironment,
-  internalTypes: InternalTypeEnvironment,
-  multipleValues: boolean
-): S.Expression<S.Typed> {
-  const { result: tmpExpr, constraints, assumptions } = infer(
-    expr,
-    [],
-    internalTypes,
-    multipleValues
-  );
-
-  const allConstraints = [
-    ...constraints,
-    ...assumptionsToConstraints(assumptions, env)
-  ];
-
-  const s = solve(allConstraints, {});
-
-  const result = applySubstitutionToExpr(tmpExpr, s);
-
-  if (DEBUG) {
-    console.log("———————————–");
-    const debug = typeAnnotate(tmpExpr);
-    console.log(pprint(debug, 40));
-
-    console.log("");
-    console.log("Constraints:");
-    debugConstraints(allConstraints);
-
-    console.log("");
-    console.log("Result");
-    console.log(pprint(typeAnnotate(result), 40));
-  }
-
-  return result;
-}
 
 // Group the gathered assumptions and classify them into:
 //
