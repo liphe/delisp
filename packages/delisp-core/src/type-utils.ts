@@ -1,7 +1,7 @@
 import { InvariantViolation } from "./invariant";
 import { generateUniqueTVar } from "./type-generate";
 import * as T from "./types";
-import { flatten, last, unique } from "./utils";
+import { flatMap, flatten, last, unique } from "./utils";
 
 export function isTVar(t: T.Type): t is T.Var {
   return t.node.tag === "type-variable";
@@ -263,3 +263,100 @@ export function openFunctionEffect(type: T.Type): T.Type {
   }
 }
 
+/** Instantiate a type schema for a specific variable only
+ *
+ * @example
+ *
+ * A type like
+ *   (forall (a e b) (-> a e b))
+ *
+ * can be instantiated for b = number, returning the type
+ *   (forall (a e) (-> a e number))
+ *
+ **/
+export function instantiateTypeSchemaForvariable(
+  polytype: T.TypeSchema,
+  tvar: T.Var,
+  replacement: T.Type
+): T.TypeSchema {
+  const varname = tvar.node.name;
+  return new T.TypeSchema(
+    polytype.tvars.filter(tv => tv !== varname),
+    applySubstitution(polytype.mono, {
+      [varname]: replacement
+    })
+  );
+}
+
+/** Close the effect of a function type.
+ *
+ * @description
+ *
+ * This function closes the 'superflous' effect polymorphism of a
+ * function. For example, the most general type for the identity
+ * function is the type
+ *
+ *   (forall (_ctx a e) (-> _ctx a e a))
+ *
+ * Note that the effect variable does not show up anywhere else in the
+ * type of the function. When that is the case, this function will
+ * close over that effect by returning a closed function like
+ *
+ *   (forall (_ctx a) (-> _ctx a (effect) a))
+ *
+ * The resulting type can be opened (once instantiated) with the
+ * `openFunctionEffect` function.
+ *
+ * This operation is done to record the individual effect of some
+ * forms, before it gets unified with other surrounding forms.
+ *
+ */
+export function closeFunctionEffect(polytype: T.TypeSchema): T.TypeSchema {
+  if (isFunctionType(polytype.mono)) {
+    const fn: T.Application = polytype.mono;
+
+    const { args, effect, output } = decomposeFunctionType(fn);
+
+    if (!isConstantApplicationType(effect, "effect")) {
+      throw new InvariantViolation(
+        `Effect of a function type must be a (effect ...) type.`
+      );
+    }
+
+    const effectRow = normalizeRow(effect.node.args[0]);
+    const effectTail = effectRow.extends;
+
+    if (effectTail.node.tag === "empty-row") {
+      // It's already a closed effect
+      return polytype;
+    }
+
+    if (!isTVar(effectTail)) {
+      throw new InvariantViolation(
+        `Tail of an effect should be a type variable or empty row.`
+      );
+    }
+
+    // Note that for high order functions we have to be a bit more
+    // careful.
+    //
+    // A function with type
+    //   (-> _ctx (-> _ctx number e number) e number)
+    //
+    // can't be closed over `e`, as we would loose the information
+    // about the other 'e' instance.
+    //
+    const freevars: string[] = [
+      ...flatMap(listTypeVariables, args),
+      ...listTypeVariables(output)
+    ];
+
+    if (freevars.includes(effectTail.node.name)) {
+      return polytype;
+    } else {
+      return instantiateTypeSchemaForvariable(polytype, effectTail, T.emptyRow);
+    }
+  } else {
+    return polytype;
+  }
+}
