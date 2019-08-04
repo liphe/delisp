@@ -215,3 +215,51 @@ export function decomposeFunctionType(type: T.Application) {
 export function typeArity(type: T.Application): number {
   return decomposeFunctionType(type).args.length;
 }
+
+/** Open an effect type.
+ *
+ * @description
+ * If the type did not change, return the argument.
+ *
+ * @example
+ *
+ * Converts the type
+ *   (effect console)
+ *
+ * into
+ *   (effect console <| e)
+ */
+export function openEffect(type: T.Type): T.Type {
+  if (isConstantApplicationType(type, "effect")) {
+    const row = type.node.args[0];
+    const normalizedRow = normalizeRow(row);
+    if (normalizedRow.extends.node.tag === "empty-row") {
+      return T.effect(
+        normalizedRow.fields.map(f => f.label),
+        generateUniqueTVar()
+      );
+    } else {
+      return type;
+    }
+  } else {
+    return type;
+  }
+}
+
+/** Open the effect of a function type with closed effect. */
+export function openFunctionEffect(type: T.Type): T.Type {
+  if (isFunctionType(type)) {
+    const args = type.node.args.slice(0, -2);
+    const [effect, output] = type.node.args.slice(-2);
+
+    const openedEffect = openEffect(effect);
+    if (openedEffect === effect) {
+      return type;
+    } else {
+      return T.multiValuedFunction(args, openedEffect, output);
+    }
+  } else {
+    return type;
+  }
+}
+
