@@ -2,7 +2,7 @@ import { printHighlightedExpr } from "./error-report";
 import { applySubstitutionToExpr } from "./infer-subst";
 import { assertNever } from "./invariant";
 import { pprint } from "./printer";
-import { Expression, Typed } from "./syntax";
+import * as S from "./syntax";
 import { printType } from "./type-printer";
 import {
   applySubstitution,
@@ -29,11 +29,11 @@ export type TConstraint =
 interface TConstraintEqual {
   tag: "equal-constraint";
   kind: ConstraintKind;
-  expr: Expression<Typed>;
+  expr: S.Expression<S.Typed>;
   t: T.Type;
 }
 export function constEqual(
-  expr: Expression<Typed>,
+  expr: S.Expression<S.Typed>,
   t: T.Type,
   kind: ConstraintKind
 ): TConstraintEqual {
@@ -41,7 +41,7 @@ export function constEqual(
 }
 
 export function constEffect(
-  expr: Expression<Typed>,
+  expr: S.Expression<S.Typed>,
   t: T.Type
 ): TConstraintEqual {
   return constEqual(expr, t, "effect-type");
@@ -53,12 +53,12 @@ export function constEffect(
 // provided some type annotations.
 interface TConstraintExplicitInstance {
   tag: "explicit-instance-constraint";
-  expr: Expression<Typed>;
+  expr: S.Expression<S.Typed>;
   t: T.TypeSchema;
   kind: ConstraintKind;
 }
 export function constExplicitInstance(
-  expr: Expression<Typed>,
+  expr: S.Expression<S.Typed>,
   t: T.TypeSchema,
   kind: ConstraintKind
 ): TConstraintExplicitInstance {
@@ -82,14 +82,14 @@ export function constExplicitInstance(
 //
 interface TConstraintImplicitInstance {
   tag: "implicit-instance-constraint";
-  expr: Expression<Typed>;
+  expr: S.Expression<S.Typed>;
   t: T.Type;
   monovars: string[];
   kind: ConstraintKind;
 }
 
 export function constImplicitInstance(
-  expr: Expression<Typed>,
+  expr: S.Expression<S.Typed>,
   monovars: T.Var[],
   t: T.Type,
   kind: ConstraintKind
@@ -103,7 +103,7 @@ export function constImplicitInstance(
   };
 }
 
-function exprType(expr: Expression<Typed>, kind: ConstraintKind) {
+function exprType(expr: S.Expression<S.Typed>, kind: ConstraintKind) {
   switch (kind) {
     case "resulting-type":
       return expr.info.resultingType;
