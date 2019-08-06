@@ -347,7 +347,7 @@ describe("Type inference", () => {
           "(-> ctx α β number)"
         );
         expect(typeOf("(the (-> ctx _a _ _b) (lambda (x) (+ x 42)))")).toBeType(
-          "(-> ctx number α number)"
+          "(-> ctx number (effect <| α) number)"
         );
 
         expect(
@@ -429,7 +429,7 @@ describe("Type inference", () => {
         1
         (* n (f (- n 1))))))`
           )
-        ).toBeType("(-> ctx number α number)");
+        ).toBeType("(-> ctx number (effect <| α) number)");
       });
 
       it("basic polymorphic function on lists should work", () => {
@@ -510,7 +510,7 @@ describe("Type inference", () => {
   describe(`Context argument`, () => {
     it("should infer the type of the context argument automatically", () => {
       const result = typeOf(`(lambda (x) (+ *context* x))`);
-      expect(result).toBeType(`(-> number number e number)`);
+      expect(result).toBeType(`(-> number number (effect <| e) number)`);
     });
   });
 

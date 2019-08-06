@@ -9,7 +9,8 @@ import {
   generalize,
   instantiate,
   listTypeVariables,
-  Substitution
+  Substitution,
+  openFunctionEffect
 } from "./type-utils";
 import * as T from "./types";
 import { unify } from "./type-unify";
@@ -338,7 +339,7 @@ ${printType(applySubstitution(exprType, solution), false)}
         [
           constEqual(
             constraint.expr,
-            instantiate(constraint.t),
+            openFunctionEffect(instantiate(constraint.t)),
             constraint.kind
           ),
           ...rest
