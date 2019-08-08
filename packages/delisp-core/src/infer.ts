@@ -106,12 +106,7 @@ function inferBody(
     result: inferred.result,
     constraints: [
       ...inferred.constraints,
-      constEqual(
-        returningForm,
-        returningForm.info.resultingType,
-        "resulting-type",
-        returnType
-      ),
+      constraintResultingType(returningForm, returnType),
       ...inferred.result.map(form => constEffect(form, effectType))
     ],
     assumptions: inferred.assumptions
@@ -127,6 +122,10 @@ function constraintMonomorphicAssumption(
     constEqual(variable, variable.info.expressionType, "expression-type", type),
     constEqual(variable, assumption.primaryResultingType, "primary-type", type)
   ];
+}
+
+function constraintResultingType(expr: S.Expression<Typed>, type: T.Type) {
+  return constEqual(expr, expr.info.resultingType, "resulting-type", type);
 }
 
 // Generate new types for an expression an all its subexpressions,
@@ -238,9 +237,7 @@ function infer(
         assumptions: inferredValues.assumptions,
         constraints: [
           ...inferredValues.constraints,
-          ...inferredValues.result.map(e =>
-            constEqual(e, e.info.resultingType, "resulting-type", t)
-          ),
+          ...inferredValues.result.map(e => constraintResultingType(e, t)),
           ...inferredValues.result.map(e => constEffect(e, effect))
         ]
       };
@@ -423,12 +420,7 @@ function infer(
           ...condition.constraints,
           ...consequent.constraints,
           ...alternative.constraints,
-          constEqual(
-            condition.result,
-            condition.result.info.resultingType,
-            "resulting-type",
-            T.boolean
-          ),
+          constraintResultingType(condition.result, T.boolean),
           constEqual(
             consequent.result,
             consequent.result.info.resultingType,
@@ -528,12 +520,7 @@ function infer(
         },
 
         constraints: [
-          constEqual(
-            ifn.result,
-            ifn.result.info.resultingType,
-            "resulting-type",
-            tfn
-          ),
+          constraintResultingType(ifn.result, tfn),
           ...ifn.constraints,
           ...iargs.constraints,
 
@@ -783,10 +770,8 @@ function infer(
           ...(defaultCase ? defaultCase.constraints : []),
           // Value must produce a value of type with all the variants
           // that `match` is handling.
-          constEqual(
+          constraintResultingType(
             value.result,
-            value.result.info.resultingType,
-            "resulting-type",
             T.cases(
               variantTypes,
               defaultCase ? generateUniqueTVar() : undefined
@@ -830,12 +815,7 @@ function infer(
           ? [
               ...inferredValue.constraints,
               constEffect(inferredValue.result, effect),
-              constEqual(
-                inferredValue.result,
-                inferredValue.result.info.resultingType,
-                "resulting-type",
-                labelType
-              )
+              constraintResultingType(inferredValue.result, labelType)
             ]
           : [],
 
@@ -904,12 +884,7 @@ function infer(
 
         constraints: [
           ...form.constraints,
-          constEqual(
-            form.result,
-            form.result.info.resultingType,
-            "resulting-type",
-            T.values(variableTypes)
-          ),
+          constraintResultingType(form.result, T.values(variableTypes)),
           constEffect(form.result, effect),
 
           ...body.constraints,
