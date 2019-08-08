@@ -1,13 +1,7 @@
 import { identifierToJS } from "./compiler/jsvariable";
 import { InvariantViolation } from "./invariant";
-import {
-  isExport,
-  Module,
-  SDefinition,
-  STypeAlias,
-  Syntax,
-  Typed
-} from "./syntax";
+import { isExport, Module, SDefinition, STypeAlias, Syntax } from "./syntax";
+import { Typed } from "./syntax-typed";
 import { printType } from "./type-printer";
 import { generalize, normalizeRow } from "./type-utils";
 import { Type, TypeSchema } from "./types";

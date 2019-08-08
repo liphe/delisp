@@ -6,6 +6,7 @@ import {
 import { assertNever } from "./invariant";
 import { pprint } from "./printer";
 import * as S from "./syntax";
+import { Typed } from "./syntax-typed";
 import { printType } from "./type-printer";
 import {
   applySubstitution,
@@ -28,7 +29,7 @@ export type TConstraint =
   | TConstraintImplicitInstance
   | TConstraintExplicitInstance;
 
-function constraintExpression(c: TConstraint): S.Expression<S.Typed> {
+function constraintExpression(c: TConstraint): S.Expression<Typed> {
   return c.tag === "equal-constraint" ? c.expr : c.variable;
 }
 
@@ -37,11 +38,11 @@ function constraintExpression(c: TConstraint): S.Expression<S.Typed> {
 interface TConstraintEqual {
   tag: "equal-constraint";
   kind: ConstraintKind;
-  expr: S.Expression<S.Typed>;
+  expr: S.Expression<Typed>;
   t: T.Type;
 }
 export function constEqual(
-  expr: S.Expression<S.Typed>,
+  expr: S.Expression<Typed>,
   t: T.Type,
   kind: ConstraintKind
 ): TConstraintEqual {
@@ -49,7 +50,7 @@ export function constEqual(
 }
 
 export function constEffect(
-  expr: S.Expression<S.Typed>,
+  expr: S.Expression<Typed>,
   t: T.Type
 ): TConstraintEqual {
   return constEqual(expr, t, "effect-type");
@@ -61,11 +62,11 @@ export function constEffect(
 // provided some type annotations.
 interface TConstraintExplicitInstance {
   tag: "explicit-instance-constraint";
-  variable: S.SVariableReference<S.Typed>;
+  variable: S.SVariableReference<Typed>;
   t: T.TypeSchema;
 }
 export function constExplicitInstance(
-  variable: S.SVariableReference<S.Typed>,
+  variable: S.SVariableReference<Typed>,
   t: T.TypeSchema
 ): TConstraintExplicitInstance {
   return {
@@ -92,13 +93,13 @@ export function constExplicitInstance(
 //
 interface TConstraintImplicitInstance {
   tag: "implicit-instance-constraint";
-  variable: S.SVariableReference<S.Typed>;
+  variable: S.SVariableReference<Typed>;
   t: T.Type;
   monovars: string[];
 }
 
 export function constImplicitInstance(
-  variable: S.SVariableReference<S.Typed>,
+  variable: S.SVariableReference<Typed>,
   monovars: T.Var[],
   t: T.Type
 ): TConstraintImplicitInstance {
@@ -110,7 +111,7 @@ export function constImplicitInstance(
   };
 }
 
-function exprType(expr: S.Expression<S.Typed>, kind: ConstraintKind) {
+function exprType(expr: S.Expression<Typed>, kind: ConstraintKind) {
   switch (kind) {
     case "resulting-type":
       return expr.info.resultingType;

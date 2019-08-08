@@ -1,4 +1,5 @@
-import { Expression, Typed } from "./syntax";
+import { Expression } from "./syntax";
+import { Typed } from "./syntax-typed";
 import { foldExpr } from "./syntax-utils";
 import { TypeWithWildcards } from "./type-wildcards";
 

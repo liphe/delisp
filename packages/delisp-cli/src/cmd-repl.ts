@@ -21,7 +21,8 @@ import {
   resolveModuleDependencies,
   Type
 } from "@delisp/core";
-import { Expression, Module, Syntax, Typed } from "@delisp/core/src/syntax";
+import { Expression, Module, Syntax } from "@delisp/core/src/syntax";
+import { Typed } from "@delisp/core/src/syntax-typed";
 import { Pair, TaggedValue } from "@delisp/runtime";
 import readline from "readline";
 import { CommandModule } from "yargs";

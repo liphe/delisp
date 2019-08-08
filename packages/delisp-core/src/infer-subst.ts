@@ -1,12 +1,13 @@
 import { assertNever, InvariantViolation } from "./invariant";
 import * as S from "./syntax";
+import { Typed } from "./syntax-typed";
 import { transformRecurExpr } from "./syntax-utils";
 import { applySubstitution, Substitution } from "./type-utils";
 
 export function applyTypeSubstitutionToVariable(
-  s: S.SVariableReference<S.Typed>,
+  s: S.SVariableReference<Typed>,
   env: Substitution
-): S.SVariableReference<S.Typed> {
+): S.SVariableReference<Typed> {
   const result = applySubstitutionToExpr(s, env);
   if (result.node.tag !== "variable-reference") {
     throw new InvariantViolation(
@@ -17,12 +18,12 @@ export function applyTypeSubstitutionToVariable(
 }
 
 export function applySubstitutionToExpr(
-  s: S.Expression<S.Typed>,
+  s: S.Expression<Typed>,
   env: Substitution
-): S.Expression<S.Typed> {
+): S.Expression<Typed> {
   return transformRecurExpr(s, expr => ({
     ...expr,
-    info: new S.Typed({
+    info: new Typed({
       expressionType: applySubstitution(expr.info.expressionType, env),
       resultingType:
         expr.info._resultingType &&
@@ -34,9 +35,9 @@ export function applySubstitutionToExpr(
 }
 
 export function applySubstitutionToSyntax(
-  s: S.Syntax<S.Typed>,
+  s: S.Syntax<Typed>,
   env: Substitution
-): S.Syntax<S.Typed> {
+): S.Syntax<Typed> {
   if (S.isExpression(s)) {
     return applySubstitutionToExpr(s, env);
   } else if (s.node.tag === "definition") {

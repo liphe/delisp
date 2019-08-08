@@ -6,6 +6,7 @@ import {
 } from "../src/infer";
 import { ExternalEnvironment } from "../src/infer-environment";
 import * as S from "../src/syntax";
+import { Typed } from "../src/syntax-typed";
 import { createModule, readModule } from "../src/module";
 import { WithErrors, readSyntax } from "../src/syntax-convert";
 import { macroexpandExpression } from "../src/macroexpand";
@@ -35,9 +36,9 @@ expect.extend({
 function inferType(
   expr: S.Expression,
   env: ExternalEnvironment = defaultEnvironment,
-  m: S.Module<S.Typed, {}> = createModule(),
+  m: S.Module<Typed, {}> = createModule(),
   multipleValues: boolean
-): S.Expression<S.Typed> {
+): S.Expression<Typed> {
   const infer = inferExpressionInModule(expr, m, env, multipleValues);
 
   const unknowns = infer.unknowns.filter(u => u.node.name !== "*context*");

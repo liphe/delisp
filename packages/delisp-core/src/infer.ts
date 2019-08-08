@@ -31,6 +31,7 @@ import { assertNever, InvariantViolation } from "./invariant";
 import { moduleExportedDefinitions } from "./module";
 import primitives from "./primitives";
 import * as S from "./syntax";
+import { Typed } from "./syntax-typed";
 import {
   lambdaListAllArguments,
   funcallAllArguments
@@ -57,7 +58,7 @@ import { difference, flatMap, fromEntries, mapObject, maybeMap } from "./utils";
 // is normal to have multiple assumptions (instances) for the same
 // variable. Assumptions will be converted to additional constraints
 // at the end of the inference process.
-type TAssumption = S.SVariableReference<S.Typed>;
+type TAssumption = S.SVariableReference<Typed>;
 
 interface InferResult<A> {
   result: A;
@@ -72,7 +73,7 @@ function inferMany(
   options = {
     multipleValuedLastForm: false
   }
-): InferResult<Array<S.Expression<S.Typed>>> {
+): InferResult<Array<S.Expression<Typed>>> {
   const results = exprs.map((e, i) =>
     infer(
       e,
@@ -133,9 +134,9 @@ function infer(
   // depends on if the parent itself is multipleValued. If that's the
   // case, just pass the value down to the subexpressions.
   multipleValues: boolean
-): InferResult<S.Expression<S.Typed>> {
-  function singleType(effect: Type, type: Type): S.Typed {
-    return new S.Typed({
+): InferResult<S.Expression<Typed>> {
+  function singleType(effect: Type, type: Type): Typed {
+    return new Typed({
       expressionType: type,
       resultingType: multipleValues ? T.values([type]) : undefined,
       effect,
@@ -369,7 +370,7 @@ function infer(
             consequent: consequent.result,
             alternative: alternative.result
           },
-          info: new S.Typed({
+          info: new Typed({
             effect,
             expressionType: t,
             multipleValues
@@ -466,7 +467,7 @@ function infer(
             fn: ifn.result,
             userArguments: iargs.result.slice(1) // don't include the context argument
           },
-          info: new S.Typed({
+          info: new Typed({
             effect,
             expressionType: valuesType,
             resultingType: multipleValues ? valuesType : primaryType,
@@ -538,7 +539,7 @@ function infer(
             })),
             body: bodyInference.result
           },
-          info: new S.Typed({ effect, expressionType: t, multipleValues })
+          info: new Typed({ effect, expressionType: t, multipleValues })
         },
         constraints: [
           ...bodyInference.constraints,
@@ -602,7 +603,7 @@ function infer(
             ...expr.node,
             value: inferred.result
           },
-          info: new S.Typed({ effect, expressionType: t, multipleValues })
+          info: new Typed({ effect, expressionType: t, multipleValues })
         },
         assumptions: inferred.assumptions,
         constraints: [
@@ -632,7 +633,7 @@ function infer(
             body: body.result,
             returning: returning.result
           },
-          info: new S.Typed({
+          info: new Typed({
             effect,
             expressionType: returning.result.info.resultingType,
             multipleValues
@@ -713,7 +714,7 @@ function infer(
             })),
             defaultCase: defaultCase && defaultCase.result
           },
-          info: new S.Typed({ effect, expressionType: t, multipleValues })
+          info: new Typed({ effect, expressionType: t, multipleValues })
         },
 
         constraints: [
@@ -793,7 +794,7 @@ function infer(
             ...expr.node,
             values: inference.result
           },
-          info: new S.Typed({
+          info: new Typed({
             effect,
             expressionType: tValuesType,
             resultingType: multipleValues ? tValuesType : tPrimaryType,
@@ -835,7 +836,7 @@ function infer(
             form: form.result,
             body: body.result
           },
-          info: new S.Typed({
+          info: new Typed({
             effect,
             expressionType: t,
             multipleValues
@@ -874,7 +875,7 @@ function infer(
 function inferSyntax(
   syntax: S.Syntax,
   internalTypes: InternalTypeEnvironment
-): InferResult<S.Syntax<S.Typed>> {
+): InferResult<S.Syntax<Typed>> {
   if (S.isExpression(syntax)) {
     const { result, assumptions, constraints } = infer(
       { ...syntax, node: { ...syntax.node } },
@@ -1090,7 +1091,7 @@ function moduleInternalTypes(m: S.Module): InternalTypeEnvironment {
 }
 
 function getModuleInternalEnvironment(
-  m: S.Module<S.Typed>,
+  m: S.Module<Typed>,
   internalTypes: InternalTypeEnvironment
 ): InternalEnvironment {
   return {
@@ -1120,7 +1121,7 @@ export function inferModule(
   m: S.Module,
   externalEnv: ExternalEnvironment = defaultEnvironment
 ): {
-  typedModule: S.Module<S.Typed>;
+  typedModule: S.Module<Typed>;
   unknowns: TAssumption[];
 } {
   const internalTypes = moduleInternalTypes(m);
@@ -1157,7 +1158,7 @@ export function inferModule(
     unknowns: assumptions.unknowns.map(
       (v): TAssumption => {
         return applySubstitutionToExpr(v, solution) as S.SVariableReference<
-          S.Typed
+          Typed
         >;
       }
     )
@@ -1168,11 +1169,11 @@ export function inferModule(
  * module. */
 export function inferExpressionInModule(
   expr: S.Expression,
-  m: S.Module<S.Typed>,
+  m: S.Module<Typed>,
   externalEnv: ExternalEnvironment = defaultEnvironment,
   multipleValues: boolean
 ): {
-  typedExpression: S.Expression<S.Typed>;
+  typedExpression: S.Expression<Typed>;
   unknowns: TAssumption[];
 } {
   const internalTypes = moduleInternalTypes(m);
@@ -1203,7 +1204,7 @@ export function inferExpressionInModule(
     unknowns: assumptions.unknowns.map(
       (v): TAssumption => {
         return applySubstitutionToExpr(v, solution) as S.SVariableReference<
-          S.Typed
+          Typed
         >;
       }
     )
@@ -1211,7 +1212,7 @@ export function inferExpressionInModule(
 }
 
 export function getModuleExternalEnvironment(
-  m: S.Module<S.Typed>
+  m: S.Module<Typed>
 ): ExternalEnvironment {
   const defs = moduleExportedDefinitions(m);
   const variables = fromEntries(
