@@ -138,7 +138,8 @@ function infer(
     return new S.Typed({
       expressionType: type,
       resultingType: multipleValues ? T.values([type]) : undefined,
-      effect
+      effect,
+      multipleValues
     });
   }
 
@@ -370,7 +371,8 @@ function infer(
           },
           info: new S.Typed({
             effect,
-            expressionType: t
+            expressionType: t,
+            multipleValues
           })
         },
         assumptions: [
@@ -467,7 +469,8 @@ function infer(
           info: new S.Typed({
             effect,
             expressionType: valuesType,
-            resultingType: multipleValues ? valuesType : primaryType
+            resultingType: multipleValues ? valuesType : primaryType,
+            multipleValues
           })
         },
 
@@ -535,7 +538,7 @@ function infer(
             })),
             body: bodyInference.result
           },
-          info: new S.Typed({ effect, expressionType: t })
+          info: new S.Typed({ effect, expressionType: t, multipleValues })
         },
         constraints: [
           ...bodyInference.constraints,
@@ -599,7 +602,7 @@ function infer(
             ...expr.node,
             value: inferred.result
           },
-          info: new S.Typed({ effect, expressionType: t })
+          info: new S.Typed({ effect, expressionType: t, multipleValues })
         },
         assumptions: inferred.assumptions,
         constraints: [
@@ -631,7 +634,8 @@ function infer(
           },
           info: new S.Typed({
             effect,
-            expressionType: returning.result.info.resultingType
+            expressionType: returning.result.info.resultingType,
+            multipleValues
           })
         },
 
@@ -709,7 +713,7 @@ function infer(
             })),
             defaultCase: defaultCase && defaultCase.result
           },
-          info: new S.Typed({ effect, expressionType: t })
+          info: new S.Typed({ effect, expressionType: t, multipleValues })
         },
 
         constraints: [
@@ -792,7 +796,8 @@ function infer(
           info: new S.Typed({
             effect,
             expressionType: tValuesType,
-            resultingType: multipleValues ? tValuesType : tPrimaryType
+            resultingType: multipleValues ? tValuesType : tPrimaryType,
+            multipleValues
           })
         },
 
@@ -832,7 +837,8 @@ function infer(
           },
           info: new S.Typed({
             effect,
-            expressionType: t
+            expressionType: t,
+            multipleValues
           })
         },
 

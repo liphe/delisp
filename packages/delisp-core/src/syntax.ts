@@ -304,19 +304,23 @@ export class Typed {
   // double the amount of types.
   _resultingType: Type | undefined;
   expressionType: Type;
+  multipleValues: boolean;
 
   constructor({
     expressionType,
     resultingType,
-    effect
+    effect,
+    multipleValues
   }: {
     expressionType: Type;
     resultingType?: Type;
     effect: Type;
+    multipleValues: boolean;
   }) {
     this.expressionType = expressionType;
     this._resultingType = resultingType;
     this.effect = effect;
+    this.multipleValues = multipleValues;
   }
 
   // The `resultingType` is used as the resulting type in the parent
