@@ -135,10 +135,23 @@ function infer(
   // case, just pass the value down to the subexpressions.
   multipleValues: boolean
 ): InferResult<S.Expression<Typed>> {
+  // Create metadata necessary to represent an expression returning a
+  // single value. If the expression is in a tail position, the
+  // resulting type will be wrapped in a values type.
   function singleType(effect: Type, type: Type): Typed {
     return new Typed({
       expressionType: type,
       resultingType: multipleValues ? T.values([type]) : undefined,
+      effect,
+      multipleValues
+    });
+  }
+
+  // Create metadata necessary to represent the type of an expression
+  // as equal to the type of a subexpression.
+  function delegatedType(effect: Type, type: Type): Typed {
+    return new Typed({
+      expressionType: type,
       effect,
       multipleValues
     });
@@ -370,11 +383,7 @@ function infer(
             consequent: consequent.result,
             alternative: alternative.result
           },
-          info: new Typed({
-            effect,
-            expressionType: t,
-            multipleValues
-          })
+          info: delegatedType(effect, t)
         },
         assumptions: [
           ...condition.assumptions,
@@ -467,12 +476,9 @@ function infer(
             fn: ifn.result,
             userArguments: iargs.result.slice(1) // don't include the context argument
           },
-          info: new Typed({
-            effect,
-            expressionType: valuesType,
-            resultingType: multipleValues ? valuesType : primaryType,
-            multipleValues
-          })
+          info: multipleValues
+            ? delegatedType(effect, valuesType)
+            : singleType(effect, primaryType)
         },
 
         constraints: [
@@ -539,7 +545,7 @@ function infer(
             })),
             body: bodyInference.result
           },
-          info: new Typed({ effect, expressionType: t, multipleValues })
+          info: delegatedType(effect, t)
         },
         constraints: [
           ...bodyInference.constraints,
@@ -603,7 +609,7 @@ function infer(
             ...expr.node,
             value: inferred.result
           },
-          info: new Typed({ effect, expressionType: t, multipleValues })
+          info: delegatedType(effect, t)
         },
         assumptions: inferred.assumptions,
         constraints: [
@@ -633,11 +639,7 @@ function infer(
             body: body.result,
             returning: returning.result
           },
-          info: new Typed({
-            effect,
-            expressionType: returning.result.info.resultingType,
-            multipleValues
-          })
+          info: delegatedType(effect, returning.result.info.resultingType)
         },
 
         constraints: [
@@ -714,7 +716,7 @@ function infer(
             })),
             defaultCase: defaultCase && defaultCase.result
           },
-          info: new Typed({ effect, expressionType: t, multipleValues })
+          info: delegatedType(effect, t)
         },
 
         constraints: [
@@ -794,12 +796,9 @@ function infer(
             ...expr.node,
             values: inference.result
           },
-          info: new Typed({
-            effect,
-            expressionType: tValuesType,
-            resultingType: multipleValues ? tValuesType : tPrimaryType,
-            multipleValues
-          })
+          info: multipleValues
+            ? delegatedType(effect, tValuesType)
+            : singleType(effect, tPrimaryType)
         },
 
         constraints: [
@@ -836,11 +835,7 @@ function infer(
             form: form.result,
             body: body.result
           },
-          info: new Typed({
-            effect,
-            expressionType: t,
-            multipleValues
-          })
+          info: delegatedType(effect, t)
         },
 
         constraints: [
