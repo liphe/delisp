@@ -142,8 +142,7 @@ function infer(
     return new Typed({
       expressionType: type,
       resultingType: multipleValues ? T.values([type]) : undefined,
-      effect,
-      multipleValues
+      effect
     });
   }
 
@@ -152,8 +151,7 @@ function infer(
   function delegatedType(effect: Type, type: Type): Typed {
     return new Typed({
       expressionType: type,
-      effect,
-      multipleValues
+      effect
     });
   }
 

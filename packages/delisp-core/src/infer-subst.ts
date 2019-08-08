@@ -28,8 +28,7 @@ export function applySubstitutionToExpr(
       resultingType:
         expr.info._resultingType &&
         applySubstitution(expr.info._resultingType, env),
-      effect: applySubstitution(expr.info.effect, env),
-      multipleValues: expr.info.multipleValues
+      effect: applySubstitution(expr.info.effect, env)
     })
   }));
 }
