@@ -1,7 +1,20 @@
-import { assertNever } from "./invariant";
+import { assertNever, InvariantViolation } from "./invariant";
 import * as S from "./syntax";
 import { transformRecurExpr } from "./syntax-utils";
 import { applySubstitution, Substitution } from "./type-utils";
+
+export function applyTypeSubstitutionToVariable(
+  s: S.SVariableReference<S.Typed>,
+  env: Substitution
+): S.SVariableReference<S.Typed> {
+  const result = applySubstitutionToExpr(s, env);
+  if (result.node.tag !== "variable-reference") {
+    throw new InvariantViolation(
+      `Replacing types to a syntax variable should still be syntax variable!`
+    );
+  }
+  return { ...s, node: result.node };
+}
 
 export function applySubstitutionToExpr(
   s: S.Expression<S.Typed>,

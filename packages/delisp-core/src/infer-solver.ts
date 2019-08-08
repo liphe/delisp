@@ -1,5 +1,8 @@
 import { printHighlightedExpr } from "./error-report";
-import { applySubstitutionToExpr } from "./infer-subst";
+import {
+  applyTypeSubstitutionToVariable,
+  applySubstitutionToExpr
+} from "./infer-subst";
 import { assertNever } from "./invariant";
 import { pprint } from "./printer";
 import * as S from "./syntax";
@@ -24,6 +27,10 @@ export type TConstraint =
   | TConstraintEqual
   | TConstraintImplicitInstance
   | TConstraintExplicitInstance;
+
+function constraintExpression(c: TConstraint): S.Expression<S.Typed> {
+  return c.tag === "equal-constraint" ? c.expr : c.variable;
+}
 
 // A constraint stating that an expression's type should be equal to a
 // given type.
@@ -54,16 +61,16 @@ export function constEffect(
 // provided some type annotations.
 interface TConstraintExplicitInstance {
   tag: "explicit-instance-constraint";
-  expr: S.Expression<S.Typed>;
+  variable: S.SVariableReference<S.Typed>;
   t: T.TypeSchema;
   kind: ConstraintKind;
 }
 export function constExplicitInstance(
-  expr: S.Expression<S.Typed>,
+  variable: S.SVariableReference<S.Typed>,
   t: T.TypeSchema,
   kind: ConstraintKind
 ): TConstraintExplicitInstance {
-  return { tag: "explicit-instance-constraint", expr, t, kind };
+  return { tag: "explicit-instance-constraint", variable, t, kind };
 }
 
 // A constraint stating that an expression's type is an instance of a
@@ -83,21 +90,21 @@ export function constExplicitInstance(
 //
 interface TConstraintImplicitInstance {
   tag: "implicit-instance-constraint";
-  expr: S.Expression<S.Typed>;
+  variable: S.SVariableReference<S.Typed>;
   t: T.Type;
   monovars: string[];
   kind: ConstraintKind;
 }
 
 export function constImplicitInstance(
-  expr: S.Expression<S.Typed>,
+  variable: S.SVariableReference<S.Typed>,
   monovars: T.Var[],
   t: T.Type,
   kind: ConstraintKind
 ): TConstraintImplicitInstance {
   return {
     tag: "implicit-instance-constraint",
-    expr,
+    variable,
     monovars: monovars.map(v => v.node.name),
     t,
     kind
@@ -127,14 +134,14 @@ export function debugConstraints(constraints: TConstraint[]) {
         );
       case "implicit-instance-constraint":
         return console.log(
-          `${pprint(c.expr, 40)} is implicit instance of ${printType(
+          `${pprint(c.variable, 40)} is implicit instance of ${printType(
             c.t,
             false
           )}`
         );
       case "explicit-instance-constraint":
         return console.log(
-          `${pprint(c.expr, 40)} is explicit instance of ${printType(
+          `${pprint(c.variable, 40)} is explicit instance of ${printType(
             c.t.mono,
             false
           )}`
@@ -158,12 +165,12 @@ function activevars(constraints: TConstraint[]): string[] {
         return equal(exprType(c.expr, c.kind), c.t);
       case "implicit-instance-constraint":
         return union(
-          listTypeVariables(exprType(c.expr, c.kind)),
+          listTypeVariables(exprType(c.variable, c.kind)),
           intersection(listTypeVariables(c.t), c.monovars)
         );
       case "explicit-instance-constraint":
         return union(
-          listTypeVariables(exprType(c.expr, c.kind)),
+          listTypeVariables(exprType(c.variable, c.kind)),
           difference(listTypeVariables(c.t.mono), c.t.tvars)
         );
     }
@@ -213,7 +220,7 @@ function applySubstitutionToConstraint(
     case "implicit-instance-constraint":
       return {
         tag: "implicit-instance-constraint",
-        expr: applySubstitutionToExpr(c.expr, s),
+        variable: applyTypeSubstitutionToVariable(c.variable, s),
         t: applySubstitution(c.t, s),
         monovars: flatMap(name => substituteVar(name, s), c.monovars),
         kind: c.kind
@@ -221,7 +228,7 @@ function applySubstitutionToConstraint(
     case "explicit-instance-constraint":
       return {
         tag: "explicit-instance-constraint",
-        expr: applySubstitutionToExpr(c.expr, s),
+        variable: applyTypeSubstitutionToVariable(c.variable, s),
         t: applySubstitutionToPolytype(c.t, s),
         kind: c.kind
       };
@@ -280,13 +287,17 @@ export function solve(
         const s = result.substitution;
         return solve(rest.map(c => applySubstitutionToConstraint(c, s)), s);
       }
-      case "unify-occur-check-error":
+      case "unify-occur-check-error": {
         throw new Error(
           printHighlightedExpr(
             "Expression would have an infinity type",
-            constraint.expr.location
+            constraint.tag === "equal-constraint"
+              ? constraint.expr.location
+              : constraint.variable.location
           )
         );
+      }
+
       case "unify-mismatch-error":
         throw new Error(
           printHighlightedExpr(
@@ -305,7 +316,8 @@ ${printType(applySubstitution(t, solution), false)}
 vs.
 
 ${printType(applySubstitution(exprType, solution), false)}`,
-            constraint.expr.location
+
+            constraintExpression(constraint).location
           )
         );
       case "unify-missing-value-error":
@@ -322,7 +334,7 @@ vs.
 ${printType(applySubstitution(exprType, solution), false)}
 
 `,
-            constraint.expr.location
+            constraintExpression(constraint).location
           )
         );
       default:
@@ -338,7 +350,7 @@ ${printType(applySubstitution(exprType, solution), false)}
       return solve(
         [
           constEqual(
-            constraint.expr,
+            constraint.variable,
             openFunctionEffect(instantiate(constraint.t)),
             constraint.kind
           ),
@@ -350,7 +362,10 @@ ${printType(applySubstitution(exprType, solution), false)}
     case "implicit-instance-constraint": {
       const t = generalize(constraint.t, constraint.monovars);
       return solve(
-        [constExplicitInstance(constraint.expr, t, constraint.kind), ...rest],
+        [
+          constExplicitInstance(constraint.variable, t, constraint.kind),
+          ...rest
+        ],
         solution
       );
     }
