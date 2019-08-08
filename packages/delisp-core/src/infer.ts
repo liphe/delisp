@@ -43,6 +43,7 @@ import { type } from "./type-tag";
 import {
   generalize,
   listTypeConstants,
+  applySubstitution,
   transformRecurType
 } from "./type-utils";
 import * as T from "./types";
@@ -105,11 +106,27 @@ function inferBody(
     result: inferred.result,
     constraints: [
       ...inferred.constraints,
-      constEqual(returningForm, returnType, "resulting-type"),
+      constEqual(
+        returningForm,
+        returningForm.info.resultingType,
+        "resulting-type",
+        returnType
+      ),
       ...inferred.result.map(form => constEffect(form, effectType))
     ],
     assumptions: inferred.assumptions
   };
+}
+
+function constraintMonomorphicAssumption(
+  assumption: TAssumption,
+  type: Type
+): TConstraint[] {
+  const { variable } = assumption;
+  return [
+    constEqual(variable, variable.info.expressionType, "expression-type", type),
+    constEqual(variable, assumption.primaryResultingType, "primary-type", type)
+  ];
 }
 
 // Generate new types for an expression an all its subexpressions,
@@ -221,7 +238,9 @@ function infer(
         assumptions: inferredValues.assumptions,
         constraints: [
           ...inferredValues.constraints,
-          ...inferredValues.result.map(e => constEqual(e, t, "resulting-type")),
+          ...inferredValues.result.map(e =>
+            constEqual(e, e.info.resultingType, "resulting-type", t)
+          ),
           ...inferredValues.result.map(e => constEffect(e, effect))
         ]
       };
@@ -277,6 +296,8 @@ function infer(
             ? [
                 constEqual(
                   tailInferred.result,
+                  tailInferred.result.info.resultingType,
+                  "resulting-type",
                   T.record(
                     expr.node.source.extending
                       ? []
@@ -285,8 +306,7 @@ function infer(
                           type: generateUniqueTVar()
                         })),
                     tailRowType
-                  ),
-                  "resulting-type"
+                  )
                 )
               ]
             : []),
@@ -320,7 +340,12 @@ function infer(
         },
         constraints: [
           ...value.constraints,
-          constEqual(value.result, recordType, "resulting-type"),
+          constEqual(
+            value.result,
+            value.result.info.resultingType,
+            "resulting-type",
+            recordType
+          ),
           constEffect(value.result, effect)
         ],
         assumptions: value.assumptions
@@ -328,19 +353,31 @@ function infer(
     }
 
     case "variable-reference": {
-      const t = generateUniqueTVar();
+      const expressionType = generateUniqueTVar();
+      const primaryResultingType = generateUniqueTVar();
       const effect = generateUniqueTVar();
       const typedVar = {
         ...expr,
         node: {
           ...expr.node
         },
-        info: singleType(effect, t)
+        info: new Typed({
+          expressionType,
+          resultingType: multipleValues
+            ? T.values([primaryResultingType])
+            : primaryResultingType,
+          effect
+        })
       };
       return {
         result: typedVar,
         constraints: [],
-        assumptions: [{ variable: typedVar }]
+        assumptions: [
+          {
+            variable: typedVar,
+            primaryResultingType
+          }
+        ]
       };
     }
     case "conditional": {
@@ -386,9 +423,24 @@ function infer(
           ...condition.constraints,
           ...consequent.constraints,
           ...alternative.constraints,
-          constEqual(condition.result, T.boolean, "resulting-type"),
-          constEqual(consequent.result, t, "resulting-type"),
-          constEqual(alternative.result, t, "resulting-type"),
+          constEqual(
+            condition.result,
+            condition.result.info.resultingType,
+            "resulting-type",
+            T.boolean
+          ),
+          constEqual(
+            consequent.result,
+            consequent.result.info.resultingType,
+            "resulting-type",
+            t
+          ),
+          constEqual(
+            alternative.result,
+            alternative.result.info.resultingType,
+            "resulting-type",
+            t
+          ),
 
           constEffect(condition.result, effect),
           constEffect(consequent.result, effect),
@@ -421,13 +473,9 @@ function infer(
       const newConstraints: TConstraint[] = [
         ...assumptions
           .filter(a => fnargs.includes(a.variable.node.name))
-          .map(a => {
+          .flatMap(a => {
             const varIndex = fnargs.indexOf(a.variable.node.name);
-            return constEqual(
-              a.variable,
-              argtypes[varIndex],
-              "expression-type"
-            );
+            return constraintMonomorphicAssumption(a, argtypes[varIndex]);
           })
       ];
 
@@ -480,7 +528,12 @@ function infer(
         },
 
         constraints: [
-          constEqual(ifn.result, tfn, "resulting-type"),
+          constEqual(
+            ifn.result,
+            ifn.result.info.resultingType,
+            "resulting-type",
+            tfn
+          ),
           ...ifn.constraints,
           ...iargs.constraints,
 
@@ -614,7 +667,12 @@ function infer(
         assumptions: inferred.assumptions,
         constraints: [
           ...inferred.constraints,
-          constEqual(inferred.result, t, "expression-type"),
+          constEqual(
+            inferred.result,
+            inferred.result.info.expressionType,
+            "expression-type",
+            t
+          ),
           constEffect(inferred.result, effect)
         ]
       };
@@ -678,7 +736,7 @@ function infer(
               ...constraints,
               ...assumptions
                 .filter(a => a.variable.node.name === c.variable.name)
-                .map(a => constEqual(a.variable, vartype, "expression-type"))
+                .flatMap(a => constraintMonomorphicAssumption(a, vartype))
             ],
             assumptions: assumptions.filter(
               a => a.variable.node.name !== c.variable.name
@@ -727,11 +785,12 @@ function infer(
           // that `match` is handling.
           constEqual(
             value.result,
+            value.result.info.resultingType,
+            "resulting-type",
             T.cases(
               variantTypes,
               defaultCase ? generateUniqueTVar() : undefined
-            ),
-            "resulting-type"
+            )
           ),
           constEffect(value.result, effect)
         ],
@@ -771,7 +830,12 @@ function infer(
           ? [
               ...inferredValue.constraints,
               constEffect(inferredValue.result, effect),
-              constEqual(inferredValue.result, labelType, "resulting-type")
+              constEqual(
+                inferredValue.result,
+                inferredValue.result.info.resultingType,
+                "resulting-type",
+                labelType
+              )
             ]
           : [],
 
@@ -840,13 +904,18 @@ function infer(
 
         constraints: [
           ...form.constraints,
-          constEqual(form.result, T.values(variableTypes), "resulting-type"),
+          constEqual(
+            form.result,
+            form.result.info.resultingType,
+            "resulting-type",
+            T.values(variableTypes)
+          ),
           constEffect(form.result, effect),
 
           ...body.constraints,
           ...body.assumptions
             .filter(a => variableNames.includes(a.variable.node.name))
-            .map(a => {
+            .flatMap(a => {
               const name = a.variable.node.name;
               const idx = variableNames.indexOf(name);
               if (idx < 0) {
@@ -854,11 +923,7 @@ function infer(
                   `Could not find variable in the list of assumptions.`
                 );
               }
-              return constEqual(
-                a.variable,
-                variableTypes[idx],
-                "expression-type"
-              );
+              return constraintMonomorphicAssumption(a, variableTypes[idx]);
             })
         ],
 
@@ -1158,7 +1223,11 @@ export function inferModule(
     },
     unknowns: assumptions.unknowns.map(
       (a): TAssumption => ({
-        variable: applyTypeSubstitutionToVariable(a.variable, solution)
+        variable: applyTypeSubstitutionToVariable(a.variable, solution),
+        primaryResultingType: applySubstitution(
+          a.primaryResultingType,
+          solution
+        )
       })
     )
   };
@@ -1202,7 +1271,11 @@ export function inferExpressionInModule(
     typedExpression: applySubstitutionToExpr(inference.result, solution),
     unknowns: assumptions.unknowns.map(
       (a): TAssumption => ({
-        variable: applyTypeSubstitutionToVariable(a.variable, solution)
+        variable: applyTypeSubstitutionToVariable(a.variable, solution),
+        primaryResultingType: applySubstitution(
+          a.primaryResultingType,
+          solution
+        )
       })
     )
   };

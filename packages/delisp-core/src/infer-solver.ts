@@ -28,9 +28,10 @@ import { difference, flatMap, intersection, union } from "./utils";
 // at the end of the inference process.
 export type TAssumption = {
   variable: S.SVariableReference<Typed>;
+  // The underling primary type of an assumption. The effective
+  // 'resulting type' could be this type wrapped by a VALUES type.
+  primaryResultingType: T.Type;
 };
-
-type ConstraintKind = "expression-type" | "resulting-type" | "effect-type";
 
 // Constraints impose which types should be equal (unified) and which
 // types are instances of other types.
@@ -39,7 +40,7 @@ export type TConstraint =
   | TConstraintImplicitInstance
   | TConstraintExplicitInstance;
 
-function constraintExpression(c: TConstraint): S.Expression<Typed> {
+function constraintExpression(c: TConstraint): S.Expression {
   return c.tag === "equal-constraint" ? c.expr : c.assumption.variable;
 }
 
@@ -47,23 +48,25 @@ function constraintExpression(c: TConstraint): S.Expression<Typed> {
 // given type.
 interface TConstraintEqual {
   tag: "equal-constraint";
-  kind: ConstraintKind;
   expr: S.Expression<Typed>;
+  exprType: T.Type;
+  kind: string;
   t: T.Type;
 }
 export function constEqual(
   expr: S.Expression<Typed>,
-  t: T.Type,
-  kind: ConstraintKind
+  exprType: T.Type,
+  kind: string,
+  t: T.Type
 ): TConstraintEqual {
-  return { tag: "equal-constraint", expr, t, kind };
+  return { tag: "equal-constraint", expr, exprType, kind, t };
 }
 
 export function constEffect(
   expr: S.Expression<Typed>,
   t: T.Type
 ): TConstraintEqual {
-  return constEqual(expr, t, "effect-type");
+  return constEqual(expr, expr.info.effect, "effect", t);
 }
 
 // A constriant stating that an expression's type is an instance of
@@ -121,24 +124,13 @@ export function constImplicitInstance(
   };
 }
 
-function exprType(expr: S.Expression<Typed>, kind: ConstraintKind) {
-  switch (kind) {
-    case "resulting-type":
-      return expr.info.resultingType;
-    case "expression-type":
-      return expr.info.expressionType;
-    case "effect-type":
-      return expr.info.effect;
-  }
-}
-
 export function debugConstraints(constraints: TConstraint[]) {
   constraints.forEach(c => {
     switch (c.tag) {
       case "equal-constraint":
         return console.log(
           `${pprint(c.expr, 40)} ${c.kind} of type ${printType(
-            exprType(c.expr, c.kind),
+            c.exprType,
             false
           )} is ${printType(c.t, false)}`
         );
@@ -172,17 +164,23 @@ function activevars(constraints: TConstraint[]): string[] {
   return flatMap(c => {
     switch (c.tag) {
       case "equal-constraint":
-        return equal(exprType(c.expr, c.kind), c.t);
-      case "implicit-instance-constraint":
+        return equal(c.exprType, c.t);
+      case "implicit-instance-constraint": {
+        const { variable } = c.assumption;
         return union(
-          listTypeVariables(exprType(c.assumption.variable, "expression-type")),
+          listTypeVariables(variable.info.expressionType),
+          listTypeVariables(variable.info.resultingType),
           intersection(listTypeVariables(c.t), c.monovars)
         );
-      case "explicit-instance-constraint":
+      }
+      case "explicit-instance-constraint": {
+        const { variable } = c.assumption;
         return union(
-          listTypeVariables(exprType(c.assumption.variable, "expression-type")),
+          listTypeVariables(variable.info.expressionType),
+          listTypeVariables(variable.info.resultingType),
           difference(listTypeVariables(c.t.mono), c.t.tvars)
         );
+      }
     }
   }, constraints);
 }
@@ -224,6 +222,7 @@ function applySubstitutionToConstraint(
       return {
         tag: "equal-constraint",
         expr: applySubstitutionToExpr(c.expr, s),
+        exprType: applySubstitution(c.exprType, s),
         t: applySubstitution(c.t, s),
         kind: c.kind
       };
@@ -231,7 +230,11 @@ function applySubstitutionToConstraint(
       return {
         tag: "implicit-instance-constraint",
         assumption: {
-          variable: applyTypeSubstitutionToVariable(c.assumption.variable, s)
+          variable: applyTypeSubstitutionToVariable(c.assumption.variable, s),
+          primaryResultingType: applySubstitution(
+            c.assumption.primaryResultingType,
+            s
+          )
         },
         t: applySubstitution(c.t, s),
         monovars: flatMap(name => substituteVar(name, s), c.monovars)
@@ -240,7 +243,11 @@ function applySubstitutionToConstraint(
       return {
         tag: "explicit-instance-constraint",
         assumption: {
-          variable: applyTypeSubstitutionToVariable(c.assumption.variable, s)
+          variable: applyTypeSubstitutionToVariable(c.assumption.variable, s),
+          primaryResultingType: applySubstitution(
+            c.assumption.primaryResultingType,
+            s
+          )
         },
         t: applySubstitutionToPolytype(c.t, s)
       };
@@ -356,16 +363,28 @@ ${printType(applySubstitution(exprType, solution), false)}
 
   switch (constraint.tag) {
     case "equal-constraint": {
-      return solveEq(exprType(constraint.expr, constraint.kind), constraint.t);
+      return solveEq(constraint.exprType, constraint.t);
     }
     case "explicit-instance-constraint": {
+      const { variable, primaryResultingType } = constraint.assumption;
+      const t = instantiate(constraint.t);
+
       return solve(
         [
           constEqual(
-            constraint.assumption.variable,
-            openFunctionEffect(instantiate(constraint.t)),
-            "expression-type"
+            variable,
+            variable.info.expressionType,
+            "expression-type",
+            t
           ),
+
+          constEqual(
+            variable,
+            primaryResultingType,
+            "primary-type",
+            openFunctionEffect(t)
+          ),
+
           ...rest
         ],
         solution
