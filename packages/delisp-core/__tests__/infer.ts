@@ -41,10 +41,14 @@ function inferType(
 ): S.Expression<Typed> {
   const infer = inferExpressionInModule(expr, m, env, multipleValues);
 
-  const unknowns = infer.unknowns.filter(u => u.node.name !== "*context*");
+  const unknowns = infer.unknowns.filter(
+    u => u.variable.node.name !== "*context*"
+  );
   if (unknowns.length > 0) {
     throw new Error(
-      `Unknown variables ${infer.unknowns.map(v => v.node.name).join(" ")}`
+      `Unknown variables ${infer.unknowns
+        .map(v => v.variable.node.name)
+        .join(" ")}`
     );
   }
   return infer.typedExpression;

@@ -21,9 +21,11 @@ import {
   constExplicitInstance,
   constImplicitInstance,
   solve,
-  TConstraint
+  TConstraint,
+  TAssumption
 } from "./infer-solver";
 import {
+  applyTypeSubstitutionToVariable,
   applySubstitutionToExpr,
   applySubstitutionToSyntax
 } from "./infer-subst";
@@ -51,14 +53,6 @@ import { difference, flatMap, fromEntries, mapObject, maybeMap } from "./utils";
 // will run through the syntax it will generate dummy type variables,
 // together with a set of constraints and assumptions.
 //
-
-// A TAssumption is a variable instance for which we have assumed the
-// type. Those variables are to be bound (and assumption removed)
-// later, either by `let`, `lambda`, or global definitions.  Note: it
-// is normal to have multiple assumptions (instances) for the same
-// variable. Assumptions will be converted to additional constraints
-// at the end of the inference process.
-type TAssumption = S.SVariableReference<Typed>;
 
 interface InferResult<A> {
   result: A;
@@ -346,7 +340,7 @@ function infer(
       return {
         result: typedVar,
         constraints: [],
-        assumptions: [typedVar]
+        assumptions: [{ variable: typedVar }]
       };
     }
     case "conditional": {
@@ -426,10 +420,14 @@ function infer(
       // the new function type we have created.
       const newConstraints: TConstraint[] = [
         ...assumptions
-          .filter(v => fnargs.includes(v.node.name))
-          .map(v => {
-            const varIndex = fnargs.indexOf(v.node.name);
-            return constEqual(v, argtypes[varIndex], "expression-type");
+          .filter(a => fnargs.includes(a.variable.node.name))
+          .map(a => {
+            const varIndex = fnargs.indexOf(a.variable.node.name);
+            return constEqual(
+              a.variable,
+              argtypes[varIndex],
+              "expression-type"
+            );
           })
       ];
 
@@ -444,7 +442,9 @@ function infer(
         },
         constraints: [...constraints, ...newConstraints],
         // assumptions have already been used, so they can be deleted.
-        assumptions: assumptions.filter(v => !fnargs.includes(v.node.name))
+        assumptions: assumptions.filter(
+          a => !fnargs.includes(a.variable.node.name)
+        )
       };
     }
 
@@ -554,15 +554,15 @@ function infer(
           // the generalized polytype of the value to be bound.
           ...bodyInference.assumptions
             // Consider variables to be bound
-            .filter(v => toBeBound(v.node.name))
-            .map(v => {
+            .filter(a => toBeBound(a.variable.node.name))
+            .map(a => {
               // We just filter the assumptions to the variables
               // that are bound, so we know it must is defined.
               const bInfo = bindingsInfo.find(
-                bi => bi.binding.variable.name === v.node.name
+                bi => bi.binding.variable.name === a.variable.node.name
               )!;
               return constImplicitInstance(
-                v,
+                a,
                 monovars,
                 bInfo.inference.result.info.resultingType
               );
@@ -574,7 +574,9 @@ function infer(
           )
         ],
         assumptions: [
-          ...bodyInference.assumptions.filter(v => !toBeBound(v.node.name)),
+          ...bodyInference.assumptions.filter(
+            a => !toBeBound(a.variable.node.name)
+          ),
           ...flatMap(bi => bi.inference.assumptions, bindingsInfo)
         ]
       };
@@ -675,11 +677,11 @@ function infer(
             constraints: [
               ...constraints,
               ...assumptions
-                .filter(a => a.node.name === c.variable.name)
-                .map(a => constEqual(a, vartype, "expression-type"))
+                .filter(a => a.variable.node.name === c.variable.name)
+                .map(a => constEqual(a.variable, vartype, "expression-type"))
             ],
             assumptions: assumptions.filter(
-              a => a.node.name !== c.variable.name
+              a => a.variable.node.name !== c.variable.name
             )
           }
         };
@@ -843,22 +845,28 @@ function infer(
 
           ...body.constraints,
           ...body.assumptions
-            .filter(a => variableNames.includes(a.node.name))
+            .filter(a => variableNames.includes(a.variable.node.name))
             .map(a => {
-              const name = a.node.name;
+              const name = a.variable.node.name;
               const idx = variableNames.indexOf(name);
               if (idx < 0) {
                 throw new InvariantViolation(
                   `Could not find variable in the list of assumptions.`
                 );
               }
-              return constEqual(a, variableTypes[idx], "expression-type");
+              return constEqual(
+                a.variable,
+                variableTypes[idx],
+                "expression-type"
+              );
             })
         ],
 
         assumptions: [
           ...form.assumptions,
-          ...body.assumptions.filter(a => !variableNames.includes(a.node.name))
+          ...body.assumptions.filter(
+            a => !variableNames.includes(a.variable.node.name)
+          )
         ]
       };
     }
@@ -978,7 +986,7 @@ function assumptionsToConstraints(
   env: ExternalEnvironment
 ): TConstraint[] {
   return maybeMap(a => {
-    const t = lookupVariableType(a.node.name, env);
+    const t = lookupVariableType(a.variable.node.name, env);
     return t && constExplicitInstance(a, t);
   }, assumptions);
 }
@@ -1004,10 +1012,10 @@ function groupAssumptions(
   unknowns: TAssumption[];
 } {
   const internals = assumptions.filter(
-    v => v.node.name in internalEnv.variables
+    a => a.variable.node.name in internalEnv.variables
   );
   const externals = assumptions.filter(
-    v => lookupVariableType(v.node.name, externalEnv) !== null
+    a => lookupVariableType(a.variable.node.name, externalEnv) !== null
   );
   return {
     internals,
@@ -1136,8 +1144,8 @@ export function inferModule(
 
     ...assumptionsToConstraints(assumptions.externals, externalEnv),
 
-    ...assumptions.internals.map(v =>
-      constImplicitInstance(v, [], internalEnv.variables[v.node.name])
+    ...assumptions.internals.map(a =>
+      constImplicitInstance(a, [], internalEnv.variables[a.variable.node.name])
     )
   ];
 
@@ -1149,11 +1157,9 @@ export function inferModule(
       body: body.map(s => applySubstitutionToSyntax(s, solution))
     },
     unknowns: assumptions.unknowns.map(
-      (v): TAssumption => {
-        return applySubstitutionToExpr(v, solution) as S.SVariableReference<
-          Typed
-        >;
-      }
+      (a): TAssumption => ({
+        variable: applyTypeSubstitutionToVariable(a.variable, solution)
+      })
     )
   };
 }
@@ -1185,8 +1191,8 @@ export function inferExpressionInModule(
 
     ...assumptionsToConstraints(assumptions.externals, externalEnv),
 
-    ...assumptions.internals.map(v =>
-      constImplicitInstance(v, [], internalEnv.variables[v.node.name])
+    ...assumptions.internals.map(a =>
+      constImplicitInstance(a, [], internalEnv.variables[a.variable.node.name])
     )
   ];
 
@@ -1195,11 +1201,9 @@ export function inferExpressionInModule(
   return {
     typedExpression: applySubstitutionToExpr(inference.result, solution),
     unknowns: assumptions.unknowns.map(
-      (v): TAssumption => {
-        return applySubstitutionToExpr(v, solution) as S.SVariableReference<
-          Typed
-        >;
-      }
+      (a): TAssumption => ({
+        variable: applyTypeSubstitutionToVariable(a.variable, solution)
+      })
     )
   };
 }

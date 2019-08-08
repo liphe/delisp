@@ -206,12 +206,12 @@ const delispEval = async (syntax: Syntax): Promise<DelispEvalResult> => {
     [
       ...result.unknowns,
       ...(expressionResult ? expressionResult.unknowns : [])
-    ].forEach(v => {
+    ].forEach(u => {
       console.warn(
         theme.warn(
-          `Unknown variable ${v.node.name} expected with type ${printType(
-            v.info.resultingType
-          )}`
+          `Unknown variable ${
+            u.variable.node.name
+          } expected with type ${printType(u.variable.info.resultingType)}`
         )
       );
     });

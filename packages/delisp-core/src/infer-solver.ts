@@ -20,6 +20,16 @@ import * as T from "./types";
 import { unify } from "./type-unify";
 import { difference, flatMap, intersection, union } from "./utils";
 
+// A TAssumption is a variable instance for which we have assumed the
+// type. Those variables are to be bound (and assumption removed)
+// later, either by `let`, `lambda`, or global definitions.  Note: it
+// is normal to have multiple assumptions (instances) for the same
+// variable. Assumptions will be converted to additional constraints
+// at the end of the inference process.
+export type TAssumption = {
+  variable: S.SVariableReference<Typed>;
+};
+
 type ConstraintKind = "expression-type" | "resulting-type" | "effect-type";
 
 // Constraints impose which types should be equal (unified) and which
@@ -30,7 +40,7 @@ export type TConstraint =
   | TConstraintExplicitInstance;
 
 function constraintExpression(c: TConstraint): S.Expression<Typed> {
-  return c.tag === "equal-constraint" ? c.expr : c.variable;
+  return c.tag === "equal-constraint" ? c.expr : c.assumption.variable;
 }
 
 // A constraint stating that an expression's type should be equal to a
@@ -62,16 +72,16 @@ export function constEffect(
 // provided some type annotations.
 interface TConstraintExplicitInstance {
   tag: "explicit-instance-constraint";
-  variable: S.SVariableReference<Typed>;
+  assumption: TAssumption;
   t: T.TypeSchema;
 }
 export function constExplicitInstance(
-  variable: S.SVariableReference<Typed>,
+  assumption: TAssumption,
   t: T.TypeSchema
 ): TConstraintExplicitInstance {
   return {
     tag: "explicit-instance-constraint",
-    variable,
+    assumption,
     t
   };
 }
@@ -93,19 +103,19 @@ export function constExplicitInstance(
 //
 interface TConstraintImplicitInstance {
   tag: "implicit-instance-constraint";
-  variable: S.SVariableReference<Typed>;
+  assumption: TAssumption;
   t: T.Type;
   monovars: string[];
 }
 
 export function constImplicitInstance(
-  variable: S.SVariableReference<Typed>,
+  assumption: TAssumption,
   monovars: T.Var[],
   t: T.Type
 ): TConstraintImplicitInstance {
   return {
     tag: "implicit-instance-constraint",
-    variable,
+    assumption,
     monovars: monovars.map(v => v.node.name),
     t
   };
@@ -134,17 +144,17 @@ export function debugConstraints(constraints: TConstraint[]) {
         );
       case "implicit-instance-constraint":
         return console.log(
-          `${pprint(c.variable, 40)} is implicit instance of ${printType(
-            c.t,
-            false
-          )}`
+          `${pprint(
+            c.assumption.variable,
+            40
+          )} is implicit instance of ${printType(c.t, false)}`
         );
       case "explicit-instance-constraint":
         return console.log(
-          `${pprint(c.variable, 40)} is explicit instance of ${printType(
-            c.t.mono,
-            false
-          )}`
+          `${pprint(
+            c.assumption.variable,
+            40
+          )} is explicit instance of ${printType(c.t.mono, false)}`
         );
     }
   });
@@ -165,12 +175,12 @@ function activevars(constraints: TConstraint[]): string[] {
         return equal(exprType(c.expr, c.kind), c.t);
       case "implicit-instance-constraint":
         return union(
-          listTypeVariables(exprType(c.variable, "expression-type")),
+          listTypeVariables(exprType(c.assumption.variable, "expression-type")),
           intersection(listTypeVariables(c.t), c.monovars)
         );
       case "explicit-instance-constraint":
         return union(
-          listTypeVariables(exprType(c.variable, "expression-type")),
+          listTypeVariables(exprType(c.assumption.variable, "expression-type")),
           difference(listTypeVariables(c.t.mono), c.t.tvars)
         );
     }
@@ -220,14 +230,18 @@ function applySubstitutionToConstraint(
     case "implicit-instance-constraint":
       return {
         tag: "implicit-instance-constraint",
-        variable: applyTypeSubstitutionToVariable(c.variable, s),
+        assumption: {
+          variable: applyTypeSubstitutionToVariable(c.assumption.variable, s)
+        },
         t: applySubstitution(c.t, s),
         monovars: flatMap(name => substituteVar(name, s), c.monovars)
       };
     case "explicit-instance-constraint":
       return {
         tag: "explicit-instance-constraint",
-        variable: applyTypeSubstitutionToVariable(c.variable, s),
+        assumption: {
+          variable: applyTypeSubstitutionToVariable(c.assumption.variable, s)
+        },
         t: applySubstitutionToPolytype(c.t, s)
       };
   }
@@ -291,7 +305,7 @@ export function solve(
             "Expression would have an infinity type",
             constraint.tag === "equal-constraint"
               ? constraint.expr.location
-              : constraint.variable.location
+              : constraint.assumption.variable.location
           )
         );
       }
@@ -348,7 +362,7 @@ ${printType(applySubstitution(exprType, solution), false)}
       return solve(
         [
           constEqual(
-            constraint.variable,
+            constraint.assumption.variable,
             openFunctionEffect(instantiate(constraint.t)),
             "expression-type"
           ),
@@ -360,7 +374,7 @@ ${printType(applySubstitution(exprType, solution), false)}
     case "implicit-instance-constraint": {
       const t = generalize(constraint.t, constraint.monovars);
       return solve(
-        [constExplicitInstance(constraint.variable, t), ...rest],
+        [constExplicitInstance(constraint.assumption, t), ...rest],
         solution
       );
     }
