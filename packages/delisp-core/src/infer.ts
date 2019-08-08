@@ -556,8 +556,7 @@ function infer(
               return constImplicitInstance(
                 v,
                 monovars,
-                bInfo.inference.result.info.resultingType,
-                "expression-type"
+                bInfo.inference.result.info.resultingType
               );
             }),
 
@@ -980,7 +979,7 @@ function assumptionsToConstraints(
 ): TConstraint[] {
   return maybeMap(a => {
     const t = lookupVariableType(a.node.name, env);
-    return t && constExplicitInstance(a, t, "expression-type");
+    return t && constExplicitInstance(a, t);
   }, assumptions);
 }
 
@@ -1138,12 +1137,7 @@ export function inferModule(
     ...assumptionsToConstraints(assumptions.externals, externalEnv),
 
     ...assumptions.internals.map(v =>
-      constImplicitInstance(
-        v,
-        [],
-        internalEnv.variables[v.node.name],
-        "expression-type"
-      )
+      constImplicitInstance(v, [], internalEnv.variables[v.node.name])
     )
   ];
 
@@ -1192,12 +1186,7 @@ export function inferExpressionInModule(
     ...assumptionsToConstraints(assumptions.externals, externalEnv),
 
     ...assumptions.internals.map(v =>
-      constImplicitInstance(
-        v,
-        [],
-        internalEnv.variables[v.node.name],
-        "expression-type"
-      )
+      constImplicitInstance(v, [], internalEnv.variables[v.node.name])
     )
   ];
 

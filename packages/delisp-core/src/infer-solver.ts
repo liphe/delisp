@@ -63,14 +63,16 @@ interface TConstraintExplicitInstance {
   tag: "explicit-instance-constraint";
   variable: S.SVariableReference<S.Typed>;
   t: T.TypeSchema;
-  kind: ConstraintKind;
 }
 export function constExplicitInstance(
   variable: S.SVariableReference<S.Typed>,
-  t: T.TypeSchema,
-  kind: ConstraintKind
+  t: T.TypeSchema
 ): TConstraintExplicitInstance {
-  return { tag: "explicit-instance-constraint", variable, t, kind };
+  return {
+    tag: "explicit-instance-constraint",
+    variable,
+    t
+  };
 }
 
 // A constraint stating that an expression's type is an instance of a
@@ -93,21 +95,18 @@ interface TConstraintImplicitInstance {
   variable: S.SVariableReference<S.Typed>;
   t: T.Type;
   monovars: string[];
-  kind: ConstraintKind;
 }
 
 export function constImplicitInstance(
   variable: S.SVariableReference<S.Typed>,
   monovars: T.Var[],
-  t: T.Type,
-  kind: ConstraintKind
+  t: T.Type
 ): TConstraintImplicitInstance {
   return {
     tag: "implicit-instance-constraint",
     variable,
     monovars: monovars.map(v => v.node.name),
-    t,
-    kind
+    t
   };
 }
 
@@ -165,12 +164,12 @@ function activevars(constraints: TConstraint[]): string[] {
         return equal(exprType(c.expr, c.kind), c.t);
       case "implicit-instance-constraint":
         return union(
-          listTypeVariables(exprType(c.variable, c.kind)),
+          listTypeVariables(exprType(c.variable, "expression-type")),
           intersection(listTypeVariables(c.t), c.monovars)
         );
       case "explicit-instance-constraint":
         return union(
-          listTypeVariables(exprType(c.variable, c.kind)),
+          listTypeVariables(exprType(c.variable, "expression-type")),
           difference(listTypeVariables(c.t.mono), c.t.tvars)
         );
     }
@@ -222,15 +221,13 @@ function applySubstitutionToConstraint(
         tag: "implicit-instance-constraint",
         variable: applyTypeSubstitutionToVariable(c.variable, s),
         t: applySubstitution(c.t, s),
-        monovars: flatMap(name => substituteVar(name, s), c.monovars),
-        kind: c.kind
+        monovars: flatMap(name => substituteVar(name, s), c.monovars)
       };
     case "explicit-instance-constraint":
       return {
         tag: "explicit-instance-constraint",
         variable: applyTypeSubstitutionToVariable(c.variable, s),
-        t: applySubstitutionToPolytype(c.t, s),
-        kind: c.kind
+        t: applySubstitutionToPolytype(c.t, s)
       };
   }
 }
@@ -352,7 +349,7 @@ ${printType(applySubstitution(exprType, solution), false)}
           constEqual(
             constraint.variable,
             openFunctionEffect(instantiate(constraint.t)),
-            constraint.kind
+            "expression-type"
           ),
           ...rest
         ],
@@ -362,10 +359,7 @@ ${printType(applySubstitution(exprType, solution), false)}
     case "implicit-instance-constraint": {
       const t = generalize(constraint.t, constraint.monovars);
       return solve(
-        [
-          constExplicitInstance(constraint.variable, t, constraint.kind),
-          ...rest
-        ],
+        [constExplicitInstance(constraint.variable, t), ...rest],
         solution
       );
     }
