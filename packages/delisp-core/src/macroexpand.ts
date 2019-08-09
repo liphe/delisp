@@ -23,6 +23,43 @@ function macroexpandLabel(
 `);
 }
 
+function macroexpandFuncall(
+  funcall: S.SFunctionCall<WithErrors>
+): S.Expression<WithErrors> {
+  return {
+    ...funcall,
+    node: {
+      tag: "function-call",
+      fn: funcall.node.fn,
+      userArguments: [
+        convertExpr(sexpr`*context*`),
+        ...funcall.node.userArguments
+      ]
+    }
+  };
+}
+
+function macroexpandLambda(
+  lambda: S.SFunction<WithErrors>
+): S.Expression<WithErrors> {
+  const { lambdaList } = lambda.node;
+  return {
+    ...lambda,
+    node: {
+      tag: "function",
+      lambdaList: {
+        tag: "function-lambda-list",
+        userPositionalArguments: [
+          { tag: "identifier", name: "*context*", location: lambda.location },
+          ...lambdaList.userPositionalArguments
+        ],
+        location: lambdaList.location
+      },
+      body: lambda.node.body
+    }
+  };
+}
+
 /** Run a single macroexpansion step. */
 export function macroexpandExpressionStep(
   expr: S.Expression<WithErrors>
@@ -34,6 +71,10 @@ export function macroexpandExpressionStep(
     } else {
       return [expr, false];
     }
+  } else if (expr.node.tag === "function") {
+    return [macroexpandLambda({ ...expr, node: expr.node }), false];
+  } else if (expr.node.tag === "function-call") {
+    return [macroexpandFuncall({ ...expr, node: expr.node }), false];
   } else {
     return [expr, false];
   }
@@ -46,8 +87,8 @@ export function macroexpandExpression(
   // Note that we do not want (necessarily) to macroexpand its
   // subforms. We just expand the toplevel form, and continue with the
   // result of this one!
-  const [expandedExpr, expanded] = macroexpandExpressionStep(expr);
-  if (expanded) {
+  const [expandedExpr, expandMore] = macroexpandExpressionStep(expr);
+  if (expandMore) {
     return macroexpandExpression(expandedExpr);
   } else {
     // Only after the top expression can't be expanded anymore, we

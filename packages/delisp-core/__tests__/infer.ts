@@ -9,7 +9,7 @@ import * as S from "../src/syntax";
 import { Typed } from "../src/syntax-typed";
 import { createModule, readModule } from "../src/module";
 import { WithErrors, readSyntax } from "../src/syntax-convert";
-import { macroexpandExpression } from "../src/macroexpand";
+import { macroexpandExpression, macroexpandModule } from "../src/macroexpand";
 import { printType } from "../src/type-printer";
 
 function normalizeType(t: string): string {
@@ -83,7 +83,7 @@ function typeOf(
   const syntax = readExpr(str);
   const expandedSyntax = macroexpandExpression(syntax);
 
-  const m = readModule(moduleCode);
+  const m = macroexpandModule(readModule(moduleCode));
   const { typedModule } = inferModule(m, externalEnv);
 
   const typedExpr = inferType(
