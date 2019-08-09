@@ -12,6 +12,7 @@ function evaluateString(str: string): unknown {
   });
   const s = macroexpandSyntax(readSyntax(`(let {*context* {}} ${str})`));
   const sandbox = createSandbox(() => null);
+
   return evaluate(s, env, sandbox);
 }
 
@@ -97,15 +98,19 @@ describe("Evaluation", () => {
   });
 
   describe("lists", () => {
-    expect(evaluateString("(empty? [])")).toBe(true);
-    expect(evaluateString("(not (empty? (cons 1 [])))")).toBe(true);
-    // expect(evaluateString("(first (cons 1 []))")).toBe(1);
-    expect(evaluateString("(rest (cons 1 []))")).toEqual([]);
+    it("basic list operations work", () => {
+      expect(evaluateString("(empty? [])")).toBe(true);
+      expect(evaluateString("(not (empty? (cons 1 [])))")).toBe(true);
+      // expect(evaluateString("(first (cons 1 []))")).toBe(1);
+      expect(evaluateString("(rest (cons 1 []))")).toEqual([]);
+    });
   });
 
   describe("conditionals", () => {
-    expect(evaluateString("(if true 1 2)")).toBe(1);
-    expect(evaluateString("(if false 1 2)")).toBe(2);
+    it("simple conditionals evaluate correctly", () => {
+      expect(evaluateString("(if true 1 2)")).toBe(1);
+      expect(evaluateString("(if false 1 2)")).toBe(2);
+    });
   });
 
   describe("Primitives", () => {
