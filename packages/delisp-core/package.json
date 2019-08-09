@@ -4,8 +4,8 @@
   "main": "dist/src/index.js",
   "license": "MIT",
   "scripts": {
-    "build": "tsc --build tsconfig.build.json",
-    "build:all": "tsc --build tsconfig.json",
+    "build": "tsc --build tsconfig.json",
+    "build:all": "tsc --build tsconfig.all.json",
     "test": "jest"
   },
   "files": [
