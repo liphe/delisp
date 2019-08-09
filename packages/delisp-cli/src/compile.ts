@@ -19,6 +19,9 @@ import { CompileFileResult, getOutputFiles } from "./compile-output";
 import * as fs from "./fs-helpers";
 import { loadModule } from "./module";
 
+import makeDebug from "debug";
+const debug = makeDebug("delisp:cli");
+
 const mkdirp = promisify(_mkdirp);
 
 export async function resolveDependency(name: string) {
@@ -32,6 +35,8 @@ export async function compileFile(
   options: CompileOptions
 ): Promise<CompileFileResult> {
   const { jsFile, infoFile, dtsFile } = await getOutputFiles(file);
+
+  debug(`Reading module ${file}`);
 
   const content = await fs.readFile(file, "utf8");
   const module = await loadModule(content, options);
@@ -47,6 +52,8 @@ export async function compileFile(
     defaultEnvironment,
     externalEnvironment
   );
+
+  debug(`Type checking ${file}`);
 
   const inferResult = inferModule(module, environment);
   const typedModule = inferResult.typedModule;
@@ -66,6 +73,8 @@ export async function compileFile(
 
   await mkdirp(path.dirname(jsFile));
 
+  debug(`Compiling ${file}`);
+
   const code = compileModuleToString(typedModule, {
     esModule: options.moduleFormat === "esm",
     getOutputFile(file: string): string {
@@ -83,6 +92,8 @@ export async function compileFile(
     const content = generateTSModuleDeclaration(typedModule);
     await fs.writeFile(dtsFile, content);
   }
+
+  debug(`Compilation of ${file} finished`);
 
   return { jsFile, infoFile, dtsFile };
 }
