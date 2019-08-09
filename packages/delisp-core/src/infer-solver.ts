@@ -14,7 +14,8 @@ import {
   instantiate,
   listTypeVariables,
   Substitution,
-  openFunctionEffect
+  openFunctionEffect,
+  closeFunctionEffect
 } from "./type-utils";
 import * as T from "./types";
 import { unify } from "./type-unify";
@@ -330,11 +331,14 @@ Expected ${printType(
               false
             )}
 
-${printType(applySubstitution(t, solution), false)}
+Expression had type
 
-vs.
+  ${printType(applySubstitution(exprType, solution), false)}
 
-${printType(applySubstitution(exprType, solution), false)}`,
+but we expected the type
+
+  ${printType(applySubstitution(t, solution), false)}
+`,
 
             constraintExpression(constraint).location
           )
@@ -367,7 +371,7 @@ ${printType(applySubstitution(exprType, solution), false)}
     }
     case "explicit-instance-constraint": {
       const { variable, primaryResultingType } = constraint.assumption;
-      const t = instantiate(constraint.t);
+      const t = instantiate(closeFunctionEffect(constraint.t));
 
       return solve(
         [

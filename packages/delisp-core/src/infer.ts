@@ -446,7 +446,7 @@ function infer(
       );
       const argtypes = fnargs.map(_ => generateUniqueTVar());
 
-      const bodyEffect = generateUniqueTVar();
+      const bodyEffect = T.effect([], generateUniqueTVar());
       const valuesType = generateUniqueTVar();
       const fnType = T.multiValuedFunction(argtypes, bodyEffect, valuesType);
 
@@ -654,11 +654,16 @@ function infer(
         assumptions: inferred.assumptions,
         constraints: [
           ...inferred.constraints,
+
           constEqual(
             inferred.result,
-            inferred.result.info.selfType,
-            "self-type",
-            t
+            inferred.result.info.resultingType,
+            "resulting-type",
+            // Note that we can't use the selfType here, because if
+            // the body is a variable with a function type, then
+            // self-typed will could be closed over the effects. See
+            // `closeFunctionEffect`.
+            multipleValues ? T.values([t]) : t
           ),
           constEffect(inferred.result, effect)
         ]
