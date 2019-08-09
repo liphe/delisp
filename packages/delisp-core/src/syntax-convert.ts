@@ -130,7 +130,7 @@ function parseLambdaList(ll: ASExpr): S.LambdaList {
 
   return {
     tag: "function-lambda-list",
-    userPositionalArguments: symbols.map(parseIdentifier),
+    positionalArguments: symbols.map(parseIdentifier),
     location: ll.location
   };
 }
@@ -728,7 +728,7 @@ function convertList(list: ASExprList): ExpressionWithErrors {
     return successFrom(list, {
       tag: "function-call",
       fn: convertExpr(fn),
-      userArguments: args.map(convertExpr)
+      arguments: args.map(convertExpr)
     });
   }
 }

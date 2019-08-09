@@ -14,7 +14,7 @@ describe("ReadModule", () => {
                 name: "sum"
               }
             },
-            userArguments: [
+            arguments: [
               { node: { tag: "number", value: 1 } },
               { node: { tag: "number", value: 2 } },
               { node: { tag: "number", value: 3 } }
@@ -30,7 +30,7 @@ describe("ReadModule", () => {
                 name: "+"
               }
             },
-            userArguments: [
+            arguments: [
               { node: { tag: "number", value: 4 } },
               { node: { tag: "number", value: 5 } }
             ]
@@ -45,7 +45,7 @@ describe("ReadModule", () => {
                 name: "inc"
               }
             },
-            userArguments: [{ node: { tag: "number", value: 6 } }]
+            arguments: [{ node: { tag: "number", value: 6 } }]
           }
         }
       ]

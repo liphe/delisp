@@ -31,10 +31,7 @@ function macroexpandFuncall(
     node: {
       tag: "function-call",
       fn: funcall.node.fn,
-      userArguments: [
-        convertExpr(sexpr`*context*`),
-        ...funcall.node.userArguments
-      ]
+      arguments: [convertExpr(sexpr`*context*`), ...funcall.node.arguments]
     }
   };
 }
@@ -49,9 +46,9 @@ function macroexpandLambda(
       tag: "function",
       lambdaList: {
         tag: "function-lambda-list",
-        userPositionalArguments: [
+        positionalArguments: [
           { tag: "identifier", name: "*context*", location: lambda.location },
-          ...lambdaList.userPositionalArguments
+          ...lambdaList.positionalArguments
         ],
         location: lambdaList.location
       },

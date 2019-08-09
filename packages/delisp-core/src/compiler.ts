@@ -100,12 +100,12 @@ function compileLambda(
   env: Environment,
   _multipleValues: boolean
 ): JS.ArrowFunctionExpression {
-  const newEnv = fn.node.lambdaList.userPositionalArguments.reduce(
+  const newEnv = fn.node.lambdaList.positionalArguments.reduce(
     (e, param) => addBinding(param.name, e),
     env
   );
 
-  const jsargs = fn.node.lambdaList.userPositionalArguments.map(
+  const jsargs = fn.node.lambdaList.positionalArguments.map(
     (param): JS.Pattern =>
       identifier(lookupBindingOrError(param.name, newEnv).name)
   );
@@ -120,7 +120,7 @@ function compileFunctionCall(
   env: Environment,
   multipleValues: boolean
 ): JS.Expression {
-  const compiledArgs = funcall.node.userArguments.map(arg =>
+  const compiledArgs = funcall.node.arguments.map(arg =>
     compile(arg, env, false)
   );
   if (

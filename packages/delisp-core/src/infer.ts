@@ -437,9 +437,7 @@ function infer(
       };
     }
     case "function": {
-      const fnargs = expr.node.lambdaList.userPositionalArguments.map(
-        a => a.name
-      );
+      const fnargs = expr.node.lambdaList.positionalArguments.map(a => a.name);
       const argtypes = fnargs.map(_ => generateUniqueTVar());
 
       const bodyEffect = T.effect([], generateUniqueTVar());
@@ -486,7 +484,7 @@ function infer(
 
     case "function-call": {
       const ifn = infer(expr.node.fn, monovars, internalTypes, false);
-      const iargs = inferMany(expr.node.userArguments, monovars, internalTypes);
+      const iargs = inferMany(expr.node.arguments, monovars, internalTypes);
 
       const primaryType = generateUniqueTVar();
       const valuesType = type`(values ${primaryType} <| _)`;
@@ -504,7 +502,7 @@ function infer(
           node: {
             ...expr.node,
             fn: ifn.result,
-            userArguments: iargs.result
+            arguments: iargs.result
           },
           info: multipleValues
             ? delegatedType(effect, valuesType)

@@ -54,7 +54,7 @@ interface SFunctionCallF<E> {
   // User provided function arguments for this function call. This is
   // internal. Use functions from syntax-functions to get this
   // information.
-  userArguments: E[];
+  arguments: E[];
 }
 
 export interface LambdaList {
@@ -62,7 +62,7 @@ export interface LambdaList {
   // The user-provided arguments for the lambda-list. This is
   // internal. Use functions from syntax-function to get this
   // information.
-  userPositionalArguments: Identifier[];
+  positionalArguments: Identifier[];
   location: Location;
 }
 
