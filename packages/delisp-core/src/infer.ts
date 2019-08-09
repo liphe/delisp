@@ -34,10 +34,6 @@ import { moduleExportedDefinitions } from "./module";
 import primitives from "./primitives";
 import * as S from "./syntax";
 import { Typed } from "./syntax-typed";
-import {
-  lambdaListAllArguments,
-  funcallAllArguments
-} from "./syntax-functions";
 import { generateUniqueTVar } from "./type-generate";
 import { type } from "./type-tag";
 import {
@@ -441,7 +437,7 @@ function infer(
       };
     }
     case "function": {
-      const fnargs = lambdaListAllArguments(expr.node.lambdaList).map(
+      const fnargs = expr.node.lambdaList.userPositionalArguments.map(
         a => a.name
       );
       const argtypes = fnargs.map(_ => generateUniqueTVar());
@@ -490,11 +486,7 @@ function infer(
 
     case "function-call": {
       const ifn = infer(expr.node.fn, monovars, internalTypes, false);
-      const iargs = inferMany(
-        funcallAllArguments({ ...expr, node: { ...expr.node } }),
-        monovars,
-        internalTypes
-      );
+      const iargs = inferMany(expr.node.userArguments, monovars, internalTypes);
 
       const primaryType = generateUniqueTVar();
       const valuesType = type`(values ${primaryType} <| _)`;

@@ -27,10 +27,6 @@ import { moduleExports, moduleImports } from "./module";
 import { pprint } from "./printer";
 import * as S from "./syntax";
 import { Typed } from "./syntax-typed";
-import {
-  funcallAllArguments,
-  lambdaListAllArguments
-} from "./syntax-functions";
 import { printType } from "./type-printer";
 import { Type } from "./types";
 import { flatMap, last, mapObject, maybeMap, range } from "./utils";
@@ -104,12 +100,12 @@ function compileLambda(
   env: Environment,
   _multipleValues: boolean
 ): JS.ArrowFunctionExpression {
-  const newEnv = lambdaListAllArguments(fn.node.lambdaList).reduce(
+  const newEnv = fn.node.lambdaList.userPositionalArguments.reduce(
     (e, param) => addBinding(param.name, e),
     env
   );
 
-  const jsargs = lambdaListAllArguments(fn.node.lambdaList).map(
+  const jsargs = fn.node.lambdaList.userPositionalArguments.map(
     (param): JS.Pattern =>
       identifier(lookupBindingOrError(param.name, newEnv).name)
   );
@@ -124,7 +120,7 @@ function compileFunctionCall(
   env: Environment,
   multipleValues: boolean
 ): JS.Expression {
-  const compiledArgs = funcallAllArguments(funcall).map(arg =>
+  const compiledArgs = funcall.node.userArguments.map(arg =>
     compile(arg, env, false)
   );
   if (
