@@ -1,4 +1,4 @@
-import { normalizeRow } from "./type-utils";
+import { normalizeRow, decomposeFunctionType } from "./type-utils";
 import * as T from "./types";
 import { range } from "./utils";
 
@@ -84,6 +84,13 @@ function printApplicationType(
       }
       case "effect": {
         const row = normalizeRow(type.node.args[0]);
+        if (
+          simplify &&
+          row.fields.length === 0 &&
+          row.extends.node.tag === "type-variable"
+        ) {
+          return _printType(row.extends, normalizeVar, simplify);
+        }
 
         const fields = row.fields.map(f => " " + f.label).join("");
         const extending =
@@ -116,12 +123,14 @@ function printApplicationType(
         return printValuesType(type.node.args[0], normalizeVar, simplify);
 
       case "->": {
-        const { op, args } = type.node;
+        const { args, effect, output } = decomposeFunctionType(type);
         return (
-          "(" +
-          [op, ...args]
-            .map((t, i) => _printType(t, normalizeVar, i === args.length))
-            .join(" ") +
+          "(->" +
+          args.map(t => " " + _printType(t, normalizeVar)).join("") +
+          " " +
+          _printType(effect, normalizeVar, true) +
+          " " +
+          _printType(output, normalizeVar, true) +
           ")"
         );
       }
