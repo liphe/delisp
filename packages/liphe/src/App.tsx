@@ -37,12 +37,25 @@ function readModuleOrError(code: string): ASTResult {
   }
 }
 
+const Panel = styled.div`
+  width: 50%;
+`;
+
 function AST(props: { code: string }) {
   const { code } = props;
   const result = readModuleOrError(code);
   switch (result.tag) {
     case "success":
-      return <ModuleExplorer module={result.module} />;
+      return (
+        <div>
+          <Panel>
+            <ModuleExplorer module={result.module} />
+          </Panel>
+          <Panel>
+            <pre>javascript</pre>
+          </Panel>
+        </div>
+      );
     case "error":
       return (
         <div>
