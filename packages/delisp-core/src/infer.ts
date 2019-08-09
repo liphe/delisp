@@ -119,7 +119,7 @@ function constraintMonomorphicAssumption(
 ): TConstraint[] {
   const { variable } = assumption;
   return [
-    constEqual(variable, variable.info.expressionType, "expression-type", type),
+    constEqual(variable, variable.info.selfType, "self-type", type),
     constEqual(variable, assumption.primaryResultingType, "primary-type", type)
   ];
 }
@@ -150,7 +150,7 @@ function infer(
   // resulting type will be wrapped in a values type.
   function singleType(effect: Type, type: Type): Typed {
     return new Typed({
-      expressionType: type,
+      selfType: type,
       resultingType: multipleValues ? T.values([type]) : undefined,
       effect
     });
@@ -160,7 +160,7 @@ function infer(
   // as equal to the type of a subexpression.
   function delegatedType(effect: Type, type: Type): Typed {
     return new Typed({
-      expressionType: type,
+      selfType: type,
       effect
     });
   }
@@ -350,7 +350,7 @@ function infer(
     }
 
     case "variable-reference": {
-      const expressionType = generateUniqueTVar();
+      const selfType = generateUniqueTVar();
       const primaryResultingType = generateUniqueTVar();
       const effect = generateUniqueTVar();
       const typedVar = {
@@ -359,7 +359,7 @@ function infer(
           ...expr.node
         },
         info: new Typed({
-          expressionType,
+          selfType,
           resultingType: multipleValues
             ? T.values([primaryResultingType])
             : primaryResultingType,
@@ -656,8 +656,8 @@ function infer(
           ...inferred.constraints,
           constEqual(
             inferred.result,
-            inferred.result.info.expressionType,
-            "expression-type",
+            inferred.result.info.selfType,
+            "self-type",
             t
           ),
           constEffect(inferred.result, effect)

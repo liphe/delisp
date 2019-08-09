@@ -168,7 +168,7 @@ function activevars(constraints: TConstraint[]): string[] {
       case "implicit-instance-constraint": {
         const { variable } = c.assumption;
         return union(
-          listTypeVariables(variable.info.expressionType),
+          listTypeVariables(variable.info.selfType),
           listTypeVariables(variable.info.resultingType),
           intersection(listTypeVariables(c.t), c.monovars)
         );
@@ -176,7 +176,7 @@ function activevars(constraints: TConstraint[]): string[] {
       case "explicit-instance-constraint": {
         const { variable } = c.assumption;
         return union(
-          listTypeVariables(variable.info.expressionType),
+          listTypeVariables(variable.info.selfType),
           listTypeVariables(variable.info.resultingType),
           difference(listTypeVariables(c.t.mono), c.t.tvars)
         );
@@ -371,12 +371,7 @@ ${printType(applySubstitution(exprType, solution), false)}
 
       return solve(
         [
-          constEqual(
-            variable,
-            variable.info.expressionType,
-            "expression-type",
-            t
-          ),
+          constEqual(variable, variable.info.selfType, "expression-type", t),
 
           constEqual(
             variable,

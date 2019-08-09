@@ -24,7 +24,7 @@ export function applySubstitutionToExpr(
   return transformRecurExpr(s, expr => ({
     ...expr,
     info: new Typed({
-      expressionType: applySubstitution(expr.info.expressionType, env),
+      selfType: applySubstitution(expr.info.selfType, env),
       resultingType:
         expr.info._resultingType &&
         applySubstitution(expr.info._resultingType, env),

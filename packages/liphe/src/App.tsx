@@ -121,7 +121,7 @@ const PrettierEncoder: Encoder<React.ReactElement[]> = {
         }}
         title={
           source && isExpression(source)
-            ? printType(source.info.expressionType)
+            ? printType(source.info.selfType)
             : undefined
         }
       >

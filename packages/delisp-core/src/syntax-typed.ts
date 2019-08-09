@@ -7,18 +7,18 @@ export class Typed {
   // expression type. This should speed up as we avoid operating on
   // double the amount of types.
   _resultingType: Type | undefined;
-  expressionType: Type;
+  selfType: Type;
 
   constructor({
-    expressionType,
+    selfType,
     resultingType,
     effect
   }: {
-    expressionType: Type;
+    selfType: Type;
     resultingType?: Type;
     effect: Type;
   }) {
-    this.expressionType = expressionType;
+    this.selfType = selfType;
     this._resultingType = resultingType;
     this.effect = effect;
   }
@@ -43,6 +43,6 @@ export class Typed {
   // the parent function.
   //
   get resultingType() {
-    return this._resultingType || this.expressionType;
+    return this._resultingType || this.selfType;
   }
 }
