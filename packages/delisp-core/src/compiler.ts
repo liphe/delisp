@@ -132,14 +132,14 @@ function compileFunctionCall(
   ) {
     return compileInlinePrimitive(funcall.node.fn.node.name, compiledArgs);
   } else {
-    return {
+    return awaitExpr({
       type: "CallExpression",
       callee: compile(funcall.node.fn, env, false),
       arguments: [
         identifier(multipleValues ? "values" : "primaryValue"),
         ...compiledArgs
       ]
-    };
+    });
   }
 }
 
@@ -226,7 +226,7 @@ function compileLetBindings(
       identifier(lookupBindingOrError(b.variable.name, newenv).name)
   );
 
-  return {
+  return awaitExpr({
     type: "CallExpression",
     callee: arrowFunction(
       params,
@@ -234,7 +234,7 @@ function compileLetBindings(
       { async: true }
     ),
     arguments: expr.node.bindings.map(b => compile(b.value, env, false))
-  };
+  });
 }
 
 function compileVector(
@@ -427,7 +427,7 @@ function compileUnknown(
   };
 }
 
-export function compileSync(
+export function compile(
   expr: S.Expression,
   env: Environment,
   multipleValues: boolean
@@ -494,16 +494,8 @@ export function compileSync(
   }
 }
 
-export function compile(
-  expr: S.Expression,
-  env: Environment,
-  multipleValues: boolean
-): JS.Expression {
-  return awaitExpr(compileSync(expr, env, multipleValues));
-}
-
 function compileDefinition(def: S.SDefinition, env: Environment): JS.Statement {
-  const value = compileSync(def.node.value, env, false);
+  const value = compile(def.node.value, env, false);
   const name = lookupBindingOrError(def.node.variable.name, env).name;
   return env.defs.define(name, value);
 }
@@ -533,7 +525,7 @@ function compileTopLevel(
   } else {
     js = {
       type: "ExpressionStatement",
-      expression: compileSync(typedSyntax, env, multipleValues)
+      expression: compile(typedSyntax, env, multipleValues)
     };
     type = typedSyntax.info.resultingType;
   }
