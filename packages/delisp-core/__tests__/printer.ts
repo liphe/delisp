@@ -55,7 +55,7 @@ eee
 
   it("should retain partial type annotations", () => {
     prettySimilar(
-      `(the (-> string number _) (lambda (name age) {:name name :age age}))`
+      `(the (-> string number _ _) (lambda (name age) {:name name :age age}))`
     );
   });
 

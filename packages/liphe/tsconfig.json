@@ -7,6 +7,6 @@
   },
   "include": ["src/"],
   "references": [
-    { "path": "../delisp-core/tsconfig.build.json" }
+    { "path": "../delisp-core/tsconfig.json" }
   ]
 }

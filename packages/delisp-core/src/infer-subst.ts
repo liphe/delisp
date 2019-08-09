@@ -1,16 +1,30 @@
-import { assertNever } from "./invariant";
+import { assertNever, InvariantViolation } from "./invariant";
 import * as S from "./syntax";
+import { Typed } from "./syntax-typed";
 import { transformRecurExpr } from "./syntax-utils";
 import { applySubstitution, Substitution } from "./type-utils";
 
-export function applySubstitutionToExpr(
-  s: S.Expression<S.Typed>,
+export function applyTypeSubstitutionToVariable(
+  s: S.SVariableReference<Typed>,
   env: Substitution
-): S.Expression<S.Typed> {
+): S.SVariableReference<Typed> {
+  const result = applySubstitutionToExpr(s, env);
+  if (result.node.tag !== "variable-reference") {
+    throw new InvariantViolation(
+      `Replacing types to a syntax variable should still be syntax variable!`
+    );
+  }
+  return { ...s, node: result.node };
+}
+
+export function applySubstitutionToExpr(
+  s: S.Expression<Typed>,
+  env: Substitution
+): S.Expression<Typed> {
   return transformRecurExpr(s, expr => ({
     ...expr,
-    info: new S.Typed({
-      expressionType: applySubstitution(expr.info.expressionType, env),
+    info: new Typed({
+      selfType: applySubstitution(expr.info.selfType, env),
       resultingType:
         expr.info._resultingType &&
         applySubstitution(expr.info._resultingType, env),
@@ -20,9 +34,9 @@ export function applySubstitutionToExpr(
 }
 
 export function applySubstitutionToSyntax(
-  s: S.Syntax<S.Typed>,
+  s: S.Syntax<Typed>,
   env: Substitution
-): S.Syntax<S.Typed> {
+): S.Syntax<Typed> {
   if (S.isExpression(s)) {
     return applySubstitutionToExpr(s, env);
   } else if (s.node.tag === "definition") {

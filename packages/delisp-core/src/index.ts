@@ -48,9 +48,9 @@ export {
   SDefinition,
   SExport,
   STypeAlias,
-  Syntax,
-  Typed
+  Syntax
 } from "./syntax";
+export { Typed } from "./syntax-typed";
 export {
   exprFChildren,
   findSyntaxByOffset,

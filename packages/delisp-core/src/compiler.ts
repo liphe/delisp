@@ -26,6 +26,7 @@ import { InvariantViolation } from "./invariant";
 import { moduleExports, moduleImports } from "./module";
 import { pprint } from "./printer";
 import * as S from "./syntax";
+import { Typed } from "./syntax-typed";
 import {
   funcallAllArguments,
   lambdaListAllArguments
@@ -501,7 +502,7 @@ function compileTopLevel(
   env: Environment,
   multipleValues: boolean
 ): JS.Statement | null {
-  const typedSyntax = syntax as S.Syntax<Partial<S.Typed>, Partial<S.Typed>>;
+  const typedSyntax = syntax as S.Syntax<Partial<Typed>, Partial<Typed>>;
 
   if (
     S.isImport(typedSyntax) ||

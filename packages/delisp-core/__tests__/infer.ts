@@ -6,6 +6,7 @@ import {
 } from "../src/infer";
 import { ExternalEnvironment } from "../src/infer-environment";
 import * as S from "../src/syntax";
+import { Typed } from "../src/syntax-typed";
 import { createModule, readModule } from "../src/module";
 import { WithErrors, readSyntax } from "../src/syntax-convert";
 import { macroexpandExpression } from "../src/macroexpand";
@@ -35,15 +36,19 @@ expect.extend({
 function inferType(
   expr: S.Expression,
   env: ExternalEnvironment = defaultEnvironment,
-  m: S.Module<S.Typed, {}> = createModule(),
+  m: S.Module<Typed, {}> = createModule(),
   multipleValues: boolean
-): S.Expression<S.Typed> {
+): S.Expression<Typed> {
   const infer = inferExpressionInModule(expr, m, env, multipleValues);
 
-  const unknowns = infer.unknowns.filter(u => u.node.name !== "*context*");
+  const unknowns = infer.unknowns.filter(
+    u => u.variable.node.name !== "*context*"
+  );
   if (unknowns.length > 0) {
     throw new Error(
-      `Unknown variables ${infer.unknowns.map(v => v.node.name).join(" ")}`
+      `Unknown variables ${infer.unknowns
+        .map(v => v.variable.node.name)
+        .join(" ")}`
     );
   }
   return infer.typedExpression;
@@ -347,7 +352,7 @@ describe("Type inference", () => {
           "(-> ctx α β number)"
         );
         expect(typeOf("(the (-> ctx _a _ _b) (lambda (x) (+ x 42)))")).toBeType(
-          "(-> ctx number α number)"
+          "(-> ctx number (effect <| α) number)"
         );
 
         expect(
@@ -429,7 +434,7 @@ describe("Type inference", () => {
         1
         (* n (f (- n 1))))))`
           )
-        ).toBeType("(-> ctx number α number)");
+        ).toBeType("(-> ctx number (effect <| α) number)");
       });
 
       it("basic polymorphic function on lists should work", () => {
@@ -510,7 +515,7 @@ describe("Type inference", () => {
   describe(`Context argument`, () => {
     it("should infer the type of the context argument automatically", () => {
       const result = typeOf(`(lambda (x) (+ *context* x))`);
-      expect(result).toBeType(`(-> number number e number)`);
+      expect(result).toBeType(`(-> number number (effect <| e) number)`);
     });
   });
 

@@ -4,7 +4,7 @@ import vectorPrims from "./vector";
 
 const prims: Primitives = {
   unknown: {
-    type: "(-> _ctx string string number number _ a)",
+    type: "(-> _ctx string string number number (effect) a)",
     value: (
       message: string,
       file: string,

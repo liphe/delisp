@@ -47,13 +47,13 @@ describe("convertType", () => {
 
   it("should convert to functions", () => {
     expect(readAndConvert("  (->  string _ number)  ")).toMatchObject(
-      T.fn([T.string], T.var("_"), T.number)
+      T.fn([T.string], T.effect([], T.var("_")), T.number)
     );
 
     expect(readAndConvert("(-> string (-> string _ c) _ c)")).toMatchObject(
       T.fn(
-        [T.string, T.fn([T.string], T.var("_"), T.var("c"))],
-        T.var("_"),
+        [T.string, T.fn([T.string], T.effect([], T.var("_")), T.var("c"))],
+        T.effect([], T.var("_")),
         T.var("c")
       )
     );

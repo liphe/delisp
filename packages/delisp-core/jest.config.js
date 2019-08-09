@@ -9,7 +9,7 @@ module.exports = {
   testPathIgnorePatterns: ["fixtures", "dist", "dist-test"],
   globals: {
     "ts-jest": {
-      tsConfig: "tsconfig.build.json"
+      tsConfig: "tsconfig.json"
     }
   }
 };

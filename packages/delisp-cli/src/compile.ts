@@ -55,10 +55,10 @@ export async function compileFile(
   if (inferResult.unknowns.length > 0) {
     const unknowns = inferResult.unknowns.map(u =>
       printHighlightedExpr(
-        `Unknown variable ${u.node.name} of type ${printType(
-          u.info.resultingType
+        `Unknown variable ${u.variable.node.name} of type ${printType(
+          u.variable.info.resultingType
         )}`,
-        u.location
+        u.variable.location
       )
     );
     throw new Error(unknowns.join("\n\n"));

@@ -80,6 +80,18 @@ function convertEffect(effects: ASExpr[]): T.Type {
   }
 }
 
+function convertFunctionEffect(x: ASExpr): T.Type {
+  if (x.tag === "symbol") {
+    return T.effect([], convertSymbol(x));
+  } else if (x.tag === "list") {
+    const [op, ...args] = x.elements;
+    if (isSymbolOfName(op, "effect")) {
+      return convertEffect(args);
+    }
+  }
+  throw new ConvertError(`Invalid function effect signature.`);
+}
+
 function convertCases(_op: ASExpr, args: ASExpr[]): T.Type {
   const lastArg = last(args);
   let tail: ASExpr | undefined;
@@ -145,7 +157,7 @@ function convertList(expr: ASExprList): T.Type {
     const fnout = args[args.length - 1];
     return T.multiValuedFunction(
       fnargs.map(convert_),
-      convert_(fneffect),
+      convertFunctionEffect(fneffect),
       convert_(fnout)
     );
   } else {

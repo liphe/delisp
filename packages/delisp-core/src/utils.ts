@@ -13,8 +13,8 @@ export function flatten<A>(x: A[][]): A[] {
   return ([] as A[]).concat(...x);
 }
 
-export function union<A>(xs: A[], ys: A[]): A[] {
-  return unique([...xs, ...ys]);
+export function union<A>(xs: A[], ...more: A[][]): A[] {
+  return unique([...xs, ...flatten(more)]);
 }
 
 export function intersection<A>(xs: A[], ys: A[]): A[] {

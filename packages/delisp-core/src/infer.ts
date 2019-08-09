@@ -21,9 +21,11 @@ import {
   constExplicitInstance,
   constImplicitInstance,
   solve,
-  TConstraint
+  TConstraint,
+  TAssumption
 } from "./infer-solver";
 import {
+  applyTypeSubstitutionToVariable,
   applySubstitutionToExpr,
   applySubstitutionToSyntax
 } from "./infer-subst";
@@ -31,6 +33,7 @@ import { assertNever, InvariantViolation } from "./invariant";
 import { moduleExportedDefinitions } from "./module";
 import primitives from "./primitives";
 import * as S from "./syntax";
+import { Typed } from "./syntax-typed";
 import {
   lambdaListAllArguments,
   funcallAllArguments
@@ -40,6 +43,7 @@ import { type } from "./type-tag";
 import {
   generalize,
   listTypeConstants,
+  applySubstitution,
   transformRecurType
 } from "./type-utils";
 import * as T from "./types";
@@ -50,14 +54,6 @@ import { difference, flatMap, fromEntries, mapObject, maybeMap } from "./utils";
 // will run through the syntax it will generate dummy type variables,
 // together with a set of constraints and assumptions.
 //
-
-// A TAssumption is a variable instance for which we have assumed the
-// type. Those variables are to be bound (and assumption removed)
-// later, either by `let`, `lambda`, or global definitions.  Note: it
-// is normal to have multiple assumptions (instances) for the same
-// variable. Assumptions will be converted to additional constraints
-// at the end of the inference process.
-type TAssumption = S.SVariableReference<S.Typed>;
 
 interface InferResult<A> {
   result: A;
@@ -72,7 +68,7 @@ function inferMany(
   options = {
     multipleValuedLastForm: false
   }
-): InferResult<Array<S.Expression<S.Typed>>> {
+): InferResult<Array<S.Expression<Typed>>> {
   const results = exprs.map((e, i) =>
     infer(
       e,
@@ -110,11 +106,26 @@ function inferBody(
     result: inferred.result,
     constraints: [
       ...inferred.constraints,
-      constEqual(returningForm, returnType, "resulting-type"),
+      constraintResultingType(returningForm, returnType),
       ...inferred.result.map(form => constEffect(form, effectType))
     ],
     assumptions: inferred.assumptions
   };
+}
+
+function constraintMonomorphicAssumption(
+  assumption: TAssumption,
+  type: Type
+): TConstraint[] {
+  const { variable } = assumption;
+  return [
+    constEqual(variable, variable.info.selfType, "self-type", type),
+    constEqual(variable, assumption.primaryResultingType, "primary-type", type)
+  ];
+}
+
+function constraintResultingType(expr: S.Expression<Typed>, type: T.Type) {
+  return constEqual(expr, expr.info.resultingType, "resulting-type", type);
 }
 
 // Generate new types for an expression an all its subexpressions,
@@ -133,11 +144,23 @@ function infer(
   // depends on if the parent itself is multipleValued. If that's the
   // case, just pass the value down to the subexpressions.
   multipleValues: boolean
-): InferResult<S.Expression<S.Typed>> {
-  function singleType(effect: Type, type: Type): S.Typed {
-    return new S.Typed({
-      expressionType: type,
+): InferResult<S.Expression<Typed>> {
+  // Create metadata necessary to represent an expression returning a
+  // single value. If the expression is in a tail position, the
+  // resulting type will be wrapped in a values type.
+  function singleType(effect: Type, type: Type): Typed {
+    return new Typed({
+      selfType: type,
       resultingType: multipleValues ? T.values([type]) : undefined,
+      effect
+    });
+  }
+
+  // Create metadata necessary to represent the type of an expression
+  // as equal to the type of a subexpression.
+  function delegatedType(effect: Type, type: Type): Typed {
+    return new Typed({
+      selfType: type,
       effect
     });
   }
@@ -214,7 +237,7 @@ function infer(
         assumptions: inferredValues.assumptions,
         constraints: [
           ...inferredValues.constraints,
-          ...inferredValues.result.map(e => constEqual(e, t, "resulting-type")),
+          ...inferredValues.result.map(e => constraintResultingType(e, t)),
           ...inferredValues.result.map(e => constEffect(e, effect))
         ]
       };
@@ -270,6 +293,8 @@ function infer(
             ? [
                 constEqual(
                   tailInferred.result,
+                  tailInferred.result.info.resultingType,
+                  "resulting-type",
                   T.record(
                     expr.node.source.extending
                       ? []
@@ -278,8 +303,7 @@ function infer(
                           type: generateUniqueTVar()
                         })),
                     tailRowType
-                  ),
-                  "resulting-type"
+                  )
                 )
               ]
             : []),
@@ -313,7 +337,12 @@ function infer(
         },
         constraints: [
           ...value.constraints,
-          constEqual(value.result, recordType, "resulting-type"),
+          constEqual(
+            value.result,
+            value.result.info.resultingType,
+            "resulting-type",
+            recordType
+          ),
           constEffect(value.result, effect)
         ],
         assumptions: value.assumptions
@@ -321,19 +350,31 @@ function infer(
     }
 
     case "variable-reference": {
-      const t = generateUniqueTVar();
+      const selfType = generateUniqueTVar();
+      const primaryResultingType = generateUniqueTVar();
       const effect = generateUniqueTVar();
       const typedVar = {
         ...expr,
         node: {
           ...expr.node
         },
-        info: singleType(effect, t)
+        info: new Typed({
+          selfType,
+          resultingType: multipleValues
+            ? T.values([primaryResultingType])
+            : primaryResultingType,
+          effect
+        })
       };
       return {
         result: typedVar,
         constraints: [],
-        assumptions: [typedVar]
+        assumptions: [
+          {
+            variable: typedVar,
+            primaryResultingType
+          }
+        ]
       };
     }
     case "conditional": {
@@ -368,10 +409,7 @@ function infer(
             consequent: consequent.result,
             alternative: alternative.result
           },
-          info: new S.Typed({
-            effect,
-            expressionType: t
-          })
+          info: delegatedType(effect, t)
         },
         assumptions: [
           ...condition.assumptions,
@@ -382,9 +420,19 @@ function infer(
           ...condition.constraints,
           ...consequent.constraints,
           ...alternative.constraints,
-          constEqual(condition.result, T.boolean, "resulting-type"),
-          constEqual(consequent.result, t, "resulting-type"),
-          constEqual(alternative.result, t, "resulting-type"),
+          constraintResultingType(condition.result, T.boolean),
+          constEqual(
+            consequent.result,
+            consequent.result.info.resultingType,
+            "resulting-type",
+            t
+          ),
+          constEqual(
+            alternative.result,
+            alternative.result.info.resultingType,
+            "resulting-type",
+            t
+          ),
 
           constEffect(condition.result, effect),
           constEffect(consequent.result, effect),
@@ -398,7 +446,7 @@ function infer(
       );
       const argtypes = fnargs.map(_ => generateUniqueTVar());
 
-      const bodyEffect = generateUniqueTVar();
+      const bodyEffect = T.effect([], generateUniqueTVar());
       const valuesType = generateUniqueTVar();
       const fnType = T.multiValuedFunction(argtypes, bodyEffect, valuesType);
 
@@ -416,10 +464,10 @@ function infer(
       // the new function type we have created.
       const newConstraints: TConstraint[] = [
         ...assumptions
-          .filter(v => fnargs.includes(v.node.name))
-          .map(v => {
-            const varIndex = fnargs.indexOf(v.node.name);
-            return constEqual(v, argtypes[varIndex], "expression-type");
+          .filter(a => fnargs.includes(a.variable.node.name))
+          .flatMap(a => {
+            const varIndex = fnargs.indexOf(a.variable.node.name);
+            return constraintMonomorphicAssumption(a, argtypes[varIndex]);
           })
       ];
 
@@ -434,7 +482,9 @@ function infer(
         },
         constraints: [...constraints, ...newConstraints],
         // assumptions have already been used, so they can be deleted.
-        assumptions: assumptions.filter(v => !fnargs.includes(v.node.name))
+        assumptions: assumptions.filter(
+          a => !fnargs.includes(a.variable.node.name)
+        )
       };
     }
 
@@ -464,15 +514,13 @@ function infer(
             fn: ifn.result,
             userArguments: iargs.result.slice(1) // don't include the context argument
           },
-          info: new S.Typed({
-            effect,
-            expressionType: valuesType,
-            resultingType: multipleValues ? valuesType : primaryType
-          })
+          info: multipleValues
+            ? delegatedType(effect, valuesType)
+            : singleType(effect, primaryType)
         },
 
         constraints: [
-          constEqual(ifn.result, tfn, "resulting-type"),
+          constraintResultingType(ifn.result, tfn),
           ...ifn.constraints,
           ...iargs.constraints,
 
@@ -535,7 +583,7 @@ function infer(
             })),
             body: bodyInference.result
           },
-          info: new S.Typed({ effect, expressionType: t })
+          info: delegatedType(effect, t)
         },
         constraints: [
           ...bodyInference.constraints,
@@ -546,18 +594,17 @@ function infer(
           // the generalized polytype of the value to be bound.
           ...bodyInference.assumptions
             // Consider variables to be bound
-            .filter(v => toBeBound(v.node.name))
-            .map(v => {
+            .filter(a => toBeBound(a.variable.node.name))
+            .map(a => {
               // We just filter the assumptions to the variables
               // that are bound, so we know it must is defined.
               const bInfo = bindingsInfo.find(
-                bi => bi.binding.variable.name === v.node.name
+                bi => bi.binding.variable.name === a.variable.node.name
               )!;
               return constImplicitInstance(
-                v,
+                a,
                 monovars,
-                bInfo.inference.result.info.resultingType,
-                "expression-type"
+                bInfo.inference.result.info.resultingType
               );
             }),
 
@@ -567,7 +614,9 @@ function infer(
           )
         ],
         assumptions: [
-          ...bodyInference.assumptions.filter(v => !toBeBound(v.node.name)),
+          ...bodyInference.assumptions.filter(
+            a => !toBeBound(a.variable.node.name)
+          ),
           ...flatMap(bi => bi.inference.assumptions, bindingsInfo)
         ]
       };
@@ -600,12 +649,22 @@ function infer(
             ...expr.node,
             value: inferred.result
           },
-          info: new S.Typed({ effect, expressionType: t })
+          info: delegatedType(effect, t)
         },
         assumptions: inferred.assumptions,
         constraints: [
           ...inferred.constraints,
-          constEqual(inferred.result, t, "expression-type"),
+
+          constEqual(
+            inferred.result,
+            inferred.result.info.resultingType,
+            "resulting-type",
+            // Note that we can't use the selfType here, because if
+            // the body is a variable with a function type, then
+            // self-typed will could be closed over the effects. See
+            // `closeFunctionEffect`.
+            multipleValues ? T.values([t]) : t
+          ),
           constEffect(inferred.result, effect)
         ]
       };
@@ -630,10 +689,7 @@ function infer(
             body: body.result,
             returning: returning.result
           },
-          info: new S.Typed({
-            effect,
-            expressionType: returning.result.info.resultingType
-          })
+          info: delegatedType(effect, returning.result.info.resultingType)
         },
 
         constraints: [
@@ -671,11 +727,11 @@ function infer(
             constraints: [
               ...constraints,
               ...assumptions
-                .filter(a => a.node.name === c.variable.name)
-                .map(a => constEqual(a, vartype, "expression-type"))
+                .filter(a => a.variable.node.name === c.variable.name)
+                .flatMap(a => constraintMonomorphicAssumption(a, vartype))
             ],
             assumptions: assumptions.filter(
-              a => a.node.name !== c.variable.name
+              a => a.variable.node.name !== c.variable.name
             )
           }
         };
@@ -710,7 +766,7 @@ function infer(
             })),
             defaultCase: defaultCase && defaultCase.result
           },
-          info: new S.Typed({ effect, expressionType: t })
+          info: delegatedType(effect, t)
         },
 
         constraints: [
@@ -719,13 +775,12 @@ function infer(
           ...(defaultCase ? defaultCase.constraints : []),
           // Value must produce a value of type with all the variants
           // that `match` is handling.
-          constEqual(
+          constraintResultingType(
             value.result,
             T.cases(
               variantTypes,
               defaultCase ? generateUniqueTVar() : undefined
-            ),
-            "resulting-type"
+            )
           ),
           constEffect(value.result, effect)
         ],
@@ -765,7 +820,7 @@ function infer(
           ? [
               ...inferredValue.constraints,
               constEffect(inferredValue.result, effect),
-              constEqual(inferredValue.result, labelType, "resulting-type")
+              constraintResultingType(inferredValue.result, labelType)
             ]
           : [],
 
@@ -790,11 +845,9 @@ function infer(
             ...expr.node,
             values: inference.result
           },
-          info: new S.Typed({
-            effect,
-            expressionType: tValuesType,
-            resultingType: multipleValues ? tValuesType : tPrimaryType
-          })
+          info: multipleValues
+            ? delegatedType(effect, tValuesType)
+            : singleType(effect, tPrimaryType)
         },
 
         constraints: [
@@ -831,35 +884,34 @@ function infer(
             form: form.result,
             body: body.result
           },
-          info: new S.Typed({
-            effect,
-            expressionType: t
-          })
+          info: delegatedType(effect, t)
         },
 
         constraints: [
           ...form.constraints,
-          constEqual(form.result, T.values(variableTypes), "resulting-type"),
+          constraintResultingType(form.result, T.values(variableTypes)),
           constEffect(form.result, effect),
 
           ...body.constraints,
           ...body.assumptions
-            .filter(a => variableNames.includes(a.node.name))
-            .map(a => {
-              const name = a.node.name;
+            .filter(a => variableNames.includes(a.variable.node.name))
+            .flatMap(a => {
+              const name = a.variable.node.name;
               const idx = variableNames.indexOf(name);
               if (idx < 0) {
                 throw new InvariantViolation(
                   `Could not find variable in the list of assumptions.`
                 );
               }
-              return constEqual(a, variableTypes[idx], "expression-type");
+              return constraintMonomorphicAssumption(a, variableTypes[idx]);
             })
         ],
 
         assumptions: [
           ...form.assumptions,
-          ...body.assumptions.filter(a => !variableNames.includes(a.node.name))
+          ...body.assumptions.filter(
+            a => !variableNames.includes(a.variable.node.name)
+          )
         ]
       };
     }
@@ -869,7 +921,7 @@ function infer(
 function inferSyntax(
   syntax: S.Syntax,
   internalTypes: InternalTypeEnvironment
-): InferResult<S.Syntax<S.Typed>> {
+): InferResult<S.Syntax<Typed>> {
   if (S.isExpression(syntax)) {
     const { result, assumptions, constraints } = infer(
       { ...syntax, node: { ...syntax.node } },
@@ -979,8 +1031,8 @@ function assumptionsToConstraints(
   env: ExternalEnvironment
 ): TConstraint[] {
   return maybeMap(a => {
-    const t = lookupVariableType(a.node.name, env);
-    return t && constExplicitInstance(a, t, "expression-type");
+    const t = lookupVariableType(a.variable.node.name, env);
+    return t && constExplicitInstance(a, t);
   }, assumptions);
 }
 
@@ -1005,10 +1057,10 @@ function groupAssumptions(
   unknowns: TAssumption[];
 } {
   const internals = assumptions.filter(
-    v => v.node.name in internalEnv.variables
+    a => a.variable.node.name in internalEnv.variables
   );
   const externals = assumptions.filter(
-    v => lookupVariableType(v.node.name, externalEnv) !== null
+    a => lookupVariableType(a.variable.node.name, externalEnv) !== null
   );
   return {
     internals,
@@ -1085,7 +1137,7 @@ function moduleInternalTypes(m: S.Module): InternalTypeEnvironment {
 }
 
 function getModuleInternalEnvironment(
-  m: S.Module<S.Typed>,
+  m: S.Module<Typed>,
   internalTypes: InternalTypeEnvironment
 ): InternalEnvironment {
   return {
@@ -1115,7 +1167,7 @@ export function inferModule(
   m: S.Module,
   externalEnv: ExternalEnvironment = defaultEnvironment
 ): {
-  typedModule: S.Module<S.Typed>;
+  typedModule: S.Module<Typed>;
   unknowns: TAssumption[];
 } {
   const internalTypes = moduleInternalTypes(m);
@@ -1137,13 +1189,8 @@ export function inferModule(
 
     ...assumptionsToConstraints(assumptions.externals, externalEnv),
 
-    ...assumptions.internals.map(v =>
-      constImplicitInstance(
-        v,
-        [],
-        internalEnv.variables[v.node.name],
-        "expression-type"
-      )
+    ...assumptions.internals.map(a =>
+      constImplicitInstance(a, [], internalEnv.variables[a.variable.node.name])
     )
   ];
 
@@ -1155,11 +1202,13 @@ export function inferModule(
       body: body.map(s => applySubstitutionToSyntax(s, solution))
     },
     unknowns: assumptions.unknowns.map(
-      (v): TAssumption => {
-        return applySubstitutionToExpr(v, solution) as S.SVariableReference<
-          S.Typed
-        >;
-      }
+      (a): TAssumption => ({
+        variable: applyTypeSubstitutionToVariable(a.variable, solution),
+        primaryResultingType: applySubstitution(
+          a.primaryResultingType,
+          solution
+        )
+      })
     )
   };
 }
@@ -1168,11 +1217,11 @@ export function inferModule(
  * module. */
 export function inferExpressionInModule(
   expr: S.Expression,
-  m: S.Module<S.Typed>,
+  m: S.Module<Typed>,
   externalEnv: ExternalEnvironment = defaultEnvironment,
   multipleValues: boolean
 ): {
-  typedExpression: S.Expression<S.Typed>;
+  typedExpression: S.Expression<Typed>;
   unknowns: TAssumption[];
 } {
   const internalTypes = moduleInternalTypes(m);
@@ -1191,13 +1240,8 @@ export function inferExpressionInModule(
 
     ...assumptionsToConstraints(assumptions.externals, externalEnv),
 
-    ...assumptions.internals.map(v =>
-      constImplicitInstance(
-        v,
-        [],
-        internalEnv.variables[v.node.name],
-        "expression-type"
-      )
+    ...assumptions.internals.map(a =>
+      constImplicitInstance(a, [], internalEnv.variables[a.variable.node.name])
     )
   ];
 
@@ -1206,17 +1250,19 @@ export function inferExpressionInModule(
   return {
     typedExpression: applySubstitutionToExpr(inference.result, solution),
     unknowns: assumptions.unknowns.map(
-      (v): TAssumption => {
-        return applySubstitutionToExpr(v, solution) as S.SVariableReference<
-          S.Typed
-        >;
-      }
+      (a): TAssumption => ({
+        variable: applyTypeSubstitutionToVariable(a.variable, solution),
+        primaryResultingType: applySubstitution(
+          a.primaryResultingType,
+          solution
+        )
+      })
     )
   };
 }
 
 export function getModuleExternalEnvironment(
-  m: S.Module<S.Typed>
+  m: S.Module<Typed>
 ): ExternalEnvironment {
   const defs = moduleExportedDefinitions(m);
   const variables = fromEntries(

@@ -21,7 +21,8 @@ import {
   resolveModuleDependencies,
   Type
 } from "@delisp/core";
-import { Expression, Module, Syntax, Typed } from "@delisp/core/src/syntax";
+import { Expression, Module, Syntax } from "@delisp/core/src/syntax";
+import { Typed } from "@delisp/core/src/syntax-typed";
 import { Pair, TaggedValue } from "@delisp/runtime";
 import readline from "readline";
 import { CommandModule } from "yargs";
@@ -205,12 +206,12 @@ const delispEval = async (syntax: Syntax): Promise<DelispEvalResult> => {
     [
       ...result.unknowns,
       ...(expressionResult ? expressionResult.unknowns : [])
-    ].forEach(v => {
+    ].forEach(u => {
       console.warn(
         theme.warn(
-          `Unknown variable ${v.node.name} expected with type ${printType(
-            v.info.resultingType
-          )}`
+          `Unknown variable ${
+            u.variable.node.name
+          } expected with type ${printType(u.variable.info.resultingType)}`
         )
       );
     });
