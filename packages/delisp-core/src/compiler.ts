@@ -155,11 +155,10 @@ function compileInlineValue(name: string): JS.Expression {
      will be created so the inlined primitive can be used as a
      function. */
   const identifiers = range(prim.arity).map(i => identifier(`x${i}`));
-  const identifiersAndContext = [identifier("*context*"), ...identifiers];
   return {
     type: "ArrowFunctionExpression",
-    params: [identifier("values"), ...identifiersAndContext],
-    body: prim.funcHandler(identifiersAndContext),
+    params: [identifier("values"), ...identifiers],
+    body: prim.funcHandler(identifiers),
     expression: true
   };
 }

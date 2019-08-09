@@ -504,7 +504,7 @@ function infer(
           node: {
             ...expr.node,
             fn: ifn.result,
-            userArguments: iargs.result.slice(1) // don't include the context argument
+            userArguments: iargs.result
           },
           info: multipleValues
             ? delegatedType(effect, valuesType)
