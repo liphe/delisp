@@ -10,6 +10,7 @@ import {
   Syntax,
   isExpression,
   readModule,
+  compileModuleToString,
   inferModule,
   pprintAs,
   printType,
@@ -38,24 +39,32 @@ function readModuleOrError(code: string): ASTResult {
 }
 
 const Panel = styled.div`
+  display: inline-block;
   width: 50%;
+  vertical-align: top;
 `;
 
 function AST(props: { code: string }) {
   const { code } = props;
   const result = readModuleOrError(code);
+
   switch (result.tag) {
-    case "success":
+    case "success": {
+      const js = compileModuleToString(result.module, {
+        getOutputFile: file => file
+      });
+
       return (
         <div>
           <Panel>
             <ModuleExplorer module={result.module} />
           </Panel>
           <Panel>
-            <pre>javascript</pre>
+            <pre>{js}</pre>
           </Panel>
         </div>
       );
+    }
     case "error":
       return (
         <div>
