@@ -31,6 +31,7 @@ import * as S from "./syntax";
 import { Typed } from "./syntax-typed";
 import { printType } from "./type-printer";
 import { Type } from "./types";
+import { getCallEffects } from "./type-utils";
 import { flatMap, last, mapObject, maybeMap, range } from "./utils";
 
 const debug = createDebug("delisp:compiler");
@@ -119,6 +120,14 @@ function compileLambda(
   });
 }
 
+function isFunctionAsync(fntype: Type): boolean {
+  const selfEffects = getCallEffects(fntype);
+  return (
+    Boolean(selfEffects.fields.find(f => f.label === "async")) ||
+    selfEffects.extends.node.tag !== "empty-row"
+  );
+}
+
 function compileFunctionCall(
   funcall: S.SFunctionCall<Typed>,
   env: Environment,
@@ -131,18 +140,20 @@ function compileFunctionCall(
     funcall.node.fn.node.tag === "variable-reference" &&
     isInlinePrimitive(funcall.node.fn.node.name)
   ) {
-    return awaitExpr(
-      compileInlinePrimitive(funcall.node.fn.node.name, compiledArgs)
-    );
+    return compileInlinePrimitive(funcall.node.fn.node.name, compiledArgs);
   } else {
-    return awaitExpr({
+    const { fn } = funcall.node;
+    const isAsync = isFunctionAsync(fn.info.selfType);
+
+    const call: JS.Expression = {
       type: "CallExpression",
-      callee: compile(funcall.node.fn, env, false),
+      callee: compile(fn, env, false),
       arguments: [
         identifier(multipleValues ? "values" : "primaryValue"),
         ...compiledArgs
       ]
-    });
+    };
+    return isAsync ? awaitExpr(call) : call;
   }
 }
 
@@ -152,7 +163,9 @@ function compileInlinePrimitive(
   args: JS.Expression[]
 ): JS.Expression {
   const prim = findInlinePrimitive(name);
-  return prim.funcHandler(args);
+  const isAsync = isFunctionAsync(prim.type.mono);
+  const inline = prim.funcHandler(args);
+  return isAsync ? awaitExpr(inline) : inline;
 }
 
 function compileInlineValue(name: string): JS.Expression {
