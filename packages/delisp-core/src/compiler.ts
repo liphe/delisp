@@ -131,7 +131,9 @@ function compileFunctionCall(
     funcall.node.fn.node.tag === "variable-reference" &&
     isInlinePrimitive(funcall.node.fn.node.name)
   ) {
-    return compileInlinePrimitive(funcall.node.fn.node.name, compiledArgs);
+    return awaitExpr(
+      compileInlinePrimitive(funcall.node.fn.node.name, compiledArgs)
+    );
   } else {
     return awaitExpr({
       type: "CallExpression",
