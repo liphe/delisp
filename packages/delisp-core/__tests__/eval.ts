@@ -20,8 +20,7 @@ function evaluateString(str: string): unknown {
   const { typedExpression } = inferExpressionInModule(
     s,
     createModule(),
-    undefined,
-    false
+    undefined
   );
 
   const lambda: any = evaluate(typedExpression, env, sandbox);

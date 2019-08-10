@@ -26,7 +26,6 @@ import {
 } from "./infer-solver";
 import {
   applyTypeSubstitutionToVariable,
-  applySubstitutionToExpr,
   applySubstitutionToSyntax
 } from "./infer-subst";
 import { assertNever, InvariantViolation } from "./invariant";
@@ -1206,21 +1205,19 @@ export function inferModule(
   };
 }
 
-/** Run the type inference in an expression in the context on a
- * module. */
-export function inferExpressionInModule(
-  expr: S.Expression,
+/** Run the type inference in a syntax in the context on a module. */
+export function inferSyntaxInModule(
+  syntax: S.Syntax,
   m: S.Module<Typed>,
-  externalEnv: ExternalEnvironment = defaultEnvironment,
-  multipleValues: boolean
+  externalEnv: ExternalEnvironment = defaultEnvironment
 ): {
-  typedExpression: S.Expression<Typed>;
+  typedSyntax: S.Syntax<Typed>;
   unknowns: TAssumption[];
 } {
   const internalTypes = moduleInternalTypes(m);
   const internalEnv = getModuleInternalEnvironment(m, internalTypes);
 
-  const inference = infer(expr, [], internalTypes, multipleValues);
+  const inference = inferSyntax(syntax, internalTypes);
 
   const assumptions = groupAssumptions(
     inference.assumptions,
@@ -1241,7 +1238,7 @@ export function inferExpressionInModule(
   const solution = solve(constraints, {});
 
   return {
-    typedExpression: applySubstitutionToExpr(inference.result, solution),
+    typedSyntax: applySubstitutionToSyntax(inference.result, solution),
     unknowns: assumptions.unknowns.map(
       (a): TAssumption => ({
         variable: applyTypeSubstitutionToVariable(a.variable, solution),
@@ -1251,6 +1248,26 @@ export function inferExpressionInModule(
         )
       })
     )
+  };
+}
+
+export function inferExpressionInModule(
+  expr: S.Expression,
+  m: S.Module<Typed>,
+  externalEnv: ExternalEnvironment = defaultEnvironment
+): {
+  typedExpression: S.Expression<Typed>;
+  unknowns: TAssumption[];
+} {
+  const result = inferSyntaxInModule(expr, m, externalEnv);
+  if (!S.isExpression(result.typedSyntax)) {
+    throw new InvariantViolation(
+      `Infering an expression must return a typed expression.`
+    );
+  }
+  return {
+    typedExpression: result.typedSyntax,
+    unknowns: result.unknowns
   };
 }
 

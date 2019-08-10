@@ -625,7 +625,7 @@ function compileExports(
 }
 
 export function moduleEnvironment(
-  m: S.Module<Typed>,
+  m: S.Module,
   opts: CompilerOptions
 ): Environment {
   const moduleDefinitions = m.body

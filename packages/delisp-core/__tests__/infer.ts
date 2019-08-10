@@ -36,10 +36,9 @@ expect.extend({
 function inferType(
   expr: S.Expression,
   env: ExternalEnvironment = defaultEnvironment,
-  m: S.Module<Typed, {}> = createModule(),
-  multipleValues: boolean
+  m: S.Module<Typed, {}> = createModule()
 ): S.Expression<Typed> {
-  const infer = inferExpressionInModule(expr, m, env, multipleValues);
+  const infer = inferExpressionInModule(expr, m, env);
 
   const unknowns = infer.unknowns.filter(
     u => u.variable.node.name !== "*context*"
@@ -77,8 +76,7 @@ const emptyExternalEnv: ExternalEnvironment = { variables: {}, types: {} };
 function typeOf(
   str: string,
   externalEnv: ExternalEnvironment = emptyExternalEnv,
-  moduleCode: string = "",
-  multipleValues = false
+  moduleCode: string = ""
 ): string {
   const syntax = readExpr(str);
   const expandedSyntax = macroexpandExpression(syntax);
@@ -86,12 +84,7 @@ function typeOf(
   const m = macroexpandModule(readModule(moduleCode));
   const { typedModule } = inferModule(m, externalEnv);
 
-  const typedExpr = inferType(
-    expandedSyntax,
-    externalEnv,
-    typedModule,
-    multipleValues
-  );
+  const typedExpr = inferType(expandedSyntax, externalEnv, typedModule);
   const result = printType(typedExpr.info.resultingType);
   return result;
 }
@@ -201,9 +194,10 @@ describe("Type inference", () => {
         );
       });
       it("should be able to access the field", () => {
-        expect(typeOf("(:x {:x 5})", undefined, undefined, true)).toBeType(
-          "(values number (-> ctx α β {:x α}))"
-        );
+        // TODO: Commented because there is no support temporarily to infer an expression with multiple values.
+        // expect(typeOf("(:x {:x 5})", undefined, undefined, true)).toBeType(
+        //   "(values number (-> ctx α β {:x α}))"
+        // );
         expect(typeOf("(lambda (f) (f {:x 5 :y 6}))")).toBeType(
           "(-> ctx (-> ctx {:x number :y number} α (values β <| γ)) α (values β <| γ))"
         );
@@ -526,7 +520,7 @@ describe("Type inference", () => {
   describe("Regressions", () => {
     it("(the _ _) type annotations should keep the type annotation node in the AST", () => {
       const expr = readExpr("(the number 10)");
-      const typedExpr = inferType(expr, emptyExternalEnv, undefined, false);
+      const typedExpr = inferType(expr, emptyExternalEnv, undefined);
       expect(typedExpr).toHaveProperty(["node", "tag"], "type-annotation");
     });
 

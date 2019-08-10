@@ -5,9 +5,9 @@ import {
   defaultEnvironment,
   evaluate,
   evaluateModule,
-  inferExpressionInModule,
   ExternalEnvironment,
   inferModule,
+  inferSyntaxInModule,
   isDefinition,
   isExpression,
   macroexpandSyntax,
@@ -21,8 +21,7 @@ import {
   resolveModuleDependencies,
   Type
 } from "@delisp/core";
-import { Expression, Module, Syntax } from "@delisp/core/src/syntax";
-import { Typed } from "@delisp/core/src/syntax-typed";
+import { Module, Syntax } from "@delisp/core/src/syntax";
 import { Pair, TaggedValue } from "@delisp/runtime";
 import readline from "readline";
 import { CommandModule } from "yargs";
@@ -43,7 +42,11 @@ function getOutputFile(name: string): string {
 
 async function prepareModule() {
   currentModule = await newModule();
-  evaluateModule(currentModule, sandbox, {
+  const { typedModule } = inferModule(currentModule, {
+    variables: {},
+    types: {}
+  });
+  evaluateModule(typedModule, sandbox, {
     getOutputFile
   });
 }
@@ -189,52 +192,43 @@ const delispEval = async (syntax: Syntax): Promise<DelispEvalResult> => {
   //
   // Type checking
   //
-  let typedModule: Module<Typed> | undefined;
-  let typedExpression: Expression<Typed> | undefined;
 
-  try {
-    const environment = await moduleExternalEnvironment(currentModule);
-    const result = inferModule(currentModule, environment);
-    typedModule = result.typedModule;
+  const environment = await moduleExternalEnvironment(currentModule);
+  const moduleInference = inferModule(currentModule, environment);
+  const syntaxInference = inferSyntaxInModule(
+    syntax,
+    moduleInference.typedModule,
+    environment
+  );
 
-    const expressionResult =
-      typedModule && isExpression(syntax)
-        ? inferExpressionInModule(syntax, typedModule, environment, true)
-        : undefined;
-    typedExpression = expressionResult && expressionResult.typedExpression;
-
-    [
-      ...result.unknowns,
-      ...(expressionResult ? expressionResult.unknowns : [])
-    ].forEach(u => {
-      console.warn(
-        theme.warn(
-          `Unknown variable ${
-            u.variable.node.name
-          } expected with type ${printType(u.variable.info.resultingType)}`
-        )
-      );
-    });
-  } catch (err) {
-    console.log(theme.error("TYPE WARNING:"));
-    console.log(theme.error(err.message));
-  }
-
-  //
-  // Evaluation
-  //
+  const { typedModule } = moduleInference;
+  const { typedSyntax } = syntaxInference;
 
   const env = moduleEnvironment(currentModule, {
     definitionContainer: "env",
     getOutputFile
   });
-  const value = await evaluate(syntax, env, sandbox);
 
-  if (isExpression(syntax)) {
+  [...moduleInference.unknowns, ...syntaxInference.unknowns].forEach(u => {
+    console.warn(
+      theme.warn(
+        `Unknown variable ${
+          u.variable.node.name
+        } expected with type ${printType(u.variable.info.resultingType)}`
+      )
+    );
+  });
+
+  //
+  // Compilation & Evaluation
+  //
+  const value = await evaluate(typedSyntax, env, sandbox);
+
+  if (isExpression(typedSyntax)) {
     return {
       tag: "expression",
       value,
-      type: typedExpression && typedExpression.info.resultingType
+      type: typedSyntax && typedSyntax.info.resultingType
     };
   } else if (isDefinition(syntax)) {
     const name = syntax.node.variable.name;
