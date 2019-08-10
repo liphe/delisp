@@ -191,3 +191,15 @@ export function awaitExpr(expr: JS.Expression): JS.Expression {
     argument: expr
   };
 }
+
+export function comment(comment: string, stmt: JS.Statement): JS.Statement {
+  return {
+    ...stmt,
+    leadingComments: [
+      {
+        type: "Block",
+        value: comment
+      }
+    ]
+  };
+}

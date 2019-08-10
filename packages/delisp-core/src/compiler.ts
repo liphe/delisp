@@ -15,7 +15,8 @@ import {
   methodCall,
   awaitExpr,
   objectExpression,
-  primitiveCall
+  primitiveCall,
+  comment
 } from "./compiler/estree-utils";
 import {
   findInlinePrimitive,
@@ -84,7 +85,7 @@ function lookupBindingOrError(
 }
 
 function compileBody(
-  body: S.Expression[],
+  body: Array<S.Expression<Typed>>,
   env: Environment,
   multipleValues: boolean
 ): JS.Expression[] {
@@ -97,7 +98,7 @@ function compileBody(
 }
 
 function compileLambda(
-  fn: S.SFunction,
+  fn: S.SFunction<Typed>,
   env: Environment,
   _multipleValues: boolean
 ): JS.ArrowFunctionExpression {
@@ -119,7 +120,7 @@ function compileLambda(
 }
 
 function compileFunctionCall(
-  funcall: S.SFunctionCall,
+  funcall: S.SFunctionCall<Typed>,
   env: Environment,
   multipleValues: boolean
 ): JS.Expression {
@@ -176,7 +177,7 @@ function compilePrimitive(name: string, env: Environment): JS.Expression {
 }
 
 function compileVariable(
-  ref: S.SVariableReference,
+  ref: S.SVariableReference<Typed>,
   env: Environment,
   _multipleValues: boolean
 ): JS.Expression {
@@ -199,7 +200,7 @@ function compileVariable(
 }
 
 function compileConditional(
-  expr: S.SConditional,
+  expr: S.SConditional<Typed>,
   env: Environment,
   multipleValues: boolean
 ): JS.Expression {
@@ -212,7 +213,7 @@ function compileConditional(
 }
 
 function compileLetBindings(
-  expr: S.SLet,
+  expr: S.SLet<Typed>,
   env: Environment,
   multipleValues: boolean
 ): JS.Expression {
@@ -238,7 +239,7 @@ function compileLetBindings(
 }
 
 function compileVector(
-  expr: S.SVectorConstructor,
+  expr: S.SVectorConstructor<Typed>,
   env: Environment,
   _multipleValues: boolean
 ): JS.Expression {
@@ -256,7 +257,7 @@ function labelToPropertyName(label: S.Identifier): string {
 }
 
 function compileRecord(
-  expr: S.SRecord,
+  expr: S.SRecord<Typed>,
   env: Environment,
   multipleValues: boolean
 ): JS.Expression {
@@ -286,7 +287,7 @@ function compileRecord(
 }
 
 function compileRecordGet(
-  expr: S.SRecordGet,
+  expr: S.SRecordGet<Typed>,
   env: Environment,
   _multipleValues: boolean
 ) {
@@ -313,7 +314,7 @@ function compileNumber(
 }
 
 function compileDoBlock(
-  expr: S.SDoBlock,
+  expr: S.SDoBlock<Typed>,
   env: Environment,
   multipleValues: boolean
 ): JS.Expression {
@@ -327,7 +328,7 @@ function compileDoBlock(
 }
 
 function compileMatch(
-  expr: S.SMatch,
+  expr: S.SMatch<Typed>,
   env: Environment,
   multipleValues: boolean
 ): JS.Expression {
@@ -360,7 +361,7 @@ function compileMatch(
 }
 
 function compileTag(
-  expr: S.SCaseTag,
+  expr: S.SCaseTag<Typed>,
   env: Environment,
   _multipleValues: boolean
 ): JS.Expression {
@@ -372,7 +373,7 @@ function compileTag(
 }
 
 function compileValues(
-  expr: S.SValues,
+  expr: S.SValues<Typed>,
   env: Environment,
   _multipleValues: boolean
 ): JS.Expression {
@@ -384,7 +385,7 @@ function compileValues(
 }
 
 function compileMultipleValueBind(
-  expr: S.SMultipleValueBind,
+  expr: S.SMultipleValueBind<Typed>,
   env: Environment,
   multipleValues: boolean
 ): JS.Expression {
@@ -411,7 +412,7 @@ function compileMultipleValueBind(
 }
 
 function compileUnknown(
-  _expr: S.SUnknown,
+  _expr: S.SUnknown<Typed>,
   env: Environment,
   _multipleValues: boolean
 ): JS.Expression {
@@ -428,7 +429,7 @@ function compileUnknown(
 }
 
 export function compile(
-  expr: S.Expression,
+  expr: S.Expression<Typed>,
   env: Environment,
   multipleValues: boolean
 ): JS.Expression {
@@ -494,56 +495,53 @@ export function compile(
   }
 }
 
-function compileDefinition(def: S.SDefinition, env: Environment): JS.Statement {
+function compileDefinition(
+  def: S.SDefinition<Typed>,
+  env: Environment
+): JS.Statement {
   const value = compile(def.node.value, env, false);
   const name = lookupBindingOrError(def.node.variable.name, env).name;
   return env.defs.define(name, value);
 }
 
 function compileTopLevel(
-  syntax: S.Syntax,
+  syntax: S.Syntax<Typed>,
   env: Environment,
   multipleValues: boolean
 ): JS.Statement | null {
-  const typedSyntax = syntax as S.Syntax<Partial<Typed>, Partial<Typed>>;
-
-  if (
-    S.isImport(typedSyntax) ||
-    S.isExport(typedSyntax) ||
-    S.isTypeAlias(typedSyntax)
-  ) {
+  if (S.isImport(syntax) || S.isExport(syntax) || S.isTypeAlias(syntax)) {
     // exports are compiled at the end of the module
     return null;
   }
 
-  let js: JS.Statement;
-  let type: Type | undefined;
-
-  if (S.isDefinition(typedSyntax)) {
-    js = compileDefinition(typedSyntax, env);
-    type = typedSyntax.node.value.info.resultingType;
-  } else {
-    js = {
-      type: "ExpressionStatement",
-      expression: compile(typedSyntax, env, multipleValues)
-    };
-    type = typedSyntax.info.resultingType;
-  }
-
-  return {
-    ...js,
-    // Include a comment with the original source code immediately
-    // before each toplevel compilation.
-    leadingComments: [
-      {
-        type: "Block",
-        value: `
+  if (S.isDefinition(syntax)) {
+    const info = syntax.node.value.info;
+    let type: Type | undefined = info ? info.resultingType : undefined;
+    const js = compileDefinition(syntax, env);
+    return comment(
+      `
 ${type ? printType(type) : ""}
 ${pprint(syntax, 40)}
-`
-      }
-    ]
-  };
+`,
+      js
+    );
+  } else if (S.isExpression(syntax)) {
+    const info = syntax.info;
+    const type = info ? info.resultingType : undefined;
+    const js: JS.Statement = {
+      type: "ExpressionStatement",
+      expression: compile(syntax, env, multipleValues)
+    };
+    return comment(
+      `
+${type ? printType(type) : ""}
+${pprint(syntax, 40)}
+`,
+      js
+    );
+  } else {
+    throw new InvariantViolation(`Can't compile unknown toplevel form.`);
+  }
 }
 
 function compileRuntime(env: Environment): JS.Statement | JS.ModuleDeclaration {
@@ -612,7 +610,7 @@ function compileExports(
 }
 
 export function moduleEnvironment(
-  m: S.Module,
+  m: S.Module<Typed>,
   opts: CompilerOptions
 ): Environment {
   const moduleDefinitions = m.body
@@ -647,7 +645,7 @@ export function moduleEnvironment(
 }
 
 function compileModule(
-  m: S.Module,
+  m: S.Module<Typed>,
   includeRuntime: boolean,
   env: Environment
 ): JS.Program {
@@ -661,16 +659,16 @@ function compileModule(
 
       ...compileImports(moduleImports(m), env),
 
-      ...maybeMap(
-        (syntax: S.Syntax) => compileTopLevel(syntax, env, false),
-        m.body
-      ),
+      ...maybeMap(syntax => compileTopLevel(syntax, env, false), m.body),
       ...compileExports(moduleExports(m), env)
     ]
   };
 }
 
-export function compileToString(syntax: S.Syntax, env: Environment): string {
+export function compileToString(
+  syntax: S.Syntax<Typed>,
+  env: Environment
+): string {
   const ast = compileTopLevel(syntax, env, true);
   if (!ast) return "";
   const code = escodegen.generate(ast, { comment: true });
@@ -679,7 +677,7 @@ export function compileToString(syntax: S.Syntax, env: Environment): string {
 }
 
 export function compileModuleToString(
-  m: S.Module,
+  m: S.Module<Typed>,
   opts: CompilerOptions
 ): string {
   const env = moduleEnvironment(m, opts);

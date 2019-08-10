@@ -12,6 +12,7 @@ import {
 import { Host } from "./host";
 import primitives from "./primitives";
 import * as S from "./syntax";
+import { Typed } from "./syntax-typed";
 import { mapObject } from "./utils";
 
 type Sandbox = ReturnType<typeof createSandbox>;
@@ -27,48 +28,22 @@ export function createSandbox(requireFn: (id: string) => any) {
   return sandbox;
 }
 
-function compileAndRun(s: S.Syntax, env: Environment, sandbox: Sandbox) {
+function compileAndRun(s: S.Syntax<Typed>, env: Environment, sandbox: Sandbox) {
   const code = compileToString(s, env);
   return vm.runInContext(code, sandbox);
 }
 
-export async function evaluateExpression(
-  expression: S.Expression,
-  env: Environment,
-  sandbox: Sandbox
-): Promise<unknown> {
-  const wrapped: S.Expression = {
-    node: {
-      tag: "function",
-      lambdaList: {
-        tag: "function-lambda-list",
-        positionalArguments: [],
-        location: expression.location
-      },
-      body: [expression]
-    },
-    info: {},
-    location: expression.location
-  };
-  const result = compileAndRun(wrapped, env, sandbox);
-  return result((x: unknown) => x, {});
-}
-
 export async function evaluate(
-  syntax: S.Syntax,
+  syntax: S.Syntax<Typed>,
   env: Environment,
   sandbox: Sandbox
 ): Promise<unknown> {
-  if (S.isExpression(syntax)) {
-    return evaluateExpression(syntax, env, sandbox);
-  } else {
-    const result = compileAndRun(syntax, env, sandbox);
-    return result;
-  }
+  const result = compileAndRun(syntax, env, sandbox);
+  return result;
 }
 
 export function evaluateModule(
-  m: S.Module,
+  m: S.Module<Typed>,
   sandbox: Sandbox,
   host: Host
 ): void {

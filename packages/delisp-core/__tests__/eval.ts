@@ -3,6 +3,8 @@ import { createSandbox, evaluate } from "../src/eval";
 import { readSyntax } from "../src/index";
 import { macroexpandSyntax } from "../src/index";
 import { createModule } from "../src/module";
+import * as S from "../src/syntax";
+import { inferExpressionInModule } from "../src/infer";
 
 function evaluateString(str: string): unknown {
   const env = moduleEnvironment(createModule(), {
@@ -12,8 +14,16 @@ function evaluateString(str: string): unknown {
   });
   const s = macroexpandSyntax(readSyntax(`(let {*context* {}} ${str})`));
   const sandbox = createSandbox(() => null);
-
-  return evaluate(s, env, sandbox);
+  if (!S.isExpression(s)) {
+    throw new Error(`Can't evaluate a non-expression!`);
+  }
+  const { typedExpression } = inferExpressionInModule(
+    s,
+    createModule(),
+    undefined,
+    false
+  );
+  return evaluate(typedExpression, env, sandbox);
 }
 
 describe("Evaluation", () => {
