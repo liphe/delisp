@@ -1,22 +1,21 @@
 /* eslint-disable react/jsx-key */
 
-import React from "react";
-import styled from "styled-components";
-
-import { updateCode, Action, State } from "./state";
-
 import {
-  Module,
-  Syntax,
-  isExpression,
-  readModule,
   compileModuleToString,
+  Encoder,
   inferModule,
+  isExpression,
+  macroexpandModule,
+  Module,
   pprintAs,
   printType,
-  Encoder,
+  readModule,
+  Syntax,
   Typed
 } from "@delisp/core";
+import React from "react";
+import styled from "styled-components";
+import { Action, State, updateCode } from "./state";
 
 const LINE_WIDTH = 40;
 
@@ -30,7 +29,7 @@ export function assertNever(x: never): never {
 
 function readModuleOrError(code: string): ASTResult {
   try {
-    const m = readModule(code);
+    const m = macroexpandModule(readModule(code));
     const inferredM = inferModule(m);
     return { tag: "success", module: inferredM.typedModule };
   } catch (err) {
