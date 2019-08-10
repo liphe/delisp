@@ -51,17 +51,13 @@ interface SConditionalF<E> {
 interface SFunctionCallF<E> {
   tag: "function-call";
   fn: E;
-  // User provided function arguments for this function call. This is
-  // internal. Use functions from syntax-functions to get this
-  // information.
   arguments: E[];
 }
 
 export interface LambdaList {
   tag: "function-lambda-list";
-  // The user-provided arguments for the lambda-list. This is
-  // internal. Use functions from syntax-function to get this
-  // information.
+  // The positional arguments for the lambda-list. This is
+  // internal.
   positionalArguments: Identifier[];
   location: Location;
 }
