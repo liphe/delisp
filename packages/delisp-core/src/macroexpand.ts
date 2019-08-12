@@ -3,13 +3,10 @@ import * as S from "./syntax";
 import { Location } from "./input";
 import { ASExprSymbol } from "./sexpr";
 import { sexpr } from "./sexpr-tag";
-import { convertExpr, WithErrors } from "./syntax-convert";
+import { convertExpr } from "./syntax-convert";
 import { mapExpr } from "./syntax-utils";
 
-function macroexpandLabel(
-  name: string,
-  location: Location
-): S.Expression<WithErrors> {
+function macroexpandLabel(name: string, location: Location): S.Expression {
   const key: ASExprSymbol = {
     tag: "symbol",
     name,
@@ -23,9 +20,7 @@ function macroexpandLabel(
 `);
 }
 
-function macroexpandFuncall(
-  funcall: S.SFunctionCall<WithErrors>
-): S.Expression<WithErrors> {
+function macroexpandFuncall(funcall: S.SFunctionCall): S.Expression {
   return {
     ...funcall,
     node: {
@@ -36,9 +31,7 @@ function macroexpandFuncall(
   };
 }
 
-function macroexpandLambda(
-  lambda: S.SFunction<WithErrors>
-): S.Expression<WithErrors> {
+function macroexpandLambda(lambda: S.SFunction): S.Expression {
   const { lambdaList } = lambda.node;
   return {
     ...lambda,
@@ -59,8 +52,8 @@ function macroexpandLambda(
 
 /** Run a single macroexpansion step. */
 export function macroexpandExpressionStep(
-  expr: S.Expression<WithErrors>
-): [S.Expression<WithErrors>, boolean] {
+  expr: S.Expression
+): [S.Expression, boolean] {
   if (expr.node.tag === "variable-reference") {
     const name = expr.node.name;
     if (name.startsWith(":")) {
@@ -78,25 +71,26 @@ export function macroexpandExpressionStep(
 }
 
 /** Macroexpand fully an expression. */
-export function macroexpandExpression(
-  expr: S.Expression<WithErrors>
-): S.Expression<WithErrors> {
+export function macroexpandRootExpression(expr: S.Expression): S.Expression {
   // Note that we do not want (necessarily) to macroexpand its
   // subforms. We just expand the toplevel form, and continue with the
   // result of this one!
   const [expandedExpr, expandMore] = macroexpandExpressionStep(expr);
   if (expandMore) {
-    return macroexpandExpression(expandedExpr);
+    return macroexpandRootExpression(expandedExpr);
   } else {
-    // Only after the top expression can't be expanded anymore, we
-    // proceed to macroexpand the subexpressions.
-    return mapExpr(expandedExpr, e => macroexpandExpression(e));
+    return expandedExpr;
   }
 }
 
-export function macroexpandSyntax(
-  syntax: S.Syntax<WithErrors, WithErrors>
-): S.Syntax<WithErrors, WithErrors> {
+export function macroexpandExpression(expr: S.Expression): S.Expression {
+  const topform = macroexpandRootExpression(expr);
+  // Only after the top expression can't be expanded anymore, we
+  // proceed to macroexpand the subexpressions.
+  return mapExpr(topform, subexpr => macroexpandExpression(subexpr));
+}
+
+export function macroexpandSyntax(syntax: S.Syntax): S.Syntax {
   if (S.isExpression(syntax)) {
     return macroexpandExpression(syntax);
   } else if (S.isDefinition(syntax)) {
@@ -122,9 +116,7 @@ export function macroexpandSyntax(
   }
 }
 
-export function macroexpandModule(
-  m: S.Module<WithErrors, WithErrors>
-): S.Module<WithErrors, WithErrors> {
+export function macroexpandModule(m: S.Module): S.Module {
   return {
     tag: "module",
     body: m.body.map(macroexpandSyntax)

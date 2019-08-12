@@ -319,7 +319,6 @@ export function closeFunctionEffect(polytype: T.TypeSchema): T.TypeSchema {
     const fn: T.Application = polytype.mono;
 
     const { args, effect, output } = decomposeFunctionType(fn);
-
     const effectRow = normalizeEffect(effect);
     const effectTail = effectRow.extends;
 

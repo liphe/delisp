@@ -2,6 +2,7 @@ import {
   addToModule,
   collectConvertErrors,
   createSandbox,
+  decomposeFunctionType,
   defaultEnvironment,
   evaluate,
   evaluateModule,
@@ -10,7 +11,9 @@ import {
   inferSyntaxInModule,
   isDefinition,
   isExpression,
+  isFunctionType,
   macroexpandSyntax,
+  macroexpandRootExpression,
   mergeExternalEnvironments,
   moduleDefinitionByName,
   moduleEnvironment,
@@ -19,7 +22,8 @@ import {
   removeModuleDefinition,
   removeModuleTypeDefinition,
   resolveModuleDependencies,
-  Type
+  Type,
+  wrapInLambda
 } from "@delisp/core";
 import { Module, Syntax } from "@delisp/core/src/syntax";
 import { Pair, TaggedValue } from "@delisp/runtime";
@@ -72,7 +76,21 @@ async function handleLine(line: string) {
 
     let syntax;
     try {
-      syntax = macroexpandSyntax(readSyntax(inputBuffer));
+      const inputSyntax = readSyntax(inputBuffer);
+      const errors = collectConvertErrors(inputSyntax);
+      if (errors.length > 0) {
+        errors.forEach(err => {
+          console.error(theme.error(`ERROR: ${err}\n`));
+        });
+      }
+
+      const macroexpandedSyntax = macroexpandSyntax(inputSyntax);
+
+      if (isExpression(macroexpandedSyntax)) {
+        syntax = macroexpandRootExpression(wrapInLambda(macroexpandedSyntax));
+      } else {
+        syntax = macroexpandedSyntax;
+      }
     } catch (err) {
       if (err.incomplete) {
         rl.setPrompt(process.env.INSIDE_EMACS ? "" : "... ");
@@ -87,20 +105,21 @@ async function handleLine(line: string) {
     inputBuffer = "";
     rl.setPrompt(PROMPT);
 
-    const errors = collectConvertErrors(syntax);
-    if (errors.length > 0) {
-      errors.forEach(err => {
-        console.error(theme.error(`ERROR: ${err}\n`));
-      });
-    }
-
     const evalResult = await delispEval(syntax);
     switch (evalResult.tag) {
-      case "expression":
-        console.log(
-          printWithTheType(evalResult.type, printColoredValue(evalResult.value))
-        );
+      case "expression": {
+        const wrappedLambda: any = evalResult.value;
+        const value = await wrappedLambda((x: unknown) => x, {});
+
+        if (!isFunctionType(evalResult.type)) {
+          throw new Error(
+            `I am pretty sure I evaluated a lambda, but the type is not a function type?`
+          );
+        }
+        const { output } = decomposeFunctionType(evalResult.type);
+        console.log(printWithTheType(output, printColoredValue(value)));
         return;
+      }
 
       case "definition":
         console.log(printWithTheType(evalResult.type, evalResult.name));
@@ -158,13 +177,13 @@ function updateModule(syntax: Syntax) {
 type DelispEvalResult =
   | {
       tag: "expression";
-      type?: Type;
+      type: Type;
       value: unknown;
     }
   | {
       tag: "definition";
       name: string;
-      type?: Type;
+      type: Type;
     }
   | {
       tag: "other";
@@ -234,7 +253,11 @@ const delispEval = async (syntax: Syntax): Promise<DelispEvalResult> => {
     const name = syntax.node.variable.name;
     const definition =
       typedModule && (moduleDefinitionByName(name, typedModule) || undefined);
-    const type = definition && definition.node.value.info.resultingType;
+
+    if (!definition) {
+      throw new Error(`Can't find the definition you just defined?`);
+    }
+    const type = definition.node.value.info.resultingType;
     return { tag: "definition", name, type };
   } else {
     return { tag: "other" };
