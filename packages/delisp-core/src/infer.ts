@@ -440,9 +440,13 @@ function infer(
       const fnargs = expr.node.lambdaList.positionalArguments.map(a => a.name);
       const argtypes = fnargs.map(_ => generateUniqueTVar());
 
-      const bodyEffect = T.effect([], generateUniqueTVar());
+      const bodyEffect = generateUniqueTVar();
       const valuesType = generateUniqueTVar();
-      const fnType = T.multiValuedFunction(argtypes, bodyEffect, valuesType);
+      const fnType = T.multiValuedFunction(
+        argtypes,
+        T.effect([], bodyEffect),
+        valuesType
+      );
 
       const { result: typedBody, constraints, assumptions } = inferBody(
         expr.node.body,
@@ -492,7 +496,7 @@ function infer(
       const effect = generateUniqueTVar();
       const tfn: Type = T.multiValuedFunction(
         iargs.result.map(a => a.info.resultingType),
-        effect,
+        T.effect([], effect),
         valuesType
       );
 
@@ -591,6 +595,7 @@ function infer(
               const bInfo = bindingsInfo.find(
                 bi => bi.binding.variable.name === a.variable.node.name
               )!;
+
               return constImplicitInstance(
                 a,
                 monovars,
@@ -599,9 +604,7 @@ function infer(
             }),
 
           // We require let-binding values to be free of effects
-          ...bindingsInfo.map(b =>
-            constEffect(b.inference.result, T.effect([]))
-          )
+          ...bindingsInfo.map(b => constEffect(b.inference.result, T.row([])))
         ],
         assumptions: [
           ...bodyInference.assumptions.filter(

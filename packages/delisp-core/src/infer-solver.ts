@@ -21,6 +21,8 @@ import * as T from "./types";
 import { unify } from "./type-unify";
 import { difference, flatMap, intersection, union } from "./utils";
 
+const DEBUG = false;
+
 // A TAssumption is a variable instance for which we have assumed the
 // type. Those variables are to be bound (and assumption removed)
 // later, either by `let`, `lambda`, or global definitions.  Note: it
@@ -140,7 +142,9 @@ export function debugConstraints(constraints: TConstraint[]) {
           `${pprint(
             c.assumption.variable,
             40
-          )} is implicit instance of ${printType(c.t, false)}`
+          )} is implicit instance of ${printType(c.t, false)}
+for monovars ${c.monovars.join(",")}
+`
         );
       case "explicit-instance-constraint":
         return console.log(
@@ -158,27 +162,25 @@ export function debugConstraints(constraints: TConstraint[]) {
 // scheme. This is used to decide which _instance constraint_ of the
 // set can be solved first. See `solve`/`solvable` for further info.
 function activevars(constraints: TConstraint[]): string[] {
-  const equal = (t1: T.Type, t2: T.Type) => {
-    return union(listTypeVariables(t1), listTypeVariables(t2));
-  };
-
   return flatMap(c => {
     switch (c.tag) {
       case "equal-constraint":
-        return equal(c.exprType, c.t);
+        return union(listTypeVariables(c.exprType), listTypeVariables(c.t));
       case "implicit-instance-constraint": {
-        const { variable } = c.assumption;
+        const { variable, primaryResultingType } = c.assumption;
         return union(
           listTypeVariables(variable.info.selfType),
           listTypeVariables(variable.info.resultingType),
+          listTypeVariables(primaryResultingType),
           intersection(listTypeVariables(c.t), c.monovars)
         );
       }
       case "explicit-instance-constraint": {
-        const { variable } = c.assumption;
+        const { variable, primaryResultingType } = c.assumption;
         return union(
           listTypeVariables(variable.info.selfType),
           listTypeVariables(variable.info.resultingType),
+          listTypeVariables(primaryResultingType),
           difference(listTypeVariables(c.t.mono), c.t.tvars)
         );
       }
@@ -284,18 +286,34 @@ export function solve(
         return true;
       case "implicit-instance-constraint":
         const others = constraints.filter(c1 => c !== c1);
-        return (
+        const result =
           intersection(
             difference(listTypeVariables(c.t), c.monovars),
             activevars(others)
-          ).length === 0
-        );
+          ).length === 0;
+        return result;
     }
   }
 
   const constraint = constraints.find(solvable);
+
   if (constraint === undefined) {
     throw new Error(`circular dependency between constraints detected`);
+  }
+
+  if (DEBUG) {
+    console.log(`---- Solving ----`);
+    console.log("with partial solution");
+    console.log("");
+    Object.keys(solution).forEach(v => {
+      console.log(`${v} => ${printType(solution[v], false)}`);
+    });
+    console.log("current constraint:");
+    debugConstraints([constraint]);
+    console.log("between other constraints");
+    debugConstraints(constraints.filter(c => c !== constraint));
+    console.log("");
+    console.log(">>>>>>>>>>>>>");
   }
 
   const rest = constraints.filter(c => c !== constraint);
