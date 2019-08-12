@@ -112,6 +112,10 @@ const Code = styled.pre`
     color: blue;
   }
 
+  .boolean {
+    color: red;
+  }
+
   .number {
     color: orange;
   }
