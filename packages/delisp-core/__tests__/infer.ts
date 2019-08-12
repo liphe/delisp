@@ -167,6 +167,10 @@ describe("Type inference", () => {
       it("should shadow inline primitivres", () => {
         expect(typeOf("(let {+ 10} +)")).toBeType("number");
       });
+
+      it("should work with function calls", () => {
+        expect(typeOf("(let {x (+ 1 2)} x)")).toBeType("number");
+      });
     });
 
     describe("Lists", () => {
