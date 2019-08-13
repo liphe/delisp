@@ -115,9 +115,7 @@ function compileLambda(
 
   const body = compileBody(fn.node.body, newEnv, true);
 
-  return arrowFunction([identifier("values"), ...jsargs], body, {
-    async: true
-  });
+  return arrowFunction([identifier("values"), ...jsargs], body);
 }
 
 function isFunctionAsync(fntype: Type): boolean {
@@ -176,8 +174,7 @@ function compileInlineValue(name: string): JS.Expression {
   const identifiers = range(prim.arity).map(i => identifier(`x${i}`));
   return arrowFunction(
     [identifier("values"), ...identifiers],
-    [prim.funcHandler(identifiers)],
-    { async: true }
+    [prim.funcHandler(identifiers)]
   );
 }
 
@@ -242,15 +239,18 @@ function compileLetBindings(
       identifier(lookupBindingOrError(b.variable.name, newenv).name)
   );
 
-  return awaitExpr({
+  const func = arrowFunction(
+    params,
+    compileBody(expr.node.body, newenv, multipleValues)
+  );
+
+  const call: JS.Expression = {
     type: "CallExpression",
-    callee: arrowFunction(
-      params,
-      compileBody(expr.node.body, newenv, multipleValues),
-      { async: true }
-    ),
+    callee: func,
     arguments: expr.node.bindings.map(b => compile(b.value, env, false))
-  });
+  };
+
+  return func.async ? awaitExpr(call) : call;
 }
 
 function compileVector(
@@ -349,9 +349,7 @@ function compileMatch(
 ): JS.Expression {
   const defaultCase =
     expr.node.defaultCase &&
-    arrowFunction([], compileBody(expr.node.defaultCase, env, multipleValues), {
-      async: true
-    });
+    arrowFunction([], compileBody(expr.node.defaultCase, env, multipleValues));
 
   return primitiveCall(
     "matchTag",
@@ -365,8 +363,7 @@ function compileMatch(
           (() => {
             const newenv = addBinding(c.variable.name, env);
             return compileBody(c.body, newenv, multipleValues);
-          })(),
-          { async: true }
+          })()
         )
       }))
     ),
@@ -406,8 +403,7 @@ function compileMultipleValueBind(
 ): JS.Expression {
   const form = arrowFunction(
     [identifier("values")],
-    [compile(expr.node.form, env, true)],
-    { async: true }
+    [compile(expr.node.form, env, true)]
   );
   const newenv = expr.node.variables.reduce((env, v) => {
     return addBinding(v.name, env);
@@ -419,8 +415,7 @@ function compileMultipleValueBind(
 
   const continuation = arrowFunction(
     params,
-    compileBody(expr.node.body, newenv, multipleValues),
-    { async: true }
+    compileBody(expr.node.body, newenv, multipleValues)
   );
 
   return primitiveCall("mvbind", form, continuation);

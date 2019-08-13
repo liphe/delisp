@@ -4,6 +4,7 @@ import {
   identifierToJS,
   identifierToJSName
 } from "./jsvariable";
+import { isBodyAsync } from "./estree-utils-async";
 
 export function literal(value: number | string | boolean | null): JS.Literal {
   return {
@@ -48,6 +49,32 @@ export function methodCall(
   };
 }
 
+export function op1(
+  operator: JS.UnaryOperator,
+  argument: JS.Expression
+): JS.UnaryExpression {
+  return { type: "UnaryExpression", operator, prefix: true, argument };
+}
+
+export function op(
+  operator: JS.BinaryOperator,
+  left: JS.Expression,
+  right: JS.Expression
+): JS.BinaryExpression {
+  return { type: "BinaryExpression", operator, left, right };
+}
+
+export function primitiveCall(
+  name: string,
+  ...args: JS.Expression[]
+): JS.Expression {
+  return {
+    type: "CallExpression",
+    callee: identifier(name),
+    arguments: args
+  };
+}
+
 /** Generate an arrow function in JS
  *
  * @description This will execute all the expressions, returning the
@@ -55,7 +82,7 @@ export function methodCall(
 export function arrowFunction(
   args: JS.Pattern[],
   body: JS.Expression[],
-  options: { async: boolean } = { async: false }
+  options: { async: boolean } = { async: isBodyAsync(body) }
 ): JS.ArrowFunctionExpression {
   if (body.length === 0) {
     throw new Error(`Empty body`);
@@ -94,32 +121,6 @@ export function arrowFunction(
       async: options.async
     };
   }
-}
-
-export function op1(
-  operator: JS.UnaryOperator,
-  argument: JS.Expression
-): JS.UnaryExpression {
-  return { type: "UnaryExpression", operator, prefix: true, argument };
-}
-
-export function op(
-  operator: JS.BinaryOperator,
-  left: JS.Expression,
-  right: JS.Expression
-): JS.BinaryExpression {
-  return { type: "BinaryExpression", operator, left, right };
-}
-
-export function primitiveCall(
-  name: string,
-  ...args: JS.Expression[]
-): JS.Expression {
-  return {
-    type: "CallExpression",
-    callee: identifier(name),
-    arguments: args
-  };
 }
 
 interface Property {
