@@ -13,68 +13,89 @@ import {
   Syntax,
   Typed
 } from "@delisp/core";
-import React from "react";
-import styled from "styled-components";
+import React, { useState } from "react";
+import styled, { css } from "styled-components";
 import { Action, State, updateCode } from "./state";
 
 const LINE_WIDTH = 40;
 
-type ASTResult =
-  | { tag: "success"; module: Module<Typed> }
-  | { tag: "error"; message: string };
-
-export function assertNever(x: never): never {
-  throw new Error("Unexpected object: " + x);
+interface ViewProps {
+  code: string;
 }
 
-function readModuleOrError(code: string): ASTResult {
-  try {
-    const m = macroexpandModule(readModule(code));
-    const inferredM = inferModule(m);
-    return { tag: "success", module: inferredM.typedModule };
-  } catch (err) {
-    return { tag: "error", message: err.message };
-  }
+interface CodeView {
+  name: string;
+  render: React.FunctionComponent<ViewProps>;
 }
 
-const Panel = styled.div`
-  display: inline-block;
-  width: 50%;
-  vertical-align: top;
-`;
-
-function AST(props: { code: string }) {
-  const { code } = props;
-  const result = readModuleOrError(code);
-
-  switch (result.tag) {
-    case "success": {
-      const js = compileModuleToString(result.module, {
+const VIEWS: CodeView[] = [
+  {
+    name: "Pretty Print",
+    render: ({ code }) => {
+      const m = readModule(code);
+      return <ModuleExplorer module={m} />;
+    }
+  },
+  {
+    name: "Macroexpand",
+    render: ({ code }) => {
+      const m = macroexpandModule(readModule(code));
+      return <ModuleExplorer module={m} />;
+    }
+  },
+  {
+    name: "Type inference",
+    render: ({ code }) => {
+      const inferred = inferModule(macroexpandModule(readModule(code)));
+      return <ModuleExplorer module={inferred.typedModule} />;
+    }
+  },
+  {
+    name: "JS",
+    render: ({ code }) => {
+      const inferred = inferModule(macroexpandModule(readModule(code)));
+      const js = compileModuleToString(inferred.typedModule, {
         getOutputFile: file => file
       });
-
-      return (
-        <div>
-          <Panel>
-            <ModuleExplorer module={result.module} />
-          </Panel>
-          <Panel>
-            <pre>{js}</pre>
-          </Panel>
-        </div>
-      );
+      return <pre>{js}</pre>;
     }
-    case "error":
+  }
+];
+
+function AST({ code }: { code: string }) {
+  const [currentView, setCurrentView] = useState(VIEWS[0]);
+  const Component = (props: ViewProps) => {
+    try {
+      return currentView.render(props);
+    } catch (err) {
       return (
         <div>
           <span>Something went wrong</span>
-          <pre>{result.message}</pre>
         </div>
       );
-  }
+    }
+  };
+
+  return (
+    <div>
+      <div>
+        {VIEWS.map(v => (
+          <ViewButton
+            selected={v === currentView}
+            onClick={() => setCurrentView(v)}
+          >
+            {v.name}
+          </ViewButton>
+        ))}
+      </div>
+      <div>
+        <Component code={code} />
+      </div>
+    </div>
+  );
 }
 
-function ModuleExplorer({ module: m }: { module: Module<Typed> }) {
+function ModuleExplorer({ module: m }: { module: Module<Typed | {}> }) {
   return (
     <div>
       {m.body.map((s, i) => (
@@ -84,9 +105,17 @@ function ModuleExplorer({ module: m }: { module: Module<Typed> }) {
   );
 }
 
-function SyntaxExplorer({ syntax }: { syntax: Syntax<Typed> }) {
+function SyntaxExplorer({ syntax }: { syntax: Syntax<Typed | {}> }) {
   return <GenericSyntaxExplorer syntax={syntax} />;
 }
+
+const ViewButton = styled.button`
+  ${(props: { selected?: boolean }) =>
+    props.selected &&
+    css`
+      background: lightBlue;
+    `}
+`;
 
 const Editor = styled.textarea`
   width: 100%;
@@ -145,7 +174,7 @@ const PrettierEncoder: Encoder<React.ReactElement[]> = {
           console.log({ source });
         }}
         title={
-          source && isExpression(source)
+          source && isExpression(source) && source.info.selfType
             ? printType(source.info.selfType)
             : undefined
         }

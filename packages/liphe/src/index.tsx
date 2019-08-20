@@ -4,15 +4,7 @@ import { App } from "./App";
 
 import { State, reducer } from "./state";
 
-const code = `
-(define id (lambda (x) x))
-
-((id id) 5)
-
-(let {f (id id)}
-  (f 5))
-
-`;
+import code from "raw-loader!delisp/lib/prelude.dl";
 
 const initialState: State = {
   code
