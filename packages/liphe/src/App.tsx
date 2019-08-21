@@ -31,28 +31,28 @@ interface CodeView {
 const VIEWS: CodeView[] = [
   {
     name: "Pretty Print",
-    render: ({ code }) => {
+    render: function PrettyPrint({ code }) {
       const m = readModule(code);
       return <ModuleExplorer module={m} />;
     }
   },
   {
     name: "Macroexpand",
-    render: ({ code }) => {
+    render: function MacroExpand({ code }) {
       const m = macroexpandModule(readModule(code));
       return <ModuleExplorer module={m} />;
     }
   },
   {
     name: "Type inference",
-    render: ({ code }) => {
+    render: function TypeInference({ code }) {
       const inferred = inferModule(macroexpandModule(readModule(code)));
       return <ModuleExplorer module={inferred.typedModule} />;
     }
   },
   {
     name: "JS",
-    render: ({ code }) => {
+    render: function JS({ code }) {
       const inferred = inferModule(macroexpandModule(readModule(code)));
       const js = compileModuleToString(inferred.typedModule, {
         getOutputFile: file => file
