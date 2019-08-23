@@ -130,335 +130,329 @@ describe("Type inference", () => {
 
       expect(() => typeOf(`(+ "foo" 3`)).toThrow();
     });
+  });
 
-    describe("Lambda abstractions", () => {
-      it("should infer the right type", () => {
-        expect(typeOf("(lambda (x) x)")).toBeType("(-> ctx β γ β)");
-        expect(typeOf("(lambda (x y) y)")).toBeType("(-> ctx α β γ β)");
-        expect(typeOf("(lambda (f x) (f x))")).toBeType(
-          "(-> ctx (-> ctx x e (values r <| rs)) x e (values r <| rs))"
-        );
-        expect(typeOf("(lambda (x) (lambda (y) x))")).toBeType(
-          "(-> ctx1 α β (-> ctx2 γ δ α))"
-        );
-        // lambda-bound variables should be monomorphic
-        expect(() => typeOf(`(lambda (f) ((f "foo") (f 0)))`)).toThrow();
-      });
-
-      it("should return the type of the last form", () => {
-        expect(typeOf("(lambda (x) 1)")).toBeType("(-> ctx α β number)");
-      });
+  describe("Lambda abstractions", () => {
+    it("should infer the right type", () => {
+      expect(typeOf("(lambda (x) x)")).toBeType("(-> ctx β γ β)");
+      expect(typeOf("(lambda (x y) y)")).toBeType("(-> ctx α β γ β)");
+      expect(typeOf("(lambda (f x) (f x))")).toBeType(
+        "(-> ctx (-> ctx x e (values r <| rs)) x e (values r <| rs))"
+      );
+      expect(typeOf("(lambda (x) (lambda (y) x))")).toBeType(
+        "(-> ctx1 α β (-> ctx2 γ δ α))"
+      );
+      // lambda-bound variables should be monomorphic
+      expect(() => typeOf(`(lambda (f) ((f "foo") (f 0)))`)).toThrow();
     });
 
-    describe("Let polymorphism", () => {
-      it("should generalize basic types in let", () => {
-        expect(typeOf("(let {id (lambda (x) x)} id)")).toBeType(
-          "(-> ctx α β α)"
-        );
-      });
+    it("should return the type of the last form", () => {
+      expect(typeOf("(lambda (x) 1)")).toBeType("(-> ctx α β number)");
+    });
+  });
 
-      it("should shadow inline primitivres", () => {
-        expect(typeOf("(let {+ 10} +)")).toBeType("number");
-      });
-
-      it("should work with function calls", () => {
-        expect(typeOf("(let {x (+ 1 2)} x)")).toBeType("number");
-      });
+  describe("Let polymorphism", () => {
+    it("should generalize basic types in let", () => {
+      expect(typeOf("(let {id (lambda (x) x)} id)")).toBeType("(-> ctx α β α)");
     });
 
-    describe("Lists", () => {
-      it("should infer the type of empty vector", () => {
-        expect(typeOf("[]")).toBeType("[α]");
-      });
-      it("should infer the type of a vector of numbers", () => {
-        expect(typeOf("[1 2 3]")).toBeType("[number]");
-      });
-      it("should infer the type of nested vectors", () => {
-        expect(typeOf("[[1] [2] [3]]")).toBeType("[[number]]");
-      });
+    it("should shadow inline primitivres", () => {
+      expect(typeOf("(let {+ 10} +)")).toBeType("number");
     });
 
-    describe("Records", () => {
-      it("should infer the type of exact records", () => {
-        expect(typeOf('{:x 10 :y "hello"}')).toBeType("{:x number :y string}");
-      });
-      it("should infer the type of a lenses", () => {
-        expect(typeOf(":x")).toBeType(
-          "(-> ctx1 {:x α <| β} γ (values α (-> ctx2 δ ε {:x δ <| β})))"
-        );
-        expect(typeOf(":foo")).toBeType(
-          "(-> ctx1 {:foo α <| β} γ (values α (-> ctx2 δ ε {:foo δ <| β})))"
-        );
-        expect(typeOf("(if true :x :y)")).toBeType(
-          "(-> ctx1 {:x α :y α <| β} γ (values α (-> ctx2 α δ {:x α :y α <| β})))"
-        );
-      });
-      it("should be able to access the field", () => {
-        // TODO: Commented because there is no support temporarily to infer an expression with multiple values.
-        // expect(typeOf("(:x {:x 5})", undefined, undefined, true)).toBeType(
-        //   "(values number (-> ctx α β {:x α}))"
-        // );
-        expect(typeOf("(lambda (f) (f {:x 5 :y 6}))")).toBeType(
-          "(-> ctx (-> ctx {:x number :y number} α (values β <| γ)) α (values β <| γ))"
-        );
-      });
-      it("should throw an error when trying to access unknown fields", () => {
-        expect(() => typeOf("(:x {:y 2})")).toThrow();
-        expect(() => typeOf("(:x {})")).toThrow();
-      });
-      it("should infer the type of updating record fields", () => {
-        expect(typeOf("{:x 2 | {:x 1}}")).toBeType("{:x number}");
-        expect(typeOf('{:x "foo" | {:x 1}}')).toBeType("{:x string}");
-        expect(typeOf("{:x 3 | (if true {:x 1} {:x 2})}")).toBeType(
-          "{:x number}"
-        );
-        expect(typeOf("(lambda (r v) {:x v | r})")).toBeType(
-          "(-> ctx {:x α <| β} γ δ {:x γ <| β})"
-        );
-      });
-      it("should not allow to extend a record", () => {
-        expect(() => typeOf("{:y 2 | {:x 1}}")).toThrow();
-      });
-      it("should not allow to extend any other type", () => {
-        expect(() => typeOf("{:x 1 | 5}")).toThrow();
-        expect(() => typeOf('{:x 1 | "foo"}')).toThrow();
-      });
+    it("should work with function calls", () => {
+      expect(typeOf("(let {x (+ 1 2)} x)")).toBeType("number");
+    });
+  });
 
-      it("infer the selector type of record lenses", () => {
-        expect(typeOf("(multiple-value-bind (x _) (:x {:x 20}) x)")).toBeType(
-          "number"
-        );
-        expect(typeOf("(multiple-value-bind (_ u) (:x {:x 20}) u)")).toBeType(
-          "(-> ctx α β {:x α})"
-        );
-      });
+  describe("Lists", () => {
+    it("should infer the type of empty vector", () => {
+      expect(typeOf("[]")).toBeType("[α]");
+    });
+    it("should infer the type of a vector of numbers", () => {
+      expect(typeOf("[1 2 3]")).toBeType("[number]");
+    });
+    it("should infer the type of nested vectors", () => {
+      expect(typeOf("[[1] [2] [3]]")).toBeType("[[number]]");
+    });
+  });
+
+  describe("Records", () => {
+    it("should infer the type of exact records", () => {
+      expect(typeOf('{:x 10 :y "hello"}')).toBeType("{:x number :y string}");
+    });
+    it("should infer the type of a lenses", () => {
+      expect(typeOf(":x")).toBeType(
+        "(-> ctx1 {:x α <| β} γ (values α (-> ctx2 δ ε {:x δ <| β})))"
+      );
+      expect(typeOf(":foo")).toBeType(
+        "(-> ctx1 {:foo α <| β} γ (values α (-> ctx2 δ ε {:foo δ <| β})))"
+      );
+      expect(typeOf("(if true :x :y)")).toBeType(
+        "(-> ctx1 {:x α :y α <| β} γ (values α (-> ctx2 α δ {:x α :y α <| β})))"
+      );
+    });
+    it("should be able to access the field", () => {
+      // TODO: Commented because there is no support temporarily to infer an expression with multiple values.
+      // expect(typeOf("(:x {:x 5})", undefined, undefined, true)).toBeType(
+      //   "(values number (-> ctx α β {:x α}))"
+      // );
+      expect(typeOf("(lambda (f) (f {:x 5 :y 6}))")).toBeType(
+        "(-> ctx (-> ctx {:x number :y number} α (values β <| γ)) α (values β <| γ))"
+      );
+    });
+    it("should throw an error when trying to access unknown fields", () => {
+      expect(() => typeOf("(:x {:y 2})")).toThrow();
+      expect(() => typeOf("(:x {})")).toThrow();
+    });
+    it("should infer the type of updating record fields", () => {
+      expect(typeOf("{:x 2 | {:x 1}}")).toBeType("{:x number}");
+      expect(typeOf('{:x "foo" | {:x 1}}')).toBeType("{:x string}");
+      expect(typeOf("{:x 3 | (if true {:x 1} {:x 2})}")).toBeType(
+        "{:x number}"
+      );
+      expect(typeOf("(lambda (r v) {:x v | r})")).toBeType(
+        "(-> ctx {:x α <| β} γ δ {:x γ <| β})"
+      );
+    });
+    it("should not allow to extend a record", () => {
+      expect(() => typeOf("{:y 2 | {:x 1}}")).toThrow();
+    });
+    it("should not allow to extend any other type", () => {
+      expect(() => typeOf("{:x 1 | 5}")).toThrow();
+      expect(() => typeOf('{:x 1 | "foo"}')).toThrow();
     });
 
-    describe("Cases", () => {
-      it("should infer the type of injected cases", () => {
-        expect(typeOf("(case :version 0)")).toBeType(
-          "(cases (:version number) α)"
-        );
-      });
-      it("should infer the type of match", () => {
-        expect(
-          typeOf(`
+    it("infer the selector type of record lenses", () => {
+      expect(typeOf("(multiple-value-bind (x _) (:x {:x 20}) x)")).toBeType(
+        "number"
+      );
+      expect(typeOf("(multiple-value-bind (_ u) (:x {:x 20}) u)")).toBeType(
+        "(-> ctx α β {:x α})"
+      );
+    });
+  });
+
+  describe("Cases", () => {
+    it("should infer the type of injected cases", () => {
+      expect(typeOf("(case :version 0)")).toBeType(
+        "(cases (:version number) α)"
+      );
+    });
+    it("should infer the type of match", () => {
+      expect(
+        typeOf(`
 (lambda (x)
   (match x
     ({:version number} number)
     ({:unreleased _} -1)))
 `)
-        ).toBeType(
-          "(-> ctx (cases (:version number) (:unreleased α)) β number)"
-        );
-      });
+      ).toBeType("(-> ctx (cases (:version number) (:unreleased α)) β number)");
+    });
 
-      it("match can handle cases", () => {
-        expect(
-          typeOf(`
+    it("match can handle cases", () => {
+      expect(
+        typeOf(`
 (match (case :version 2)
   ({:version number} number)
   ({:unreleased _} -1))`)
-        ).toBeType("number");
-      });
+      ).toBeType("number");
+    });
 
-      it("unexpected cases are not allowed", () => {
-        expect(() =>
-          typeOf(`
+    it("unexpected cases are not allowed", () => {
+      expect(() =>
+        typeOf(`
 (match (case :test "foo")
   ({:version number} number)
   ({:unreleased _} -1))`)
-        ).toThrow();
-      });
+      ).toThrow();
+    });
 
-      it("cases with the wrong type are not allowed", () => {
-        expect(() =>
-          typeOf(`
+    it("cases with the wrong type are not allowed", () => {
+      expect(() =>
+        typeOf(`
 (match (case :version "foo")
   ({:version number} number)
   ({:unreleased _} -1))`)
-        ).toThrow();
-      });
+      ).toThrow();
+    });
 
-      it("match can handle a default case", () => {
-        expect(
-          typeOf(`
+    it("match can handle a default case", () => {
+      expect(
+        typeOf(`
 (lambda (x)
   (match x
     ({:version number} number)
     ({:unreleased _} -1)
     (:default -2)))
 `)
-        ).toBeType(
-          "(-> ctx (cases (:version number) (:unreleased α) β) γ number)"
-        );
-      });
+      ).toBeType(
+        "(-> ctx (cases (:version number) (:unreleased α) β) γ number)"
+      );
+    });
 
-      it("match can handle a default case", () => {
-        expect(
-          typeOf(`
+    it("match can handle a default case", () => {
+      expect(
+        typeOf(`
 (lambda (state action)
   (match action
     ({:foo _} "hello")
     (:default state)))
 `)
-        ).toBeType("(-> ctx string (cases (:foo α) β) γ string)");
-      });
+      ).toBeType("(-> ctx string (cases (:foo α) β) γ string)");
+    });
 
-      it("match case variables should not be visible outside of the body", () => {
-        expect(() =>
-          typeOf(`
+    it("match case variables should not be visible outside of the body", () => {
+      expect(() =>
+        typeOf(`
 (match (case :version 1)
   ({:version v}
     v)
   (:default
     (string-length v)))`)
-        ).toThrow();
-      });
+      ).toThrow();
+    });
+  });
+
+  describe("Conditionals", () => {
+    it("should infer the right type when both branches return the same type", () => {
+      expect(typeOf("(if true 1 0)")).toBeType("number");
+    });
+    it("should ensure both branches' types are instantiated properly", () => {
+      expect(typeOf("(if true [] [1])")).toBeType("[number]");
+    });
+  });
+
+  describe("Type annotations", () => {
+    it("user-specified variables can specialize inferred types", () => {
+      expect(typeOf("(the [number] [])")).toBeType("[number]");
     });
 
-    describe("Conditionals", () => {
-      it("should infer the right type when both branches return the same type", () => {
-        expect(typeOf("(if true 1 0)")).toBeType("number");
-      });
-      it("should ensure both branches' types are instantiated properly", () => {
-        expect(typeOf("(if true [] [1])")).toBeType("[number]");
-      });
+    it("user-specified variables can be isomorphic to inferred types", () => {
+      expect(typeOf("(the [a] [])")).toBeType("[α]");
     });
 
-    describe("Type annotations", () => {
-      it("user-specified variables can specialize inferred types", () => {
-        expect(typeOf("(the [number] [])")).toBeType("[number]");
-      });
-
-      it("user-specified variables can be isomorphic to inferred types", () => {
-        expect(typeOf("(the [a] [])")).toBeType("[α]");
-      });
-
-      it("user-specified variables cannot generalize inferred types", () => {
-        expect(() => typeOf(`(the a 3)`)).toThrow();
-        expect(() =>
-          typeOf(
-            `(the (-> ctx a a) (the (-> ctx string string) (lambda (x) x)))`
-          )
-        ).toThrow();
-      });
-
-      it("supports partial type annotations", () => {
-        expect(typeOf('(the [_a] ["foo"])')).toBeType("[string]");
-        expect(typeOf("(the (-> ctx _a _ _b) (lambda (x) 42))")).toBeType(
-          "(-> ctx α β number)"
-        );
-        expect(typeOf("(the (-> ctx _a _ _b) (lambda (x) (+ x 42)))")).toBeType(
-          "(-> ctx number (effect <| α) number)"
-        );
-
-        expect(
-          typeOf(`(lambda (f) ((the (-> cstx _a _b _c _d) f) 42 "foo"))`)
-        ).toBeType("(-> ctx (-> ctx number string α β) α β)");
-        expect(() =>
-          typeOf(`(lambda (f) ((the (-> ctx _a _a _ _c) f) 42 "foo"))`)
-        ).toThrow();
-
-        expect(
-          typeOf(`(lambda (f) ((the (-> ctx _ _ _e _) f) 42 "foo"))`)
-        ).toBeType("(-> ctx (-> ctx number string α β) α β)");
-      });
-
-      it.skip("`_` should not be equal to any named wildcard _<name>", () => {
-        expect(
-          typeOf(`(the (-> ctx _ __t1) (lambda (x) (print x) 42))`)
-        ).toBeType("(-> ctx string number)");
-      });
+    it("user-specified variables cannot generalize inferred types", () => {
+      expect(() => typeOf(`(the a 3)`)).toThrow();
+      expect(() =>
+        typeOf(`(the (-> ctx a a) (the (-> ctx string string) (lambda (x) x)))`)
+      ).toThrow();
     });
 
-    describe("User-defined type", () => {
-      const env = { variables: {}, types: { ID: readType("number") } };
+    it("supports partial type annotations", () => {
+      expect(typeOf('(the [_a] ["foo"])')).toBeType("[string]");
+      expect(typeOf("(the (-> ctx _a _ _b) (lambda (x) 42))")).toBeType(
+        "(-> ctx α β number)"
+      );
+      expect(typeOf("(the (-> ctx _a _ _b) (lambda (x) (+ x 42)))")).toBeType(
+        "(-> ctx number (effect <| α) number)"
+      );
 
-      it("should NOT be compatible", () => {
-        expect(() => typeOf("(if true (the ID 5) 3)", env)).toThrow();
-      });
+      expect(
+        typeOf(`(lambda (f) ((the (-> cstx _a _b _c _d) f) 42 "foo"))`)
+      ).toBeType("(-> ctx (-> ctx number string α β) α β)");
+      expect(() =>
+        typeOf(`(lambda (f) ((the (-> ctx _a _a _ _c) f) 42 "foo"))`)
+      ).toThrow();
 
-      it("should NOT expand to their definition", () => {
-        expect(typeOf("(lambda (x) (the ID x))", env)).toBeType(
-          "(-> ctx ID α ID)"
-        );
-      });
+      expect(
+        typeOf(`(lambda (f) ((the (-> ctx _ _ _e _) f) 42 "foo"))`)
+      ).toBeType("(-> ctx (-> ctx number string α β) α β)");
     });
 
-    describe("Type aliases", () => {
-      const env = { variables: {}, types: {} };
-      const m = `
+    it.skip("`_` should not be equal to any named wildcard _<name>", () => {
+      expect(
+        typeOf(`(the (-> ctx _ __t1) (lambda (x) (print x) 42))`)
+      ).toBeType("(-> ctx string number)");
+    });
+  });
+
+  describe("User-defined type", () => {
+    const env = { variables: {}, types: { ID: readType("number") } };
+
+    it("should NOT be compatible", () => {
+      expect(() => typeOf("(if true (the ID 5) 3)", env)).toThrow();
+    });
+
+    it("should NOT expand to their definition", () => {
+      expect(typeOf("(lambda (x) (the ID x))", env)).toBeType(
+        "(-> ctx ID α ID)"
+      );
+    });
+  });
+
+  describe("Type aliases", () => {
+    const env = { variables: {}, types: {} };
+    const m = `
         (type ID number)
         (type Person {:name string})
       `;
 
-      it("should be compatible if they are internal", () => {
-        expect(typeOf("(if true (the ID 5) 3)", env, m)).not.toBeType("α");
-      });
-
-      it("should expand to their definition if they are internal", () => {
-        expect(typeOf("(the ID 5)", env, m)).toBeType("number");
-      });
-
-      it("should be compatible when defined as a record", () => {
-        expect(typeOf('(the Person {:name "david"})', env, m)).toBeType(
-          "{:name string}"
-        );
-      });
+    it("should be compatible if they are internal", () => {
+      expect(typeOf("(if true (the ID 5) 3)", env, m)).not.toBeType("α");
     });
 
-    describe("Do blocks", () => {
-      it("type is the type of the last form", () => {
-        expect(typeOf("(do 1 2 3)")).toBeType("number");
-      });
-      it("constraint types properly", () => {
-        expect(typeOf("(lambda (x) (print x) x)")).toBeType(
-          "(-> ctx string (effect console <| α) string)"
-        );
-      });
+    it("should expand to their definition if they are internal", () => {
+      expect(typeOf("(the ID 5)", env, m)).toBeType("number");
     });
 
-    describe("Recursion", () => {
-      it("type is inferred for simple functions", () => {
-        expect(
-          typeOf(
-            "f",
-            undefined,
-            `
+    it("should be compatible when defined as a record", () => {
+      expect(typeOf('(the Person {:name "david"})', env, m)).toBeType(
+        "{:name string}"
+      );
+    });
+  });
+
+  describe("Do blocks", () => {
+    it("type is the type of the last form", () => {
+      expect(typeOf("(do 1 2 3)")).toBeType("number");
+    });
+    it("constraint types properly", () => {
+      expect(typeOf("(lambda (x) (print x) x)")).toBeType(
+        "(-> ctx string (effect console <| α) string)"
+      );
+    });
+  });
+
+  describe("Recursion", () => {
+    it("type is inferred for simple functions", () => {
+      expect(
+        typeOf(
+          "f",
+          undefined,
+          `
 (define f
   (lambda (n)
     (if (= n 0)
         1
         (* n (f (- n 1))))))`
-          )
-        ).toBeType("(-> ctx number (effect <| α) number)");
-      });
+        )
+      ).toBeType("(-> ctx number (effect <| α) number)");
+    });
 
-      it("basic polymorphic function on lists should work", () => {
-        const env = {
-          variables: {
-            "empty?": readType("(-> ctx [a] _ boolean)"),
-            "+": readType("(-> ctx number number _ number)"),
-            rest: readType("(-> ctx [a] (effect exp <| _) [a])")
-          },
-          types: {}
-        };
+    it("basic polymorphic function on lists should work", () => {
+      const env = {
+        variables: {
+          "empty?": readType("(-> ctx [a] _ boolean)"),
+          "+": readType("(-> ctx number number _ number)"),
+          rest: readType("(-> ctx [a] (effect exp <| _) [a])")
+        },
+        types: {}
+      };
 
-        expect(
-          typeOf(
-            "f",
-            env,
-            `
+      expect(
+        typeOf(
+          "f",
+          env,
+          `
 (define f
   (lambda (l)
     (if (empty? l)
         0
         (+ 1 (f (rest l))))))
 `
-          )
-        ).toBeType("(-> ctx [α] (effect exp <| β) number)");
-      });
+        )
+      ).toBeType("(-> ctx [α] (effect exp <| β) number)");
     });
   });
 
