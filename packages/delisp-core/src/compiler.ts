@@ -141,7 +141,9 @@ function compileFunctionCall(
     return compileInlinePrimitive(funcall.node.fn.node.name, compiledArgs);
   } else {
     const { fn } = funcall.node;
-    const isAsync = isFunctionAsync(fn.info.selfType);
+    const isAsync = funcall.node.closedFunctionEffect
+      ? isFunctionAsync(funcall.node.closedFunctionEffect)
+      : true;
 
     const call: JS.Expression = {
       type: "CallExpression",

@@ -5,6 +5,7 @@ import {
   Encoder,
   inferModule,
   isExpression,
+  Expression,
   macroexpandModule,
   Module,
   pprintAs,
@@ -160,6 +161,20 @@ const Token = styled.span`
   }
 `;
 
+function getDisplayExpressionType(expr: Expression<Typed>) {
+  if (!expr.info.selfType) return undefined;
+
+  const selfType = `Self type: ${printType(expr.info.selfType, false)}`;
+  if (expr.node.tag === "variable-reference") {
+    if (expr.node.closedFunctionEffect) {
+      return `Closed: ${printType(expr.node.closedFunctionEffect, false)}`;
+    }
+    return selfType;
+  } else {
+    return selfType;
+  }
+}
+
 const PrettierEncoder: Encoder<React.ReactElement[]> = {
   fromString: function PrettierEncoder(
     x: string,
@@ -174,8 +189,8 @@ const PrettierEncoder: Encoder<React.ReactElement[]> = {
           console.log({ source });
         }}
         title={
-          source && isExpression(source) && source.info.selfType
-            ? printType(source.info.selfType)
+          source && isExpression(source)
+            ? getDisplayExpressionType(source)
             : undefined
         }
       >

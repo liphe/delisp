@@ -72,13 +72,18 @@ interface TConstraintExplicitInstance {
   tag: "explicit-instance-constraint";
   type: T.Type;
   typeSchema: T.TypeSchema;
+  closedFunctionEffect?: T.Type;
   source?: {
     expr: S.Expression<Typed>;
   };
 }
 
-export function constEqual(t1: T.Type, t2: T.Type): TConstraintEqual {
-  return { tag: "equal-constraint", t1, t2 };
+export function constEqual(
+  t1: T.Type,
+  t2: T.Type,
+  source?: TConstraintEqual["source"]
+): TConstraintEqual {
+  return { tag: "equal-constraint", t1, t2, source };
 }
 
 export function constSelfType(
@@ -129,12 +134,14 @@ export function constEffect(
 export function constExplicitInstance(
   expr: S.Expression<Typed> | undefined,
   type: T.Type,
-  typeSchema: T.TypeSchema
+  typeSchema: T.TypeSchema,
+  closedFunctionEffect?: T.Type
 ): TConstraintExplicitInstance {
   return {
     tag: "explicit-instance-constraint",
     type,
     typeSchema,
+    closedFunctionEffect,
     source: expr && { expr }
   };
 }
@@ -173,7 +180,10 @@ export function debugConstraints(constraints: TConstraint[]) {
         return console.log(
           `${
             c.source ? pprint(c.source.expr, 40) : "<no expr>"
-          } is implicit instance of ${printType(c.typeToGeneralize, false)}
+          } of type ${printType(
+            c.type,
+            false
+          )} is implicit instance of ${printType(c.typeToGeneralize, false)}
 for monovars ${c.monovars.join(",")}
 `
         );
@@ -181,7 +191,10 @@ for monovars ${c.monovars.join(",")}
         return console.log(
           `${
             c.source ? pprint(c.source.expr, 40) : "<no expr>"
-          } is explicit instance of ${printType(c.typeSchema.mono, false)}`
+          } of type ${printType(
+            c.type,
+            false
+          )} is explicit instance of ${printType(c.typeSchema.mono, false)}`
         );
     }
   });
@@ -258,14 +271,18 @@ function applySubstitutionToConstraint(
         type: applySubstitution(c.type, s),
         typeToGeneralize: applySubstitution(c.typeToGeneralize, s),
         monovars: flatMap(name => substituteVar(name, s), c.monovars),
-        source: c.source
+        source: c.source,
+        closedFunctionEffect:
+          c.closedFunctionEffect && applySubstitution(c.closedFunctionEffect, s)
       };
     case "explicit-instance-constraint":
       return {
         tag: "explicit-instance-constraint",
         type: applySubstitution(c.type, s),
         typeSchema: applySubstitutionToPolytype(c.typeSchema, s),
-        source: c.source
+        source: c.source,
+        closedFunctionEffect:
+          c.closedFunctionEffect && applySubstitution(c.closedFunctionEffect, s)
       };
   }
 }
@@ -403,24 +420,16 @@ ${printType(applySubstitution(exprType, solution), false)}
         closeFunctionEffect(constraint.typeSchema)
       );
       const openedType = openFunctionEffect(closedType);
-
-      // TODO: Do we want to constraint the selfType of the
-      // expression though? an edge case would be something like
-      //
-      //   ((values id) 5)
-      //
-
-      const equalConstraint: TConstraintEqual = {
-        tag: "equal-constraint",
-        t1: constraint.type,
-        t2: openedType,
-        source: constraint.source && {
-          kind: "expression-type",
-          expr: constraint.source.expr
-        }
-      };
-
-      return solve([equalConstraint, ...rest], solution);
+      return solve(
+        [
+          constEqual(constraint.type, openedType),
+          ...(constraint.closedFunctionEffect
+            ? [constEqual(constraint.closedFunctionEffect, closedType)]
+            : []),
+          ...rest
+        ],
+        solution
+      );
     }
     case "implicit-instance-constraint": {
       const t = generalize(constraint.typeToGeneralize, constraint.monovars);
@@ -429,7 +438,8 @@ ${printType(applySubstitution(exprType, solution), false)}
           constExplicitInstance(
             constraint.source && constraint.source.expr,
             constraint.type,
-            t
+            t,
+            constraint.closedFunctionEffect
           ),
           ...rest
         ],

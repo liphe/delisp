@@ -16,6 +16,7 @@ import {
 import { printHighlightedExpr } from "./error-report";
 import { ExternalEnvironment } from "./infer-environment";
 import {
+  constEqual,
   constEffect,
   constExplicitInstance,
   constImplicitInstance,
@@ -332,20 +333,15 @@ function infer(
     }
 
     case "variable-reference": {
-      const primaryResultingType = generateUniqueTVar();
+      const type = generateUniqueTVar();
       const effect = generateUniqueTVar();
       const typedVar = {
         ...expr,
         node: {
-          ...expr.node
+          ...expr.node,
+          closedFunctionEffect: generateUniqueTVar(false, "closed")
         },
-        info: new Typed({
-          selfType: primaryResultingType,
-          resultingType: multipleValues
-            ? T.values([primaryResultingType])
-            : primaryResultingType,
-          effect
-        })
+        info: singleType(effect, type)
       };
       return {
         result: typedVar,
@@ -462,12 +458,16 @@ function infer(
 
     case "function-call": {
       const ifn = infer(expr.node.fn, monovars, internalTypes, false);
+      const ifnInstance = generateUniqueTVar();
+
       const iargs = inferMany(expr.node.arguments, monovars, internalTypes);
 
       const primaryType = generateUniqueTVar();
       const valuesType = type`(values ${primaryType} <| _)`;
+      const closedFunctionEffect = generateUniqueTVar();
 
       const effect = generateUniqueTVar();
+
       const tfn: Type = T.multiValuedFunction(
         iargs.result.map(a => a.info.resultingType),
         T.effect([], effect),
@@ -480,7 +480,8 @@ function infer(
           node: {
             ...expr.node,
             fn: ifn.result,
-            arguments: iargs.result
+            arguments: iargs.result,
+            closedFunctionEffect
           },
           info: multipleValues
             ? delegatedType(effect, valuesType)
@@ -488,7 +489,15 @@ function infer(
         },
 
         constraints: [
-          constResultingType(ifn.result, tfn),
+          constImplicitInstance(
+            undefined,
+            ifnInstance,
+            monovars,
+            ifn.result.info.resultingType,
+            closedFunctionEffect
+          ),
+          constEqual(ifnInstance, tfn),
+
           ...ifn.constraints,
           ...iargs.constraints,
 
@@ -574,7 +583,8 @@ function infer(
                 a.variable,
                 a.variable.info.selfType,
                 monovars,
-                bInfo.inference.result.info.resultingType
+                bInfo.inference.result.info.resultingType,
+                a.variable.node.closedFunctionEffect
               );
             }),
 
@@ -998,7 +1008,15 @@ function assumptionsToConstraints(
 ): TConstraint[] {
   return maybeMap(a => {
     const t = lookupVariableType(a.variable.node.name, env);
-    return t && constExplicitInstance(a.variable, a.variable.info.selfType, t);
+    return (
+      t &&
+      constExplicitInstance(
+        a.variable,
+        a.variable.info.selfType,
+        t,
+        a.variable.node.closedFunctionEffect
+      )
+    );
   }, assumptions);
 }
 
@@ -1160,7 +1178,8 @@ export function inferModule(
         a.variable,
         a.variable.info.selfType,
         [],
-        internalEnv.variables[a.variable.node.name]
+        internalEnv.variables[a.variable.node.name],
+        a.variable.node.closedFunctionEffect
       )
     )
   ];
@@ -1210,7 +1229,8 @@ export function inferSyntaxInModule(
         a.variable,
         a.variable.info.selfType,
         [],
-        internalEnv.variables[a.variable.node.name]
+        internalEnv.variables[a.variable.node.name],
+        a.variable.node.closedFunctionEffect
       )
     )
   ];

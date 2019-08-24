@@ -39,6 +39,10 @@ type SVar = string;
 interface SVariableReferenceF {
   tag: "variable-reference";
   name: SVar;
+  // NOTE: This should not be parted of the AST. We should split this
+  // syntax into two, the user-facing Delisp language and a core
+  // language.
+  closedFunctionEffect?: Type;
 }
 
 interface SConditionalF<E> {
@@ -51,6 +55,10 @@ interface SConditionalF<E> {
 interface SFunctionCallF<E> {
   tag: "function-call";
   fn: E;
+  // NOTE: This should not be parted of the AST. We should split this
+  // syntax into two, the user-facing Delisp language and a core
+  // language.
+  closedFunctionEffect?: Type;
   arguments: E[];
 }
 
