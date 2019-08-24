@@ -117,3 +117,7 @@ export function zip<A, B>(xs: A[], ys: B[]): Array<[A, B]> {
   const shortest: Array<A | B> = xs.length < ys.length ? xs : ys;
   return shortest.map((_: A | B, i: number) => [xs[i], ys[i]]);
 }
+
+export function isDefined<A>(x: A | undefined): x is A {
+  return x !== undefined;
+}
