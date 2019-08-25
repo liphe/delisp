@@ -43,7 +43,15 @@ import {
 } from "./type-utils";
 import * as T from "./types";
 import { Type } from "./types";
-import { difference, flatMap, fromEntries, mapObject, maybeMap } from "./utils";
+import { stronglyConnectedComponents } from "./SCC";
+import {
+  isDefined,
+  difference,
+  flatMap,
+  fromEntries,
+  mapObject,
+  maybeMap
+} from "./utils";
 
 // A TAssumption is a variable instance for which we have assumed the
 // type. Those variables are to be bound (and assumption removed)
@@ -1027,6 +1035,50 @@ function externalAssumptionsToConstraints(
   }, assumptions);
 }
 
+function findDefinitionInGroup(
+  name: string,
+  inferences: Array<InferResult<S.Syntax<Typed>>>
+) {
+  return inferences.find(
+    i => S.isDefinition(i.result) && i.result.node.variable.name === name
+  );
+}
+
+function groupAssumptions(
+  group: Array<InferResult<S.Syntax<Typed>>>,
+  internalEnv: InternalEnvironment,
+  externalEnv: ExternalEnvironment
+) {
+  const allAssumptions = group.flatMap(i => i.assumptions);
+
+  // The assumptions define dependencies between different
+  // variable instances and definitions. They can, then, be
+  // classified according to the source of the dependency:
+
+  // Assumptions that reference definitions within the current group.
+  const groupInternals = allAssumptions.filter(a => {
+    const { name } = a.variable.node;
+    const def = findDefinitionInGroup(name, group);
+    return def !== undefined;
+  });
+
+  const moduleAssumptions = difference(allAssumptions, groupInternals);
+
+  const moduleInternals = moduleAssumptions.filter(
+    a => a.variable.node.name in internalEnv.variables
+  );
+  const moduleExternals = moduleAssumptions.filter(
+    a => lookupVariableType(a.variable.node.name, externalEnv) !== null
+  );
+
+  const unknowns = difference(moduleAssumptions, [
+    ...moduleInternals,
+    ...moduleExternals
+  ]);
+
+  return { groupInternals, moduleInternals, moduleExternals, unknowns };
+}
+
 // Resolve a set of inferences in a given environment.
 //
 // This will resolve as many assumptions as possible, converting them
@@ -1037,33 +1089,59 @@ function resolveInferenceEnvironment(
   internalEnv: InternalEnvironment,
   externalEnv: ExternalEnvironment
 ): { constraints: TConstraint[]; unknowns: TAssumption[] } {
-  const assumptions = inferences.flatMap(i => i.assumptions);
+  // Find a defiition in the group of inferences
 
-  const internals = assumptions.filter(
-    a => a.variable.node.name in internalEnv.variables
-  );
-  const externals = assumptions.filter(
-    a => lookupVariableType(a.variable.node.name, externalEnv) !== null
-  );
+  // The body inferences depend on the type of the definitions in the
+  // module by the returned assumptions.
+  //
+  // As it is not possible to type polymophic recursion, we'll group
+  // the forms that are mutually dependent and apply monomorphic
+  // constraints instead.
+  const inferenceGroups = stronglyConnectedComponents(inferences, inference => {
+    const dependencies = inference.assumptions.map(a =>
+      findDefinitionInGroup(a.variable.node.name, inferences)
+    );
+    return dependencies.filter(isDefined);
+  });
 
-  const unknowns = difference(assumptions, [...internals, ...externals]);
+  return inferenceGroups
+    .map(group => {
+      const {
+        groupInternals,
+        moduleInternals,
+        moduleExternals,
+        unknowns
+      } = groupAssumptions(group, internalEnv, externalEnv);
 
-  const constraints: TConstraint[] = [
-    ...inferences.flatMap(i => i.constraints),
+      const constraints: TConstraint[] = [
+        ...inferences.flatMap(i => i.constraints),
+        ...groupInternals.map(a =>
+          constSelfType(a.variable, internalEnv.variables[a.variable.node.name])
+        ),
+        ...moduleInternals.map(a =>
+          constImplicitInstance(
+            a.variable,
+            a.variable.info.selfType,
+            [],
+            internalEnv.variables[a.variable.node.name],
+            a.variable.node.closedFunctionEffect
+          )
+        ),
+        ...externalAssumptionsToConstraints(moduleExternals, externalEnv)
+      ];
 
-    ...externalAssumptionsToConstraints(externals, externalEnv),
-
-    ...internals.map(a =>
-      constImplicitInstance(
-        a.variable,
-        a.variable.info.selfType,
-        [],
-        internalEnv.variables[a.variable.node.name],
-        a.variable.node.closedFunctionEffect
-      )
-    )
-  ];
-  return { constraints, unknowns };
+      return { constraints, unknowns };
+    })
+    .reduce(
+      (acc, result) => ({
+        constraints: [...acc.constraints, ...result.constraints],
+        unknowns: [...acc.unknowns, ...result.unknowns]
+      }),
+      {
+        constraints: [],
+        unknowns: []
+      }
+    );
 }
 
 /** Check that there is no cycles in env, throwing an error otherwise. */
