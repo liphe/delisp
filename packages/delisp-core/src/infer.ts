@@ -313,8 +313,6 @@ function infer(
     case "record-get": {
       const label = expr.node.field.name;
       const labelType = generateUniqueTVar();
-      const effect = generateUniqueTVar();
-
       const value = infer(expr.node.value, monovars, internalTypes, false);
 
       const recordType = T.record(
@@ -329,12 +327,11 @@ function infer(
             ...expr.node,
             value: value.result
           },
-          info: singleType(effect, labelType)
+          info: singleType(value.result.info.effect, labelType)
         },
         constraints: [
           ...value.constraints,
-          constResultingType(value.result, recordType),
-          constEffect(value.result, effect)
+          constResultingType(value.result, recordType)
         ],
         assumptions: value.assumptions
       };
@@ -616,8 +613,6 @@ function infer(
         multipleValues
       );
 
-      const effect = generateUniqueTVar();
-
       const t = expandTypeAliases(
         // Note that the type variables specified by the user are
         // user-specified (or rigid) variables. It is important that
@@ -635,7 +630,7 @@ function infer(
             ...expr.node,
             value: inferred.result
           },
-          info: delegatedType(effect, t)
+          info: delegatedType(inferred.result.info.effect, t)
         },
         assumptions: inferred.assumptions,
         constraints: [
@@ -648,8 +643,7 @@ function infer(
             // then self-typed will could be closed over the
             // effects. See `closeFunctionEffect`.
             multipleValues ? T.values([t]) : t
-          ),
-          constEffect(inferred.result, effect)
+          )
         ]
       };
     }
