@@ -999,58 +999,71 @@ function lookupVariableType(
   }
 }
 
-// Generate constraints for those assumptions. Note that we generate
-// explicit instance constraints, as it will allow us to have
-// polymoprphic types in the environment.
-function assumptionsToConstraints(
-  assumptions: TAssumption[],
-  env: ExternalEnvironment
-): TConstraint[] {
-  return maybeMap(a => {
-    const t = lookupVariableType(a.variable.node.name, env);
-    return (
-      t &&
-      constExplicitInstance(
-        a.variable,
-        a.variable.info.selfType,
-        t,
-        a.variable.node.closedFunctionEffect
-      )
-    );
-  }, assumptions);
-}
-
 export const defaultEnvironment: ExternalEnvironment = {
   variables: mapObject(primitives, prim => prim.type),
   types: {}
 };
 
-// Group the gathered assumptions and classify them into:
-//
-// - internals: The variable referes to a variable defined in this module.
-// - externals: The variable referes to an imported module.
-// - unknown: The variable does not refer to anything known.
-//
-function groupAssumptions(
+// Generate constraints for those assumptions. Note that we generate
+// explicit instance constraints, as it will allow us to have
+// polymoprphic types in the environment.
+function externalAssumptionsToConstraints(
   assumptions: TAssumption[],
+  env: ExternalEnvironment
+): TConstraint[] {
+  return maybeMap(a => {
+    const t = lookupVariableType(a.variable.node.name, env);
+    if (!t) {
+      throw new InvariantViolation(
+        `Assumption ${a.variable.node.name} is not bound in the external environment.`
+      );
+    }
+    return constExplicitInstance(
+      a.variable,
+      a.variable.info.selfType,
+      t,
+      a.variable.node.closedFunctionEffect
+    );
+  }, assumptions);
+}
+
+// Resolve a set of inferences in a given environment.
+//
+// This will resolve as many assumptions as possible, converting them
+// in additional constraints. The unknown assumptions are also
+// returned so we can report them back to the user.
+function resolveInferenceEnvironment(
+  inferences: Array<InferResult<S.Syntax<Typed>>>,
   internalEnv: InternalEnvironment,
   externalEnv: ExternalEnvironment
-): {
-  internals: TAssumption[];
-  externals: TAssumption[];
-  unknowns: TAssumption[];
-} {
+): { constraints: TConstraint[]; unknowns: TAssumption[] } {
+  const assumptions = inferences.flatMap(i => i.assumptions);
+
   const internals = assumptions.filter(
     a => a.variable.node.name in internalEnv.variables
   );
   const externals = assumptions.filter(
     a => lookupVariableType(a.variable.node.name, externalEnv) !== null
   );
-  return {
-    internals,
-    externals,
-    unknowns: difference(assumptions, [...internals, ...externals])
-  };
+
+  const unknowns = difference(assumptions, [...internals, ...externals]);
+
+  const constraints: TConstraint[] = [
+    ...inferences.flatMap(i => i.constraints),
+
+    ...externalAssumptionsToConstraints(externals, externalEnv),
+
+    ...internals.map(a =>
+      constImplicitInstance(
+        a.variable,
+        a.variable.info.selfType,
+        [],
+        internalEnv.variables[a.variable.node.name],
+        a.variable.node.closedFunctionEffect
+      )
+    )
+  ];
+  return { constraints, unknowns };
 }
 
 /** Check that there is no cycles in env, throwing an error otherwise. */
@@ -1162,27 +1175,11 @@ export function inferModule(
     internalTypes
   );
 
-  const assumptions = groupAssumptions(
-    flatMap(i => i.assumptions, bodyInferences),
+  const { constraints, unknowns } = resolveInferenceEnvironment(
+    bodyInferences,
     internalEnv,
     externalEnv
   );
-
-  const constraints: TConstraint[] = [
-    ...flatMap(i => i.constraints, bodyInferences),
-
-    ...assumptionsToConstraints(assumptions.externals, externalEnv),
-
-    ...assumptions.internals.map(a =>
-      constImplicitInstance(
-        a.variable,
-        a.variable.info.selfType,
-        [],
-        internalEnv.variables[a.variable.node.name],
-        a.variable.node.closedFunctionEffect
-      )
-    )
-  ];
 
   const solution = solve(constraints, {});
 
@@ -1191,7 +1188,7 @@ export function inferModule(
       ...m,
       body: body.map(s => applySubstitutionToSyntax(s, solution))
     },
-    unknowns: assumptions.unknowns.map(
+    unknowns: unknowns.map(
       (a): TAssumption => ({
         variable: applyTypeSubstitutionToVariable(a.variable, solution)
       })
@@ -1213,33 +1210,17 @@ export function inferSyntaxInModule(
 
   const inference = inferSyntax(syntax, internalTypes);
 
-  const assumptions = groupAssumptions(
-    inference.assumptions,
+  const { constraints, unknowns } = resolveInferenceEnvironment(
+    [inference],
     internalEnv,
     externalEnv
   );
-
-  const constraints: TConstraint[] = [
-    ...inference.constraints,
-
-    ...assumptionsToConstraints(assumptions.externals, externalEnv),
-
-    ...assumptions.internals.map(a =>
-      constImplicitInstance(
-        a.variable,
-        a.variable.info.selfType,
-        [],
-        internalEnv.variables[a.variable.node.name],
-        a.variable.node.closedFunctionEffect
-      )
-    )
-  ];
 
   const solution = solve(constraints, {});
 
   return {
     typedSyntax: applySubstitutionToSyntax(inference.result, solution),
-    unknowns: assumptions.unknowns.map(
+    unknowns: unknowns.map(
       (a): TAssumption => ({
         variable: applyTypeSubstitutionToVariable(a.variable, solution)
       })
