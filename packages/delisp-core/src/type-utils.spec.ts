@@ -1,6 +1,11 @@
+import * as T from "./types";
 import { readType } from "./type-convert";
 import { printType } from "./type-printer";
-import { openFunctionEffect, closeFunctionEffect } from "./type-utils";
+import {
+  openFunctionEffect,
+  closeFunctionEffect,
+  instantiateTypeSchemaForVariable
+} from "./type-utils";
 
 describe("Type utils", () => {
   describe("openFunctionEffect", () => {
@@ -51,6 +56,17 @@ describe("Type utils", () => {
     it("should NOT close the effect of higher order functions with polymorphic effects", () => {
       expect(closeType("(-> α (-> α β none) (effect console <| β) none)")).toBe(
         "(-> α (-> α β none) (effect console <| β) none)"
+      );
+    });
+
+    it("should not closed over an effect that is not a generalized variable of the type schema", () => {
+      const polytype = instantiateTypeSchemaForVariable(
+        readType("(-> α (effect console <| β) none)"),
+        T.var("β"),
+        T.var("eff")
+      );
+      expect(printType(closeFunctionEffect(polytype).mono)).toBe(
+        "(-> α (effect console <| β) none)"
       );
     });
   });

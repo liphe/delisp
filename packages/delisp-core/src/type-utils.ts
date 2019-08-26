@@ -211,6 +211,13 @@ export function decomposeFunctionType(type: T.Application) {
   return { args, effect, output };
 }
 
+export function normalizeEffect(effect: T.Type) {
+  if (!isConstantApplicationType(effect, "effect")) {
+    throw new InvariantViolation(`Effect type must be a (effect ...) type.`);
+  }
+  return normalizeRow(effect.node.args[0]);
+}
+
 /** Return the number of input arguments of a function type. */
 export function typeArity(type: T.Application): number {
   return decomposeFunctionType(type).args.length;
@@ -231,13 +238,9 @@ export function typeArity(type: T.Application): number {
  */
 export function openEffect(type: T.Type): T.Type {
   if (isConstantApplicationType(type, "effect")) {
-    const row = type.node.args[0];
-    const normalizedRow = normalizeRow(row);
-    if (normalizedRow.extends.node.tag === "empty-row") {
-      return T.effect(
-        normalizedRow.fields.map(f => f.label),
-        generateUniqueTVar()
-      );
+    const row = normalizeEffect(type);
+    if (row.extends.node.tag === "empty-row") {
+      return T.effect(row.fields.map(f => f.label), generateUniqueTVar());
     } else {
       return type;
     }
@@ -274,7 +277,7 @@ export function openFunctionEffect(type: T.Type): T.Type {
  *   (forall (a e) (-> a e number))
  *
  **/
-export function instantiateTypeSchemaForvariable(
+export function instantiateTypeSchemaForVariable(
   polytype: T.TypeSchema,
   tvar: T.Var,
   replacement: T.Type
@@ -316,14 +319,7 @@ export function closeFunctionEffect(polytype: T.TypeSchema): T.TypeSchema {
     const fn: T.Application = polytype.mono;
 
     const { args, effect, output } = decomposeFunctionType(fn);
-
-    if (!isConstantApplicationType(effect, "effect")) {
-      throw new InvariantViolation(
-        `Effect of a function type must be a (effect ...) type.`
-      );
-    }
-
-    const effectRow = normalizeRow(effect.node.args[0]);
+    const effectRow = normalizeEffect(effect);
     const effectTail = effectRow.extends;
 
     if (effectTail.node.tag === "empty-row") {
@@ -351,12 +347,21 @@ export function closeFunctionEffect(polytype: T.TypeSchema): T.TypeSchema {
       ...listTypeVariables(output)
     ];
 
-    if (freevars.includes(effectTail.node.name)) {
+    const isPolymorphicOnEffect = polytype.tvars.includes(effectTail.node.name);
+
+    if (!isPolymorphicOnEffect || freevars.includes(effectTail.node.name)) {
       return polytype;
     } else {
-      return instantiateTypeSchemaForvariable(polytype, effectTail, T.emptyRow);
+      return instantiateTypeSchemaForVariable(polytype, effectTail, T.emptyRow);
     }
   } else {
     return polytype;
   }
+}
+
+export function getCallEffects(t: T.Type) {
+  const effect = isFunctionType(t)
+    ? decomposeFunctionType(t).effect
+    : T.effect([]);
+  return normalizeEffect(effect);
 }

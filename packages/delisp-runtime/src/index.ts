@@ -73,9 +73,9 @@ export function bindPrimaryValue(fn: Function, ctx: unknown): Function {
   return (...args: unknown[]) => fn(primaryValue, ctx, ...args);
 }
 
-export function mvbind(
-  form: (values: any, ...args: any[]) => any,
-  cont: (...results: any[]) => any
+export async function mvbind(
+  form: (values: any, ...args: any[]) => Promise<any>,
+  cont: (...results: any[]) => Promise<any>
 ) {
   let valuesCalled = false;
 
@@ -84,7 +84,7 @@ export function mvbind(
     return cont(...results);
   };
 
-  const result = form(values);
+  const result = await form(values);
 
   if (valuesCalled) {
     return result;
@@ -97,4 +97,52 @@ export function assert(x: boolean, message: string) {
   if (!x) {
     throw new Error(message);
   }
+}
+
+//
+// Async primitives
+//
+
+export function promiseMap<A, B>(
+  array: A[],
+  f: (x: A) => Promise<B>
+): Promise<B[]> {
+  return Promise.all(array.map(f));
+}
+
+export async function promiseMapSeq<A, B>(
+  array: A[],
+  f: (x: A) => Promise<B>
+): Promise<B[]> {
+  let results: B[] = [];
+  for (const elm of array) {
+    results.push(await f(elm));
+  }
+  return results;
+}
+
+export async function promiseReduce<A, B>(
+  array: A[],
+  reducer: (x: B, y: A) => Promise<B>,
+  initial: B
+): Promise<B> {
+  let value: B = initial;
+  for (const elem of array) {
+    value = await reducer(value, elem);
+  }
+  return value;
+}
+
+export async function promiseFilter<A>(
+  array: A[],
+  predicate: (x: A) => Promise<boolean>
+): Promise<A[]> {
+  const flags = await Promise.all(array.map(predicate));
+  return array.filter((_, i) => flags[i]);
+}
+
+export function promiseDelay(ms: number): Promise<void> {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
 }

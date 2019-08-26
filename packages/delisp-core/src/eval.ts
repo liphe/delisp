@@ -11,7 +11,8 @@ import {
 } from "./compiler";
 import { Host } from "./host";
 import primitives from "./primitives";
-import { Module, Syntax } from "./syntax";
+import * as S from "./syntax";
+import { Typed } from "./syntax-typed";
 import { mapObject } from "./utils";
 
 type Sandbox = ReturnType<typeof createSandbox>;
@@ -27,17 +28,25 @@ export function createSandbox(requireFn: (id: string) => any) {
   return sandbox;
 }
 
-export function evaluate(
-  syntax: Syntax,
+function compileAndRun(s: S.Syntax<Typed>, env: Environment, sandbox: Sandbox) {
+  const code = compileToString(s, env);
+  return vm.runInContext(code, sandbox);
+}
+
+export async function evaluate(
+  syntax: S.Syntax<Typed>,
   env: Environment,
   sandbox: Sandbox
-): unknown {
-  const code = compileToString(syntax, env);
-  const result = vm.runInContext(code, sandbox);
+): Promise<unknown> {
+  const result = compileAndRun(syntax, env, sandbox);
   return result;
 }
 
-export function evaluateModule(m: Module, sandbox: Sandbox, host: Host): void {
+export function evaluateModule(
+  m: S.Module<Typed>,
+  sandbox: Sandbox,
+  host: Host
+): void {
   const code = compileModuleToString(m, {
     definitionContainer: "env",
     getOutputFile: host.getOutputFile

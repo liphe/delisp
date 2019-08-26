@@ -116,10 +116,40 @@ defineInlinePrimitive(
 );
 
 defineInlinePrimitive(
+  "number->string",
+  "(-> _ctx number _ string)",
+  ([_ctx, x]) => primitiveCall("String", x)
+);
+
+defineInlinePrimitive(
   "map",
   "(-> _ctx (-> _ctx a e (values b <| _)) [a] e [b])",
   ([ctx, fn, vec]) => {
-    return methodCall(vec, "map", [primitiveCall("bindPrimaryValue", fn, ctx)]);
+    return primitiveCall(
+      "promiseMap",
+      vec,
+      primitiveCall("bindPrimaryValue", fn, ctx)
+    );
+  }
+);
+
+defineInlinePrimitive(
+  "map/seq",
+  "(-> _ctx (-> _ctx a e (values b <| _)) [a] e [b])",
+  ([ctx, fn, vec]) => {
+    return primitiveCall(
+      "promiseMapSeq",
+      vec,
+      primitiveCall("bindPrimaryValue", fn, ctx)
+    );
+  }
+);
+
+defineInlinePrimitive(
+  "sleep",
+  "(-> _ctx number (effect async <| _) none)",
+  ([_ctx, ms]) => {
+    return primitiveCall("promiseDelay", ms);
   }
 );
 
@@ -127,9 +157,11 @@ defineInlinePrimitive(
   "filter",
   "(-> _ctx (-> _ctx a _ (values boolean <| _)) [a] _ [a])",
   ([ctx, predicate, vec]) => {
-    return methodCall(vec, "filter", [
+    return primitiveCall(
+      "promiseFilter",
+      vec,
       primitiveCall("bindPrimaryValue", predicate, ctx)
-    ]);
+    );
   }
 );
 
@@ -137,10 +169,12 @@ defineInlinePrimitive(
   "fold",
   "(-> _ctx (-> _ctx b a _ (values b <| _)) [a] b _ b)",
   ([ctx, fn, vec, init]) => {
-    return methodCall(vec, "reduce", [
+    return primitiveCall(
+      "promiseReduce",
+      vec,
       primitiveCall("bindPrimaryValue", fn, ctx),
       init
-    ]);
+    );
   }
 );
 

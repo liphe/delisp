@@ -15,6 +15,7 @@ export {
   defaultEnvironment,
   getModuleExternalEnvironment,
   inferExpressionInModule,
+  inferSyntaxInModule,
   inferModule
 } from "./infer";
 export {
@@ -54,13 +55,16 @@ export { Typed } from "./syntax-typed";
 export {
   exprFChildren,
   findSyntaxByOffset,
-  findSyntaxByRange
+  findSyntaxByRange,
+  wrapInLambda
 } from "./syntax-utils";
 export { printType } from "./type-printer";
+export { isFunctionType, decomposeFunctionType } from "./type-utils";
 export { Type } from "./types";
 export { generateTSModuleDeclaration } from "./typescript-generation";
 export {
   macroexpandModule,
   macroexpandSyntax,
+  macroexpandRootExpression,
   macroexpandExpression
 } from "./macroexpand";

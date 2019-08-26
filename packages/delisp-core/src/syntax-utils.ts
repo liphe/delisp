@@ -268,3 +268,19 @@ export function findSyntaxByOffset<I>(
 ): S.Syntax<I> | undefined {
   return findSyntaxByRange(m, offset, offset);
 }
+
+export function wrapInLambda(e: S.Expression): S.Expression {
+  return {
+    node: {
+      tag: "function",
+      lambdaList: {
+        tag: "function-lambda-list",
+        positionalArguments: [],
+        location: e.location
+      },
+      body: [e]
+    },
+    info: {},
+    location: e.location
+  };
+}

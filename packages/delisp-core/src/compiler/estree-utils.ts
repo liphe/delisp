@@ -4,6 +4,7 @@ import {
   identifierToJS,
   identifierToJSName
 } from "./jsvariable";
+import { isBodyAsync } from "./estree-utils-async";
 
 export function literal(value: number | string | boolean | null): JS.Literal {
   return {
@@ -48,53 +49,6 @@ export function methodCall(
   };
 }
 
-/** Generate an arrow function in JS
- *
- * @description This will execute all the expressions, returning the
- * last one. */
-export function arrowFunction(
-  args: JS.Pattern[],
-  body: JS.Expression[]
-): JS.ArrowFunctionExpression {
-  if (body.length === 0) {
-    throw new Error(`Empty body`);
-  }
-
-  if (body.length === 1) {
-    const expr = body[0];
-    return {
-      type: "ArrowFunctionExpression",
-      params: args,
-      body: expr,
-      generator: false,
-      expression: true,
-      async: false
-    };
-  } else {
-    const middle: JS.Statement[] = body.slice(0, -1).map(e => ({
-      type: "ExpressionStatement",
-      expression: e
-    }));
-
-    const returning: JS.Statement = {
-      type: "ReturnStatement",
-      argument: body[body.length - 1]
-    };
-
-    return {
-      type: "ArrowFunctionExpression",
-      params: args,
-      body: {
-        type: "BlockStatement",
-        body: [...middle, returning]
-      },
-      generator: false,
-      expression: false,
-      async: false
-    };
-  }
-}
-
 export function op1(
   operator: JS.UnaryOperator,
   argument: JS.Expression
@@ -119,6 +73,54 @@ export function primitiveCall(
     callee: identifier(name),
     arguments: args
   };
+}
+
+/** Generate an arrow function in JS
+ *
+ * @description This will execute all the expressions, returning the
+ * last one. */
+export function arrowFunction(
+  args: JS.Pattern[],
+  body: JS.Expression[],
+  options: { async: boolean } = { async: isBodyAsync(body) }
+): JS.ArrowFunctionExpression {
+  if (body.length === 0) {
+    throw new Error(`Empty body`);
+  }
+
+  if (body.length === 1) {
+    const expr = body[0];
+    return {
+      type: "ArrowFunctionExpression",
+      params: args,
+      body: expr,
+      generator: false,
+      expression: true,
+      async: options.async
+    };
+  } else {
+    const middle: JS.Statement[] = body.slice(0, -1).map(e => ({
+      type: "ExpressionStatement",
+      expression: e
+    }));
+
+    const returning: JS.Statement = {
+      type: "ReturnStatement",
+      argument: body[body.length - 1]
+    };
+
+    return {
+      type: "ArrowFunctionExpression",
+      params: args,
+      body: {
+        type: "BlockStatement",
+        body: [...middle, returning]
+      },
+      generator: false,
+      expression: false,
+      async: options.async
+    };
+  }
 }
 
 interface Property {
@@ -179,6 +181,25 @@ export function requireNames(names: string[], source: string): JS.Statement {
           callee: identifier("require"),
           arguments: [literal(source)]
         }
+      }
+    ]
+  };
+}
+
+export function awaitExpr(expr: JS.Expression): JS.Expression {
+  return {
+    type: "AwaitExpression",
+    argument: expr
+  };
+}
+
+export function comment(comment: string, stmt: JS.Statement): JS.Statement {
+  return {
+    ...stmt,
+    leadingComments: [
+      {
+        type: "Block",
+        value: comment
       }
     ]
   };

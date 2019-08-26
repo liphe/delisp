@@ -1,8 +1,4 @@
 import { printHighlightedExpr } from "./error-report";
-import {
-  applyTypeSubstitutionToVariable,
-  applySubstitutionToExpr
-} from "./infer-subst";
 import { assertNever } from "./invariant";
 import { pprint } from "./printer";
 import * as S from "./syntax";
@@ -23,19 +19,6 @@ import { difference, flatMap, intersection, union } from "./utils";
 
 const DEBUG = false;
 
-// A TAssumption is a variable instance for which we have assumed the
-// type. Those variables are to be bound (and assumption removed)
-// later, either by `let`, `lambda`, or global definitions.  Note: it
-// is normal to have multiple assumptions (instances) for the same
-// variable. Assumptions will be converted to additional constraints
-// at the end of the inference process.
-export type TAssumption = {
-  variable: S.SVariableReference<Typed>;
-  // The underling primary type of an assumption. The effective
-  // 'resulting type' could be this type wrapped by a VALUES type.
-  primaryResultingType: T.Type;
-};
-
 // Constraints impose which types should be equal (unified) and which
 // types are instances of other types.
 export type TConstraint =
@@ -43,52 +26,15 @@ export type TConstraint =
   | TConstraintImplicitInstance
   | TConstraintExplicitInstance;
 
-function constraintExpression(c: TConstraint): S.Expression {
-  return c.tag === "equal-constraint" ? c.expr : c.assumption.variable;
-}
-
 // A constraint stating that an expression's type should be equal to a
 // given type.
 interface TConstraintEqual {
   tag: "equal-constraint";
-  expr: S.Expression<Typed>;
-  exprType: T.Type;
-  kind: string;
-  t: T.Type;
-}
-export function constEqual(
-  expr: S.Expression<Typed>,
-  exprType: T.Type,
-  kind: string,
-  t: T.Type
-): TConstraintEqual {
-  return { tag: "equal-constraint", expr, exprType, kind, t };
-}
-
-export function constEffect(
-  expr: S.Expression<Typed>,
-  t: T.Type
-): TConstraintEqual {
-  return constEqual(expr, expr.info.effect, "effect", t);
-}
-
-// A constriant stating that an expression's type is an instance of
-// the (poly)type t.  This is generated when we already know somehow
-// the generalized type of an expression. For example if the user has
-// provided some type annotations.
-interface TConstraintExplicitInstance {
-  tag: "explicit-instance-constraint";
-  assumption: TAssumption;
-  t: T.TypeSchema;
-}
-export function constExplicitInstance(
-  assumption: TAssumption,
-  t: T.TypeSchema
-): TConstraintExplicitInstance {
-  return {
-    tag: "explicit-instance-constraint",
-    assumption,
-    t
+  t1: T.Type;
+  t2: T.Type;
+  source?: {
+    expr: S.Expression<Typed>;
+    kind: string;
   };
 }
 
@@ -109,21 +55,113 @@ export function constExplicitInstance(
 //
 interface TConstraintImplicitInstance {
   tag: "implicit-instance-constraint";
-  assumption: TAssumption;
-  t: T.Type;
+  type: T.Type;
+  typeToGeneralize: T.Type;
   monovars: string[];
+  closedFunctionEffect?: T.Type;
+  source?: {
+    expr: S.Expression<Typed>;
+  };
+}
+
+// A constriant stating that an expression's type is an instance of
+// the (poly)type t.  This is generated when we already know somehow
+// the generalized type of an expression. For example if the user has
+// provided some type annotations.
+interface TConstraintExplicitInstance {
+  tag: "explicit-instance-constraint";
+  type: T.Type;
+  typeSchema: T.TypeSchema;
+  closedFunctionEffect?: T.Type;
+  source?: {
+    expr: S.Expression<Typed>;
+  };
+}
+
+export function constEqual(
+  t1: T.Type,
+  t2: T.Type,
+  source?: TConstraintEqual["source"]
+): TConstraintEqual {
+  return { tag: "equal-constraint", t1, t2, source };
+}
+
+export function constSelfType(
+  expr: S.Expression<Typed>,
+  selfType: T.Type
+): TConstraint {
+  return {
+    tag: "equal-constraint",
+    t1: expr.info.selfType,
+    t2: selfType,
+    source: {
+      expr: expr,
+      kind: "self-type"
+    }
+  };
+}
+
+export function constResultingType(
+  returningForm: S.Expression<Typed>,
+  returnType: T.Type
+): TConstraint {
+  return {
+    tag: "equal-constraint",
+    t1: returningForm.info.resultingType,
+    t2: returnType,
+    source: {
+      expr: returningForm,
+      kind: "resulting-type"
+    }
+  };
+}
+
+export function constEffect(
+  expr: S.Expression<Typed>,
+  t: T.Type
+): TConstraintEqual {
+  return {
+    tag: "equal-constraint",
+    t1: expr.info.effect,
+    t2: t,
+    source: {
+      kind: "effect",
+      expr
+    }
+  };
+}
+
+export function constExplicitInstance(
+  expr: S.Expression<Typed> | undefined,
+  type: T.Type,
+  typeSchema: T.TypeSchema,
+  closedFunctionEffect?: T.Type
+): TConstraintExplicitInstance {
+  return {
+    tag: "explicit-instance-constraint",
+    type,
+    typeSchema,
+    closedFunctionEffect,
+    source: expr && { expr }
+  };
 }
 
 export function constImplicitInstance(
-  assumption: TAssumption,
+  expr: S.Expression<Typed> | undefined,
+  type: T.Type,
   monovars: T.Var[],
-  t: T.Type
+  typeToGeneralize: T.Type,
+  closedFunctionEffect?: T.Type
 ): TConstraintImplicitInstance {
   return {
     tag: "implicit-instance-constraint",
-    assumption,
+    type,
     monovars: monovars.map(v => v.node.name),
-    t
+    typeToGeneralize,
+    closedFunctionEffect,
+    source: expr && {
+      expr
+    }
   };
 }
 
@@ -132,26 +170,31 @@ export function debugConstraints(constraints: TConstraint[]) {
     switch (c.tag) {
       case "equal-constraint":
         return console.log(
-          `${pprint(c.expr, 40)} ${c.kind} of type ${printType(
-            c.exprType,
-            false
-          )} is ${printType(c.t, false)}`
+          `${
+            c.source
+              ? pprint(c.source.expr, 40) + " " + c.source.kind + " "
+              : "<no expr>"
+          }  of type ${printType(c.t1, false)} is ${printType(c.t2, false)}`
         );
       case "implicit-instance-constraint":
         return console.log(
-          `${pprint(
-            c.assumption.variable,
-            40
-          )} is implicit instance of ${printType(c.t, false)}
+          `${
+            c.source ? pprint(c.source.expr, 40) : "<no expr>"
+          } of type ${printType(
+            c.type,
+            false
+          )} is implicit instance of ${printType(c.typeToGeneralize, false)}
 for monovars ${c.monovars.join(",")}
 `
         );
       case "explicit-instance-constraint":
         return console.log(
-          `${pprint(
-            c.assumption.variable,
-            40
-          )} is explicit instance of ${printType(c.t.mono, false)}`
+          `${
+            c.source ? pprint(c.source.expr, 40) : "<no expr>"
+          } of type ${printType(
+            c.type,
+            false
+          )} is explicit instance of ${printType(c.typeSchema.mono, false)}`
         );
     }
   });
@@ -165,23 +208,17 @@ function activevars(constraints: TConstraint[]): string[] {
   return flatMap(c => {
     switch (c.tag) {
       case "equal-constraint":
-        return union(listTypeVariables(c.exprType), listTypeVariables(c.t));
+        return union(listTypeVariables(c.t1), listTypeVariables(c.t2));
       case "implicit-instance-constraint": {
-        const { variable, primaryResultingType } = c.assumption;
         return union(
-          listTypeVariables(variable.info.selfType),
-          listTypeVariables(variable.info.resultingType),
-          listTypeVariables(primaryResultingType),
-          intersection(listTypeVariables(c.t), c.monovars)
+          listTypeVariables(c.type),
+          intersection(listTypeVariables(c.typeToGeneralize), c.monovars)
         );
       }
       case "explicit-instance-constraint": {
-        const { variable, primaryResultingType } = c.assumption;
         return union(
-          listTypeVariables(variable.info.selfType),
-          listTypeVariables(variable.info.resultingType),
-          listTypeVariables(primaryResultingType),
-          difference(listTypeVariables(c.t.mono), c.t.tvars)
+          listTypeVariables(c.type),
+          difference(listTypeVariables(c.typeSchema.mono), c.typeSchema.tvars)
         );
       }
     }
@@ -224,35 +261,28 @@ function applySubstitutionToConstraint(
     case "equal-constraint":
       return {
         tag: "equal-constraint",
-        expr: applySubstitutionToExpr(c.expr, s),
-        exprType: applySubstitution(c.exprType, s),
-        t: applySubstitution(c.t, s),
-        kind: c.kind
+        t1: applySubstitution(c.t1, s),
+        t2: applySubstitution(c.t2, s),
+        source: c.source
       };
     case "implicit-instance-constraint":
       return {
         tag: "implicit-instance-constraint",
-        assumption: {
-          variable: applyTypeSubstitutionToVariable(c.assumption.variable, s),
-          primaryResultingType: applySubstitution(
-            c.assumption.primaryResultingType,
-            s
-          )
-        },
-        t: applySubstitution(c.t, s),
-        monovars: flatMap(name => substituteVar(name, s), c.monovars)
+        type: applySubstitution(c.type, s),
+        typeToGeneralize: applySubstitution(c.typeToGeneralize, s),
+        monovars: flatMap(name => substituteVar(name, s), c.monovars),
+        source: c.source,
+        closedFunctionEffect:
+          c.closedFunctionEffect && applySubstitution(c.closedFunctionEffect, s)
       };
     case "explicit-instance-constraint":
       return {
         tag: "explicit-instance-constraint",
-        assumption: {
-          variable: applyTypeSubstitutionToVariable(c.assumption.variable, s),
-          primaryResultingType: applySubstitution(
-            c.assumption.primaryResultingType,
-            s
-          )
-        },
-        t: applySubstitutionToPolytype(c.t, s)
+        type: applySubstitution(c.type, s),
+        typeSchema: applySubstitutionToPolytype(c.typeSchema, s),
+        source: c.source,
+        closedFunctionEffect:
+          c.closedFunctionEffect && applySubstitution(c.closedFunctionEffect, s)
       };
   }
 }
@@ -288,7 +318,7 @@ export function solve(
         const others = constraints.filter(c1 => c !== c1);
         const result =
           intersection(
-            difference(listTypeVariables(c.t), c.monovars),
+            difference(listTypeVariables(c.typeToGeneralize), c.monovars),
             activevars(others)
           ).length === 0;
         return result;
@@ -329,9 +359,7 @@ export function solve(
         throw new Error(
           printHighlightedExpr(
             "Expression would have an infinity type",
-            constraint.tag === "equal-constraint"
-              ? constraint.expr.location
-              : constraint.assumption.variable.location
+            constraint.source && constraint.source.expr.location
           )
         );
       }
@@ -358,7 +386,7 @@ but we expected the type
   ${printType(applySubstitution(t, solution), false)}
 `,
 
-            constraintExpression(constraint).location
+            constraint.source && constraint.source.expr.location
           )
         );
       case "unify-missing-value-error":
@@ -375,7 +403,7 @@ vs.
 ${printType(applySubstitution(exprType, solution), false)}
 
 `,
-            constraintExpression(constraint).location
+            constraint.source && constraint.source.expr.location
           )
         );
       default:
@@ -385,32 +413,36 @@ ${printType(applySubstitution(exprType, solution), false)}
 
   switch (constraint.tag) {
     case "equal-constraint": {
-      return solveEq(constraint.exprType, constraint.t);
+      return solveEq(constraint.t1, constraint.t2);
     }
     case "explicit-instance-constraint": {
-      const { variable, primaryResultingType } = constraint.assumption;
-      const t = instantiate(closeFunctionEffect(constraint.t));
-
+      const closedType = instantiate(
+        closeFunctionEffect(constraint.typeSchema)
+      );
+      const openedType = openFunctionEffect(closedType);
       return solve(
         [
-          constEqual(variable, variable.info.selfType, "expression-type", t),
-
-          constEqual(
-            variable,
-            primaryResultingType,
-            "primary-type",
-            openFunctionEffect(t)
-          ),
-
+          constEqual(constraint.type, openedType),
+          ...(constraint.closedFunctionEffect
+            ? [constEqual(constraint.closedFunctionEffect, closedType)]
+            : []),
           ...rest
         ],
         solution
       );
     }
     case "implicit-instance-constraint": {
-      const t = generalize(constraint.t, constraint.monovars);
+      const t = generalize(constraint.typeToGeneralize, constraint.monovars);
       return solve(
-        [constExplicitInstance(constraint.assumption, t), ...rest],
+        [
+          constExplicitInstance(
+            constraint.source && constraint.source.expr,
+            constraint.type,
+            t,
+            constraint.closedFunctionEffect
+          ),
+          ...rest
+        ],
         solution
       );
     }

@@ -1,59 +1,102 @@
 /* eslint-disable react/jsx-key */
 
-import React from "react";
-import styled from "styled-components";
-
-import { updateCode, Action, State } from "./state";
-
 import {
-  Module,
-  Syntax,
-  isExpression,
-  readModule,
+  compileModuleToString,
+  Encoder,
   inferModule,
+  isExpression,
+  Expression,
+  macroexpandModule,
+  Module,
   pprintAs,
   printType,
-  Encoder,
+  readModule,
+  Syntax,
   Typed
 } from "@delisp/core";
+import React, { useState } from "react";
+import styled, { css } from "styled-components";
+import { Action, State, updateCode } from "./state";
 
 const LINE_WIDTH = 40;
 
-type ASTResult =
-  | { tag: "success"; module: Module<Typed> }
-  | { tag: "error"; message: string };
-
-export function assertNever(x: never): never {
-  throw new Error("Unexpected object: " + x);
+interface ViewProps {
+  code: string;
 }
 
-function readModuleOrError(code: string): ASTResult {
-  try {
-    const m = readModule(code);
-    const inferredM = inferModule(m);
-    return { tag: "success", module: inferredM.typedModule };
-  } catch (err) {
-    return { tag: "error", message: err.message };
+interface CodeView {
+  name: string;
+  render: React.FunctionComponent<ViewProps>;
+}
+
+const VIEWS: CodeView[] = [
+  {
+    name: "Pretty Print",
+    render: function PrettyPrint({ code }) {
+      const m = readModule(code);
+      return <ModuleExplorer module={m} />;
+    }
+  },
+  {
+    name: "Macroexpand",
+    render: function MacroExpand({ code }) {
+      const m = macroexpandModule(readModule(code));
+      return <ModuleExplorer module={m} />;
+    }
+  },
+  {
+    name: "Type inference",
+    render: function TypeInference({ code }) {
+      const inferred = inferModule(macroexpandModule(readModule(code)));
+      return <ModuleExplorer module={inferred.typedModule} />;
+    }
+  },
+  {
+    name: "JS",
+    render: function JS({ code }) {
+      const inferred = inferModule(macroexpandModule(readModule(code)));
+      const js = compileModuleToString(inferred.typedModule, {
+        getOutputFile: file => file
+      });
+      return <pre>{js}</pre>;
+    }
   }
-}
+];
 
-function AST(props: { code: string }) {
-  const { code } = props;
-  const result = readModuleOrError(code);
-  switch (result.tag) {
-    case "success":
-      return <ModuleExplorer module={result.module} />;
-    case "error":
+function AST({ code }: { code: string }) {
+  const [currentView, setCurrentView] = useState(VIEWS[0]);
+  const Component = (props: ViewProps) => {
+    try {
+      return currentView.render(props);
+    } catch (err) {
       return (
         <div>
           <span>Something went wrong</span>
-          <pre>{result.message}</pre>
         </div>
       );
-  }
+    }
+  };
+
+  return (
+    <div>
+      <div>
+        {VIEWS.map(v => (
+          <ViewButton
+            selected={v === currentView}
+            onClick={() => setCurrentView(v)}
+          >
+            {v.name}
+          </ViewButton>
+        ))}
+      </div>
+      <div>
+        <Component code={code} />
+      </div>
+    </div>
+  );
 }
 
-function ModuleExplorer({ module: m }: { module: Module<Typed> }) {
+function ModuleExplorer({ module: m }: { module: Module<Typed | {}> }) {
   return (
     <div>
       {m.body.map((s, i) => (
@@ -63,9 +106,17 @@ function ModuleExplorer({ module: m }: { module: Module<Typed> }) {
   );
 }
 
-function SyntaxExplorer({ syntax }: { syntax: Syntax<Typed> }) {
+function SyntaxExplorer({ syntax }: { syntax: Syntax<Typed | {}> }) {
   return <GenericSyntaxExplorer syntax={syntax} />;
 }
+
+const ViewButton = styled.button`
+  ${(props: { selected?: boolean }) =>
+    props.selected &&
+    css`
+      background: lightBlue;
+    `}
+`;
 
 const Editor = styled.textarea`
   width: 100%;
@@ -91,6 +142,10 @@ const Code = styled.pre`
     color: blue;
   }
 
+  .boolean {
+    color: red;
+  }
+
   .number {
     color: orange;
   }
@@ -105,6 +160,20 @@ const Token = styled.span`
     background-color: #88f;
   }
 `;
+
+function getDisplayExpressionType(expr: Expression<Typed>) {
+  if (!expr.info.selfType) return undefined;
+
+  const selfType = `Self type: ${printType(expr.info.selfType, false)}`;
+  if (expr.node.tag === "variable-reference") {
+    if (expr.node.closedFunctionEffect) {
+      return `Closed: ${printType(expr.node.closedFunctionEffect, false)}`;
+    }
+    return selfType;
+  } else {
+    return selfType;
+  }
+}
 
 const PrettierEncoder: Encoder<React.ReactElement[]> = {
   fromString: function PrettierEncoder(
@@ -121,7 +190,7 @@ const PrettierEncoder: Encoder<React.ReactElement[]> = {
         }}
         title={
           source && isExpression(source)
-            ? printType(source.info.selfType)
+            ? getDisplayExpressionType(source)
             : undefined
         }
       >
