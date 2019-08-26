@@ -635,15 +635,7 @@ function infer(
         assumptions: inferred.assumptions,
         constraints: [
           ...inferred.constraints,
-
-          constResultingType(
-            inferred.result,
-            // Note that we can't constraint the selfType here,
-            // because if the body is a variable with a function type,
-            // then self-typed will could be closed over the
-            // effects. See `closeFunctionEffect`.
-            multipleValues ? T.values([t]) : t
-          )
+          constSelfType(inferred.result, t)
         ]
       };
     }

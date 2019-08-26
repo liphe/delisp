@@ -277,7 +277,7 @@ export function openFunctionEffect(type: T.Type): T.Type {
  *   (forall (a e) (-> a e number))
  *
  **/
-export function instantiateTypeSchemaForvariable(
+export function instantiateTypeSchemaForVariable(
   polytype: T.TypeSchema,
   tvar: T.Var,
   replacement: T.Type
@@ -347,10 +347,12 @@ export function closeFunctionEffect(polytype: T.TypeSchema): T.TypeSchema {
       ...listTypeVariables(output)
     ];
 
-    if (freevars.includes(effectTail.node.name)) {
+    const isPolymorphicOnEffect = polytype.tvars.includes(effectTail.node.name);
+
+    if (!isPolymorphicOnEffect || freevars.includes(effectTail.node.name)) {
       return polytype;
     } else {
-      return instantiateTypeSchemaForvariable(polytype, effectTail, T.emptyRow);
+      return instantiateTypeSchemaForVariable(polytype, effectTail, T.emptyRow);
     }
   } else {
     return polytype;
