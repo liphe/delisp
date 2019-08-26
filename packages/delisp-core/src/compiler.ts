@@ -349,29 +349,32 @@ function compileMatch(
   env: Environment,
   multipleValues: boolean
 ): JS.Expression {
+  const cases = expr.node.cases.map(c => ({
+    key: c.label,
+    value: arrowFunction(
+      [identifier(c.variable.name)],
+      (() => {
+        const newenv = addBinding(c.variable.name, env);
+        return compileBody(c.body, newenv, multipleValues);
+      })()
+    )
+  }));
+
   const defaultCase =
     expr.node.defaultCase &&
     arrowFunction([], compileBody(expr.node.defaultCase, env, multipleValues));
 
-  return primitiveCall(
+  const call = primitiveCall(
     "matchTag",
     compile(expr.node.value, env, false),
-
-    objectExpression(
-      expr.node.cases.map(c => ({
-        key: c.label,
-        value: arrowFunction(
-          [identifier(c.variable.name)],
-          (() => {
-            const newenv = addBinding(c.variable.name, env);
-            return compileBody(c.body, newenv, multipleValues);
-          })()
-        )
-      }))
-    ),
-
+    objectExpression(cases),
     ...(defaultCase ? [defaultCase] : [])
   );
+
+  const isAsync =
+    cases.some(c => c.value.async) || (defaultCase && defaultCase.async);
+
+  return isAsync ? awaitExpr(call) : call;
 }
 
 function compileTag(
