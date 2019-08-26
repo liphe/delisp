@@ -1100,7 +1100,7 @@ function resolveInferenceEnvironment(
       } = groupAssumptions(group, internalEnv, externalEnv);
 
       const constraints: TConstraint[] = [
-        ...inferences.flatMap(i => i.constraints),
+        ...group.flatMap(i => i.constraints),
         ...groupInternals.map(a =>
           constSelfType(a.variable, internalEnv.variables[a.variable.node.name])
         ),
