@@ -123,7 +123,7 @@ defineInlinePrimitive(
 
 defineInlinePrimitive(
   "map",
-  "(-> _ctx (-> _ctx a e (values b <| _)) [a] e [b])",
+  "(-> _ctx (-> _ctx a e (values b <| _)) [a] (effect async <| e) [b])",
   ([ctx, fn, vec]) => {
     return primitiveCall(
       "promiseMap",
@@ -135,7 +135,7 @@ defineInlinePrimitive(
 
 defineInlinePrimitive(
   "map/seq",
-  "(-> _ctx (-> _ctx a e (values b <| _)) [a] e [b])",
+  "(-> _ctx (-> _ctx a e (values b <| _)) [a] (effect async <| e) [b])",
   ([ctx, fn, vec]) => {
     return primitiveCall(
       "promiseMapSeq",
@@ -155,7 +155,7 @@ defineInlinePrimitive(
 
 defineInlinePrimitive(
   "filter",
-  "(-> _ctx (-> _ctx a _ (values boolean <| _)) [a] _ [a])",
+  "(-> _ctx (-> _ctx a e (values boolean <| _)) [a] (effect async <| e) [a])",
   ([ctx, predicate, vec]) => {
     return primitiveCall(
       "promiseFilter",
@@ -167,7 +167,7 @@ defineInlinePrimitive(
 
 defineInlinePrimitive(
   "fold",
-  "(-> _ctx (-> _ctx b a _ (values b <| _)) [a] b _ b)",
+  "(-> _ctx (-> _ctx b a e (values b <| _)) [a] b (effect async <| e) b)",
   ([ctx, fn, vec, init]) => {
     return primitiveCall(
       "promiseReduce",
