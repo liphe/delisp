@@ -4,6 +4,7 @@
   "main": "index.js",
   "private": true,
   "scripts": {
-    "test": "delisp compile reducer.dl && node test-todo.js"
+    "build": "delisp compile reducer.dl",
+    "test": "yarn build && node test-todo.js"
   }
 }
