@@ -11,8 +11,17 @@ let state = initialState;
 const id = x => x;
 const ctx = {};
 
-state = reducer(id, ctx, state, addTodo(id, ctx, "Write todo app!"));
-state = reducer(id, ctx, state, completeAll(id, ctx));
-state = reducer(id, ctx, state, addTodo(id, ctx, "Complete more todos"));
+async function run() {
+  state = await reducer(id, ctx, state, addTodo(id, ctx, "Write todo app!"));
+  state = await reducer(id, ctx, state, completeAll(id, ctx));
+  state = await reducer(
+    id,
+    ctx,
+    state,
+    addTodo(id, ctx, "Complete more todos")
+  );
 
-showTodos(id, ctx, state);
+  await showTodos(id, ctx, state);
+}
+
+run();
