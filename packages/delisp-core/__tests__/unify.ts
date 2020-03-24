@@ -44,7 +44,10 @@ describe("Unification", () => {
       const r = T.var("r");
       const t1 = T.record([{ label: ":x", type: T.number }], r);
       const t2 = T.record(
-        [{ label: "z", type: T.number }, { label: ":y", type: T.number }],
+        [
+          { label: "z", type: T.number },
+          { label: ":y", type: T.number },
+        ],
         r
       );
       const result = unify(t1, t2, {});

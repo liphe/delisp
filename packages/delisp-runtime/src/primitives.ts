@@ -12,11 +12,11 @@ const prims: Primitives = {
       column: number
     ): never => {
       throw new Error(`ERROR:${file}:${line}$:${column}: ${message}.`);
-    }
+    },
   },
 
   ...vectorPrims,
-  ...stringPrims
+  ...stringPrims,
 };
 
 export default prims;

@@ -5,7 +5,7 @@ import * as JS from "estree";
 import {
   DefinitionBackend,
   dynamicDefinition,
-  staticDefinition
+  staticDefinition,
 } from "./compiler/definitions";
 import {
   arrowFunction,
@@ -16,11 +16,11 @@ import {
   awaitExpr,
   objectExpression,
   primitiveCall,
-  comment
+  comment,
 } from "./compiler/estree-utils";
 import {
   findInlinePrimitive,
-  isInlinePrimitive
+  isInlinePrimitive,
 } from "./compiler/inline-primitives";
 import { cjs, esm, ModuleBackend } from "./compiler/modules";
 import { printHighlightedExpr } from "./error-report";
@@ -61,8 +61,8 @@ function addBinding(varName: string, env: Environment): Environment {
     ...env,
     bindings: {
       ...env.bindings,
-      [varName]: { name: varName, source: "lexical" }
-    }
+      [varName]: { name: varName, source: "lexical" },
+    },
   };
 }
 
@@ -86,15 +86,15 @@ function lookupBindingOrError(
 }
 
 function compileBody(
-  body: Array<S.Expression<Typed>>,
+  body: S.Expression<Typed>[],
   env: Environment,
   multipleValues: boolean
 ): JS.Expression[] {
   const middleForms = body.slice(0, -1);
   const lastForm = last(body)!;
   return [
-    ...middleForms.map(e => compile(e, env, false)),
-    compile(lastForm, env, multipleValues)
+    ...middleForms.map((e) => compile(e, env, false)),
+    compile(lastForm, env, multipleValues),
   ];
 }
 
@@ -121,7 +121,7 @@ function compileLambda(
 function isFunctionAsync(fntype: Type): boolean {
   const selfEffects = getCallEffects(fntype);
   return (
-    Boolean(selfEffects.fields.find(f => f.label === "async")) ||
+    Boolean(selfEffects.fields.find((f) => f.label === "async")) ||
     selfEffects.extends.node.tag !== "empty-row"
   );
 }
@@ -131,7 +131,7 @@ function compileFunctionCall(
   env: Environment,
   multipleValues: boolean
 ): JS.Expression {
-  const compiledArgs = funcall.node.arguments.map(arg =>
+  const compiledArgs = funcall.node.arguments.map((arg) =>
     compile(arg, env, false)
   );
   if (
@@ -150,8 +150,8 @@ function compileFunctionCall(
       callee: compile(fn, env, false),
       arguments: [
         identifier(multipleValues ? "values" : "primaryValue"),
-        ...compiledArgs
-      ]
+        ...compiledArgs,
+      ],
     };
     return isAsync ? awaitExpr(call) : call;
   }
@@ -173,7 +173,7 @@ function compileInlineValue(name: string): JS.Expression {
   /* If the primitive is used in a value position, a wrapper function
      will be created so the inlined primitive can be used as a
      function. */
-  const identifiers = range(prim.arity).map(i => identifier(`x${i}`));
+  const identifiers = range(prim.arity).map((i) => identifier(`x${i}`));
   return arrowFunction(
     [identifier("values"), ...identifiers],
     [prim.funcHandler(identifiers)]
@@ -222,7 +222,7 @@ function compileConditional(
     type: "ConditionalExpression",
     test: compile(expr.node.condition, env, false),
     consequent: compile(expr.node.consequent, env, multipleValues),
-    alternate: compile(expr.node.alternative, env, multipleValues)
+    alternate: compile(expr.node.alternative, env, multipleValues),
   };
 }
 
@@ -249,7 +249,7 @@ function compileLetBindings(
   const call: JS.Expression = {
     type: "CallExpression",
     callee: func,
-    arguments: expr.node.bindings.map(b => compile(b.value, env, false))
+    arguments: expr.node.bindings.map((b) => compile(b.value, env, false)),
   };
 
   return func.async ? awaitExpr(call) : call;
@@ -262,7 +262,7 @@ function compileVector(
 ): JS.Expression {
   return {
     type: "ArrayExpression",
-    elements: expr.node.values.map(e => compile(e, env, false))
+    elements: expr.node.values.map((e) => compile(e, env, false)),
   };
 }
 
@@ -283,7 +283,7 @@ function compileRecord(
       const name = labelToPropertyName(label);
       return {
         key: name,
-        value: compile(value, env, multipleValues)
+        value: compile(value, env, multipleValues),
       };
     })
   );
@@ -296,7 +296,7 @@ function compileRecord(
     return methodCall(identifier("Object"), "assign", [
       objectExpression([]),
       compile(expr.node.source.expression, env, false),
-      newObj
+      newObj,
     ]);
   } else {
     return newObj;
@@ -325,7 +325,7 @@ function compileNumber(
       type: "UnaryExpression",
       operator: "-",
       prefix: true,
-      argument: literal(-value)
+      argument: literal(-value),
     };
   }
 }
@@ -338,9 +338,9 @@ function compileDoBlock(
   return {
     type: "SequenceExpression",
     expressions: [
-      ...expr.node.body.map(f => compile(f, env, false)),
-      compile(expr.node.returning, env, multipleValues)
-    ]
+      ...expr.node.body.map((f) => compile(f, env, false)),
+      compile(expr.node.returning, env, multipleValues),
+    ],
   };
 }
 
@@ -349,7 +349,7 @@ function compileMatch(
   env: Environment,
   multipleValues: boolean
 ): JS.Expression {
-  const cases = expr.node.cases.map(c => ({
+  const cases = expr.node.cases.map((c) => ({
     key: c.label,
     value: arrowFunction(
       [identifier(c.variable.name)],
@@ -357,7 +357,7 @@ function compileMatch(
         const newenv = addBinding(c.variable.name, env);
         return compileBody(c.body, newenv, multipleValues);
       })()
-    )
+    ),
   }));
 
   const defaultCase =
@@ -372,7 +372,7 @@ function compileMatch(
   );
 
   const isAsync =
-    cases.some(c => c.value.async) || (defaultCase && defaultCase.async);
+    cases.some((c) => c.value.async) || (defaultCase && defaultCase.async);
 
   return isAsync ? awaitExpr(call) : call;
 }
@@ -397,7 +397,7 @@ function compileValues(
   return {
     type: "CallExpression",
     callee: identifier("values"),
-    arguments: expr.node.values.map(e => compile(e, env, false))
+    arguments: expr.node.values.map((e) => compile(e, env, false)),
   };
 }
 
@@ -414,7 +414,7 @@ function compileMultipleValueBind(
     return addBinding(v.name, env);
   }, env);
 
-  const params = expr.node.variables.map(v =>
+  const params = expr.node.variables.map((v) =>
     identifier(lookupBindingOrError(v.name, newenv).name)
   );
 
@@ -439,7 +439,7 @@ function compileUnknown(
   return {
     type: "CallExpression",
     callee: unknownFn,
-    arguments: [message, file, line, column]
+    arguments: [message, file, line, column],
   };
 }
 
@@ -531,7 +531,7 @@ function compileTopLevel(
 
   if (S.isDefinition(syntax)) {
     const info = syntax.node.value.info;
-    let type: Type | undefined = info ? info.resultingType : undefined;
+    const type: Type | undefined = info ? info.resultingType : undefined;
     const js = compileDefinition(syntax, env);
     return comment(
       `
@@ -545,7 +545,7 @@ ${pprint(syntax, 40)}
     const type = info ? info.resultingType : undefined;
     const js: JS.Statement = {
       type: "ExpressionStatement",
-      expression: compile(syntax, env, multipleValues)
+      expression: compile(syntax, env, multipleValues),
     };
     return comment(
       `
@@ -580,15 +580,15 @@ function compileRuntimeUtils(
     "promiseMap",
     "promiseReduce",
     "promiseFilter",
-    "promiseDelay"
+    "promiseDelay",
   ]);
 }
 
 function compileImports(
   imports: S.SImport[],
   env: Environment
-): Array<JS.Statement | JS.ModuleDeclaration> {
-  return imports.map(i =>
+): (JS.Statement | JS.ModuleDeclaration)[] {
+  return imports.map((i) =>
     env.moduleFormat.importNames(
       [i.node.variable.name],
       env.getOutputFile(i.node.source),
@@ -600,9 +600,9 @@ function compileImports(
 function compileExports(
   exps: S.SExport[],
   env: Environment
-): Array<JS.Statement | JS.ModuleDeclaration> {
-  const exportNames = flatMap(exp => exp.node.identifiers, exps).map(
-    identifier => {
+): (JS.Statement | JS.ModuleDeclaration)[] {
+  const exportNames = flatMap((exp) => exp.node.identifiers, exps).map(
+    (identifier) => {
       const binding = lookupBindingOrError(identifier.name, env);
       if (!binding || binding.source !== "module") {
         throw new Error(
@@ -630,11 +630,11 @@ export function moduleEnvironment(
 ): Environment {
   const moduleDefinitions = m.body
     .filter(S.isDefinition)
-    .map(decl => decl.node.variable.name);
+    .map((decl) => decl.node.variable.name);
   const moduleBindings = moduleDefinitions.reduce(
     (d, decl) => ({
       ...d,
-      [decl]: { name: decl, source: "module" }
+      [decl]: { name: decl, source: "module" },
     }),
     {}
   );
@@ -643,7 +643,7 @@ export function moduleEnvironment(
     runtime,
     (_, key: string): EnvironmentBinding => ({
       name: key,
-      source: "primitive"
+      source: "primitive",
     })
   );
 
@@ -653,7 +653,7 @@ export function moduleEnvironment(
       : staticDefinition,
     moduleFormat: opts.esModule ? esm : cjs,
     bindings: { ...primitiveBindings, ...moduleBindings },
-    getOutputFile: opts.getOutputFile
+    getOutputFile: opts.getOutputFile,
   };
 
   return initialEnv;
@@ -674,9 +674,9 @@ function compileModule(
 
       ...compileImports(moduleImports(m), env),
 
-      ...maybeMap(syntax => compileTopLevel(syntax, env, false), m.body),
-      ...compileExports(moduleExports(m), env)
-    ]
+      ...maybeMap((syntax) => compileTopLevel(syntax, env, false), m.body),
+      ...compileExports(moduleExports(m), env),
+    ],
   };
 }
 

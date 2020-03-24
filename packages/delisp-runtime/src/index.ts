@@ -114,7 +114,7 @@ export async function promiseMapSeq<A, B>(
   array: A[],
   f: (x: A) => Promise<B>
 ): Promise<B[]> {
-  let results: B[] = [];
+  const results: B[] = [];
   for (const elm of array) {
     results.push(await f(elm));
   }
@@ -142,7 +142,7 @@ export async function promiseFilter<A>(
 }
 
 export function promiseDelay(ms: number): Promise<void> {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
 }

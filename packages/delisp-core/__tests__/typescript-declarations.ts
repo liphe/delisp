@@ -28,7 +28,7 @@ async function buildModule(file: string): Promise<void> {
   const { typedModule } = inferModule(m);
 
   const jscode = compileModuleToString(typedModule, {
-    getOutputFile: name => name
+    getOutputFile: (name) => name,
   });
   await writeFile(file.replace(/\.dl$/, ".js"), jscode);
 

@@ -18,7 +18,10 @@ describe("Type printer", () => {
     expect(
       printType(
         T.cases(
-          [{ label: ":a", type: T.var("a") }, { label: ":b", type: T.void }],
+          [
+            { label: ":a", type: T.var("a") },
+            { label: ":b", type: T.void },
+          ],
           T.var("c")
         ),
         false

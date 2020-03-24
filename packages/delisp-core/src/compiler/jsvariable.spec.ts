@@ -1,7 +1,7 @@
 import {
   escapeIdentifier,
   isValidJSIdentifier,
-  isValidJSIdentifierName
+  isValidJSIdentifierName,
 } from "./jsvariable";
 
 describe("Check valid JS identifier name", () => {
@@ -44,11 +44,11 @@ describe("Variable name translation", () => {
       "<=",
       "%compile",
       "!foo",
-      "&foo"
+      "&foo",
     ];
-    const result = cases.map(v => ({
+    const result = cases.map((v) => ({
       delisp: v,
-      js: escapeIdentifier(v)
+      js: escapeIdentifier(v),
     }));
     return expect(result).toMatchSnapshot();
   });

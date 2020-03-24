@@ -9,19 +9,19 @@ const TypeSchemaFromString = new t.Type<TypeSchema, string, unknown>(
   "TypeFromString",
   (u): u is TypeSchema => u instanceof TypeSchema,
   (u, c) =>
-    either.chain(t.string.validate(u, c), s => {
+    either.chain(t.string.validate(u, c), (s) => {
       try {
         return t.success(readType(s));
       } catch (err) {
         return t.failure(u, c);
       }
     }),
-  a => printType(a.mono, true)
+  (a) => printType(a.mono, true)
 );
 
 const ExternalEnvironment = t.type({
   variables: t.record(t.string, TypeSchemaFromString),
-  types: t.record(t.string, TypeSchemaFromString)
+  types: t.record(t.string, TypeSchemaFromString),
 });
 
 export type ExternalEnvironment = t.TypeOf<typeof ExternalEnvironment>;
@@ -46,6 +46,6 @@ export function mergeExternalEnvironments(
 ) {
   return {
     variables: { ...e1.variables, ...e2.variables },
-    types: { ...e1.types, ...e2.types }
+    types: { ...e1.types, ...e2.types },
   };
 }

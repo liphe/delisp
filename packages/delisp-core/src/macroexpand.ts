@@ -10,7 +10,7 @@ function macroexpandLabel(name: string, location: Location): S.Expression {
   const key: ASExprSymbol = {
     tag: "symbol",
     name,
-    location
+    location,
   };
   return convertExpr(sexpr`
 (lambda (container)
@@ -26,8 +26,8 @@ function macroexpandFuncall(funcall: S.SFunctionCall): S.Expression {
     node: {
       tag: "function-call",
       fn: funcall.node.fn,
-      arguments: [convertExpr(sexpr`*context*`), ...funcall.node.arguments]
-    }
+      arguments: [convertExpr(sexpr`*context*`), ...funcall.node.arguments],
+    },
   };
 }
 
@@ -41,12 +41,12 @@ function macroexpandLambda(lambda: S.SFunction): S.Expression {
         tag: "function-lambda-list",
         positionalArguments: [
           { tag: "identifier", name: "*context*", location: lambda.location },
-          ...lambdaList.positionalArguments
+          ...lambdaList.positionalArguments,
         ],
-        location: lambdaList.location
+        location: lambdaList.location,
       },
-      body: lambda.node.body
-    }
+      body: lambda.node.body,
+    },
   };
 }
 
@@ -87,7 +87,7 @@ export function macroexpandExpression(expr: S.Expression): S.Expression {
   const topform = macroexpandRootExpression(expr);
   // Only after the top expression can't be expanded anymore, we
   // proceed to macroexpand the subexpressions.
-  return mapExpr(topform, subexpr => macroexpandExpression(subexpr));
+  return mapExpr(topform, (subexpr) => macroexpandExpression(subexpr));
 }
 
 export function macroexpandSyntax(syntax: S.Syntax): S.Syntax {
@@ -98,12 +98,12 @@ export function macroexpandSyntax(syntax: S.Syntax): S.Syntax {
       node: {
         tag: "definition",
         variable: syntax.node.variable,
-        value: macroexpandExpression(syntax.node.value)
+        value: macroexpandExpression(syntax.node.value),
       },
       info: {
-        errors: []
+        errors: [],
       },
-      location: syntax.location
+      location: syntax.location,
     };
   } else if (
     S.isExport(syntax) ||
@@ -119,6 +119,6 @@ export function macroexpandSyntax(syntax: S.Syntax): S.Syntax {
 export function macroexpandModule(m: S.Module): S.Module {
   return {
     tag: "module",
-    body: m.body.map(macroexpandSyntax)
+    body: m.body.map(macroexpandSyntax),
   };
 }

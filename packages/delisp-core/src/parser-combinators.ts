@@ -33,35 +33,35 @@ export class Parser<A> {
   }
 
   static of<A>(value: A) {
-    return new Parser(moreInput => {
+    return new Parser((moreInput) => {
       const result: ParserSuccess<A> = { status: "success", value, moreInput };
       return result;
     });
   }
 
   static fail(message: string): Parser<never> {
-    return new Parser(input => ({
+    return new Parser((input) => ({
       status: "error",
       expected: message,
       incomplete: false,
       reasons: [],
-      offset: input.offset
+      offset: input.offset,
     }));
   }
 
   static lookahead(parser: Parser<unknown>): Parser<boolean> {
-    return new Parser(input => {
+    return new Parser((input) => {
       const result = parser.run(input);
       return {
         status: "success",
         value: result.status === "success",
-        moreInput: input
+        moreInput: input,
       };
     });
   }
 
   description(desc: string) {
-    return new Parser(input => {
+    return new Parser((input) => {
       const result = this.run(input);
       if (result.status === "success") {
         return result;
@@ -71,7 +71,7 @@ export class Parser<A> {
           expected: desc,
           incomplete: result.incomplete,
           reasons: [result],
-          offset: input.offset
+          offset: input.offset,
         };
       }
     });
@@ -88,7 +88,7 @@ export class Parser<A> {
       const location: Location = {
         input,
         start: input.offset,
-        end: moreInput.offset
+        end: moreInput.offset,
       };
 
       return fn(value, location).run(moreInput);
@@ -96,11 +96,11 @@ export class Parser<A> {
   }
 
   then<B>(p: Parser<B>): Parser<B> {
-    return this.chain(_ => p);
+    return this.chain((_) => p);
   }
 
   skip(p: Parser<unknown>): Parser<A> {
-    return this.chain(x => p.map(_ => x));
+    return this.chain((x) => p.map((_) => x));
   }
 
   or<B>(alternative: Parser<B>) {
@@ -121,7 +121,7 @@ export class Parser<A> {
         status: "error",
         reasons: [result, alternativeResult],
         incomplete: result.incomplete || alternativeResult.incomplete,
-        offset: input.offset
+        offset: input.offset,
       };
     });
   }
@@ -148,13 +148,13 @@ export class Parser<A> {
 }
 
 export function lazy<A>(makeParser: () => Parser<A>): Parser<A> {
-  return new Parser(input => {
+  return new Parser((input) => {
     const parser = makeParser();
     return parser.run(input);
   });
 }
 
-export function alternatives<A>(...alts: Array<Parser<A>>) {
+export function alternatives<A>(...alts: Parser<A>[]) {
   return alts.reduce((p1, p2) => p1.or(p2));
 }
 
@@ -171,10 +171,10 @@ export function until<A>(
   parser: Parser<A>
 ): Parser<A[]> {
   return delimiter
-    .map(_ => [] as A[])
+    .map((_) => [] as A[])
     .or(
-      parser.chain(first =>
-        until(delimiter, parser).map(rest => [first, ...rest])
+      parser.chain((first) =>
+        until(delimiter, parser).map((rest) => [first, ...rest])
       )
     );
 }
@@ -198,14 +198,14 @@ export function many<A>(parser: Parser<A>): Parser<A[]> {
   // It would be better to combine `delimited` and `many` into a
   // single operator that take care of this.
   return parser
-    .chain(first => {
-      return many(parser).map(rest => [first, ...rest]);
+    .chain((first) => {
+      return many(parser).map((rest) => [first, ...rest]);
     })
     .or(Parser.of([]));
 }
 
 export function atLeastOne<A>(parser: Parser<A>): Parser<A[]> {
-  return parser.chain(first => many(parser).map(rest => [first, ...rest]));
+  return parser.chain((first) => many(parser).map((rest) => [first, ...rest]));
 }
 
 //
@@ -213,7 +213,7 @@ export function atLeastOne<A>(parser: Parser<A>): Parser<A[]> {
 //
 
 export const character = (expected?: string) => {
-  return new Parser<string>(input => {
+  return new Parser<string>((input) => {
     const [char, moreInput] = input.readChars(1);
 
     if (char === "") {
@@ -221,7 +221,7 @@ export const character = (expected?: string) => {
         status: "error",
         reasons: [],
         incomplete: true,
-        offset: input.offset
+        offset: input.offset,
       };
     }
 
@@ -230,7 +230,7 @@ export const character = (expected?: string) => {
         status: "error",
         reasons: [],
         incomplete: false,
-        offset: input.offset
+        offset: input.offset,
       };
     }
 
@@ -238,24 +238,24 @@ export const character = (expected?: string) => {
       status: "success",
       value: char,
       reasons: [],
-      moreInput
+      moreInput,
     };
   });
 };
 
-export const endOfInput = new Parser<void>(input => {
+export const endOfInput = new Parser<void>((input) => {
   const [char] = input.readChars(1);
   return char === ""
     ? {
         status: "success",
         value: undefined,
-        moreInput: input
+        moreInput: input,
       }
     : {
         status: "error",
         reasons: [],
         incomplete: false,
-        offset: input.offset
+        offset: input.offset,
       };
 });
 
@@ -299,8 +299,8 @@ function pruneErrorTree(
     return {
       ...error,
       reasons: error.reasons
-        .map(subtree => pruneErrorTree(subtree, offset))
-        .filter((x: ParserError | null): x is ParserError => x !== null)
+        .map((subtree) => pruneErrorTree(subtree, offset))
+        .filter((x: ParserError | null): x is ParserError => x !== null),
     };
   }
 }
@@ -317,7 +317,7 @@ function mapLeaves<A>(
     return [fn(error, parents)];
   } else {
     return error.reasons
-      .map(e => mapLeaves(e, fn, [e, ...parents]))
+      .map((e) => mapLeaves(e, fn, [e, ...parents]))
       .reduce((x, y) => [...x, ...y], []);
   }
 }
@@ -336,9 +336,9 @@ export function getParserError(source: string, rootError: ParserError): string {
 
   const errors = mapLeaves(prunedTree, (error, parents) => {
     return (
-      [error, ...parents].find(e => e.expected !== undefined) || {
+      [error, ...parents].find((e) => e.expected !== undefined) || {
         ...error,
-        expected: "Parsing error"
+        expected: "Parsing error",
       }
     );
   });

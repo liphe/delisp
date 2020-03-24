@@ -4,7 +4,7 @@ import {
   Module,
   readModule,
   readSyntax,
-  macroexpandModule
+  macroexpandModule,
 } from "@delisp/core";
 import { CompileOptions } from "./compile-options";
 import { generatePreludeImports } from "./prelude";

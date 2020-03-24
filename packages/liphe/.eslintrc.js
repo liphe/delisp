@@ -3,10 +3,10 @@ module.exports = {
   extends: ["plugin:react/recommended"],
   settings: {
     react: {
-      version: "detect"
-    }
+      version: "detect",
+    },
   },
   rules: {
-    "react/prop-types": "off"
-  }
+    "react/prop-types": "off",
+  },
 };

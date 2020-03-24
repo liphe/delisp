@@ -12,7 +12,7 @@ yargs
   .option("color", {
     // We don't do anything with this flag, but we avoid the warning
     // of unkonwn option and chalk will interpret it.
-    type: "boolean"
+    type: "boolean",
   })
   .command(cmdREPL)
   .command(cmdFormat)

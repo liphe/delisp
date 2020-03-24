@@ -47,16 +47,16 @@ export function mapType<A, B>(type: T.TypeF<A>, fn: (x: A) => B): T.TypeF<B> {
       return {
         ...type,
         node: {
-          ...type.node
-        }
+          ...type.node,
+        },
       };
     case "application":
       return {
         node: {
           tag: "application",
           op: fn(type.node.op),
-          args: type.node.args.map(fn)
-        }
+          args: type.node.args.map(fn),
+        },
       };
     case "row-extension":
       return {
@@ -64,14 +64,14 @@ export function mapType<A, B>(type: T.TypeF<A>, fn: (x: A) => B): T.TypeF<B> {
           tag: "row-extension",
           label: type.node.label,
           labelType: fn(type.node.labelType),
-          extends: fn(type.node.extends)
-        }
+          extends: fn(type.node.extends),
+        },
       };
   }
 }
 
 export function foldType<A>(type: T.Type, fn: (t: T.TypeF<A>) => A): A {
-  return fn(mapType(type, t => foldType(t, fn)));
+  return fn(mapType(type, (t) => foldType(t, fn)));
 }
 
 export function transformRecurType(
@@ -87,7 +87,7 @@ export interface Substitution {
 }
 
 export function applySubstitution(t: T.Type, env: Substitution): T.Type {
-  return transformRecurType(t, t1 => {
+  return transformRecurType(t, (t1) => {
     if (t1.node.tag === "type-variable") {
       if (t1.node.name in env) {
         const tt = env[t1.node.name];
@@ -103,15 +103,15 @@ export function applySubstitution(t: T.Type, env: Substitution): T.Type {
 
 // Return user defined types
 export function listTypeConstants(type: T.Type): T.Constant[] {
-  return foldType(type, t => {
+  return foldType(type, (t) => {
     return t.node.tag === "constant"
       ? [
           {
             node: {
               ...t.node,
-              nextType: undefined
-            }
-          }
+              nextType: undefined,
+            },
+          },
         ]
       : typeChildren(t);
   });
@@ -119,7 +119,7 @@ export function listTypeConstants(type: T.Type): T.Constant[] {
 
 // Return the list of type variables in the order they show up
 export function listTypeVariables(type: T.Type): string[] {
-  return foldType(type, t => {
+  return foldType(type, (t) => {
     return t.node.tag === "type-variable"
       ? [t.node.name]
       : unique(typeChildren(t));
@@ -131,7 +131,10 @@ export function generalize(t: T.Type, monovars: string[]): T.TypeSchema {
   // monomorphic set must be polymorphic. So we generalize over
   // them.
   const vars = listTypeVariables(t);
-  return new T.TypeSchema(vars.filter(v => !monovars.includes(v)), t);
+  return new T.TypeSchema(
+    vars.filter((v) => !monovars.includes(v)),
+    t
+  );
 }
 
 export function isWildcardTypeVarName(name: string): boolean {
@@ -144,7 +147,7 @@ export function instantiate(t: T.TypeSchema, userSpecified = false): T.Type {
       ...s,
       [vname]: generateUniqueTVar(
         isWildcardTypeVarName(vname) ? false : userSpecified
-      )
+      ),
     };
   }, {});
   return applySubstitution(t.mono, subst);
@@ -153,7 +156,7 @@ export function instantiate(t: T.TypeSchema, userSpecified = false): T.Type {
 export function normalizeRow(
   type: T.Type
 ): {
-  fields: Array<{ label: string; labelType: T.Type }>;
+  fields: { label: string; labelType: T.Type }[];
   extends: T.Type;
 } {
   if (
@@ -173,9 +176,9 @@ export function normalizeRow(
       return {
         fields: [
           { label: type.node.label, labelType: type.node.labelType },
-          ...fields
+          ...fields,
         ],
-        extends: row
+        extends: row,
       };
   }
 }
@@ -185,7 +188,7 @@ export function normalizeRow(
  * @description Transform a type to ensure only VALUES type or type
  * variables appear in the codomain of functions types. */
 export function normalizeValues(type: T.Type): T.Type {
-  return foldType(type, t => {
+  return foldType(type, (t) => {
     if (isFunctionType(t)) {
       const out = last(t.node.args)!;
       if (isConstantApplicationType(out, "values")) {
@@ -194,8 +197,8 @@ export function normalizeValues(type: T.Type): T.Type {
         return {
           node: {
             ...t.node,
-            args: [...t.node.args.slice(0, -1), T.values([out])]
-          }
+            args: [...t.node.args.slice(0, -1), T.values([out])],
+          },
         };
       }
     } else {
@@ -240,7 +243,10 @@ export function openEffect(type: T.Type): T.Type {
   if (isConstantApplicationType(type, "effect")) {
     const row = normalizeEffect(type);
     if (row.extends.node.tag === "empty-row") {
-      return T.effect(row.fields.map(f => f.label), generateUniqueTVar());
+      return T.effect(
+        row.fields.map((f) => f.label),
+        generateUniqueTVar()
+      );
     } else {
       return type;
     }
@@ -284,9 +290,9 @@ export function instantiateTypeSchemaForVariable(
 ): T.TypeSchema {
   const varname = tvar.node.name;
   return new T.TypeSchema(
-    polytype.tvars.filter(tv => tv !== varname),
+    polytype.tvars.filter((tv) => tv !== varname),
     applySubstitution(polytype.mono, {
-      [varname]: replacement
+      [varname]: replacement,
     })
   );
 }
@@ -344,7 +350,7 @@ export function closeFunctionEffect(polytype: T.TypeSchema): T.TypeSchema {
     //
     const freevars: string[] = [
       ...flatMap(listTypeVariables, args),
-      ...listTypeVariables(output)
+      ...listTypeVariables(output),
     ];
 
     const isPolymorphicOnEffect = polytype.tvars.includes(effectTail.node.name);

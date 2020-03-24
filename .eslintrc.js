@@ -3,11 +3,11 @@ module.exports = {
   extends: [
     "plugin:@typescript-eslint/recommended",
     "plugin:prettier/recommended",
-    "prettier/@typescript-eslint"
+    "prettier/@typescript-eslint",
   ],
   parserOptions: {
     ecmaVersion: 2018,
-    sourceType: "module"
+    sourceType: "module",
   },
   plugins: ["import"],
   settings: {
@@ -15,19 +15,23 @@ module.exports = {
     // is a new release of the eslint-plugin-import plugin.
     "import/extensions": [".js", ".ts"],
     "import/parsers": {
-      "@typescript-eslint/parser": [".ts"]
+      "@typescript-eslint/parser": [".ts"],
     },
     "import/resolver": {
       node: {
-        extensions: [".js", ".ts"]
-      }
-    }
+        extensions: [".js", ".ts"],
+      },
+    },
   },
   rules: {
-    "arrow-parens": ["error", "as-needed"],
-    "comma-dangle": ["error", "never"],
     "sort-keys": "off",
     "quote-props": "off",
+    "prefer-const": [
+      "error",
+      {
+        destructuring: "all",
+      },
+    ],
     "no-restricted-globals": ["error", "process"],
     "@typescript-eslint/no-use-before-define": "off",
     "@typescript-eslint/interface-name-prefix": ["error", "never"],
@@ -36,11 +40,11 @@ module.exports = {
     // Should be an error, but there is a problem with the rule.
     "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
     "@typescript-eslint/explicit-function-return-type": "off",
-    "@typescript-eslint/array-type": ["error", "array-simple"],
+    "@typescript-eslint/array-type": ["error", { defualt: "array-simple" }],
     "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-empty-interface": "off",
     "@typescript-eslint/prefer-interface": "off",
-    "import/no-cycle": "error"
-  }
+    "import/no-cycle": "error",
+  },
 };

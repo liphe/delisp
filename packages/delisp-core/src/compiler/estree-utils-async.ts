@@ -46,5 +46,5 @@ export function isBodyAsync(body: JS.Expression[]) {
         return Object.entries(expr).some(([_, value]) => containsAwait(value));
     }
   }
-  return body.some(e => containsAwait(e as MaybeExpression));
+  return body.some((e) => containsAwait(e as MaybeExpression));
 }

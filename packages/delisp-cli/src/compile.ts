@@ -9,7 +9,7 @@ import {
   mergeExternalEnvironments,
   printHighlightedExpr,
   printType,
-  resolveModuleDependencies
+  resolveModuleDependencies,
 } from "@delisp/core";
 import _mkdirp from "mkdirp";
 import path from "path";
@@ -60,7 +60,7 @@ export async function compileFile(
 
   // Check for unknown references
   if (inferResult.unknowns.length > 0) {
-    const unknowns = inferResult.unknowns.map(u =>
+    const unknowns = inferResult.unknowns.map((u) =>
       printHighlightedExpr(
         `Unknown variable ${u.variable.node.name} of type ${printType(
           u.variable.info.resultingType
@@ -79,7 +79,7 @@ export async function compileFile(
     esModule: options.moduleFormat === "esm",
     getOutputFile(file: string): string {
       return getOutputFiles(file).jsFile;
-    }
+    },
   });
   await fs.writeFile(jsFile, code);
 

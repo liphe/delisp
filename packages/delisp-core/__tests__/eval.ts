@@ -10,7 +10,7 @@ function evaluateString(str: string): unknown {
   const env = moduleEnvironment(createModule(), {
     getOutputFile(name) {
       return name;
-    }
+    },
   });
   const s = macroexpandSyntax(readSyntax(`(lambda () ${str})`));
   const sandbox = createSandbox(() => null);
@@ -29,7 +29,7 @@ function evaluateString(str: string): unknown {
   // time. So we won't use async/await here but just resolve the
   // promise to evaluate the wrapper function when necessary only.
   if (lambda instanceof Promise) {
-    return lambda.then(fn => fn((x: unknown) => x, {}));
+    return lambda.then((fn) => fn((x: unknown) => x, {}));
   } else {
     return lambda((x: unknown) => x, {});
   }
@@ -73,14 +73,14 @@ describe("Evaluation", () => {
 
     it("should return records as objects", async () => {
       expect(await evaluateString("((lambda (x) {:x x}) 10)")).toEqual({
-        x: 10
+        x: 10,
       });
     });
 
     it("should return the last expression of the body", async () => {
       expect(await evaluateString("((lambda (x) x 1) 10)")).toBe(1);
       expect(await evaluateString("((lambda (x) x {:a 1}) 10)")).toEqual({
-        a: 1
+        a: 1,
       });
     });
 
@@ -165,7 +165,7 @@ describe("Evaluation", () => {
       expect(await evaluateString("{:x 2 | {:x 1}}")).toEqual({ x: 2 });
       expect(await evaluateString("{:x 3 | {:x 1 :y 2}}")).toEqual({
         x: 3,
-        y: 2
+        y: 2,
       });
     });
   });

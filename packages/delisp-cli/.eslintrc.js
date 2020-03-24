@@ -1,5 +1,5 @@
 module.exports = {
   rules: {
-    "no-restricted-globals": ["off"]
-  }
+    "no-restricted-globals": ["off"],
+  },
 };

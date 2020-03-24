@@ -10,7 +10,7 @@ describe("Type tag template", () => {
     expect(isConstantApplicationType(out, "values")).toBeTruthy();
 
     const outvalues = normalizeRow((out as T.Application).node.args[0]);
-    const primary = outvalues.fields.find(f => f.label === "0")!.labelType;
+    const primary = outvalues.fields.find((f) => f.label === "0")!.labelType;
     expect(isConstantApplicationType(primary, "values")).toBeFalsy();
   });
 

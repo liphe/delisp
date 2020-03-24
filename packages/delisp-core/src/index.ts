@@ -1,13 +1,13 @@
 export {
   compileModuleToString,
   compileToString,
-  moduleEnvironment
+  moduleEnvironment,
 } from "./compiler";
 export {
   createImportSyntax,
   WithErrors,
   collectConvertErrors,
-  readSyntax
+  readSyntax,
 } from "./syntax-convert";
 export { printHighlightedExpr } from "./error-report";
 export { createSandbox, evaluate, evaluateModule } from "./eval";
@@ -16,13 +16,13 @@ export {
   getModuleExternalEnvironment,
   inferExpressionInModule,
   inferSyntaxInModule,
-  inferModule
+  inferModule,
 } from "./infer";
 export {
   decodeExternalEnvironment,
   encodeExternalEnvironment,
   ExternalEnvironment,
-  mergeExternalEnvironments
+  mergeExternalEnvironments,
 } from "./infer-environment";
 export {
   addToModule,
@@ -31,7 +31,7 @@ export {
   moduleDefinitions,
   readModule,
   removeModuleDefinition,
-  removeModuleTypeDefinition
+  removeModuleTypeDefinition,
 } from "./module";
 export { resolveModuleDependencies } from "./module-dependencies";
 export { Encoder } from "./prettier";
@@ -49,14 +49,14 @@ export {
   SDefinition,
   SExport,
   STypeAlias,
-  Syntax
+  Syntax,
 } from "./syntax";
 export { Typed } from "./syntax-typed";
 export {
   exprFChildren,
   findSyntaxByOffset,
   findSyntaxByRange,
-  wrapInLambda
+  wrapInLambda,
 } from "./syntax-utils";
 export { printType } from "./type-printer";
 export { isFunctionType, decomposeFunctionType } from "./type-utils";
@@ -66,5 +66,5 @@ export {
   macroexpandModule,
   macroexpandSyntax,
   macroexpandRootExpression,
-  macroexpandExpression
+  macroexpandExpression,
 } from "./macroexpand";

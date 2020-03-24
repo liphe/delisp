@@ -6,7 +6,7 @@ module.exports = {
   devtool: "eval-source-map",
   output: {
     filename: "main.js",
-    path: path.resolve(__dirname, "dist")
+    path: path.resolve(__dirname, "dist"),
   },
   module: {
     rules: [
@@ -16,15 +16,15 @@ module.exports = {
         use: [
           "babel-loader",
           {
-            loader: "ts-loader"
-          }
+            loader: "ts-loader",
+          },
         ],
-        exclude: /node_modules/
-      }
-    ]
+        exclude: /node_modules/,
+      },
+    ],
   },
   resolve: {
-    extensions: [".tsx", ".ts", ".js"]
+    extensions: [".tsx", ".ts", ".js"],
   },
-  plugins: [new HtmlWebpackPlugin({ title: "Liphe" })]
+  plugins: [new HtmlWebpackPlugin({ title: "Liphe" })],
 };

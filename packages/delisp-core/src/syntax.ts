@@ -89,16 +89,16 @@ export interface SLetBindingF<E> {
 
 interface SLetF<E> {
   tag: "let-bindings";
-  bindings: Array<SLetBindingF<E>>;
+  bindings: SLetBindingF<E>[];
   body: E[];
 }
 
 interface SRecordF<E> {
   tag: "record";
-  fields: Array<{
+  fields: {
     label: Identifier;
     value: E;
-  }>;
+  }[];
   source?: {
     extending: boolean;
     expression: E;
@@ -132,7 +132,7 @@ export interface SMatchCaseF<E> {
 interface SMatchF<E> {
   tag: "match";
   value: E;
-  cases: Array<SMatchCaseF<E>>;
+  cases: SMatchCaseF<E>[];
   defaultCase?: E[];
 }
 
@@ -297,5 +297,5 @@ export function isTypeAlias<I>(syntax: Syntax<I>): syntax is STypeAlias<I> {
 
 export interface Module<EInfo = {}, SInfo = {}> {
   tag: "module";
-  body: Array<Syntax<EInfo, SInfo>>;
+  body: Syntax<EInfo, SInfo>[];
 }

@@ -21,7 +21,7 @@ export function applySubstitutionToExpr(
   s: S.Expression<Typed>,
   env: Substitution
 ): S.Expression<Typed> {
-  return transformRecurExpr(s, expr => {
+  return transformRecurExpr(s, (expr) => {
     const tmp: S.Expression<Typed> = {
       ...expr,
       info: new Typed({
@@ -29,8 +29,8 @@ export function applySubstitutionToExpr(
         resultingType:
           expr.info._resultingType &&
           applySubstitution(expr.info._resultingType, env),
-        effect: applySubstitution(expr.info.effect, env)
-      })
+        effect: applySubstitution(expr.info.effect, env),
+      }),
     };
     switch (tmp.node.tag) {
       case "function-call":
@@ -41,8 +41,8 @@ export function applySubstitutionToExpr(
             ...tmp.node,
             closedFunctionEffect:
               tmp.node.closedFunctionEffect &&
-              applySubstitution(tmp.node.closedFunctionEffect, env)
-          }
+              applySubstitution(tmp.node.closedFunctionEffect, env),
+          },
         };
       default:
         return tmp;
@@ -61,8 +61,8 @@ export function applySubstitutionToSyntax(
       ...s,
       node: {
         ...s.node,
-        value: applySubstitutionToExpr(s.node.value, env)
-      }
+        value: applySubstitutionToExpr(s.node.value, env),
+      },
     };
   } else if (s.node.tag === "export") {
     return s;

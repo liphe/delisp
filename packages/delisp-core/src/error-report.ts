@@ -5,9 +5,7 @@
 import { Location } from "./input";
 
 function repeatChar(ch: string, n: number): string {
-  return Array(n)
-    .fill(ch)
-    .join("");
+  return Array(n).fill(ch).join("");
 }
 
 /** Print a error message with some highlighted piece of a source code */
@@ -31,7 +29,7 @@ export function printHighlightedSource(
   return [
     `file:${line + 1}:${column + 1}: ${message}`,
     lines[line],
-    repeatChar("-", column) + "^"
+    repeatChar("-", column) + "^",
   ].join("\n");
 }
 

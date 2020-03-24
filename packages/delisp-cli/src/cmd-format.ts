@@ -13,12 +13,12 @@ async function formatFile(file: string): Promise<void> {
 export const cmdFormat: CommandModule = {
   command: "format [files...]",
   describe: "Format delisp files",
-  handler: args => {
+  handler: (args) => {
     const files = args.files as string[];
-    Promise.all(files.map(formatFile)).catch(err => {
+    Promise.all(files.map(formatFile)).catch((err) => {
       console.error(err.message);
       console.error(err.stack);
       process.exit(-1);
     });
-  }
+  },
 };

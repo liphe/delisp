@@ -102,8 +102,8 @@ function tvar(name: string, userSpecified = false): Var {
     node: {
       tag: "type-variable",
       name,
-      userSpecified
-    }
+      userSpecified,
+    },
   };
 }
 export { tvar as var };
@@ -117,8 +117,8 @@ export function app(op: Type, ...args: Type[]): Type {
     node: {
       tag: "application",
       op,
-      args
-    }
+      args,
+    },
   };
 }
 
@@ -127,7 +127,7 @@ export function vector(t: Type): Type {
 }
 
 export const emptyRow: REmpty = {
-  node: { tag: "empty-row" }
+  node: { tag: "empty-row" },
 };
 
 export const rowExtension = (
@@ -139,12 +139,12 @@ export const rowExtension = (
     tag: "row-extension",
     label,
     labelType,
-    extends: row
-  }
+    extends: row,
+  },
 });
 
 export function row(
-  fields: Array<{ label: string; type: Type }>,
+  fields: { label: string; type: Type }[],
   extending: Type = emptyRow
 ): Type {
   return fields.reduceRight(
@@ -156,19 +156,22 @@ export function row(
 export function effect(labels: string[], extending: Type = emptyRow): Type {
   return app(
     cEffect,
-    row(labels.map(label => ({ label, type: tVoid })), extending)
+    row(
+      labels.map((label) => ({ label, type: tVoid })),
+      extending
+    )
   );
 }
 
 export function record(
-  fields: Array<{ label: string; type: Type }>,
+  fields: { label: string; type: Type }[],
   extending: Type = emptyRow
 ): Type {
   return app(cRecord, row(fields, extending));
 }
 
 export function cases(
-  variants: Array<{ label: string; type: Type }>,
+  variants: { label: string; type: Type }[],
   extending: Type = emptyRow
 ): Type {
   return app(cCases, row(variants, extending));
@@ -181,7 +184,10 @@ export function product(types: Type[]) {
 export function values(types: Type[], extending: Type = emptyRow): Type {
   return app(
     cValues,
-    row(types.map((type, i) => ({ label: String(i), type })), extending)
+    row(
+      types.map((type, i) => ({ label: String(i), type })),
+      extending
+    )
   );
 }
 

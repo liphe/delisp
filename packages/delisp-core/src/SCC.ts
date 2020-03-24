@@ -10,13 +10,13 @@
 
 import { InvariantViolation } from "./invariant";
 
-type Graph<T> = Array<Vertex<T>>;
-type Component<T> = Array<Vertex<T>>;
+type Graph<T> = Vertex<T>[];
+type Component<T> = Vertex<T>[];
 
 class Vertex<T> {
   index?: number;
   lowlink?: number;
-  edges: Array<Vertex<T>>;
+  edges: Vertex<T>[];
   value: T;
   constructor(value: T) {
     this.value = value;
@@ -24,20 +24,20 @@ class Vertex<T> {
   }
 }
 
-function tarjan<T>(graph: Graph<T>): Array<Component<T>> {
+function tarjan<T>(graph: Graph<T>): Component<T>[] {
   // An array where we wil push strongly connected components
-  let components: Array<Component<T>> = [];
+  const components: Component<T>[] = [];
   // The number of vertices we have discovered so far.
   let index = 0;
   // An stack of vertices whose strongly connected component detection
   // is in progress.
-  let stack: Array<Vertex<T>> = [];
+  const stack: Vertex<T>[] = [];
 
   function strongConnect(v: Vertex<T>) {
     v.lowlink = v.index = index++;
     stack.unshift(v);
 
-    v.edges.forEach(w => {
+    v.edges.forEach((w) => {
       if (w.index === undefined) {
         // If the next vertex has not yet being found, we recurse into
         // it. The vertex will then be part of the spanning tree we
@@ -71,7 +71,7 @@ function tarjan<T>(graph: Graph<T>): Array<Component<T>> {
     }
   }
 
-  graph.forEach(v => {
+  graph.forEach((v) => {
     if (v.index === undefined) {
       strongConnect(v);
     }
@@ -106,14 +106,14 @@ export function stronglyConnectedComponents<T>(
 ): T[][] {
   const verticesByValue = new Map<T, Vertex<T>>();
 
-  values.forEach(value => {
+  values.forEach((value) => {
     const v = new Vertex(value);
     verticesByValue.set(value, v);
   });
 
   const vertices = Array.from(verticesByValue.values());
-  vertices.forEach(v => {
-    getAdjacents(v.value).forEach(adjacentValue => {
+  vertices.forEach((v) => {
+    getAdjacents(v.value).forEach((adjacentValue) => {
       const adjacent = verticesByValue.get(adjacentValue);
       if (!adjacent) {
         throw new InvariantViolation(
@@ -125,5 +125,5 @@ export function stronglyConnectedComponents<T>(
   });
 
   const components = tarjan(vertices);
-  return components.map(c => c.map(v => v.value));
+  return components.map((c) => c.map((v) => v.value));
 }

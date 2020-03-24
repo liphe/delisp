@@ -16,17 +16,17 @@ async function lintFile(file: string): Promise<string[]> {
 export const cmdLint: CommandModule = {
   command: "lint [files...]",
   describe: "Lint delisp files",
-  handler: async args => {
+  handler: async (args) => {
     const files = args.files as string[];
     let errored = false;
 
     try {
       console.log(`linting ${files}`);
       await Promise.all(
-        files.map(async file => {
+        files.map(async (file) => {
           debug(`Linting ${file}`);
           const errors = await lintFile(file);
-          errors.forEach(err => {
+          errors.forEach((err) => {
             console.error(err);
             console.error();
           });
@@ -41,5 +41,5 @@ export const cmdLint: CommandModule = {
     }
 
     process.exit(errored ? -1 : 0);
-  }
+  },
 };

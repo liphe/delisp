@@ -9,21 +9,21 @@ import {
   SDefinition,
   SExport,
   SImport,
-  Syntax
+  Syntax,
 } from "./syntax";
 import { flatMap } from "./utils";
 
 export function createModule<I, E>(): Module<I, E> {
   return {
     tag: "module",
-    body: []
+    body: [],
   };
 }
 
 export function readModule(str: string): Module<WithErrors, WithErrors> {
   return {
     tag: "module",
-    body: readAllFromString(str).map(convert)
+    body: readAllFromString(str).map(convert),
   };
 }
 
@@ -33,48 +33,46 @@ export function addToModule<EInfo, SInfo>(
 ): Module<EInfo, SInfo> {
   return {
     tag: "module",
-    body: [...m.body, s]
+    body: [...m.body, s],
   };
 }
 
 export function removeModuleDefinition(m: Module, name: string): Module {
   return {
     tag: "module",
-    body: m.body.filter(d => {
+    body: m.body.filter((d) => {
       return isDefinition(d) ? d.node.variable.name !== name : true;
-    })
+    }),
   };
 }
 
 export function removeModuleTypeDefinition(m: Module, name: string): Module {
   return {
     tag: "module",
-    body: m.body.filter(d => {
+    body: m.body.filter((d) => {
       return isTypeAlias(d) ? d.node.alias.name !== name : true;
-    })
+    }),
   };
 }
 
-export function moduleExportedDefinitions<A>(
-  m: Module<A>
-): Array<SDefinition<A>> {
-  const exported = flatMap(e => e.node.identifiers, moduleExports(m)).map(
-    i => i.name
+export function moduleExportedDefinitions<A>(m: Module<A>): SDefinition<A>[] {
+  const exported = flatMap((e) => e.node.identifiers, moduleExports(m)).map(
+    (i) => i.name
   );
-  return moduleDefinitions(m).filter(d =>
+  return moduleDefinitions(m).filter((d) =>
     exported.includes(d.node.variable.name)
   );
 }
 
-export function moduleDefinitions<A>(m: Module<A>): Array<SDefinition<A>> {
+export function moduleDefinitions<A>(m: Module<A>): SDefinition<A>[] {
   return m.body.filter(isDefinition);
 }
 
-export function moduleExports<A>(m: Module<A>): Array<SExport<A>> {
+export function moduleExports<A>(m: Module<A>): SExport<A>[] {
   return m.body.filter(isExport);
 }
 
-export function moduleImports<A>(m: Module<A>): Array<SImport<A>> {
+export function moduleImports<A>(m: Module<A>): SImport<A>[] {
   return m.body.filter(isImport);
 }
 
@@ -83,6 +81,6 @@ export function moduleDefinitionByName<A>(
   m: Module<A>
 ): SDefinition<A> | null {
   return (
-    moduleDefinitions(m).find(def => def.node.variable.name === name) || null
+    moduleDefinitions(m).find((def) => def.node.variable.name === name) || null
   );
 }

@@ -9,5 +9,5 @@ export async function generatePreludeImports() {
   const { infoFile } = await getOutputFiles(preludeFile);
   const preludeEnv = decodeExternalEnvironment(await readJSONFile(infoFile));
   const names = Object.keys(preludeEnv.variables);
-  return names.map(n => createImportSyntax(n, preludeFile));
+  return names.map((n) => createImportSyntax(n, preludeFile));
 }

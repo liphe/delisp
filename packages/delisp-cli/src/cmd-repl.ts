@@ -23,7 +23,7 @@ import {
   removeModuleTypeDefinition,
   resolveModuleDependencies,
   Type,
-  wrapInLambda
+  wrapInLambda,
 } from "@delisp/core";
 import { Module, Syntax } from "@delisp/core/src/syntax";
 import { Pair, TaggedValue } from "@delisp/runtime";
@@ -48,10 +48,10 @@ async function prepareModule() {
   currentModule = await newModule();
   const { typedModule } = inferModule(currentModule, {
     variables: {},
-    types: {}
+    types: {},
   });
   evaluateModule(typedModule, sandbox, {
-    getOutputFile
+    getOutputFile,
   });
 }
 
@@ -62,7 +62,7 @@ async function startREPL() {
     input: process.stdin,
     output: process.stdout,
     completer,
-    prompt: PROMPT
+    prompt: PROMPT,
   });
 
   rl.on("line", handleLine);
@@ -79,7 +79,7 @@ async function handleLine(line: string) {
       const inputSyntax = readSyntax(inputBuffer);
       const errors = collectConvertErrors(inputSyntax);
       if (errors.length > 0) {
-        errors.forEach(err => {
+        errors.forEach((err) => {
           console.error(theme.error(`ERROR: ${err}\n`));
         });
       }
@@ -140,14 +140,14 @@ async function completer(
   callback: (err: null, result: [string[], string]) => void
 ) {
   const defs = currentModule.body.filter(isDefinition);
-  const internalCompletions = defs.map(d => d.node.variable.name);
+  const internalCompletions = defs.map((d) => d.node.variable.name);
 
   const externalEnv = await moduleExternalEnvironment(currentModule);
   const externalCompletions = Object.keys(externalEnv.variables);
 
   const candidates = [...internalCompletions, ...externalCompletions];
 
-  const completions = candidates.filter(opt => opt.startsWith(input));
+  const completions = candidates.filter((opt) => opt.startsWith(input));
 
   return callback(null, [completions, input]);
 }
@@ -225,10 +225,10 @@ const delispEval = async (syntax: Syntax): Promise<DelispEvalResult> => {
 
   const env = moduleEnvironment(currentModule, {
     definitionContainer: "env",
-    getOutputFile
+    getOutputFile,
   });
 
-  [...moduleInference.unknowns, ...syntaxInference.unknowns].forEach(u => {
+  [...moduleInference.unknowns, ...syntaxInference.unknowns].forEach((u) => {
     console.warn(
       theme.warn(
         `Unknown variable ${
@@ -247,7 +247,7 @@ const delispEval = async (syntax: Syntax): Promise<DelispEvalResult> => {
     return {
       tag: "expression",
       value,
-      type: typedSyntax && typedSyntax.info.resultingType
+      type: typedSyntax && typedSyntax.info.resultingType,
     };
   } else if (isDefinition(syntax)) {
     const name = syntax.node.variable.name;
@@ -315,11 +315,7 @@ function printWithTheType(type: Type | undefined, x: string): string {
 }
 
 function dimBrackets(str: string): string {
-  return str
-    .split("(")
-    .join(theme.dim("("))
-    .split(")")
-    .join(theme.dim(")"));
+  return str.split("(").join(theme.dim("(")).split(")").join(theme.dim(")"));
 }
 
 export const cmdREPL: CommandModule = {
@@ -327,5 +323,5 @@ export const cmdREPL: CommandModule = {
   describe: "Start a REPL",
   handler: () => {
     startREPL();
-  }
+  },
 };

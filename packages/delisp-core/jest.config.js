@@ -1,6 +1,6 @@
 module.exports = {
   transform: {
-    "^.+\\.tsx?$": "ts-jest"
+    "^.+\\.tsx?$": "ts-jest",
   },
   testRegex: "(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$",
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
@@ -8,7 +8,7 @@ module.exports = {
   testPathIgnorePatterns: ["fixtures", "dist", "dist-test"],
   globals: {
     "ts-jest": {
-      tsConfig: "tsconfig.json"
-    }
-  }
+      tsConfig: "tsconfig.json",
+    },
+  },
 };

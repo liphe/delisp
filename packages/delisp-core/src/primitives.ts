@@ -12,6 +12,6 @@ export default mapObject(
   primitives,
   (spec): Primitive => ({
     type: readType(spec.type),
-    value: spec.value
+    value: spec.value,
   })
 );
