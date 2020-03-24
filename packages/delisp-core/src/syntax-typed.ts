@@ -12,7 +12,7 @@ export class Typed {
   constructor({
     selfType,
     resultingType,
-    effect
+    effect,
   }: {
     selfType: Type;
     resultingType?: Type;

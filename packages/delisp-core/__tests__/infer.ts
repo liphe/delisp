@@ -2,7 +2,7 @@ import { readType } from "../src/type-convert";
 import {
   defaultEnvironment,
   inferExpressionInModule,
-  inferModule
+  inferModule,
 } from "../src/infer";
 import { ExternalEnvironment } from "../src/infer-environment";
 import * as S from "../src/syntax";
@@ -22,15 +22,15 @@ expect.extend({
     if (expected === received) {
       return {
         message: () => `works`,
-        pass: true
+        pass: true,
       };
     } else {
       return {
         message: () => `Received: ${received}\nExpected: ${expected}`,
-        pass: false
+        pass: false,
       };
     }
-  }
+  },
 });
 
 function inferType(
@@ -41,12 +41,12 @@ function inferType(
   const infer = inferExpressionInModule(expr, m, env);
 
   const unknowns = infer.unknowns.filter(
-    u => u.variable.node.name !== "*context*"
+    (u) => u.variable.node.name !== "*context*"
   );
   if (unknowns.length > 0) {
     throw new Error(
       `Unknown variables ${infer.unknowns
-        .map(v => v.variable.node.name)
+        .map((v) => v.variable.node.name)
         .join(" ")}`
     );
   }
@@ -76,7 +76,7 @@ const emptyExternalEnv: ExternalEnvironment = { variables: {}, types: {} };
 function typeOf(
   str: string,
   externalEnv: ExternalEnvironment = emptyExternalEnv,
-  moduleCode: string = ""
+  moduleCode = ""
 ): string {
   const syntax = readExpr(str);
   const expandedSyntax = macroexpandExpression(syntax);
@@ -112,10 +112,10 @@ describe("Type inference", () => {
         variables: {
           length: readType("(-> ctx string _ int)"),
           "+": readType("(-> ctx number number _ number)"),
-          const: readType("(-> ctx1 a _ (-> ctx2 b _ a))")
+          const: readType("(-> ctx1 a _ (-> ctx2 b _ a))"),
         },
 
-        types: {}
+        types: {},
       };
       expect(typeOf("(+ 1 2)", env)).toBeType("number");
       expect(typeOf("(+ (+ 1 1) 2)", env)).toBeType("number");
@@ -435,9 +435,9 @@ describe("Type inference", () => {
         variables: {
           "empty?": readType("(-> ctx [a] _ boolean)"),
           "+": readType("(-> ctx number number _ number)"),
-          rest: readType("(-> ctx [a] (effect exp <| _) [a])")
+          rest: readType("(-> ctx [a] (effect exp <| _) [a])"),
         },
-        types: {}
+        types: {},
       };
 
       expect(
@@ -521,7 +521,7 @@ describe("Type inference", () => {
     it("Annotations can state the same type for an expression with different variable names", () => {
       const env = {
         variables: { id: readType("(-> ctx a1 b1 a1)") },
-        types: {}
+        types: {},
       };
       expect(typeOf("(the (-> ctx a2 b2 a2) id)", env)).toBeType(
         "(-> ctx α β α)"

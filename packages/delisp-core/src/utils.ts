@@ -18,11 +18,11 @@ export function union<A>(xs: A[], ...more: A[][]): A[] {
 }
 
 export function intersection<A>(xs: A[], ys: A[]): A[] {
-  return xs.filter(x => ys.includes(x));
+  return xs.filter((x) => ys.includes(x));
 }
 
 export function difference<A>(xs: A[], ys: A[]): A[] {
-  return xs.filter(x => !ys.includes(x));
+  return xs.filter((x) => !ys.includes(x));
 }
 
 export function unique<A>(array: A[]): A[] {
@@ -105,16 +105,14 @@ export function capitalize(str: string) {
 }
 
 /** Build an object from an array of pairs */
-export function fromEntries<T>(
-  entries: Array<[string, T]>
-): { [key: string]: T } {
+export function fromEntries<T>(entries: [string, T][]): { [key: string]: T } {
   return entries.reduce((obj, [key, value]) => {
     return { ...obj, [key]: value };
   }, {});
 }
 
-export function zip<A, B>(xs: A[], ys: B[]): Array<[A, B]> {
-  const shortest: Array<A | B> = xs.length < ys.length ? xs : ys;
+export function zip<A, B>(xs: A[], ys: B[]): [A, B][] {
+  const shortest: (A | B)[] = xs.length < ys.length ? xs : ys;
   return shortest.map((_: A | B, i: number) => [xs[i], ys[i]]);
 }
 

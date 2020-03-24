@@ -16,14 +16,14 @@ import {
   lazy,
   many,
   Parser,
-  until
+  until,
 } from "./parser-combinators";
 import {
   ASExpr,
   ASExprMap,
   ASExprNumber,
   ASExprString,
-  ASExprSymbol
+  ASExprSymbol,
 } from "./sexpr";
 
 const spaces = many(
@@ -34,7 +34,7 @@ function spaced<A>(x: Parser<A>) {
   return delimited(spaces, x, spaces);
 }
 
-const alphanumeric = character().chain(char => {
+const alphanumeric = character().chain((char) => {
   if (/[a-zA-Z0-9α-ω]/.test(char)) {
     return Parser.of(char);
   } else {
@@ -84,13 +84,13 @@ const specialChar = alternatives(
 const doubleQuote = character('"').description("double quote");
 
 const stringChar = character()
-  .chain(char => {
+  .chain((char) => {
     if (char === '"') {
       return Parser.fail("Not inside string");
     }
     if (char === "\\") {
       return alternatives(
-        character("n").map(_ => "\n"),
+        character("n").map((_) => "\n"),
         character("\\")
       ).description("escaped string character");
     }
@@ -107,7 +107,7 @@ const stringP: Parser<ASExprString> = delimitedMany(
     (chars, location): ASExprString => ({
       tag: "string",
       value: chars.join(""),
-      location
+      location,
     })
   )
   .description("string");
@@ -122,7 +122,7 @@ const symbol: Parser<ASExprSymbol> = atLeastOne(
   (chars, location): ASExprSymbol => ({
     tag: "symbol",
     name: chars.join(""),
-    location
+    location,
   })
 );
 
@@ -139,13 +139,13 @@ const numberOrSymbol: Parser<ASExprSymbol | ASExprNumber> = atLeastOne(
       return {
         tag: "number",
         value: parseFloat(str),
-        location
+        location,
       };
     } else {
       return {
         tag: "symbol",
         name: str,
-        location
+        location,
       };
     }
   })
@@ -169,7 +169,7 @@ function list(x: Parser<ASExpr>): Parser<ASExpr> {
       (elements, location): ASExpr => ({
         tag: "list",
         elements,
-        location
+        location,
       })
     )
     .description("list");
@@ -184,14 +184,14 @@ function vector(x: Parser<ASExpr>): Parser<ASExpr> {
       (elements, location): ASExpr => ({
         tag: "vector",
         elements,
-        location
+        location,
       })
     )
     .description("vector");
 }
 
 const reportUnmatched: Parser<{}> = Parser.lookahead(rightParen).chain(
-  closed => {
+  (closed) => {
     if (closed) {
       return Parser.fail("Unmatched closed parenthesis");
     } else {
@@ -206,7 +206,7 @@ const rightCurly = character("}").description("close curly brace");
 const atExprBodyConstitutent: Parser<ASExpr> = lazy(() => {
   return atExpr.or(
     many(
-      character().chain(x => {
+      character().chain((x) => {
         if (x === "}" || x === "@") {
           return Parser.fail(`${x} is not a valid character in {...}`);
         }
@@ -220,7 +220,7 @@ const atExprBodyConstitutent: Parser<ASExpr> = lazy(() => {
         return Parser.of({
           tag: "string",
           value: chars.join(""),
-          location
+          location,
         });
       }
     )
@@ -243,20 +243,20 @@ const atExpr = lazy(() => {
           {
             tag: "symbol",
             name: "comment",
-            location
+            location,
           },
-          ...bodyValue
+          ...bodyValue,
         ],
-        location
+        location,
       })
     );
 
-    const fullForm = sexpr.chain(headValue => {
+    const fullForm = sexpr.chain((headValue) => {
       return atExprBody.map(
         (bodyValue): ASExpr => ({
           tag: "list",
           elements: [headValue, ...bodyValue],
-          location
+          location,
         })
       );
     });
@@ -268,11 +268,11 @@ const atExpr = lazy(() => {
 const mapFields = (
   x: Parser<ASExpr>
 ): Parser<{ label: ASExprSymbol; value: ASExpr }> =>
-  spaced(symbol).chain(label => {
-    return x.chain(value => {
+  spaced(symbol).chain((label) => {
+    return x.chain((value) => {
       return Parser.of({
         label,
-        value
+        value,
       });
     });
   });
@@ -282,7 +282,7 @@ const mapP = (x: Parser<ASExpr>): Parser<ASExpr> =>
     (fields, location): ASExprMap => ({
       tag: "map",
       fields,
-      location
+      location,
     })
   );
 

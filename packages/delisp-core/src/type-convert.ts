@@ -7,7 +7,7 @@ import {
   ASExprMap,
   ASExprSymbol,
   ASExprVector,
-  isSymbolOfName
+  isSymbolOfName,
 } from "./sexpr";
 import { normalizeValues as doNormalizeValues } from "./type-utils";
 import { TypeWithWildcards } from "./type-wildcards";
@@ -59,7 +59,7 @@ function convertSymbol(expr: ASExprSymbol): T.Var | T.Constant {
 }
 
 function convertEffect(effects: ASExpr[]): T.Type {
-  const labels = effects.map(e => {
+  const labels = effects.map((e) => {
     if (e.tag !== "symbol") {
       throw new ConvertError(
         printHighlightedExpr(`not a valid effect`, e.location)
@@ -187,7 +187,7 @@ function convertMap(expr: ASExprMap): T.Type {
   return T.record(
     fields.map(({ label, value }) => ({
       label: label.name,
-      type: convert_(value)
+      type: convert_(value),
     })),
     tail ? convert_(tail.expression) : T.emptyRow
   );

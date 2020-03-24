@@ -19,31 +19,31 @@ export function mapExpr<I, A, B>(
         ...expr,
         node: {
           ...expr.node,
-          values: expr.node.values.map(fn)
-        }
+          values: expr.node.values.map(fn),
+        },
       };
     case "record":
       return {
         ...expr,
         node: {
           ...expr.node,
-          fields: expr.node.fields.map(f => ({
+          fields: expr.node.fields.map((f) => ({
             ...f,
-            value: fn(f.value)
+            value: fn(f.value),
           })),
           source: expr.node.source && {
             extending: expr.node.source.extending,
-            expression: fn(expr.node.source.expression)
-          }
-        }
+            expression: fn(expr.node.source.expression),
+          },
+        },
       };
     case "record-get":
       return {
         ...expr,
         node: {
           ...expr.node,
-          value: fn(expr.node.value)
-        }
+          value: fn(expr.node.value),
+        },
       };
     case "function-call":
       return {
@@ -51,8 +51,8 @@ export function mapExpr<I, A, B>(
         node: {
           ...expr.node,
           fn: fn(expr.node.fn),
-          arguments: expr.node.arguments.map(fn)
-        }
+          arguments: expr.node.arguments.map(fn),
+        },
       };
     case "conditional":
       return {
@@ -61,36 +61,36 @@ export function mapExpr<I, A, B>(
           ...expr.node,
           condition: fn(expr.node.condition),
           consequent: fn(expr.node.consequent),
-          alternative: fn(expr.node.alternative)
-        }
+          alternative: fn(expr.node.alternative),
+        },
       };
     case "function":
       return {
         ...expr,
         node: {
           ...expr.node,
-          body: expr.node.body.map(fn)
-        }
+          body: expr.node.body.map(fn),
+        },
       };
     case "let-bindings":
       return {
         ...expr,
         node: {
           ...expr.node,
-          bindings: expr.node.bindings.map(b => ({
+          bindings: expr.node.bindings.map((b) => ({
             ...b,
-            value: fn(b.value)
+            value: fn(b.value),
           })),
-          body: expr.node.body.map(fn)
-        }
+          body: expr.node.body.map(fn),
+        },
       };
     case "type-annotation":
       return {
         ...expr,
         node: {
           ...expr.node,
-          value: fn(expr.node.value)
-        }
+          value: fn(expr.node.value),
+        },
       };
     case "do-block":
       return {
@@ -98,8 +98,8 @@ export function mapExpr<I, A, B>(
         node: {
           ...expr.node,
           body: expr.node.body.map(fn),
-          returning: fn(expr.node.returning)
-        }
+          returning: fn(expr.node.returning),
+        },
       };
     case "match":
       return {
@@ -107,13 +107,13 @@ export function mapExpr<I, A, B>(
         node: {
           ...expr.node,
           value: fn(expr.node.value),
-          cases: expr.node.cases.map(c => ({
+          cases: expr.node.cases.map((c) => ({
             label: c.label,
             variable: c.variable,
-            body: c.body.map(fn)
+            body: c.body.map(fn),
           })),
-          defaultCase: expr.node.defaultCase && expr.node.defaultCase.map(fn)
-        }
+          defaultCase: expr.node.defaultCase && expr.node.defaultCase.map(fn),
+        },
       };
     case "case":
       return {
@@ -121,16 +121,16 @@ export function mapExpr<I, A, B>(
         node: {
           ...expr.node,
           label: expr.node.label,
-          value: expr.node.value && fn(expr.node.value)
-        }
+          value: expr.node.value && fn(expr.node.value),
+        },
       };
     case "values":
       return {
         ...expr,
         node: {
           ...expr.node,
-          values: expr.node.values.map(fn)
-        }
+          values: expr.node.values.map(fn),
+        },
       };
     case "multiple-value-bind":
       return {
@@ -138,8 +138,8 @@ export function mapExpr<I, A, B>(
         node: {
           ...expr.node,
           form: fn(expr.node.form),
-          body: expr.node.body.map(fn)
-        }
+          body: expr.node.body.map(fn),
+        },
       };
   }
 }
@@ -162,11 +162,11 @@ export function exprFChildren<I, E>(e: S.ExpressionF<I, E>): E[] {
     case "vector":
       return e.node.values;
     case "let-bindings":
-      return [...e.node.bindings.map(b => b.value), ...e.node.body];
+      return [...e.node.bindings.map((b) => b.value), ...e.node.body];
     case "record":
       return [
-        ...e.node.fields.map(f => f.value),
-        ...(e.node.source ? [e.node.source.expression] : [])
+        ...e.node.fields.map((f) => f.value),
+        ...(e.node.source ? [e.node.source.expression] : []),
       ];
     case "record-get":
       return [e.node.value];
@@ -177,8 +177,8 @@ export function exprFChildren<I, E>(e: S.ExpressionF<I, E>): E[] {
     case "match":
       return [
         e.node.value,
-        ...flatten(e.node.cases.map(c => c.body)),
-        ...(e.node.defaultCase ? e.node.defaultCase : [])
+        ...flatten(e.node.cases.map((c) => c.body)),
+        ...(e.node.defaultCase ? e.node.defaultCase : []),
       ];
     case "case":
       return e.node.value ? [e.node.value] : [];
@@ -193,7 +193,10 @@ export function foldExpr<I, A>(
   expr: S.Expression<I>,
   fn: (e: S.ExpressionF<I, A>, original: S.Expression<I>) => A
 ): A {
-  return fn(mapExpr(expr, e => foldExpr(e, fn)), expr);
+  return fn(
+    mapExpr(expr, (e) => foldExpr(e, fn)),
+    expr
+  );
 }
 
 export function transformRecurExpr<I>(
@@ -206,13 +209,11 @@ export function transformRecurExpr<I>(
   );
 }
 
-export function expressionChildren<I>(
-  e: S.Expression<I>
-): Array<S.Expression<I>> {
+export function expressionChildren<I>(e: S.Expression<I>): S.Expression<I>[] {
   return exprFChildren(e);
 }
 
-export function syntaxChildren<I>(s: S.Syntax<I>): Array<S.Expression<I>> {
+export function syntaxChildren<I>(s: S.Syntax<I>): S.Expression<I>[] {
   if (S.isExpression(s)) {
     return expressionChildren({ ...s, node: s.node });
   } else {
@@ -253,7 +254,7 @@ export function findSyntaxByRange<I>(
   start: number,
   end: number
 ): S.Syntax<I> | undefined {
-  const child = m.body.find(e =>
+  const child = m.body.find((e) =>
     e.location ? e.location.start <= start && end < e.location.end : false
   );
   if (!child) {
@@ -276,11 +277,11 @@ export function wrapInLambda(e: S.Expression): S.Expression {
       lambdaList: {
         tag: "function-lambda-list",
         positionalArguments: [],
-        location: e.location
+        location: e.location,
       },
-      body: [e]
+      body: [e],
     },
     info: {},
-    location: e.location
+    location: e.location,
   };
 }

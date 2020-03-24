@@ -10,10 +10,10 @@ interface TAppHandler {
   (args: Type[], mapping: TSMapping): string;
 }
 
-type TSMapping = Array<{
+type TSMapping = {
   delispName: string;
   tsName: string;
-}>;
+}[];
 
 function generateFn(args: Type[], mapping: TSMapping): string {
   const argTypes = args.slice(0, -1);
@@ -53,7 +53,7 @@ function generateRecord([arg]: Type[], mapping: TSMapping): string {
 const generateTApps: { [name: string]: TAppHandler } = {
   vector: generateVector,
   record: generateRecord,
-  "->": generateFn
+  "->": generateFn,
 };
 
 export function generateTSMonotype(t: Type, mapping: TSMapping): string {
@@ -98,7 +98,7 @@ export function generateTSMonotype(t: Type, mapping: TSMapping): string {
 
     case "type-variable":
       const name = t.node.name;
-      const entry = mapping.find(e => e.delispName === name);
+      const entry = mapping.find((e) => e.delispName === name);
       if (!entry) {
         throw new InvariantViolation(
           `Type variable is not in the mapping list.`
@@ -111,13 +111,13 @@ export function generateTSMonotype(t: Type, mapping: TSMapping): string {
 function generateTSType(t: TypeSchema): string {
   const mapping = t.tvars.map((varname, i) => ({
     delispName: varname,
-    tsName: `T${i + 1}`
+    tsName: `T${i + 1}`,
   }));
 
   if (mapping.length === 0) {
     return generateTSMonotype(t.mono, mapping);
   } else {
-    const generics = mapping.map(e => e.tsName).join(",");
+    const generics = mapping.map((e) => e.tsName).join(",");
     return `<${generics}>${generateTSMonotype(t.mono, mapping)}`;
   }
 }
@@ -149,7 +149,7 @@ function isExported(name: string, m: Module): boolean {
   const exports = m.body.filter(isExport);
   return (
     exports.find(
-      e => e.node.identifiers.find(i => i.name === name) !== undefined
+      (e) => e.node.identifiers.find((i) => i.name === name) !== undefined
     ) !== undefined
   );
 }
@@ -165,7 +165,7 @@ export function generateTSModuleDeclaration(m: Module<Typed>): string {
   const declarations = m.body.filter(isGenerable);
   return (
     declarations
-      .map(d => {
+      .map((d) => {
         const tstype = generateTSDeclaration(d);
         const active =
           d.node.tag === "definition" && isExported(d.node.variable.name, m);

@@ -48,7 +48,7 @@ const reservedWords = [
   "void",
   "while",
   "with",
-  "yield"
+  "yield",
 ];
 
 // A valid IdentifierName can be used as a property on objects
@@ -91,7 +91,7 @@ export function escapeIdentifier(x: string): string {
       "/": "div",
       "~": "tilde",
       "?": "q",
-      "=": "eq"
+      "=": "eq",
     })
   );
 

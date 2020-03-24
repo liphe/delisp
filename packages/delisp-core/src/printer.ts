@@ -14,7 +14,7 @@ import {
   prettyAs,
   space,
   StringEncoder,
-  text
+  text,
 } from "./prettier";
 import * as S from "./syntax";
 import { foldExpr } from "./syntax-utils";
@@ -96,13 +96,13 @@ function printExpr(expr: S.Expression): Doc {
                     ? [
                         concat(
                           text(e.node.source.extending ? "<|" : "|", [
-                            "label-ext"
+                            "label-ext",
                           ]),
                           space,
                           e.node.source.expression
-                        )
+                        ),
                       ]
-                    : [])
+                    : []),
                 ],
                 line
               )
@@ -147,7 +147,7 @@ function printExpr(expr: S.Expression): Doc {
           group(
             list(
               align(
-                ...e.node.lambdaList.positionalArguments.map(x =>
+                ...e.node.lambdaList.positionalArguments.map((x) =>
                   printIdentifier(x.name, undefined, ["argument"])
                 )
               )
@@ -169,10 +169,10 @@ function printExpr(expr: S.Expression): Doc {
           space,
           map(
             align(
-              ...e.node.bindings.map(b =>
+              ...e.node.bindings.map((b) =>
                 concat(
                   printIdentifier(b.variable.name, undefined, [
-                    "lexical-variable-declaration"
+                    "lexical-variable-declaration",
                   ]),
                   space,
                   b.value
@@ -212,7 +212,7 @@ function printExpr(expr: S.Expression): Doc {
                 line,
                 join(
                   [
-                    ...e.node.cases.map(c => {
+                    ...e.node.cases.map((c) => {
                       return printCase(
                         map(
                           keyword(c.label),
@@ -225,7 +225,7 @@ function printExpr(expr: S.Expression): Doc {
 
                     e.node.defaultCase
                       ? printCase(keyword(":default"), e.node.defaultCase)
-                      : nil
+                      : nil,
                   ],
                   line
                 )
@@ -258,7 +258,7 @@ function printExpr(expr: S.Expression): Doc {
           // List of variables
           list(
             join(
-              e.node.variables.map(v =>
+              e.node.variables.map((v) =>
                 printIdentifier(v.name, source, ["lexical-variable-definition"])
               ),
               space
@@ -282,7 +282,7 @@ function print(form: S.Syntax): Doc {
             keyword("define", form),
             space,
             printIdentifier(form.node.variable.name, undefined, [
-              "variable-definition"
+              "variable-definition",
             ]),
             indent(concat(line, print(form.node.value)))
           )
@@ -308,7 +308,7 @@ function print(form: S.Syntax): Doc {
             : group(
                 vector(
                   align(
-                    ...form.node.identifiers.map(i =>
+                    ...form.node.identifiers.map((i) =>
                       printIdentifier(i.name, form)
                     )
                   )

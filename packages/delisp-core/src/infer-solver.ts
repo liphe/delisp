@@ -11,7 +11,7 @@ import {
   listTypeVariables,
   Substitution,
   openFunctionEffect,
-  closeFunctionEffect
+  closeFunctionEffect,
 } from "./type-utils";
 import * as T from "./types";
 import { unify } from "./type-unify";
@@ -96,8 +96,8 @@ export function constSelfType(
     t2: selfType,
     source: {
       expr: expr,
-      kind: "self-type"
-    }
+      kind: "self-type",
+    },
   };
 }
 
@@ -111,8 +111,8 @@ export function constResultingType(
     t2: returnType,
     source: {
       expr: returningForm,
-      kind: "resulting-type"
-    }
+      kind: "resulting-type",
+    },
   };
 }
 
@@ -126,8 +126,8 @@ export function constEffect(
     t2: t,
     source: {
       kind: "effect",
-      expr
-    }
+      expr,
+    },
   };
 }
 
@@ -142,7 +142,7 @@ export function constExplicitInstance(
     type,
     typeSchema,
     closedFunctionEffect,
-    source: expr && { expr }
+    source: expr && { expr },
   };
 }
 
@@ -156,17 +156,17 @@ export function constImplicitInstance(
   return {
     tag: "implicit-instance-constraint",
     type,
-    monovars: monovars.map(v => v.node.name),
+    monovars: monovars.map((v) => v.node.name),
     typeToGeneralize,
     closedFunctionEffect,
     source: expr && {
-      expr
-    }
+      expr,
+    },
   };
 }
 
 export function debugConstraints(constraints: TConstraint[]) {
-  constraints.forEach(c => {
+  constraints.forEach((c) => {
     switch (c.tag) {
       case "equal-constraint":
         return console.log(
@@ -205,7 +205,7 @@ for monovars ${c.monovars.join(",")}
 // scheme. This is used to decide which _instance constraint_ of the
 // set can be solved first. See `solve`/`solvable` for further info.
 function activevars(constraints: TConstraint[]): string[] {
-  return flatMap(c => {
+  return flatMap((c) => {
     switch (c.tag) {
       case "equal-constraint":
         return union(listTypeVariables(c.t1), listTypeVariables(c.t2));
@@ -263,17 +263,18 @@ function applySubstitutionToConstraint(
         tag: "equal-constraint",
         t1: applySubstitution(c.t1, s),
         t2: applySubstitution(c.t2, s),
-        source: c.source
+        source: c.source,
       };
     case "implicit-instance-constraint":
       return {
         tag: "implicit-instance-constraint",
         type: applySubstitution(c.type, s),
         typeToGeneralize: applySubstitution(c.typeToGeneralize, s),
-        monovars: flatMap(name => substituteVar(name, s), c.monovars),
+        monovars: flatMap((name) => substituteVar(name, s), c.monovars),
         source: c.source,
         closedFunctionEffect:
-          c.closedFunctionEffect && applySubstitution(c.closedFunctionEffect, s)
+          c.closedFunctionEffect &&
+          applySubstitution(c.closedFunctionEffect, s),
       };
     case "explicit-instance-constraint":
       return {
@@ -282,7 +283,8 @@ function applySubstitutionToConstraint(
         typeSchema: applySubstitutionToPolytype(c.typeSchema, s),
         source: c.source,
         closedFunctionEffect:
-          c.closedFunctionEffect && applySubstitution(c.closedFunctionEffect, s)
+          c.closedFunctionEffect &&
+          applySubstitution(c.closedFunctionEffect, s),
       };
   }
 }
@@ -315,7 +317,7 @@ export function solve(
       case "explicit-instance-constraint":
         return true;
       case "implicit-instance-constraint":
-        const others = constraints.filter(c1 => c !== c1);
+        const others = constraints.filter((c1) => c !== c1);
         const result =
           intersection(
             difference(listTypeVariables(c.typeToGeneralize), c.monovars),
@@ -335,25 +337,28 @@ export function solve(
     console.log(`---- Solving ----`);
     console.log("with partial solution");
     console.log("");
-    Object.keys(solution).forEach(v => {
+    Object.keys(solution).forEach((v) => {
       console.log(`${v} => ${printType(solution[v], false)}`);
     });
     console.log("current constraint:");
     debugConstraints([constraint]);
     console.log("between other constraints");
-    debugConstraints(constraints.filter(c => c !== constraint));
+    debugConstraints(constraints.filter((c) => c !== constraint));
     console.log("");
     console.log(">>>>>>>>>>>>>");
   }
 
-  const rest = constraints.filter(c => c !== constraint);
+  const rest = constraints.filter((c) => c !== constraint);
 
   const solveEq = (exprType: T.Type, t: T.Type) => {
     const result = unify(exprType, t, solution);
     switch (result.tag) {
       case "unify-success": {
         const s = result.substitution;
-        return solve(rest.map(c => applySubstitutionToConstraint(c, s)), s);
+        return solve(
+          rest.map((c) => applySubstitutionToConstraint(c, s)),
+          s
+        );
       }
       case "unify-occur-check-error": {
         throw new Error(
@@ -426,7 +431,7 @@ ${printType(applySubstitution(exprType, solution), false)}
           ...(constraint.closedFunctionEffect
             ? [constEqual(constraint.closedFunctionEffect, closedType)]
             : []),
-          ...rest
+          ...rest,
         ],
         solution
       );
@@ -441,7 +446,7 @@ ${printType(applySubstitution(exprType, solution), false)}
             t,
             constraint.closedFunctionEffect
           ),
-          ...rest
+          ...rest,
         ],
         solution
       );

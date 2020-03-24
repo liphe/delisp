@@ -11,7 +11,7 @@ const vectorPrims: Primitives = {
       } else {
         throw Error("Cannot get first element of empty list");
       }
-    }
+    },
   },
 
   rest: {
@@ -26,8 +26,8 @@ const vectorPrims: Primitives = {
       } else {
         throw Error("Cannot get tail of empty list");
       }
-    }
-  }
+    },
+  },
 };
 
 export default vectorPrims;

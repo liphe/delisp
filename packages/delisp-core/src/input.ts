@@ -21,7 +21,7 @@ export class Input {
   readChars(n: number): [string, Input] {
     return [
       this.input.slice(this.offset, this.offset + n),
-      new Input(this.input, this.offset + n)
+      new Input(this.input, this.offset + n),
     ];
   }
 
@@ -34,5 +34,5 @@ export class Input {
 export const nolocation: Location = {
   input: new Input(""),
   start: 0,
-  end: 0
+  end: 0,
 };

@@ -12,7 +12,7 @@ import {
   printType,
   readModule,
   Syntax,
-  Typed
+  Typed,
 } from "@delisp/core";
 import React, { useState } from "react";
 import styled, { css } from "styled-components";
@@ -35,32 +35,32 @@ const VIEWS: CodeView[] = [
     render: function PrettyPrint({ code }) {
       const m = readModule(code);
       return <ModuleExplorer module={m} />;
-    }
+    },
   },
   {
     name: "Macroexpand",
     render: function MacroExpand({ code }) {
       const m = macroexpandModule(readModule(code));
       return <ModuleExplorer module={m} />;
-    }
+    },
   },
   {
     name: "Type inference",
     render: function TypeInference({ code }) {
       const inferred = inferModule(macroexpandModule(readModule(code)));
       return <ModuleExplorer module={inferred.typedModule} />;
-    }
+    },
   },
   {
     name: "JS",
     render: function JS({ code }) {
       const inferred = inferModule(macroexpandModule(readModule(code)));
       const js = compileModuleToString(inferred.typedModule, {
-        getOutputFile: file => file
+        getOutputFile: (file) => file,
       });
       return <pre>{js}</pre>;
-    }
-  }
+    },
+  },
 ];
 
 function AST({ code }: { code: string }) {
@@ -80,7 +80,7 @@ function AST({ code }: { code: string }) {
   return (
     <div>
       <div>
-        {VIEWS.map(v => (
+        {VIEWS.map((v) => (
           <ViewButton
             selected={v === currentView}
             onClick={() => setCurrentView(v)}
@@ -195,11 +195,11 @@ const PrettierEncoder: Encoder<React.ReactElement[]> = {
         }
       >
         {x}
-      </Token>
+      </Token>,
     ];
   },
   concat: (...args: React.ReactElement[][]): React.ReactElement[] =>
-    args.flat(1)
+    args.flat(1),
 };
 
 function GenericSyntaxExplorer({ syntax }: { syntax: Syntax }) {
@@ -208,7 +208,7 @@ function GenericSyntaxExplorer({ syntax }: { syntax: Syntax }) {
 
 export function App({
   state,
-  dispatch
+  dispatch,
 }: {
   state: State;
   dispatch: React.Dispatch<Action>;
@@ -218,7 +218,7 @@ export function App({
       <h1>Liphe</h1>
       <Editor
         value={state.code}
-        onChange={e => dispatch(updateCode(e.target.value))}
+        onChange={(e) => dispatch(updateCode(e.target.value))}
       />
       <AST code={state.code} />
     </div>

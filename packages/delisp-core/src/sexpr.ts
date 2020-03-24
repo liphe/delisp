@@ -35,10 +35,10 @@ export interface ASExprVector {
 
 export interface ASExprMap {
   tag: "map";
-  fields: Array<{
+  fields: {
     label: ASExprSymbol;
     value: ASExpr;
-  }>;
+  }[];
   location: Location;
 }
 

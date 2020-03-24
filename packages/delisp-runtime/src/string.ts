@@ -21,8 +21,8 @@ const stringPrims: Primitives = {
         };
         return values(value, update);
       };
-    }
-  }
+    },
+  },
 };
 
 export default stringPrims;

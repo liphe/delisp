@@ -7,7 +7,7 @@ import * as vm from "vm";
 import {
   compileModuleToString,
   compileToString,
-  Environment
+  Environment,
 } from "./compiler";
 import { Host } from "./host";
 import primitives from "./primitives";
@@ -19,10 +19,10 @@ type Sandbox = ReturnType<typeof createSandbox>;
 
 export function createSandbox(requireFn: (id: string) => any) {
   const sandbox = {
-    env: mapObject(primitives, p => p.value),
+    env: mapObject(primitives, (p) => p.value),
     console,
     require: requireFn,
-    ...runtime
+    ...runtime,
   };
   vm.createContext(sandbox);
   return sandbox;
@@ -49,7 +49,7 @@ export function evaluateModule(
 ): void {
   const code = compileModuleToString(m, {
     definitionContainer: "env",
-    getOutputFile: host.getOutputFile
+    getOutputFile: host.getOutputFile,
   });
   vm.runInContext(code, sandbox);
   return;

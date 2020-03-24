@@ -10,7 +10,7 @@ import {
   methodCall,
   op1,
   op,
-  primitiveCall
+  primitiveCall,
 } from "./estree-utils";
 
 type InlineHandler = (args: JS.Expression[]) => JS.Expression;
@@ -74,7 +74,7 @@ defineInlinePrimitive(
     type: "LogicalExpression",
     operator: "&&",
     left,
-    right
+    right,
   })
 );
 
@@ -85,7 +85,7 @@ defineInlinePrimitive(
     type: "LogicalExpression",
     operator: "||",
     left,
-    right
+    right,
   })
 );
 
@@ -309,7 +309,7 @@ defineInlinePrimitive(
   "(-> _ctx a [a] (effect) [a])",
   ([_ctx, x, lst]) => ({
     type: "ArrayExpression",
-    elements: [x, { type: "SpreadElement", argument: lst }]
+    elements: [x, { type: "SpreadElement", argument: lst }],
   })
 );
 

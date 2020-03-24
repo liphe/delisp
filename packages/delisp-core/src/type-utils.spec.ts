@@ -4,7 +4,7 @@ import { printType } from "./type-printer";
 import {
   openFunctionEffect,
   closeFunctionEffect,
-  instantiateTypeSchemaForVariable
+  instantiateTypeSchemaForVariable,
 } from "./type-utils";
 
 describe("Type utils", () => {

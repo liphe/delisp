@@ -3,12 +3,12 @@ const {
   reducer,
   addTodo,
   completeAll,
-  showTodos
+  showTodos,
 } = require("./.delisp/build/reducer.js");
 
 let state = initialState;
 
-const id = x => x;
+const id = (x) => x;
 const ctx = {};
 
 async function run() {

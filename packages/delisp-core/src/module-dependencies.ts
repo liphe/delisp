@@ -15,7 +15,7 @@ async function resolveDependencySources(
       sources.map(
         async (source): Promise<[string, ExternalEnvironment]> => [
           source,
-          await resolve(source)
+          await resolve(source),
         ]
       )
     )
@@ -33,7 +33,7 @@ export async function resolveModuleDependencies(
   resolve: Resolver
 ): Promise<ExternalEnvironment> {
   const importDeclarations = moduleImports(m);
-  const importSources = unique(importDeclarations.map(i => i.node.source));
+  const importSources = unique(importDeclarations.map((i) => i.node.source));
   const resolvedSources = await resolveDependencySources(
     importSources,
     resolve
@@ -48,6 +48,6 @@ export async function resolveModuleDependencies(
 
   return {
     variables: fromEntries(environmentEntries),
-    types: {}
+    types: {},
   };
 }

@@ -4,7 +4,7 @@ import {
   identifier,
   member,
   methodCall,
-  objectExpression
+  objectExpression,
 } from "./estree-utils";
 
 export interface DefinitionBackend {
@@ -27,9 +27,9 @@ export const staticDefinition: DefinitionBackend = {
         {
           type: "VariableDeclarator",
           id: identifier(name),
-          init: value
-        }
-      ]
+          init: value,
+        },
+      ],
     };
   },
 
@@ -42,25 +42,25 @@ export const staticDefinition: DefinitionBackend = {
           type: "VariableDeclarator",
           id: {
             type: "ObjectPattern",
-            properties: names.map(name => ({
+            properties: names.map((name) => ({
               type: "Property",
               kind: "init",
               key: identifier(name),
               value: identifier(name),
               computed: false,
               method: false,
-              shorthand: true
-            }))
+              shorthand: true,
+            })),
           },
-          init: obj
-        }
-      ]
+          init: obj,
+        },
+      ],
     };
   },
 
   access(name) {
     return identifier(name);
-  }
+  },
 };
 
 //
@@ -77,8 +77,8 @@ export function dynamicDefinition(containerName: string): DefinitionBackend {
         type: "AssignmentExpression",
         operator: "=",
         left: member(container, name),
-        right: value
-      }
+        right: value,
+      },
     };
   }
 
@@ -96,23 +96,23 @@ export function dynamicDefinition(containerName: string): DefinitionBackend {
               [identifier("x")],
               [
                 objectExpression(
-                  names.map(name => {
+                  names.map((name) => {
                     return {
                       key: name,
-                      value: member(identifier("x"), name)
+                      value: member(identifier("x"), name),
                     };
                   })
-                )
+                ),
               ]
             ),
-            arguments: [obj]
-          }
-        ])
+            arguments: [obj],
+          },
+        ]),
       };
     },
 
     access(name) {
       return member(container, name);
-    }
+    },
   };
 }

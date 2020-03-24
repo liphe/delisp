@@ -2,28 +2,28 @@ import * as JS from "estree";
 import {
   isValidJSIdentifierName,
   identifierToJS,
-  identifierToJSName
+  identifierToJSName,
 } from "./jsvariable";
 import { isBodyAsync } from "./estree-utils-async";
 
 export function literal(value: number | string | boolean | null): JS.Literal {
   return {
     type: "Literal",
-    value
+    value,
   };
 }
 
 export function identifier(name: string): JS.Identifier {
   return {
     type: "Identifier",
-    name: identifierToJS(name)
+    name: identifierToJS(name),
   };
 }
 
 export function identifierName(name: string): JS.Identifier {
   return {
     type: "Identifier",
-    name: identifierToJSName(name)
+    name: identifierToJSName(name),
   };
 }
 
@@ -33,7 +33,7 @@ export function member(obj: JS.Expression, prop: string): JS.MemberExpression {
     type: "MemberExpression",
     computed: !dotNotation,
     object: obj,
-    property: dotNotation ? identifierName(prop) : literal(prop)
+    property: dotNotation ? identifierName(prop) : literal(prop),
   };
 }
 
@@ -45,7 +45,7 @@ export function methodCall(
   return {
     type: "CallExpression",
     callee: member(e, method),
-    arguments: args
+    arguments: args,
   };
 }
 
@@ -71,7 +71,7 @@ export function primitiveCall(
   return {
     type: "CallExpression",
     callee: identifier(name),
-    arguments: args
+    arguments: args,
   };
 }
 
@@ -96,17 +96,17 @@ export function arrowFunction(
       body: expr,
       generator: false,
       expression: true,
-      async: options.async
+      async: options.async,
     };
   } else {
-    const middle: JS.Statement[] = body.slice(0, -1).map(e => ({
+    const middle: JS.Statement[] = body.slice(0, -1).map((e) => ({
       type: "ExpressionStatement",
-      expression: e
+      expression: e,
     }));
 
     const returning: JS.Statement = {
       type: "ReturnStatement",
-      argument: body[body.length - 1]
+      argument: body[body.length - 1],
     };
 
     return {
@@ -114,11 +114,11 @@ export function arrowFunction(
       params: args,
       body: {
         type: "BlockStatement",
-        body: [...middle, returning]
+        body: [...middle, returning],
       },
       generator: false,
       expression: false,
-      async: options.async
+      async: options.async,
     };
   }
 }
@@ -131,7 +131,7 @@ interface Property {
 export function objectExpression(properties: Property[]): JS.ObjectExpression {
   return {
     type: "ObjectExpression",
-    properties: properties.map(p => {
+    properties: properties.map((p) => {
       const validIdentifierName = isValidJSIdentifierName(p.key);
       return {
         type: "Property",
@@ -143,9 +143,9 @@ export function objectExpression(properties: Property[]): JS.ObjectExpression {
           p.value.type === "Identifier" &&
           p.value.name === p.key,
         key: validIdentifierName ? identifierName(p.key) : literal(p.key),
-        value: p.value
+        value: p.value,
       };
-    })
+    }),
   };
 }
 
@@ -153,7 +153,7 @@ export function requireModule(name: string): JS.Expression {
   return {
     type: "CallExpression",
     callee: identifier("require"),
-    arguments: [literal(name)]
+    arguments: [literal(name)],
   };
 }
 
@@ -166,30 +166,30 @@ export function requireNames(names: string[], source: string): JS.Statement {
         type: "VariableDeclarator",
         id: {
           type: "ObjectPattern",
-          properties: names.map(name => ({
+          properties: names.map((name) => ({
             type: "Property",
             kind: "init",
             key: identifier(name),
             value: identifier(name),
             computed: false,
             method: false,
-            shorthand: true
-          }))
+            shorthand: true,
+          })),
         },
         init: {
           type: "CallExpression",
           callee: identifier("require"),
-          arguments: [literal(source)]
-        }
-      }
-    ]
+          arguments: [literal(source)],
+        },
+      },
+    ],
   };
 }
 
 export function awaitExpr(expr: JS.Expression): JS.Expression {
   return {
     type: "AwaitExpression",
-    argument: expr
+    argument: expr,
   };
 }
 
@@ -199,8 +199,8 @@ export function comment(comment: string, stmt: JS.Statement): JS.Statement {
     leadingComments: [
       {
         type: "Block",
-        value: comment
-      }
-    ]
+        value: comment,
+      },
+    ],
   };
 }

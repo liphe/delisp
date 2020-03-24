@@ -8,7 +8,7 @@ export type Action = { tag: "update-code"; value: string };
 
 export const updateCode = (value: string): Action => ({
   tag: "update-code",
-  value
+  value,
 });
 
 // Reducer

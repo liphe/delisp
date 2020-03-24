@@ -6,7 +6,7 @@ import {
   member,
   objectExpression,
   requireModule,
-  requireNames
+  requireNames,
 } from "./estree-utils";
 
 export interface ModuleBackend {
@@ -30,12 +30,12 @@ export const cjs: ModuleBackend = {
         operator: "=",
         left: member(identifier("module"), "exports"),
         right: objectExpression(
-          vars.map(vari => ({
+          vars.map((vari) => ({
             key: vari,
-            value: identifier(vari)
+            value: identifier(vari),
           }))
-        )
-      }
+        ),
+      },
     };
   },
 
@@ -47,9 +47,9 @@ export const cjs: ModuleBackend = {
         {
           type: "VariableDeclarator",
           id: identifier(localName),
-          init: member(requireModule("@delisp/runtime"), "default")
-        }
-      ]
+          init: member(requireModule("@delisp/runtime"), "default"),
+        },
+      ],
     };
   },
 
@@ -63,7 +63,7 @@ export const cjs: ModuleBackend = {
     defs: DefinitionBackend
   ): JS.Statement {
     return defs.defineFromObject(names, requireModule(source));
-  }
+  },
 };
 
 export const esm: ModuleBackend = {
@@ -75,10 +75,10 @@ export const esm: ModuleBackend = {
         (vari): JS.ExportSpecifier => ({
           type: "ExportSpecifier",
           exported: identifier(vari),
-          local: identifier(vari)
+          local: identifier(vari),
         })
       ),
-      declaration: null
+      declaration: null,
     };
   },
   importRuntime(localName: string) {
@@ -88,22 +88,22 @@ export const esm: ModuleBackend = {
       specifiers: [
         {
           type: "ImportDefaultSpecifier",
-          local: identifier(localName)
-        }
+          local: identifier(localName),
+        },
       ],
-      source: literal("@delisp/runtime")
+      source: literal("@delisp/runtime"),
     };
   },
   importRuntimeUtils(names: string[]) {
     return {
       type: "ImportDeclaration",
       importKind: "value",
-      specifiers: names.map(name => ({
+      specifiers: names.map((name) => ({
         type: "ImportSpecifier",
         local: identifier(name),
-        imported: identifier(name)
+        imported: identifier(name),
       })),
-      source: literal("@delisp/runtime")
+      source: literal("@delisp/runtime"),
     };
   },
   importNames(
@@ -117,5 +117,5 @@ export const esm: ModuleBackend = {
     throw new Error(
       `Importing modules is not supported by the ESM module system yet.`
     );
-  }
+  },
 };

@@ -5,10 +5,10 @@ import { duplicatedItemsBy, last } from "./utils";
 export class ConvertError extends Error {}
 
 export interface ParseRecordResult {
-  fields: Array<{
+  fields: {
     label: ASExprSymbol;
     value: ASExpr;
-  }>;
+  }[];
   tail?: {
     separator: ASExprSymbol;
     expression: ASExpr;
@@ -29,15 +29,15 @@ export function parseRecord(expr: ASExprMap): ParseRecordResult {
             fields: expr.fields.slice(0, -1),
             tail: {
               separator: lastField.label,
-              expression: lastField.value
-            }
+              expression: lastField.value,
+            },
           }
         : { fields: expr.fields };
     }
   }
 
   function checkInvalidFields() {
-    const invalidFields = fields.filter(f => !f.label.name.startsWith(":"));
+    const invalidFields = fields.filter((f) => !f.label.name.startsWith(":"));
     if (invalidFields.length > 0) {
       const field = invalidFields[0];
       throw new ConvertError(
@@ -52,7 +52,7 @@ export function parseRecord(expr: ASExprMap): ParseRecordResult {
   const { fields, tail } = fieldsAndTail();
   checkInvalidFields();
 
-  const duplicates = duplicatedItemsBy(fields, f => f.label.name);
+  const duplicates = duplicatedItemsBy(fields, (f) => f.label.name);
   if (duplicates.length > 0) {
     throw new ConvertError(
       printHighlightedExpr("Duplicated label", duplicates[0].label.location)

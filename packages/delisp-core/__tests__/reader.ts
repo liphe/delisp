@@ -14,17 +14,17 @@ function removeLocation(x: ASExpr): object {
       const { location: _, ...props } = x;
       return {
         ...props,
-        elements: x.elements.map(removeLocation)
+        elements: x.elements.map(removeLocation),
       };
     }
     case "map": {
       const { location: _, ...props } = x;
       return {
         ...props,
-        fields: x.fields.map(f => ({
+        fields: x.fields.map((f) => ({
           label: f.label,
-          value: removeLocation(f.value)
-        }))
+          value: removeLocation(f.value),
+        })),
       };
     }
   }
@@ -35,27 +35,27 @@ describe("Reader", () => {
     expect(readFromString("12")).toMatchObject({
       tag: "number",
       value: 12,
-      location: { start: 0, end: 2 }
+      location: { start: 0, end: 2 },
     });
     expect(readFromString("  12  ")).toMatchObject({
       tag: "number",
       value: 12,
-      location: { start: 2, end: 4 }
+      location: { start: 2, end: 4 },
     });
     expect(readFromString("  -12  ")).toMatchObject({
       tag: "number",
       value: -12,
-      location: { start: 2, end: 5 }
+      location: { start: 2, end: 5 },
     });
     expect(readFromString("  0.05  ")).toMatchObject({
       tag: "number",
       value: 0.05,
-      location: { start: 2, end: 6 }
+      location: { start: 2, end: 6 },
     });
     expect(readFromString("  -0.9  ")).toMatchObject({
       tag: "number",
       value: -0.9,
-      location: { start: 2, end: 6 }
+      location: { start: 2, end: 6 },
     });
   });
 
@@ -63,13 +63,13 @@ describe("Reader", () => {
     expect(readFromString('  "xyz"  ')).toMatchObject({
       tag: "string",
       value: "xyz",
-      location: { start: 2, end: 7 }
+      location: { start: 2, end: 7 },
     });
 
     expect(readFromString('  "a\\nb"  ')).toMatchObject({
       tag: "string",
       value: "a\nb",
-      location: { start: 2, end: 8 }
+      location: { start: 2, end: 8 },
     });
   });
 
@@ -77,25 +77,25 @@ describe("Reader", () => {
     expect(readFromString("  xyz  ")).toMatchObject({
       tag: "symbol",
       name: "xyz",
-      location: { start: 2, end: 5 }
+      location: { start: 2, end: 5 },
     });
 
     expect(readFromString("  a2  ")).toMatchObject({
       tag: "symbol",
       name: "a2",
-      location: { start: 2, end: 4 }
+      location: { start: 2, end: 4 },
     });
 
     expect(readFromString("  3d  ")).toMatchObject({
       tag: "symbol",
       name: "3d",
-      location: { start: 2, end: 4 }
+      location: { start: 2, end: 4 },
     });
 
     expect(readFromString("  $bc  ")).toMatchObject({
       tag: "symbol",
       name: "$bc",
-      location: { start: 2, end: 5 }
+      location: { start: 2, end: 5 },
     });
   });
 
@@ -103,12 +103,12 @@ describe("Reader", () => {
     expect(readFromString("()")).toMatchObject({
       tag: "list",
       elements: [],
-      location: { start: 0, end: 2 }
+      location: { start: 0, end: 2 },
     });
     expect(readFromString("(  )")).toMatchObject({
       tag: "list",
       elements: [],
-      location: { start: 0, end: 4 }
+      location: { start: 0, end: 4 },
     });
     expect(readFromString("(1 2 3)")).toMatchObject({
       tag: "list",
@@ -116,20 +116,20 @@ describe("Reader", () => {
         {
           tag: "number",
           value: 1,
-          location: { start: 1, end: 2 }
+          location: { start: 1, end: 2 },
         },
         {
           tag: "number",
           value: 2,
-          location: { start: 3, end: 4 }
+          location: { start: 3, end: 4 },
         },
         {
           tag: "number",
           value: 3,
-          location: { start: 5, end: 6 }
-        }
+          location: { start: 5, end: 6 },
+        },
       ],
-      location: { start: 0, end: 7 }
+      location: { start: 0, end: 7 },
     });
 
     expect(readFromString(" (1 ( 2 ) 3) ")).toMatchObject({
@@ -138,7 +138,7 @@ describe("Reader", () => {
         {
           tag: "number",
           value: 1,
-          location: { start: 2, end: 3 }
+          location: { start: 2, end: 3 },
         },
         {
           tag: "list",
@@ -146,18 +146,18 @@ describe("Reader", () => {
             {
               tag: "number",
               value: 2,
-              location: { start: 6, end: 7 }
-            }
+              location: { start: 6, end: 7 },
+            },
           ],
-          location: { start: 4, end: 9 }
+          location: { start: 4, end: 9 },
         },
         {
           tag: "number",
           value: 3,
-          location: { start: 10, end: 11 }
-        }
+          location: { start: 10, end: 11 },
+        },
       ],
-      location: { start: 1, end: 12 }
+      location: { start: 1, end: 12 },
     });
   });
 
@@ -165,12 +165,12 @@ describe("Reader", () => {
     expect(readFromString("[]")).toMatchObject({
       tag: "vector",
       elements: [],
-      location: { start: 0, end: 2 }
+      location: { start: 0, end: 2 },
     });
     expect(readFromString("[  ]")).toMatchObject({
       tag: "vector",
       elements: [],
-      location: { start: 0, end: 4 }
+      location: { start: 0, end: 4 },
     });
     expect(readFromString("[1 2 3]")).toMatchObject({
       tag: "vector",
@@ -178,20 +178,20 @@ describe("Reader", () => {
         {
           tag: "number",
           value: 1,
-          location: { start: 1, end: 2 }
+          location: { start: 1, end: 2 },
         },
         {
           tag: "number",
           value: 2,
-          location: { start: 3, end: 4 }
+          location: { start: 3, end: 4 },
         },
         {
           tag: "number",
           value: 3,
-          location: { start: 5, end: 6 }
-        }
+          location: { start: 5, end: 6 },
+        },
       ],
-      location: { start: 0, end: 7 }
+      location: { start: 0, end: 7 },
     });
 
     expect(readFromString(" [1 [ 2 ] 3] ")).toMatchObject({
@@ -200,7 +200,7 @@ describe("Reader", () => {
         {
           tag: "number",
           value: 1,
-          location: { start: 2, end: 3 }
+          location: { start: 2, end: 3 },
         },
         {
           tag: "vector",
@@ -208,30 +208,30 @@ describe("Reader", () => {
             {
               tag: "number",
               value: 2,
-              location: { start: 6, end: 7 }
-            }
+              location: { start: 6, end: 7 },
+            },
           ],
-          location: { start: 4, end: 9 }
+          location: { start: 4, end: 9 },
         },
         {
           tag: "number",
           value: 3,
-          location: { start: 10, end: 11 }
-        }
+          location: { start: 10, end: 11 },
+        },
       ],
-      location: { start: 1, end: 12 }
+      location: { start: 1, end: 12 },
     });
   });
 
   it("should read multiple S-expressions", () => {
     expect(readAllFromString("(x 1 2)(y 3)")).toMatchObject([
       { tag: "list" },
-      { tag: "list" }
+      { tag: "list" },
     ]);
 
     expect(readAllFromString(" (x 1 2) (y 3) ")).toMatchObject([
       { tag: "list" },
-      { tag: "list" }
+      { tag: "list" },
     ]);
 
     expect(

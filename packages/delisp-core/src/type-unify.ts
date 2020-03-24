@@ -47,7 +47,7 @@ type UnifyResult = UnifySuccess | UnifyError;
 function success(s: Substitution): UnifyResult {
   return {
     tag: "unify-success",
-    substitution: s
+    substitution: s,
   };
 }
 
@@ -57,12 +57,12 @@ function occurCheck(v: T.Var, rootT: T.Type): UnifyOccurCheckError | null {
       const err: UnifyOccurCheckError = {
         tag: "unify-occur-check-error",
         variable: v,
-        t: rootT
+        t: rootT,
       };
       return err;
     }
     if (t.node.tag === "application") {
-      const errors = t.node.args.map(a => check(a)).filter(r => r !== null);
+      const errors = t.node.args.map((a) => check(a)).filter((r) => r !== null);
       return errors.length > 0 ? errors[0] : null;
     }
     return null;
@@ -104,7 +104,7 @@ function unifyVariable(v: T.Var, t: T.Type, ctx: Substitution): UnifyResult {
       return {
         tag: "unify-mismatch-error",
         t1: v,
-        t2: t
+        t2: t,
       };
     }
 
@@ -122,12 +122,12 @@ function unifyArray(
   } else if (t1s.length === 0) {
     return {
       tag: "unify-missing-value-error",
-      t: t2s[0]
+      t: t2s[0],
     };
   } else if (t2s.length === 0) {
     return {
       tag: "unify-missing-value-error",
-      t: t1s[0]
+      t: t1s[0],
     };
   } else {
     const [t1, ...rest1] = t1s;
@@ -170,7 +170,7 @@ function rewriteRowForLabel(
     const theta = T.rowExtension(label, gamma, beta);
     return {
       row: theta,
-      substitution: { ...ctx, [row.node.name]: theta }
+      substitution: { ...ctx, [row.node.name]: theta },
     };
   } else if (row.node.tag === "row-extension") {
     // RULE (row-head)
@@ -181,7 +181,7 @@ function rewriteRowForLabel(
     if (row.node.label === label) {
       return {
         row: { node: row.node },
-        substitution: ctx
+        substitution: ctx,
       };
     } else {
       // RULE (row-swap)
@@ -206,7 +206,7 @@ function rewriteRowForLabel(
             newRow.node.extends
           )
         ),
-        substitution: subs
+        substitution: subs,
       };
     }
   } else if (row.node.tag === "empty-row") {
@@ -232,7 +232,7 @@ function unifyRow(
     return {
       tag: "unify-mismatch-error",
       t1: row1,
-      t2: row2
+      t2: row2,
     };
   }
 
@@ -259,7 +259,7 @@ export function unify(t1: T.Type, t2: T.Type, ctx: Substitution): UnifyResult {
       : {
           tag: "unify-mismatch-error",
           t1,
-          t2
+          t2,
         };
   } else if (t1.node.tag === "application" && t2.node.tag === "application") {
     // RULE: (uni-app)
@@ -287,7 +287,7 @@ export function unify(t1: T.Type, t2: T.Type, ctx: Substitution): UnifyResult {
     return {
       tag: "unify-mismatch-error",
       t1,
-      t2
+      t2,
     };
   }
 }

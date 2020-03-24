@@ -74,7 +74,7 @@ export function text(content: string, kind: Kind, source?: unknown): Doc {
  */
 export const line: Doc = {
   tag: "line",
-  next: nil
+  next: nil,
 };
 
 /** Indent a document by a number of levels. */
@@ -95,13 +95,13 @@ function union(x: Doc, y: Doc, width?: number): Doc {
     tag: "union",
     x,
     y,
-    width
+    width,
   };
 }
 
 /** Pretty print docs vertically aligned with the first one. */
 export function align(...docs: Doc[]): Doc {
-  const nonEmptyDocs = docs.filter(x => x !== nil);
+  const nonEmptyDocs = docs.filter((x) => x !== nil);
   if (nonEmptyDocs.length === 0) {
     return nil;
   }
@@ -110,7 +110,7 @@ export function align(...docs: Doc[]): Doc {
     tag: "align",
     root,
     docs: rest,
-    next: nil
+    next: nil,
   };
 }
 
@@ -136,32 +136,32 @@ function concat2(x: Doc, y: Doc): Doc {
         content: x.content,
         source: x.source,
         kind: x.kind,
-        next: concat2(x.next, y)
+        next: concat2(x.next, y),
       };
     case "line":
       return {
         tag: "line",
-        next: concat2(x.next, y)
+        next: concat2(x.next, y),
       };
     case "union":
       return {
         tag: "union",
         x: concat2(x.x, y),
-        y: concat2(x.y, y)
+        y: concat2(x.y, y),
       };
     case "align":
       return {
         tag: "align",
         root: x.root,
         docs: x.docs,
-        next: concat2(x.next, y)
+        next: concat2(x.next, y),
       };
     case "indent":
       return {
         tag: "indent",
         doc: x.doc,
         next: concat2(x.next, y),
-        level: x.level
+        level: x.level,
       };
   }
 }
@@ -181,14 +181,14 @@ function flatten(doc: Doc): Doc {
         content: doc.content,
         source: doc.source,
         kind: doc.kind,
-        next: flatten(doc.next)
+        next: flatten(doc.next),
       };
     case "line":
       return {
         tag: "text",
         content: " ",
         kind: ["space"],
-        next: flatten(doc.next)
+        next: flatten(doc.next),
       };
     case "union":
       // Note that we can just flatten one of the layouts,
@@ -205,7 +205,7 @@ function flatten(doc: Doc): Doc {
         tag: "indent",
         level: doc.level,
         doc: flatten(doc.doc),
-        next: flatten(doc.next)
+        next: flatten(doc.next),
       };
   }
 }
@@ -228,7 +228,7 @@ export function group(doc: Doc, width?: number): Doc {
         content: doc.content,
         source: doc.source,
         kind: doc.kind,
-        next: group(doc.next, width)
+        next: group(doc.next, width),
       };
     case "line":
       return union(flatten(doc), doc, width);
@@ -249,7 +249,7 @@ export function group(doc: Doc, width?: number): Doc {
         tag: "indent",
         level: doc.level,
         doc: group(doc.doc, width),
-        next: group(doc.next, width)
+        next: group(doc.next, width),
       };
   }
 }
@@ -301,7 +301,7 @@ function fits(doc: Doc, w: number): boolean {
         `unions should be removed before checking if it fits.`
       );
     case "align":
-      return fits(doc.root, w) && doc.docs.every(d => fits(d, w));
+      return fits(doc.root, w) && doc.docs.every((d) => fits(d, w));
     case "indent":
       return fits(doc.doc, w - doc.level);
   }
@@ -321,12 +321,12 @@ function best(doc: Doc, w: number, k: number): Doc {
         content: doc.content,
         source: doc.source,
         kind: doc.kind,
-        next: best(doc.next, w, k + doc.content.length)
+        next: best(doc.next, w, k + doc.content.length),
       };
     case "line":
       return {
         tag: "line",
-        next: best(doc.next, w, 0)
+        next: best(doc.next, w, 0),
       };
     case "union":
       if (doc.width) {
@@ -344,23 +344,21 @@ function best(doc: Doc, w: number, k: number): Doc {
       return {
         tag: "align",
         root: best(doc.root, w, k),
-        docs: doc.docs.map(d => best(d, w, k)),
-        next: best(doc.next, w, k)
+        docs: doc.docs.map((d) => best(d, w, k)),
+        next: best(doc.next, w, k),
       };
     case "indent":
       return {
         tag: "indent",
         doc: best(doc.doc, w - doc.level, k),
         level: doc.level,
-        next: best(doc.next, w, k)
+        next: best(doc.next, w, k),
       };
   }
 }
 
 function repeatChar(ch: string, n: number): string {
-  return Array(n)
-    .fill(ch)
-    .join("");
+  return Array(n).fill(ch).join("");
 }
 
 /** Encoders assist the transformation of a Doc into a value.
@@ -382,7 +380,7 @@ export const StringEncoder: Encoder<string> = {
   },
   concat(...args: string[]): string {
     return args.join("");
-  }
+  },
 };
 
 /** Like `.join(sep)` but it works for an arbitrary encoder. */
@@ -417,7 +415,7 @@ function layout<A>(
         encoder.fromString("\n", ["space"]),
         encoder.fromString(repeatChar(" ", indentation), [
           "space",
-          "indentation"
+          "indentation",
         ]),
         layout(doc.next, indentation, 0, encoder)
       );
@@ -429,14 +427,14 @@ function layout<A>(
           encoder,
           [
             layout(doc.root, indentation + alignment, 0, encoder),
-            ...doc.docs.map(d =>
+            ...doc.docs.map((d) =>
               encoder.concat(
                 encoder.fromString(repeatChar(" ", indentation + alignment), [
-                  "space"
+                  "space",
                 ]),
                 layout(d, indentation + alignment, 0, encoder)
               )
-            )
+            ),
           ],
           encoder.fromString("\n", ["space"])
         ),

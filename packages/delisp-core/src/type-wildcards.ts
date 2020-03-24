@@ -27,7 +27,7 @@ export class TypeWithWildcards {
   }
 
   generalize(): TypeSchema {
-    const nowildcards = transformRecurType(this.body, t1 => {
+    const nowildcards = transformRecurType(this.body, (t1) => {
       if (t1.node.tag === "type-variable" && t1.node.name === "_") {
         return generateUniqueTVar(false, "__t");
       } else {

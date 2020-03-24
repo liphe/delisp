@@ -1,7 +1,7 @@
 import { readModule } from "../src/index";
 import { pprintModule } from "../src/printer";
 
-function pprintSource(source: string, lineWidth: number = 80) {
+function pprintSource(source: string, lineWidth = 80) {
   const m = readModule(source);
   return "\n" + pprintModule(m, lineWidth);
 }

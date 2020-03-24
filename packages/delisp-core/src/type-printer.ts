@@ -10,7 +10,7 @@ function typeIndexName(index: number): string {
 }
 
 function createVariableNormalizer() {
-  let variables: string[] = [];
+  const variables: string[] = [];
 
   return (t: T.Var): string => {
     let idx = variables.indexOf(t.node.name);
@@ -41,8 +41,8 @@ function printValuesType(
     return (
       "(values " +
       range(row.fields.length)
-        .map(i => {
-          const field = row.fields.find(f => f.label === String(i))!;
+        .map((i) => {
+          const field = row.fields.find((f) => f.label === String(i))!;
           return _printType(field.labelType, normalizeVar);
         })
         .join(" ") +
@@ -61,7 +61,9 @@ function printApplicationType(
 ): string {
   function genericApp(op: T.Type, args: T.Type[]): string {
     return (
-      "(" + [op, ...args].map(t => _printType(t, normalizeVar)).join(" ") + ")"
+      "(" +
+      [op, ...args].map((t) => _printType(t, normalizeVar)).join(" ") +
+      ")"
     );
   }
 
@@ -74,7 +76,7 @@ function printApplicationType(
         const arg = type.node.args[0];
         const row = normalizeRow(arg);
         const fields = row.fields
-          .map(f => `${f.label} ${_printType(f.labelType, normalizeVar)}`)
+          .map((f) => `${f.label} ${_printType(f.labelType, normalizeVar)}`)
           .join(" ");
         const extension =
           row.extends.node.tag !== "empty-row"
@@ -92,7 +94,7 @@ function printApplicationType(
           return _printType(row.extends, normalizeVar, simplify);
         }
 
-        const fields = row.fields.map(f => " " + f.label).join("");
+        const fields = row.fields.map((f) => " " + f.label).join("");
         const extending =
           row.extends.node.tag === "empty-row"
             ? ""
@@ -105,7 +107,7 @@ function printApplicationType(
         const arg = type.node.args[0];
         const row = normalizeRow(arg);
         const fields = row.fields
-          .map(f =>
+          .map((f) =>
             f.labelType.node.tag === "constant" &&
             f.labelType.node.name === "void"
               ? `${f.label}`
@@ -126,7 +128,7 @@ function printApplicationType(
         const { args, effect, output } = decomposeFunctionType(type);
         return (
           "(->" +
-          args.map(t => " " + _printType(t, normalizeVar)).join("") +
+          args.map((t) => " " + _printType(t, normalizeVar)).join("") +
           " " +
           _printType(effect, normalizeVar, true) +
           " " +

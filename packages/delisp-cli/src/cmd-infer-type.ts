@@ -6,7 +6,7 @@ import {
   isExpression,
   isTypeAlias,
   printType,
-  readModule
+  readModule,
 } from "@delisp/core";
 import { CommandModule } from "yargs";
 import * as fs from "./fs-helpers";
@@ -14,7 +14,7 @@ import * as fs from "./fs-helpers";
 function wrap<A>(fn: (args: A) => Promise<unknown>): (args: A) => void {
   return async (...args) => {
     try {
-      fn.apply(null, args);
+      fn(...args);
     } catch (err) {
       console.error(err.message);
       process.exit(-1);
@@ -25,17 +25,17 @@ function wrap<A>(fn: (args: A) => Promise<unknown>): (args: A) => void {
 
 export const cmdInferType: CommandModule = {
   command: "infer-type <file>",
-  builder: yargs => {
+  builder: (yargs) => {
     return yargs
       .option("cursor-offset", {
-        type: "number"
+        type: "number",
       })
       .demand(
         "cursor-offset",
         "You must specify the cursor offset to identiy which expression you want to infer."
       );
   },
-  handler: wrap(async args => {
+  handler: wrap(async (args) => {
     const file = args.file as string;
     const cursorOffset = args["cursor-offset"] as number;
 
@@ -64,5 +64,5 @@ export const cmdInferType: CommandModule = {
     }
 
     process.exit(0);
-  })
+  }),
 };

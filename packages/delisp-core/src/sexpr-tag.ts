@@ -16,12 +16,12 @@ function replaceSymbolsInASExpr(
       case "list":
         return {
           ...e,
-          elements: e.elements.map(replaceIn)
+          elements: e.elements.map(replaceIn),
         };
       case "vector":
         return {
           ...e,
-          elements: e.elements.map(replaceIn)
+          elements: e.elements.map(replaceIn),
         };
       case "map":
         return {
@@ -35,9 +35,9 @@ function replaceSymbolsInASExpr(
             }
             return {
               label: newLabel,
-              value: replaceIn(value)
+              value: replaceIn(value),
             };
-          })
+          }),
         };
     }
   }
@@ -56,7 +56,7 @@ export function sexpr(
 
   const sexprTmpl = readFromString(tmpstring);
 
-  return replaceSymbolsInASExpr(sexprTmpl, s => {
+  return replaceSymbolsInASExpr(sexprTmpl, (s) => {
     const index = tmpvars.indexOf(s.name);
     return index < 0 ? s : placeholders[index];
   });

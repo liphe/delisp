@@ -9,13 +9,13 @@ import {
   mapObject,
   range,
   union,
-  unique
+  unique,
 } from "./utils";
 
 describe("Utils", () => {
   describe("flatMap", () => {
     it("x => [x] should preserve the list", () => {
-      expect(flatMap(x => [x], [1, 2, 3])).toEqual([1, 2, 3]);
+      expect(flatMap((x) => [x], [1, 2, 3])).toEqual([1, 2, 3]);
     });
   });
   describe("flatten", () => {
@@ -71,15 +71,15 @@ describe("Utils", () => {
   });
   describe("mapObject", () => {
     it("will map values of objects", () => {
-      expect(mapObject({ x: 10, y: 20 }, x => x * x)).toEqual({
+      expect(mapObject({ x: 10, y: 20 }, (x) => x * x)).toEqual({
         x: 100,
-        y: 400
+        y: 400,
       });
     });
     it("will call the callback with the key as a second argument", () => {
       expect(mapObject({ x: 10, y: 20 }, (_, key) => key)).toEqual({
         x: "x",
-        y: "y"
+        y: "y",
       });
     });
   });
