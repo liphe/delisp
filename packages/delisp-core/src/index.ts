@@ -58,7 +58,12 @@ export {
   findSyntaxByRange,
   wrapInLambda,
 } from "./syntax-utils";
-export { printType } from "./type-printer";
+export {
+  printType,
+  printTypeWithNormalizer,
+  createVariableNormalizer,
+  TypeVariableNormalizer,
+} from "./type-printer";
 export { isFunctionType, decomposeFunctionType } from "./type-utils";
 export { Type } from "./types";
 export { generateTSModuleDeclaration } from "./typescript-generation";
