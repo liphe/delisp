@@ -11,9 +11,8 @@ import {
   printType,
   resolveModuleDependencies,
 } from "@delisp/core";
-import _mkdirp from "mkdirp";
+import mkdirp from "mkdirp";
 import path from "path";
-import { promisify } from "util";
 import { CompileOptions } from "./compile-options";
 import { CompileFileResult, getOutputFiles } from "./compile-output";
 import * as fs from "./fs-helpers";
@@ -21,8 +20,6 @@ import { loadModule } from "./module";
 
 import makeDebug from "debug";
 const debug = makeDebug("delisp:cli");
-
-const mkdirp = promisify(_mkdirp);
 
 export async function resolveDependency(name: string) {
   const { infoFile } = await getOutputFiles(name);
@@ -71,7 +68,7 @@ export async function compileFile(
     throw new Error(unknowns.join("\n\n"));
   }
 
-  await mkdirp(path.dirname(jsFile), undefined);
+  await mkdirp(path.dirname(jsFile));
 
   debug(`Compiling ${file}`);
 
