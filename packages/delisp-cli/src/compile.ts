@@ -71,7 +71,7 @@ export async function compileFile(
     throw new Error(unknowns.join("\n\n"));
   }
 
-  await mkdirp(path.dirname(jsFile));
+  await mkdirp(path.dirname(jsFile), undefined);
 
   debug(`Compiling ${file}`);
 
