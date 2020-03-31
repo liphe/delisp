@@ -9,10 +9,14 @@ import {
   macroexpandModule,
   Module,
   pprintAs,
-  printType,
+  printTypeWithNormalizer,
   readModule,
   Syntax,
+  SDefinition,
+  Type,
   Typed,
+  TypeVariableNormalizer,
+  createVariableNormalizer,
 } from "@delisp/core";
 import React, { useState } from "react";
 import styled, { css } from "styled-components";
@@ -107,7 +111,49 @@ function ModuleExplorer({ module: m }: { module: Module<Typed | {}> }) {
 }
 
 function SyntaxExplorer({ syntax }: { syntax: Syntax<Typed | {}> }) {
-  return <GenericSyntaxExplorer syntax={syntax} />;
+  switch (syntax.node.tag) {
+    case "definition":
+      return (
+        <DefinitionExplorer definition={{ ...syntax, node: syntax.node }} />
+      );
+    default:
+      return (
+        <GenericSyntaxExplorer
+          syntax={syntax}
+          normalizer={createVariableNormalizer()}
+        />
+      );
+  }
+}
+
+const Definition = styled.div`
+  border: 1px solid lightGray;
+  margin: 20px;
+  padding: 2px;
+`;
+
+function DefinitionExplorer({
+  definition,
+}: {
+  definition: SDefinition<Typed | {}>;
+}) {
+  const normalizer = createVariableNormalizer();
+  const type = (definition.node.value.info as any).resultingType;
+
+  return (
+    <Definition>
+      <pre>Definition</pre> <pre>{definition.node.variable.name}</pre>
+      {type && (
+        <div>
+          Type <Type type={type} normalizer={normalizer} />
+        </div>
+      )}
+      <GenericSyntaxExplorer
+        syntax={definition.node.value}
+        normalizer={normalizer}
+      />
+    </Definition>
+  );
 }
 
 const ViewButton = styled.button`
@@ -161,49 +207,67 @@ const Token = styled.span`
   }
 `;
 
-function getDisplayExpressionType(expr: Expression<Typed>) {
+function getDisplayExpressionType(
+  expr: Expression<Typed>,
+  normalizer: TypeVariableNormalizer
+) {
   if (!expr.info.selfType) return undefined;
-
-  const selfType = `Self type: ${printType(expr.info.selfType, false)}`;
-  if (expr.node.tag === "variable-reference") {
-    if (expr.node.closedFunctionEffect) {
-      return `Closed: ${printType(expr.node.closedFunctionEffect, false)}`;
-    }
-    return selfType;
-  } else {
-    return selfType;
-  }
+  return `${printTypeWithNormalizer(expr.info.selfType, normalizer)}`;
 }
 
-const PrettierEncoder: Encoder<React.ReactElement[]> = {
-  fromString: function PrettierEncoder(
-    x: string,
-    kind: string[],
-    source?: Syntax<Typed>
-  ) {
-    return [
-      <Token
-        data-source={source}
-        className={kind.join(" ")}
-        onClick={() => {
-          console.log({ source });
-        }}
-        title={
-          source && isExpression(source)
-            ? getDisplayExpressionType(source)
-            : undefined
-        }
-      >
-        {x}
-      </Token>,
-    ];
-  },
-  concat: (...args: React.ReactElement[][]): React.ReactElement[] =>
-    args.flat(1),
-};
+function Type({
+  type,
+  normalizer,
+}: {
+  type: Type;
+  normalizer: TypeVariableNormalizer;
+}) {
+  return <span>`{printTypeWithNormalizer(type, normalizer)}`</span>;
+}
 
-function GenericSyntaxExplorer({ syntax }: { syntax: Syntax }) {
-  return <Code>{pprintAs(syntax, LINE_WIDTH, PrettierEncoder)}</Code>;
+function createPrettierEncoder(
+  normalizer: TypeVariableNormalizer
+): Encoder<React.ReactElement[]> {
+  return {
+    fromString: function PrettierEncoder(
+      x: string,
+      kind: string[],
+      source?: Syntax<Typed>
+    ) {
+      return [
+        <Token
+          data-source={source}
+          className={kind.join(" ")}
+          onClick={() => {
+            console.log({ source });
+          }}
+          title={
+            source && isExpression(source)
+              ? getDisplayExpressionType(source, normalizer)
+              : undefined
+          }
+        >
+          {x}
+        </Token>,
+      ];
+    },
+    concat: (...args: React.ReactElement[][]): React.ReactElement[] =>
+      args.flat(1),
+  };
+}
+
+function GenericSyntaxExplorer({
+  syntax,
+  normalizer,
+}: {
+  syntax: Syntax;
+  normalizer: TypeVariableNormalizer;
+}) {
+  return (
+    <Code>
+      {pprintAs(syntax, LINE_WIDTH, createPrettierEncoder(normalizer))}
+    </Code>
+  );
 }
 
 export function App({
