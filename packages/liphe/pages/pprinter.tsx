@@ -1,5 +1,6 @@
 import React from "react";
+import { PageLayout } from "../components/PageLayout";
 
 export default function PPrinter() {
-  return <h1>Pretty printer</h1>;
+  return <PageLayout></PageLayout>;
 }

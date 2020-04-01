@@ -1,11 +1,6 @@
 import React from "react";
-import Link from "next/link";
+import { PageLayout } from "../components/PageLayout";
 
 export default function Homepage() {
-  return (
-    <>
-      <h1>Liphe</h1>
-      <Link href="/pprinter">Pretty printer</Link>
-    </>
-  );
+  return <PageLayout>hello world</PageLayout>;
 }
