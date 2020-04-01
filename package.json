@@ -24,7 +24,7 @@
     "eslint-plugin-react": "^7.19.0",
     "jest": "^25.1.0",
     "lerna": "^3.20.2",
-    "prettier": "^2.0.2",
+    "prettier": "2.0.2",
     "ts-jest": "^25.2.1",
     "typescript": "^3.8.3"
   },
@@ -34,9 +34,9 @@
       "examples"
     ],
     "nohoist": [
-      "**/styled-components",
-      "**/@types/styled-components",
-      "**/@types/styled-components/**"
+      "**/@types/**",
+      "**/next",
+      "**/next/**"
     ]
   },
   "private": true

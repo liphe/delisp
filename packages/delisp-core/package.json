@@ -20,9 +20,11 @@
     "debug": "^4.1.0",
     "escodegen": "^1.11.1",
     "fp-ts": "^2.0.0",
-    "io-ts": "^2.0.0"
+    "io-ts": "^2.0.0",
+    "mkdirp": "^1.0.3"
   },
   "devDependencies": {
-    "@types/estree": "^0.0.44"
+    "@types/estree": "^0.0.44",
+    "@types/mkdirp": "^1.0.0"
   }
 }

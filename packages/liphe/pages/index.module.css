@@ -1,0 +1,12 @@
+.module {
+  font-family: monospace;
+}
+
+.record ul {
+    list-style-type: none;
+    padding-left: 20px;
+}
+
+.identifier {
+  color: blue;
+}

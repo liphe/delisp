@@ -12,7 +12,8 @@
     "resolveJsonModule": true,
     "isolatedModules": true
   },
-  "include": ["src/"],
+  "include": ["next-env.d.ts", "pages/", "components/"],
+  "types": "",
   "references": [
     {
       "path": "../delisp-core/tsconfig.json"

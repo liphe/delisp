@@ -1,9 +1,9 @@
 import React from "react";
 import Link from "next/link";
 
-export const PageLayout = (React.FunctionComponent = ({ children }) => {
+export const PageLayout: React.FC = ({ children }) => {
   return (
-    <>
+    <div>
       <ul>
         <li>
           <Link href="/">
@@ -26,6 +26,6 @@ export const PageLayout = (React.FunctionComponent = ({ children }) => {
           }
         `}
       </style>
-    </>
+    </div>
   );
-});
+};
