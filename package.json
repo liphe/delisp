@@ -28,9 +28,16 @@
     "ts-jest": "^25.2.1",
     "typescript": "^3.8.3"
   },
-  "workspaces": [
-    "packages/*",
-    "examples"
-  ],
+  "workspaces": {
+    "packages": [
+      "packages/*",
+      "examples"
+    ],
+    "nohoist": [
+      "**/styled-components",
+      "**/@types/styled-components",
+      "**/@types/styled-components/**"
+    ]
+  },
   "private": true
 }

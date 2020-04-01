@@ -17,14 +17,14 @@
     "raw-loader": "^4.0.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
-    "styled-components": "^4.2.0"
+    "styled-components": "^5.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.4.4",
     "@babel/preset-env": "^7.4.4",
     "@babel/preset-react": "^7.0.0",
     "@babel/preset-typescript": "^7.3.3",
-    "@types/styled-components": "4.1.8",
+    "@types/styled-components": "5.0.1",
     "@types/webpack-env": "^1.13.9",
     "babel-loader": "^8.0.6",
     "html-webpack-plugin": "^4.0.1",
