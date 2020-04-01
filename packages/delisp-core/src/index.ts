@@ -49,6 +49,7 @@ export {
   SDefinition,
   SExport,
   STypeAlias,
+  SRecord,
   Syntax,
 } from "./syntax";
 export { Typed } from "./syntax-typed";

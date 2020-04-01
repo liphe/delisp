@@ -20,6 +20,7 @@ import {
 } from "@delisp/core";
 import React, { useState } from "react";
 import styled, { css } from "styled-components";
+import { PageLayout } from "../components/PageLayout";
 
 const LINE_WIDTH = 40;
 
@@ -272,11 +273,11 @@ function GenericSyntaxExplorer({
 export default function App() {
   const [code, setCode] = useState("");
   return (
-    <div>
+    <PageLayout>
       <h1>Liphe</h1>
       <Editor value={code} onChange={(e) => setCode(e.target.value)} />
       <AST code={code} />
-    </div>
+    </PageLayout>
   );
 }
 
