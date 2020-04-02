@@ -161,6 +161,8 @@ export const FunctionExplorer: React.FC<{ fn: Delisp.SFunction<Typed> }> = ({
     Delisp.isTVar(contextType) &&
     Delisp.countTypeOccurrences(contextType, selfType) === 1;
 
+  const effects = Delisp.normalizeEffect(type.effect).fields.map(f => f.label);
+
   return (
     <div className={styles.function}>
       <span className={styles.functionLabel}>λ</span>
@@ -184,10 +186,16 @@ export const FunctionExplorer: React.FC<{ fn: Delisp.SFunction<Typed> }> = ({
         })}
       </ul>
 
-      <div>
-        <strong>Effect:</strong>
-        <TypeExplorer type={type.effect} />
-      </div>
+      {effects.length === 0 ? null : (
+        <div>
+          <strong>Effects</strong>
+          <ul className={styles.effects}>
+            {effects.map((eff, effPosition) => {
+              return (<li key={effPosition}>{eff}</li>)
+            })}
+          </ul>
+        </div>
+      )}
 
       <div>
         <strong>Output:</strong>
