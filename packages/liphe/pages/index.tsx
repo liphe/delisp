@@ -172,6 +172,7 @@ export const FunctionExplorer: React.FC<{ fn: Delisp.SFunction<Typed> }> = ({
         </div>
       )}
 
+      <strong>Arguments</strong>
       <ul className={styles.functionArguments}>
         {args.map((arg, argPosition) => {
           return (
