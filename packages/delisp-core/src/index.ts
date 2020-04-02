@@ -37,26 +37,7 @@ export { resolveModuleDependencies } from "./module-dependencies";
 export { Encoder } from "./prettier";
 export { default as primitives } from "./primitives";
 export { pprint, pprintAs, pprintModule, pprintModuleAs } from "./printer";
-export {
-  Declaration,
-  Expression,
-  isDeclaration,
-  isDefinition,
-  isExport,
-  isExpression,
-  isTypeAlias,
-  Identifier,
-  SNumber,
-  SString,
-  SBoolean,
-  SNone,
-  Module,
-  SDefinition,
-  SExport,
-  STypeAlias,
-  SRecord,
-  Syntax,
-} from "./syntax";
+export * from "./syntax";
 export { Typed } from "./syntax-typed";
 export {
   exprFChildren,
@@ -70,7 +51,7 @@ export {
   createVariableNormalizer,
   TypeVariableNormalizer,
 } from "./type-printer";
-export { isFunctionType, decomposeFunctionType } from "./type-utils";
+export * from "./type-utils";
 export { Type } from "./types";
 export { generateTSModuleDeclaration } from "./typescript-generation";
 export {

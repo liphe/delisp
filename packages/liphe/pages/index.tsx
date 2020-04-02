@@ -1,33 +1,73 @@
 import * as React from "react";
+import { useState, useContext } from "react";
 import * as Delisp from "@delisp/core";
+import { Typed } from "@delisp/core";
 import { PageLayout } from "../components/PageLayout";
+
+import { GenericSyntaxExplorer } from "./pprinter";
 
 import styles from "./index.module.css";
 
-export const ModuleExplorer: React.FC<{ module: Delisp.Module }> = ({
+const Context = React.createContext<
+  ReturnType<typeof Delisp.createVariableNormalizer>
+>(null as any);
+
+export const ModuleExplorer: React.FC<{ module: Delisp.Module<Typed> }> = ({
   module,
 }) => {
   return (
     <div className={styles.module}>
       {module.body.map((syntax, i) => (
-        <SyntaxExplorer key={i} syntax={syntax} />
+        <ToplevelSyntaxExplorer key={i} syntax={syntax} />
       ))}
     </div>
   );
 };
 
-export const SyntaxExplorer: React.FC<{ syntax: Delisp.Syntax }> = ({
+export const ToplevelSyntaxExplorer: React.FC<{
+  syntax: Delisp.Syntax<Typed>;
+}> = ({ syntax }) => {
+  const [raw, setRaw] = useState(false);
+  const normalizer = Delisp.createVariableNormalizer();
+
+  const content = (() => {
+    if (raw) {
+      return <GenericSyntaxExplorer syntax={syntax} normalizer={normalizer} />;
+    } else {
+      return <SyntaxExplorer syntax={syntax} />;
+    }
+  })();
+
+  return (
+    <Context.Provider value={normalizer}>
+      <div>
+        <button
+          onClick={() => {
+            setRaw(!raw);
+          }}
+        >
+          {raw ? "Rich" : "Text"}
+        </button>
+        {content}
+      </div>
+    </Context.Provider>
+  );
+};
+
+export const SyntaxExplorer: React.FC<{ syntax: Delisp.Syntax<Typed> }> = ({
   syntax,
 }) => {
-  if (Delisp.isExpression(syntax)) {
-    return <ExpressionExplorer expression={syntax} />;
-  } else {
-    return null;
-  }
+  const normalizer = useContext(Context);
+  const content = Delisp.isExpression(syntax) ? (
+    <ExpressionExplorer expression={syntax} />
+  ) : (
+    <GenericSyntaxExplorer syntax={syntax} normalizer={normalizer} />
+  );
+  return <div>{content}</div>;
 };
 
 export const ExpressionExplorer: React.FC<{
-  expression: Delisp.Expression;
+  expression: Delisp.Expression<Typed>;
 }> = ({ expression }) => {
   switch (expression.node.tag) {
     case "number":
@@ -44,13 +84,18 @@ export const ExpressionExplorer: React.FC<{
       return (
         <BooleanExplorer value={{ ...expression, node: expression.node }} />
       );
-
+    case "function":
+      return <FunctionExplorer fn={{ ...expression, node: expression.node }} />;
     case "record":
       return (
         <RecordExplorer record={{ ...expression, node: expression.node }} />
       );
-    default:
-      return null;
+    default: {
+      const normalizer = useContext(Context);
+      return (
+        <GenericSyntaxExplorer syntax={expression} normalizer={normalizer} />
+      );
+    }
   }
 };
 
@@ -80,7 +125,7 @@ export const NoneExplorer: React.FC<{ value: Delisp.SNone }> = () => {
 };
 
 export const RecordExplorer: React.FC<{
-  record: Delisp.SRecord;
+  record: Delisp.SRecord<Typed>;
 }> = ({ record }) => {
   return (
     <div className={styles.record}>
@@ -90,13 +135,63 @@ export const RecordExplorer: React.FC<{
           return (
             <li key={field.label.name}>
               <IdentifierExplorer identifier={field.label} />{" "}
-              <ExpressionExplorer expression={field.value} />
+              <SyntaxExplorer syntax={field.value} />
             </li>
           );
         })}
       </ul>
       {"}"}
     </div>
+  );
+};
+
+export const FunctionExplorer: React.FC<{ fn: Delisp.SFunction<Typed> }> = ({
+  fn,
+}) => {
+  const selfType = fn.info.selfType;
+  if (!Delisp.isFunctionType(selfType)) {
+    throw new Error("The type of a function is not a function type??");
+  }
+  const type = Delisp.decomposeFunctionType(selfType);
+
+  return (
+    <div className={styles.function}>
+      <span className={styles.functionLabel}>λ</span>
+
+      <ul className={styles.functionArguments}>
+        {fn.node.lambdaList.positionalArguments.map((arg, argPosition) => {
+          return (
+            <li key={arg.name}>
+              <IdentifierExplorer identifier={arg} /> -
+              <TypeExplorer type={type.args[argPosition]} />
+            </li>
+          );
+        })}
+      </ul>
+
+      <div>
+        <strong>Effect:</strong>
+        <TypeExplorer type={type.effect} />
+      </div>
+
+      <div>
+        <strong>Output:</strong>
+        <TypeExplorer type={type.output} />
+      </div>
+
+      {fn.node.body.map((expr, i) => {
+        return <SyntaxExplorer key={i} syntax={expr} />;
+      })}
+    </div>
+  );
+};
+
+export const TypeExplorer: React.FC<{ type: Delisp.Type }> = ({ type }) => {
+  const normalizer = useContext(Context);
+  return (
+    <span className="type">
+      {Delisp.printTypeWithNormalizer(type, normalizer)}
+    </span>
   );
 };
 
@@ -111,14 +206,18 @@ export const IdentifierExplorer: React.FC<{
 };
 
 export default function Homepage() {
-  const module = Delisp.readModule(`
-{:x 10 :y 20 :z {:name "david"}}
-`);
+  const module = Delisp.macroexpandModule(
+    Delisp.readModule(`
+(lambda (x1 x2) {:x (+ x1 x2) :y 20 :z {:name "david"} :callback (lambda () 3)})
+`)
+  );
+
+  const { typedModule } = Delisp.inferModule(module);
+
   return (
     <div>
       <PageLayout>
-        <div>test</div>
-        <ModuleExplorer module={module} />
+        <ModuleExplorer module={typedModule} />
       </PageLayout>
     </div>
   );

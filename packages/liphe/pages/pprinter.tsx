@@ -256,7 +256,7 @@ function createPrettierEncoder(
   };
 }
 
-function GenericSyntaxExplorer({
+export function GenericSyntaxExplorer({
   syntax,
   normalizer,
 }: {
