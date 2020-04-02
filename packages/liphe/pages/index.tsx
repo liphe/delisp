@@ -161,7 +161,9 @@ export const FunctionExplorer: React.FC<{ fn: Delisp.SFunction<Typed> }> = ({
     Delisp.isTVar(contextType) &&
     Delisp.countTypeOccurrences(contextType, selfType) === 1;
 
-  const effects = Delisp.normalizeEffect(type.effect).fields.map(f => f.label);
+  const effects = Delisp.normalizeEffect(type.effect).fields.map(
+    (f) => f.label
+  );
 
   return (
     <div className={styles.function}>
@@ -169,29 +171,30 @@ export const FunctionExplorer: React.FC<{ fn: Delisp.SFunction<Typed> }> = ({
 
       {isUnconstraintContext ? null : (
         <div>
-          <strong>*context*</strong> -
-          <TypeExplorer type={contextType} />
+          <strong>*context*</strong> - <TypeExplorer type={contextType} />
         </div>
       )}
 
-      <strong>Arguments</strong>
-      <ul className={styles.functionArguments}>
-        {args.map((arg, argPosition) => {
-          return (
-            <li key={arg.name}>
-              <IdentifierExplorer identifier={arg} /> -
-              <TypeExplorer type={argsTypes[argPosition]} />
-            </li>
-          );
-        })}
-      </ul>
+      <div>
+        <strong>Arguments:</strong>
+        <ul className={styles.functionArguments}>
+          {args.map((arg, argPosition) => {
+            return (
+              <li key={arg.name}>
+                <IdentifierExplorer identifier={arg} /> -{" "}
+                <TypeExplorer type={argsTypes[argPosition]} />
+              </li>
+            );
+          })}
+        </ul>
+      </div>
 
       {effects.length === 0 ? null : (
         <div>
-          <strong>Effects</strong>
+          <strong>Effects:</strong>
           <ul className={styles.effects}>
             {effects.map((eff, effPosition) => {
-              return (<li key={effPosition}>{eff}</li>)
+              return <li key={effPosition}>{eff}</li>;
             })}
           </ul>
         </div>
@@ -230,7 +233,7 @@ export const IdentifierExplorer: React.FC<{
 
 export default function Homepage() {
   const [code, setCode] = useState(`
-(lambda (x) 
+(lambda (x)
   (+ *context* x)
   )`);
 
