@@ -1,7 +1,7 @@
 import { InvariantViolation } from "./invariant";
 import { generateUniqueTVar } from "./type-generate";
 import * as T from "./types";
-import { flatMap, flatten, last, unique } from "./utils";
+import { flatten, flatMap, last, unique } from "./utils";
 
 export function isTVar(t: T.Type): t is T.Var {
   return t.node.tag === "type-variable";
@@ -26,16 +26,24 @@ export function isFunctionType(t: T.Type): t is T.Application {
   return isConstantApplicationType(t, "->");
 }
 
-export function typeChildren<A>(type: T.TypeF<A[]>): A[] {
+export function countTypeOccurrences(variable: T.Var, type: T.Type): number {
+  return foldType(type, (t) => {
+    return t.node.tag === "type-variable" && t.node.name === variable.node.name
+      ? 1
+      : typeChildren(t).reduce((x, y) => x + y, 0);
+  });
+}
+
+export function typeChildren<A>(type: T.TypeF<A>): A[] {
   switch (type.node.tag) {
     case "constant":
     case "type-variable":
     case "empty-row":
       return [];
     case "application":
-      return flatten([type.node.op, ...type.node.args]);
+      return [type.node.op, ...type.node.args];
     case "row-extension":
-      return [...type.node.labelType, ...type.node.extends];
+      return [type.node.labelType, type.node.extends];
   }
 }
 
@@ -113,7 +121,7 @@ export function listTypeConstants(type: T.Type): T.Constant[] {
             },
           },
         ]
-      : typeChildren(t);
+      : flatten(typeChildren(t));
   });
 }
 
@@ -122,7 +130,7 @@ export function listTypeVariables(type: T.Type): string[] {
   return foldType(type, (t) => {
     return t.node.tag === "type-variable"
       ? [t.node.name]
-      : unique(typeChildren(t));
+      : unique(flatten(typeChildren(t)));
   });
 }
 

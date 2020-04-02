@@ -193,6 +193,11 @@ export interface Expression<I = {}>
 export interface SVariableReference<I = {}>
   extends Node<I, SVariableReferenceF> {}
 
+export interface SNumber<I = {}> extends Node<I, SNumberF> {}
+export interface SString<I = {}> extends Node<I, SStringF> {}
+export interface SBoolean<I = {}> extends Node<I, SBooleanF> {}
+export interface SNone<I = {}> extends Node<I, SNoneF> {}
+
 export interface SConditional<I = {}>
   extends Node<I, SConditionalF<Expression<I>>> {}
 

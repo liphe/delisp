@@ -1,0 +1,26 @@
+.module {
+  font-family: monospace;
+}
+
+.record ul {
+  list-style-type: none;
+  padding-left: 20px;
+}
+
+.identifier {
+  color: blue;
+}
+
+.function {
+  border: 1px solid lightGray;
+  padding: 5px;
+}
+
+.functionLabel {
+  font-size: 2em;
+  font-weight: bold;
+}
+
+.functionArguments .identifier {
+  color: purple;
+}

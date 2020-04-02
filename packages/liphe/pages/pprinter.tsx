@@ -20,7 +20,7 @@ import {
 } from "@delisp/core";
 import React, { useState } from "react";
 import styled, { css } from "styled-components";
-import { Action, State, updateCode } from "./state";
+import { PageLayout } from "../components/PageLayout";
 
 const LINE_WIDTH = 40;
 
@@ -145,7 +145,7 @@ function DefinitionExplorer({
       <pre>Definition</pre> <pre>{definition.node.variable.name}</pre>
       {type && (
         <div>
-          Type <Type type={type} normalizer={normalizer} />
+          Type <TypeExplorer type={type} normalizer={normalizer} />
         </div>
       )}
       <GenericSyntaxExplorer
@@ -215,7 +215,7 @@ function getDisplayExpressionType(
   return `${printTypeWithNormalizer(expr.info.selfType, normalizer)}`;
 }
 
-function Type({
+function TypeExplorer({
   type,
   normalizer,
 }: {
@@ -256,7 +256,7 @@ function createPrettierEncoder(
   };
 }
 
-function GenericSyntaxExplorer({
+export function GenericSyntaxExplorer({
   syntax,
   normalizer,
 }: {
@@ -270,22 +270,14 @@ function GenericSyntaxExplorer({
   );
 }
 
-export function App({
-  state,
-  dispatch,
-}: {
-  state: State;
-  dispatch: React.Dispatch<Action>;
-}) {
+export default function App() {
+  const [code, setCode] = useState("");
   return (
-    <div>
+    <PageLayout>
       <h1>Liphe</h1>
-      <Editor
-        value={state.code}
-        onChange={(e) => dispatch(updateCode(e.target.value))}
-      />
-      <AST code={state.code} />
-    </div>
+      <Editor value={code} onChange={(e) => setCode(e.target.value)} />
+      <AST code={code} />
+    </PageLayout>
   );
 }
 
