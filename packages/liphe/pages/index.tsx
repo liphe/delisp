@@ -154,16 +154,30 @@ export const FunctionExplorer: React.FC<{ fn: Delisp.SFunction<Typed> }> = ({
   }
   const type = Delisp.decomposeFunctionType(selfType);
 
+  const [, ...args] = fn.node.lambdaList.positionalArguments;
+  const [contextType, ...argsTypes] = type.args;
+
+  const isUnconstraintContext =
+    Delisp.isTVar(contextType) &&
+    Delisp.countTypeOccurrences(contextType, selfType) === 1;
+
   return (
     <div className={styles.function}>
       <span className={styles.functionLabel}>λ</span>
 
+      {isUnconstraintContext ? null : (
+        <div>
+          <strong>*context*</strong> -
+          <TypeExplorer type={contextType} />
+        </div>
+      )}
+
       <ul className={styles.functionArguments}>
-        {fn.node.lambdaList.positionalArguments.map((arg, argPosition) => {
+        {args.map((arg, argPosition) => {
           return (
             <li key={arg.name}>
               <IdentifierExplorer identifier={arg} /> -
-              <TypeExplorer type={type.args[argPosition]} />
+              <TypeExplorer type={argsTypes[argPosition]} />
             </li>
           );
         })}
@@ -206,17 +220,25 @@ export const IdentifierExplorer: React.FC<{
 };
 
 export default function Homepage() {
-  const module = Delisp.macroexpandModule(
-    Delisp.readModule(`
-(lambda (x1 x2) {:x (+ x1 x2) :y 20 :z {:name "david"} :callback (lambda () 3)})
-`)
-  );
+  const [code, setCode] = useState(`
+(lambda (x) 
+  (+ *context* x)
+  )`);
+
+  const module = Delisp.macroexpandModule(Delisp.readModule(code));
 
   const { typedModule } = Delisp.inferModule(module);
 
   return (
     <div>
       <PageLayout>
+        <textarea
+          value={code}
+          onChange={(event) => {
+            setCode(event.target.value);
+          }}
+        />
+
         <ModuleExplorer module={typedModule} />
       </PageLayout>
     </div>
