@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 import * as Delisp from "@delisp/core";
 import { Typed } from "@delisp/core";
 import { PageLayout } from "../components/PageLayout";
@@ -225,9 +225,20 @@ export default function Homepage() {
   (+ *context* x)
   )`);
 
-  const module = Delisp.macroexpandModule(Delisp.readModule(code));
+  const [module, setModule] = useState<Delisp.Module<Typed>>();
+  const [hasErrors, setHasErrors] = useState(false);
 
-  const { typedModule } = Delisp.inferModule(module);
+  useEffect(() => {
+    try {
+      const module = Delisp.macroexpandModule(Delisp.readModule(code));
+      const { typedModule } = Delisp.inferModule(module);
+      setHasErrors(false);
+      setModule(typedModule);
+    } catch (err) {
+      console.error(err);
+      setHasErrors(true);
+    }
+  }, [code]);
 
   return (
     <div>
@@ -238,8 +249,8 @@ export default function Homepage() {
             setCode(event.target.value);
           }}
         />
-
-        <ModuleExplorer module={typedModule} />
+        {hasErrors && "with errors!"}
+        {module && <ModuleExplorer module={module} />}
       </PageLayout>
     </div>
   );
