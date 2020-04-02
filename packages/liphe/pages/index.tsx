@@ -165,6 +165,10 @@ export const FunctionExplorer: React.FC<{ fn: Delisp.SFunction<Typed> }> = ({
     (f) => f.label
   );
 
+  const outputTypes = Delisp.normalizeOutput(type.output).fields.map(
+    (f) => f.labelType
+  );
+
   return (
     <div className={styles.function}>
       <span className={styles.functionLabel}>λ</span>
@@ -202,7 +206,15 @@ export const FunctionExplorer: React.FC<{ fn: Delisp.SFunction<Typed> }> = ({
 
       <div>
         <strong>Output:</strong>
-        <TypeExplorer type={type.output} />
+        <ul className={styles.outputs}>
+          {outputTypes.map((out, outPosition) => {
+            return (
+              <li key={outPosition}>
+                <TypeExplorer type={out} />
+              </li>
+            );
+          })}
+        </ul>
       </div>
 
       {fn.node.body.map((expr, i) => {

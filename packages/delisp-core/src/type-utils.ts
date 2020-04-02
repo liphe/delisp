@@ -229,6 +229,13 @@ export function normalizeEffect(effect: T.Type) {
   return normalizeRow(effect.node.args[0]);
 }
 
+export function normalizeOutput(output: T.Type) {
+  if (!isConstantApplicationType(output, "values")) {
+    throw new InvariantViolation(`Output type must be a (values ...) type.`);
+  }
+  return normalizeRow(output.node.args[0]);
+}
+
 /** Return the number of input arguments of a function type. */
 export function typeArity(type: T.Application): number {
   return decomposeFunctionType(type).args.length;
