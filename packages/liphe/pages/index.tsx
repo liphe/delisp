@@ -4,7 +4,7 @@ import * as Delisp from "@delisp/core";
 import { Typed } from "@delisp/core";
 import { PageLayout } from "../components/PageLayout";
 
-import { GenericSyntaxExplorer } from "./pprinter";
+import { GenericSyntaxExplorer } from "../components/PPrinter";
 
 import styles from "./index.module.css";
 
