@@ -154,6 +154,11 @@ export const EffectTypeExplorer: React.FC<{
   functionType: Delisp.Type;
 }> = ({ effectType, functionType }) => {
   const effects = Delisp.normalizeEffect(effectType);
+  const unconstraintedEffect = isUnconstraint(effects.extends, functionType);
+
+  if (effects.fields.length === 0 && unconstraintedEffect) {
+    return <p>None</p>;
+  }
 
   return (
     <ul>
@@ -195,6 +200,18 @@ export const ValuesTypeExplorer: React.FC<{
   );
 };
 
+export const FunctionInfoSection: React.FC<{ label: string }> = ({
+  label,
+  children,
+}) => {
+  return (
+    <div className={styles.functionSection}>
+      <strong>{label}</strong>
+      <div className={styles.functionSectionContent}>{children}</div>
+    </div>
+  );
+};
+
 export const FunctionExplorer: React.FC<{ fn: Delisp.SFunction<Typed> }> = ({
   fn,
 }) => {
@@ -212,38 +229,41 @@ export const FunctionExplorer: React.FC<{ fn: Delisp.SFunction<Typed> }> = ({
       <span className={styles.functionLabel}>λ</span>
 
       {isUnconstraint(contextType, selfType) ? null : (
-        <div>
-          <strong>*context*</strong> - <TypeExplorer type={contextType} />
-        </div>
+        <FunctionInfoSection label="*context*">
+          <TypeExplorer type={contextType} />
+        </FunctionInfoSection>
       )}
 
-      <div>
-        <strong>Arguments:</strong>
-        <ul className={styles.functionArguments}>
-          {args.map((arg, argPosition) => {
-            return (
-              <li key={arg.name}>
-                <IdentifierExplorer identifier={arg} /> -{" "}
-                <TypeExplorer type={argsTypes[argPosition]} />
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+      <FunctionInfoSection label="Arguments:">
+        {args.length === 0 ? (
+          "None"
+        ) : (
+          <ul className={styles.functionArguments}>
+            {args.map((arg, argPosition) => {
+              return (
+                <li key={arg.name}>
+                  <IdentifierExplorer identifier={arg} /> -{" "}
+                  <TypeExplorer type={argsTypes[argPosition]} />
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </FunctionInfoSection>
 
-      <div>
-        <strong>Effect:</strong>
-        <EffectTypeExplorer effectType={type.effect} functionType={selfType} />
-      </div>
-
-      <div>
-        <strong>Output:</strong>
+      <FunctionInfoSection label="Output:">
         <ValuesTypeExplorer type={type.output} />
-      </div>
+      </FunctionInfoSection>
 
-      {fn.node.body.map((expr, i) => {
-        return <SyntaxExplorer key={i} syntax={expr} />;
-      })}
+      <FunctionInfoSection label="Effect:">
+        <EffectTypeExplorer effectType={type.effect} functionType={selfType} />
+      </FunctionInfoSection>
+
+      <FunctionInfoSection label="Implementation:">
+        {fn.node.body.map((expr, i) => {
+          return <SyntaxExplorer key={i} syntax={expr} />;
+        })}
+      </FunctionInfoSection>
     </div>
   );
 };
