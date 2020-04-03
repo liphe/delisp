@@ -53,6 +53,7 @@ export {
 } from "./type-printer";
 export * from "./type-utils";
 export { Type } from "./types";
+export * as T from "./types";
 export { generateTSModuleDeclaration } from "./typescript-generation";
 export {
   macroexpandModule,

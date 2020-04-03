@@ -159,14 +159,14 @@ export const EffectTypeExplorer: React.FC<{
     <ul>
       {effects.fields.map((eff, effPosition) => {
         return (
-          <li className={styles.effectItem} key={effPosition}>
-            {eff.label}
+          <li className={styles.effect} key={effPosition}>
+            <span className={styles.typeVariable}>{eff.label}</span>
           </li>
         );
       })}
       {Delisp.isEmtpyRow(effects.extends) ||
       isUnconstraint(effects.extends, contextType) ? null : (
-        <li>
+        <li className={styles.effect}>
           ... <TypeExplorer type={effects.extends} />
         </li>
       )}
@@ -250,12 +250,23 @@ export const FunctionExplorer: React.FC<{ fn: Delisp.SFunction<Typed> }> = ({
 };
 
 export const TypeExplorer: React.FC<{ type: Delisp.Type }> = ({ type }) => {
+  if (Delisp.isTVar(type)) {
+    return <TypeVariableExplorer tvar={type} />;
+  } else {
+    const normalizer = useContext(Context);
+    return (
+      <span className="type">
+        {Delisp.printTypeWithNormalizer(type, normalizer)}
+      </span>
+    );
+  }
+};
+
+export const TypeVariableExplorer: React.FC<{ tvar: Delisp.T.Var }> = ({
+  tvar,
+}) => {
   const normalizer = useContext(Context);
-  return (
-    <span className="type">
-      {Delisp.printTypeWithNormalizer(type, normalizer)}
-    </span>
-  );
+  return <span className={styles.typeVariable}>{normalizer(tvar)}</span>;
 };
 
 export const IdentifierExplorer: React.FC<{

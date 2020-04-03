@@ -24,3 +24,7 @@
 .functionArguments .identifier {
   color: purple;
 }
+
+.effect .typeVariable {
+  color: orange;
+}
