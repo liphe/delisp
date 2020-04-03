@@ -145,6 +145,57 @@ export const RecordExplorer: React.FC<{
   );
 };
 
+function isUnconstraint(t: Delisp.Type, container: Delisp.Type) {
+  return Delisp.isTVar(t) && Delisp.countTypeOccurrences(t, container) <= 1;
+}
+
+export const EffectTypeExplorer: React.FC<{
+  type: Delisp.Type;
+  contextType: Delisp.Type;
+}> = ({ type, contextType }) => {
+  const effects = Delisp.normalizeEffect(type);
+
+  return (
+    <ul>
+      {effects.fields.map((eff, effPosition) => {
+        return (
+          <li className={styles.effectItem} key={effPosition}>
+            {eff.label}
+          </li>
+        );
+      })}
+      {Delisp.isEmtpyRow(effects.extends) ||
+      isUnconstraint(effects.extends, contextType) ? null : (
+        <li>
+          ... <TypeExplorer type={effects.extends} />
+        </li>
+      )}
+    </ul>
+  );
+};
+
+export const ValuesTypeExplorer: React.FC<{
+  type: Delisp.Type;
+}> = ({ type }) => {
+  const row = Delisp.normalizeOutput(type);
+  return (
+    <ul>
+      {row.fields.map((value, valuePosition) => {
+        return (
+          <li className={styles.effectItem} key={valuePosition}>
+            <TypeExplorer type={value.labelType}></TypeExplorer>
+          </li>
+        );
+      })}
+      {Delisp.isEmtpyRow(row.extends) ? null : (
+        <li>
+          ... <TypeExplorer type={row.extends} />
+        </li>
+      )}
+    </ul>
+  );
+};
+
 export const FunctionExplorer: React.FC<{ fn: Delisp.SFunction<Typed> }> = ({
   fn,
 }) => {
@@ -157,23 +208,11 @@ export const FunctionExplorer: React.FC<{ fn: Delisp.SFunction<Typed> }> = ({
   const [, ...args] = fn.node.lambdaList.positionalArguments;
   const [contextType, ...argsTypes] = type.args;
 
-  const isUnconstraintContext =
-    Delisp.isTVar(contextType) &&
-    Delisp.countTypeOccurrences(contextType, selfType) === 1;
-
-  const effects = Delisp.normalizeEffect(type.effect).fields.map(
-    (f) => f.label
-  );
-
-  const outputTypes = Delisp.normalizeOutput(type.output).fields.map(
-    (f) => f.labelType
-  );
-
   return (
     <div className={styles.function}>
       <span className={styles.functionLabel}>λ</span>
 
-      {isUnconstraintContext ? null : (
+      {isUnconstraint(contextType, selfType) ? null : (
         <div>
           <strong>*context*</strong> - <TypeExplorer type={contextType} />
         </div>
@@ -193,28 +232,14 @@ export const FunctionExplorer: React.FC<{ fn: Delisp.SFunction<Typed> }> = ({
         </ul>
       </div>
 
-      {effects.length === 0 ? null : (
-        <div>
-          <strong>Effects:</strong>
-          <ul className={styles.effects}>
-            {effects.map((eff, effPosition) => {
-              return <li key={effPosition}>{eff}</li>;
-            })}
-          </ul>
-        </div>
-      )}
+      <div>
+        <strong>Effect:</strong>
+        <EffectTypeExplorer type={type.effect} contextType={selfType} />
+      </div>
 
       <div>
         <strong>Output:</strong>
-        <ul className={styles.outputs}>
-          {outputTypes.map((out, outPosition) => {
-            return (
-              <li key={outPosition}>
-                <TypeExplorer type={out} />
-              </li>
-            );
-          })}
-        </ul>
+        <ValuesTypeExplorer type={type.output} />
       </div>
 
       {fn.node.body.map((expr, i) => {
@@ -245,8 +270,9 @@ export const IdentifierExplorer: React.FC<{
 
 export default function Homepage() {
   const [code, setCode] = useState(`
-(lambda (x)
-  (+ *context* x)
+(lambda (f x)
+  (print x)
+  (f)
   )`);
 
   const [module, setModule] = useState<Delisp.Module<Typed>>();

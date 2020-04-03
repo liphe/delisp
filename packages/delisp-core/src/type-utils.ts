@@ -3,6 +3,10 @@ import { generateUniqueTVar } from "./type-generate";
 import * as T from "./types";
 import { flatten, flatMap, last, unique } from "./utils";
 
+export function isEmtpyRow(t: T.Type): boolean {
+  return t.node.tag === "empty-row";
+}
+
 export function isTVar(t: T.Type): t is T.Var {
   return t.node.tag === "type-variable";
 }
