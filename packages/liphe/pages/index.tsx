@@ -150,10 +150,10 @@ function isUnconstraint(t: Delisp.Type, container: Delisp.Type) {
 }
 
 export const EffectTypeExplorer: React.FC<{
-  type: Delisp.Type;
-  contextType: Delisp.Type;
-}> = ({ type, contextType }) => {
-  const effects = Delisp.normalizeEffect(type);
+  effectType: Delisp.Type;
+  functionType: Delisp.Type;
+}> = ({ effectType, functionType }) => {
+  const effects = Delisp.normalizeEffect(effectType);
 
   return (
     <ul>
@@ -164,8 +164,7 @@ export const EffectTypeExplorer: React.FC<{
           </li>
         );
       })}
-      {Delisp.isEmtpyRow(effects.extends) ||
-      isUnconstraint(effects.extends, contextType) ? null : (
+      {isUnconstraint(effects.extends, functionType) ? null : (
         <li className={styles.effect}>
           ... <TypeExplorer type={effects.extends} />
         </li>
@@ -234,7 +233,7 @@ export const FunctionExplorer: React.FC<{ fn: Delisp.SFunction<Typed> }> = ({
 
       <div>
         <strong>Effect:</strong>
-        <EffectTypeExplorer type={type.effect} contextType={selfType} />
+        <EffectTypeExplorer effectType={type.effect} functionType={selfType} />
       </div>
 
       <div>

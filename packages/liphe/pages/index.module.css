@@ -25,6 +25,11 @@
   color: purple;
 }
 
+.typeVariable {
+  color: purple;
+  font-weight: bold;
+}
+
 .effect .typeVariable {
   color: orange;
 }
