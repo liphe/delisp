@@ -30,6 +30,21 @@ export function isFunctionType(t: T.Type): t is T.Application {
   return isConstantApplicationType(t, "->");
 }
 
+/// Check if a type variable does not constriant multiple parts of a
+/// type. For instance
+///
+/// (-> _ a _ a)
+///
+/// a is constraining argument and return value to be equal. But in
+///
+/// (-> a _ _ _)
+///
+/// the context can be anything and it won't affect other parts.
+///
+export function isUnconstraint(t: T.Type, container: T.Type) {
+  return isTVar(t) && countTypeOccurrences(t, container) <= 1;
+}
+
 export function countTypeOccurrences(variable: T.Var, type: T.Type): number {
   return foldType(type, (t) => {
     return t.node.tag === "type-variable" && t.node.name === variable.node.name
