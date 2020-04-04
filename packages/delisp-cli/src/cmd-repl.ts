@@ -1,31 +1,4 @@
-import {
-  addToModule,
-  collectConvertErrors,
-  createSandbox,
-  decomposeFunctionType,
-  defaultEnvironment,
-  evaluate,
-  evaluateModule,
-  ExternalEnvironment,
-  inferModule,
-  inferSyntaxInModule,
-  isDefinition,
-  isExpression,
-  isFunctionType,
-  macroexpandRootExpression,
-  macroexpandSyntax,
-  mergeExternalEnvironments,
-  moduleDefinitionByName,
-  moduleEnvironment,
-  printType,
-  readSyntax,
-  removeModuleDefinition,
-  removeModuleTypeDefinition,
-  resolveModuleDependencies,
-  Type,
-  wrapInLambda,
-} from "@delisp/core";
-import { Module, Syntax } from "@delisp/core/src/syntax";
+import * as Delisp from "@delisp/core";
 import { Pair, TaggedValue } from "@delisp/runtime";
 import readline from "readline";
 import { CommandModule } from "yargs";
@@ -38,8 +11,8 @@ import { newModule } from "./module";
 let rl: readline.Interface;
 const PROMPT = "λ ";
 
-let currentModule: Module;
-const sandbox = createSandbox(require);
+let currentModule: Delisp.Module;
+const sandbox = Delisp.createSandbox(require);
 
 function getOutputFile(name: string): string {
   return getOutputFiles(name).jsFile;
@@ -47,11 +20,11 @@ function getOutputFile(name: string): string {
 
 async function prepareModule() {
   currentModule = await newModule();
-  const { typedModule } = inferModule(currentModule, {
+  const { typedModule } = Delisp.inferModule(currentModule, {
     variables: {},
     types: {},
   });
-  evaluateModule(typedModule, sandbox, {
+  Delisp.evaluateModule(typedModule, sandbox, {
     getOutputFile,
   });
 }
@@ -77,18 +50,20 @@ async function handleLine(line: string) {
 
     let syntax;
     try {
-      const inputSyntax = readSyntax(inputBuffer);
-      const errors = collectConvertErrors(inputSyntax);
+      const inputSyntax = Delisp.readSyntax(inputBuffer);
+      const errors = Delisp.collectConvertErrors(inputSyntax);
       if (errors.length > 0) {
         errors.forEach((err) => {
           console.error(theme.error(`ERROR: ${err}\n`));
         });
       }
 
-      const macroexpandedSyntax = macroexpandSyntax(inputSyntax);
+      const macroexpandedSyntax = Delisp.macroexpandSyntax(inputSyntax);
 
-      if (isExpression(macroexpandedSyntax)) {
-        syntax = macroexpandRootExpression(wrapInLambda(macroexpandedSyntax));
+      if (Delisp.isExpression(macroexpandedSyntax)) {
+        syntax = Delisp.macroexpandRootExpression(
+          Delisp.wrapInLambda(macroexpandedSyntax)
+        );
       } else {
         syntax = macroexpandedSyntax;
       }
@@ -112,12 +87,12 @@ async function handleLine(line: string) {
         const wrappedLambda: any = evalResult.value;
         const value = await wrappedLambda((x: unknown) => x, {});
 
-        if (!isFunctionType(evalResult.type)) {
+        if (!Delisp.isFunctionType(evalResult.type)) {
           throw new Error(
             `I am pretty sure I evaluated a lambda, but the type is not a function type?`
           );
         }
-        const { output } = decomposeFunctionType(evalResult.type);
+        const { output } = Delisp.decomposeFunctionType(evalResult.type);
         console.log(printWithTheType(output, printColoredValue(value)));
         return;
       }
@@ -140,7 +115,7 @@ async function completer(
   input: string,
   callback: (err: null, result: [string[], string]) => void
 ) {
-  const defs = currentModule.body.filter(isDefinition);
+  const defs = currentModule.body.filter(Delisp.isDefinition);
   const internalCompletions = defs.map((d) => d.node.variable.name);
 
   const externalEnv = await moduleExternalEnvironment(currentModule);
@@ -154,20 +129,20 @@ async function completer(
 }
 
 // Update `currentModule` with the syntax as introduced in the REPL.
-function updateModule(syntax: Syntax) {
-  if (isDefinition(syntax)) {
-    currentModule = removeModuleDefinition(
+function updateModule(syntax: Delisp.Syntax) {
+  if (Delisp.isDefinition(syntax)) {
+    currentModule = Delisp.removeModuleDefinition(
       currentModule,
       syntax.node.variable.name
     );
-    currentModule = addToModule(currentModule, syntax);
+    currentModule = Delisp.addToModule(currentModule, syntax);
   } else if (syntax.node.tag === "type-alias") {
-    currentModule = removeModuleTypeDefinition(
+    currentModule = Delisp.removeModuleTypeDefinition(
       currentModule,
       syntax.node.alias.name
     );
-    currentModule = addToModule(currentModule, syntax);
-  } else if (isExpression(syntax)) {
+    currentModule = Delisp.addToModule(currentModule, syntax);
+  } else if (Delisp.isExpression(syntax)) {
     // An expression won't affect the module so we don't need to
     // update it.
   } else {
@@ -178,35 +153,35 @@ function updateModule(syntax: Syntax) {
 type DelispEvalResult =
   | {
       tag: "expression";
-      type: Type;
+      type: Delisp.Type;
       value: unknown;
     }
   | {
       tag: "definition";
       name: string;
-      type: Type;
+      type: Delisp.Type;
     }
   | {
       tag: "other";
     };
 
 async function moduleExternalEnvironment(
-  m: Module
-): Promise<ExternalEnvironment> {
-  const externalEnvironment = await resolveModuleDependencies(
+  m: Delisp.Module
+): Promise<Delisp.ExternalEnvironment> {
+  const externalEnvironment = await Delisp.resolveModuleDependencies(
     m,
     resolveDependency
   );
 
-  const environment = mergeExternalEnvironments(
-    defaultEnvironment,
+  const environment = Delisp.mergeExternalEnvironments(
+    Delisp.defaultEnvironment,
     externalEnvironment
   );
 
   return environment;
 }
 
-const delispEval = async (syntax: Syntax): Promise<DelispEvalResult> => {
+const delispEval = async (syntax: Delisp.Syntax): Promise<DelispEvalResult> => {
   updateModule(syntax);
 
   //
@@ -214,8 +189,8 @@ const delispEval = async (syntax: Syntax): Promise<DelispEvalResult> => {
   //
 
   const environment = await moduleExternalEnvironment(currentModule);
-  const moduleInference = inferModule(currentModule, environment);
-  const syntaxInference = inferSyntaxInModule(
+  const moduleInference = Delisp.inferModule(currentModule, environment);
+  const syntaxInference = Delisp.inferSyntaxInModule(
     syntax,
     moduleInference.typedModule,
     environment
@@ -224,7 +199,7 @@ const delispEval = async (syntax: Syntax): Promise<DelispEvalResult> => {
   const { typedModule } = moduleInference;
   const { typedSyntax } = syntaxInference;
 
-  const env = moduleEnvironment(currentModule, {
+  const env = Delisp.moduleEnvironment(currentModule, {
     definitionContainer: "env",
     getOutputFile,
   });
@@ -234,7 +209,7 @@ const delispEval = async (syntax: Syntax): Promise<DelispEvalResult> => {
       theme.warn(
         `Unknown variable ${
           u.variable.node.name
-        } expected with type ${printType(u.variable.info.resultingType)}`
+        } expected with type ${Delisp.printType(u.variable.info.resultingType)}`
       )
     );
   });
@@ -242,18 +217,19 @@ const delispEval = async (syntax: Syntax): Promise<DelispEvalResult> => {
   //
   // Compilation & Evaluation
   //
-  const value = await evaluate(typedSyntax, env, sandbox);
+  const value = await Delisp.evaluate(typedSyntax, env, sandbox);
 
-  if (isExpression(typedSyntax)) {
+  if (Delisp.isExpression(typedSyntax)) {
     return {
       tag: "expression",
       value,
       type: typedSyntax && typedSyntax.info.resultingType,
     };
-  } else if (isDefinition(syntax)) {
+  } else if (Delisp.isDefinition(syntax)) {
     const name = syntax.node.variable.name;
     const definition =
-      typedModule && (moduleDefinitionByName(name, typedModule) || undefined);
+      typedModule &&
+      (Delisp.moduleDefinitionByName(name, typedModule) || undefined);
 
     if (!definition) {
       throw new Error(`Can't find the definition you just defined?`);
@@ -304,10 +280,10 @@ function printColoredValue(value: any): string {
     : theme.value(printedValue);
 }
 
-function printWithTheType(type: Type | undefined, x: string): string {
+function printWithTheType(type: Delisp.Type | undefined, x: string): string {
   if (type) {
     // a definition
-    const typ = printType(type);
+    const typ = Delisp.printType(type);
     const sep = typ.length > 10 ? "\n  " : " ";
     return dimBrackets(`(${theme.dim("the")} ${theme.type(typ)}${sep}${x})`);
   } else {

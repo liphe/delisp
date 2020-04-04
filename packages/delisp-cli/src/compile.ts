@@ -1,16 +1,4 @@
-import {
-  compileModuleToString,
-  decodeExternalEnvironment,
-  defaultEnvironment,
-  encodeExternalEnvironment,
-  generateTSModuleDeclaration,
-  getModuleExternalEnvironment,
-  inferModule,
-  mergeExternalEnvironments,
-  printHighlightedExpr,
-  printType,
-  resolveModuleDependencies,
-} from "@delisp/core";
+import * as Delisp from "@delisp/core";
 import makeDebug from "debug";
 import mkdirp from "mkdirp";
 import path from "path";
@@ -24,7 +12,7 @@ const debug = makeDebug("delisp:cli");
 export async function resolveDependency(name: string) {
   const { infoFile } = await getOutputFiles(name);
   const content = await fs.readJSONFile(infoFile);
-  return decodeExternalEnvironment(content);
+  return Delisp.decodeExternalEnvironment(content);
 }
 
 export async function compileFile(
@@ -40,26 +28,26 @@ export async function compileFile(
 
   // Type check module
 
-  const externalEnvironment = await resolveModuleDependencies(
+  const externalEnvironment = await Delisp.resolveModuleDependencies(
     module,
     resolveDependency
   );
 
-  const environment = mergeExternalEnvironments(
-    defaultEnvironment,
+  const environment = Delisp.mergeExternalEnvironments(
+    Delisp.defaultEnvironment,
     externalEnvironment
   );
 
   debug(`Type checking ${file}`);
 
-  const inferResult = inferModule(module, environment);
+  const inferResult = Delisp.inferModule(module, environment);
   const typedModule = inferResult.typedModule;
 
   // Check for unknown references
   if (inferResult.unknowns.length > 0) {
     const unknowns = inferResult.unknowns.map((u) =>
-      printHighlightedExpr(
-        `Unknown variable ${u.variable.node.name} of type ${printType(
+      Delisp.printHighlightedExpr(
+        `Unknown variable ${u.variable.node.name} of type ${Delisp.printType(
           u.variable.info.resultingType
         )}`,
         u.variable.location
@@ -72,7 +60,7 @@ export async function compileFile(
 
   debug(`Compiling ${file}`);
 
-  const code = compileModuleToString(typedModule, {
+  const code = Delisp.compileModuleToString(typedModule, {
     esModule: options.moduleFormat === "esm",
     getOutputFile(file: string): string {
       return getOutputFiles(file).jsFile;
@@ -80,13 +68,13 @@ export async function compileFile(
   });
   await fs.writeFile(jsFile, code);
 
-  const moduleInt = encodeExternalEnvironment(
-    getModuleExternalEnvironment(typedModule)
+  const moduleInt = Delisp.encodeExternalEnvironment(
+    Delisp.getModuleExternalEnvironment(typedModule)
   );
   await fs.writeJSONFile(infoFile, moduleInt);
 
   if (options.tsDeclaration) {
-    const content = generateTSModuleDeclaration(typedModule);
+    const content = Delisp.generateTSModuleDeclaration(typedModule);
     await fs.writeFile(dtsFile, content);
   }
 
