@@ -2,9 +2,9 @@ import { moduleEnvironment } from "../src/compiler";
 import { createSandbox, evaluate } from "../src/eval";
 import { readSyntax } from "../src/index";
 import { macroexpandSyntax } from "../src/index";
+import { inferExpressionInModule } from "../src/infer";
 import { createModule } from "../src/module";
 import * as S from "../src/syntax";
-import { inferExpressionInModule } from "../src/infer";
 
 function evaluateString(str: string): unknown {
   const env = moduleEnvironment(createModule(), {

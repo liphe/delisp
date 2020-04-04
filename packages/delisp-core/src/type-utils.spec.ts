@@ -1,11 +1,11 @@
-import * as T from "./types";
 import { readType } from "./type-convert";
 import { printType } from "./type-printer";
 import {
-  openFunctionEffect,
   closeFunctionEffect,
   instantiateTypeSchemaForVariable,
+  openFunctionEffect,
 } from "./type-utils";
+import * as T from "./types";
 
 describe("Type utils", () => {
   describe("openFunctionEffect", () => {

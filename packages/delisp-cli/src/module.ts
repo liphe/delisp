@@ -1,11 +1,12 @@
 import {
   addToModule,
   createModule,
+  macroexpandModule,
   Module,
   readModule,
   readSyntax,
-  macroexpandModule,
 } from "@delisp/core";
+
 import { CompileOptions } from "./compile-options";
 import { generatePreludeImports } from "./prelude";
 

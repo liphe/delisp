@@ -12,8 +12,8 @@ import {
   isDefinition,
   isExpression,
   isFunctionType,
-  macroexpandSyntax,
   macroexpandRootExpression,
+  macroexpandSyntax,
   mergeExternalEnvironments,
   moduleDefinitionByName,
   moduleEnvironment,
@@ -29,6 +29,7 @@ import { Module, Syntax } from "@delisp/core/src/syntax";
 import { Pair, TaggedValue } from "@delisp/runtime";
 import readline from "readline";
 import { CommandModule } from "yargs";
+
 import * as theme from "./color-theme";
 import { resolveDependency } from "./compile";
 import { getOutputFiles } from "./compile-output";

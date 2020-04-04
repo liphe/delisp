@@ -1,10 +1,9 @@
+import * as Delisp from "@delisp/core";
+import { Typed } from "@delisp/core";
 import * as React from "react";
 import { useState } from "react";
 
-import * as Delisp from "@delisp/core";
-import { Typed } from "@delisp/core";
 import { GenericSyntaxExplorer } from "../PPrinter";
-
 import { Context } from "./common";
 import { SyntaxExplorer } from "./Syntax";
 

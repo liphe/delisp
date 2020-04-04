@@ -1,4 +1,5 @@
 import yargs from "yargs";
+
 import { cmdCompile } from "./cmd-compile";
 import { cmdFormat } from "./cmd-format";
 import { cmdInferType } from "./cmd-infer-type";

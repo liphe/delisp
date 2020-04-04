@@ -1,16 +1,15 @@
-import * as React from "react";
 import * as Delisp from "@delisp/core";
 import { Typed } from "@delisp/core";
+import * as React from "react";
+
 import { GenericSyntaxExplorer } from "../PPrinter";
-
-import { useTypeNormalizer } from "./common";
-
-import { NumberExplorer } from "./Number";
-import { StringExplorer } from "./String";
-import { NoneExplorer } from "./None";
 import { BooleanExplorer } from "./Boolean";
+import { useTypeNormalizer } from "./common";
 import { FunctionExplorer } from "./Function";
+import { NoneExplorer } from "./None";
+import { NumberExplorer } from "./Number";
 import { RecordExplorer } from "./Record";
+import { StringExplorer } from "./String";
 
 export const ExpressionExplorer: React.FC<{
   expression: Delisp.Expression<Typed>;

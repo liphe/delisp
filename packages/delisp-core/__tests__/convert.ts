@@ -1,5 +1,5 @@
-import { collectConvertErrors, convert } from "../src/syntax-convert";
 import { readFromString } from "../src/reader";
+import { collectConvertErrors, convert } from "../src/syntax-convert";
 
 describe("Convert", () => {
   describe("Error messages", () => {

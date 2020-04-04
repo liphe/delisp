@@ -4,17 +4,17 @@ import { pprint } from "./printer";
 import * as S from "./syntax";
 import { Typed } from "./syntax-typed";
 import { printType } from "./type-printer";
+import { unify } from "./type-unify";
 import {
   applySubstitution,
+  closeFunctionEffect,
   generalize,
   instantiate,
   listTypeVariables,
-  Substitution,
   openFunctionEffect,
-  closeFunctionEffect,
+  Substitution,
 } from "./type-utils";
 import * as T from "./types";
-import { unify } from "./type-unify";
 import { difference, flatMap, intersection, union } from "./utils";
 
 const DEBUG = false;

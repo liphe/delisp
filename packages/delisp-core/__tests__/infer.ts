@@ -1,15 +1,15 @@
-import { readType } from "../src/type-convert";
 import {
   defaultEnvironment,
   inferExpressionInModule,
   inferModule,
 } from "../src/infer";
 import { ExternalEnvironment } from "../src/infer-environment";
-import * as S from "../src/syntax";
-import { Typed } from "../src/syntax-typed";
-import { createModule, readModule } from "../src/module";
-import { WithErrors, readSyntax } from "../src/syntax-convert";
 import { macroexpandExpression, macroexpandModule } from "../src/macroexpand";
+import { createModule, readModule } from "../src/module";
+import * as S from "../src/syntax";
+import { readSyntax, WithErrors } from "../src/syntax-convert";
+import { Typed } from "../src/syntax-typed";
+import { readType } from "../src/type-convert";
 import { printType } from "../src/type-printer";
 
 function normalizeType(t: string): string {

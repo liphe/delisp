@@ -1,6 +1,6 @@
+import * as Delisp from "@delisp/core";
 import * as React from "react";
 import { useContext } from "react";
-import * as Delisp from "@delisp/core";
 
 export const Context = React.createContext<
   ReturnType<typeof Delisp.createVariableNormalizer>

@@ -1,8 +1,8 @@
-import { assertNever } from "./invariant";
-import * as S from "./syntax";
 import { Location } from "./input";
+import { assertNever } from "./invariant";
 import { ASExprSymbol } from "./sexpr";
 import { sexpr } from "./sexpr-tag";
+import * as S from "./syntax";
 import { convertExpr } from "./syntax-convert";
 import { mapExpr } from "./syntax-utils";
 

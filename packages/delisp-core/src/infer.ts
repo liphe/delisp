@@ -16,22 +16,23 @@ import {
 import { printHighlightedExpr } from "./error-report";
 import { ExternalEnvironment } from "./infer-environment";
 import {
-  constEqual,
   constEffect,
+  constEqual,
   constExplicitInstance,
   constImplicitInstance,
-  constSelfType,
   constResultingType,
+  constSelfType,
   solve,
   TConstraint,
 } from "./infer-solver";
 import {
-  applyTypeSubstitutionToVariable,
   applySubstitutionToSyntax,
+  applyTypeSubstitutionToVariable,
 } from "./infer-subst";
 import { assertNever, InvariantViolation } from "./invariant";
 import { moduleExportedDefinitions } from "./module";
 import primitives from "./primitives";
+import { stronglyConnectedComponents } from "./SCC";
 import * as S from "./syntax";
 import { Typed } from "./syntax-typed";
 import { generateUniqueTVar } from "./type-generate";
@@ -43,12 +44,11 @@ import {
 } from "./type-utils";
 import * as T from "./types";
 import { Type } from "./types";
-import { stronglyConnectedComponents } from "./SCC";
 import {
-  isDefined,
   difference,
   flatMap,
   fromEntries,
+  isDefined,
   mapObject,
   maybeMap,
 } from "./utils";

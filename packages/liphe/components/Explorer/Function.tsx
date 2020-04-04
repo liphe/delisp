@@ -3,10 +3,9 @@ import { Typed } from "@delisp/core";
 import * as React from "react";
 
 import styles from "./Function.module.css";
-
+import { IdentifierExplorer } from "./Identifier";
 import { SyntaxExplorer } from "./Syntax";
 import { TypeExplorer } from "./Type";
-import { IdentifierExplorer } from "./Identifier";
 
 export const EffectTypeExplorer: React.FC<{
   effectType: Delisp.Type;

@@ -1,4 +1,4 @@
-import { normalizeRow, decomposeFunctionType } from "./type-utils";
+import { decomposeFunctionType, normalizeRow } from "./type-utils";
 import * as T from "./types";
 import { range } from "./utils";
 

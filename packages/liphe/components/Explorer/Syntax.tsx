@@ -1,8 +1,9 @@
-import * as React from "react";
 import * as Delisp from "@delisp/core";
 import { Typed } from "@delisp/core";
-import { useTypeNormalizer } from "./common";
+import * as React from "react";
+
 import { GenericSyntaxExplorer } from "../PPrinter";
+import { useTypeNormalizer } from "./common";
 import { ExpressionExplorer } from "./Expression";
 
 export const SyntaxExplorer: React.FC<{ syntax: Delisp.Syntax<Typed> }> = ({

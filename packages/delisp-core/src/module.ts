@@ -1,4 +1,3 @@
-import { convert, WithErrors } from "./syntax-convert";
 import { readAllFromString } from "./reader";
 import {
   isDefinition,
@@ -11,6 +10,7 @@ import {
   SImport,
   Syntax,
 } from "./syntax";
+import { convert, WithErrors } from "./syntax-convert";
 import { flatMap } from "./utils";
 
 export function createModule<I, E>(): Module<I, E> {

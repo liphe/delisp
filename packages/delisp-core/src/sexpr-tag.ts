@@ -1,5 +1,5 @@
-import { ASExpr, ASExprSymbol } from "./sexpr";
 import { readFromString } from "./reader";
+import { ASExpr, ASExprSymbol } from "./sexpr";
 
 function replaceSymbolsInASExpr(
   sexpr: ASExpr,

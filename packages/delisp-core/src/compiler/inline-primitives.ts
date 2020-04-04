@@ -1,6 +1,7 @@
 import * as JS from "estree";
-import { readType } from "../type-convert";
+
 import { InvariantViolation } from "../invariant";
+import { readType } from "../type-convert";
 import { isFunctionType, typeArity } from "../type-utils";
 import * as T from "../types";
 import {
@@ -8,8 +9,8 @@ import {
   literal,
   member,
   methodCall,
-  op1,
   op,
+  op1,
   primitiveCall,
 } from "./estree-utils";
 

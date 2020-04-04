@@ -2,6 +2,7 @@ import runtime from "@delisp/runtime";
 import createDebug from "debug";
 import * as escodegen from "escodegen";
 import * as JS from "estree";
+
 import {
   DefinitionBackend,
   dynamicDefinition,
@@ -9,14 +10,14 @@ import {
 } from "./compiler/definitions";
 import {
   arrowFunction,
+  awaitExpr,
+  comment,
   identifier,
   literal,
   member,
   methodCall,
-  awaitExpr,
   objectExpression,
   primitiveCall,
-  comment,
 } from "./compiler/estree-utils";
 import {
   findInlinePrimitive,
@@ -30,8 +31,8 @@ import { pprint } from "./printer";
 import * as S from "./syntax";
 import { Typed } from "./syntax-typed";
 import { printType } from "./type-printer";
-import { Type } from "./types";
 import { getCallEffects } from "./type-utils";
+import { Type } from "./types";
 import { flatMap, last, mapObject, maybeMap, range } from "./utils";
 
 const debug = createDebug("delisp:compiler");

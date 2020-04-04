@@ -1,7 +1,7 @@
 import { InvariantViolation } from "./invariant";
 import { generateUniqueTVar } from "./type-generate";
 import * as T from "./types";
-import { flatten, flatMap, last, unique } from "./utils";
+import { flatMap, flatten, last, unique } from "./utils";
 
 export function isEmtpyRow(t: T.Type): boolean {
   return t.node.tag === "empty-row";

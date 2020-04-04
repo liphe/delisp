@@ -1,10 +1,10 @@
-import * as React from "react";
-import { useState, useEffect } from "react";
 import * as Delisp from "@delisp/core";
 import { Typed } from "@delisp/core";
-import { PageLayout } from "../components/PageLayout";
+import * as React from "react";
+import { useEffect, useState } from "react";
 
 import { ModuleExplorer } from "../components/Explorer/Module";
+import { PageLayout } from "../components/PageLayout";
 
 export default function Homepage() {
   const [code, setCode] = useState(`

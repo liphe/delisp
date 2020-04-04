@@ -11,14 +11,14 @@ import {
   printType,
   resolveModuleDependencies,
 } from "@delisp/core";
+import makeDebug from "debug";
 import mkdirp from "mkdirp";
 import path from "path";
+
 import { CompileOptions } from "./compile-options";
 import { CompileFileResult, getOutputFiles } from "./compile-output";
 import * as fs from "./fs-helpers";
 import { loadModule } from "./module";
-
-import makeDebug from "debug";
 const debug = makeDebug("delisp:cli");
 
 export async function resolveDependency(name: string) {

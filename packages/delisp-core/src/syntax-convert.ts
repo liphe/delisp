@@ -1,10 +1,6 @@
-import {
-  checkUserDefinedTypeName,
-  convert as convertType,
-} from "./type-convert";
 import { ConvertError, parseRecord, ParseRecordResult } from "./convert-utils";
 import { printHighlightedExpr } from "./error-report";
-import { nolocation, Location } from "./input";
+import { Location, nolocation } from "./input";
 import { assertNever, InvariantViolation } from "./invariant";
 import { readFromString } from "./reader";
 import {
@@ -16,6 +12,10 @@ import {
 } from "./sexpr";
 import * as S from "./syntax";
 import { exprFChildren, foldExpr } from "./syntax-utils";
+import {
+  checkUserDefinedTypeName,
+  convert as convertType,
+} from "./type-convert";
 import { listTypeVariables } from "./type-utils";
 import { flatten, last, maybeMap } from "./utils";
 

@@ -1,15 +1,15 @@
 /* eslint-disable react/jsx-key */
 
 import {
-  inferModule,
   compileModuleToString,
+  inferModule,
   macroexpandModule,
   readModule,
 } from "@delisp/core";
 import React, { useState } from "react";
 import styled, { css } from "styled-components";
-import { PageLayout } from "../components/PageLayout";
 
+import { PageLayout } from "../components/PageLayout";
 import { ModuleExplorer } from "../components/PPrinter";
 
 interface ViewProps {

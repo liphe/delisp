@@ -1,4 +1,5 @@
 import { CommandModule } from "yargs";
+
 import { compileFile } from "./compile";
 
 export const cmdCompile: CommandModule = {

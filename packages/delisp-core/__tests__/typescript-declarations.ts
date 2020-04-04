@@ -3,6 +3,7 @@ import fs from "fs";
 import mkdirp from "mkdirp";
 import path from "path";
 import { promisify } from "util";
+
 import { compileModuleToString } from "../src/compiler";
 import { inferModule } from "../src/infer";
 import { readModule } from "../src/module";

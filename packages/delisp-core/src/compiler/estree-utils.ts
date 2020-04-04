@@ -1,10 +1,11 @@
 import * as JS from "estree";
+
+import { isBodyAsync } from "./estree-utils-async";
 import {
-  isValidJSIdentifierName,
   identifierToJS,
   identifierToJSName,
+  isValidJSIdentifierName,
 } from "./jsvariable";
-import { isBodyAsync } from "./estree-utils-async";
 
 export function literal(value: number | string | boolean | null): JS.Literal {
   return {

@@ -1,18 +1,18 @@
 /* eslint-disable react/jsx-key */
 
 import {
+  createVariableNormalizer,
   Encoder,
-  isExpression,
   Expression,
+  isExpression,
   Module,
   pprintAs,
   printTypeWithNormalizer,
-  Syntax,
   SDefinition,
+  Syntax,
   Type,
   Typed,
   TypeVariableNormalizer,
-  createVariableNormalizer,
 } from "@delisp/core";
 import React from "react";
 import styled from "styled-components";
