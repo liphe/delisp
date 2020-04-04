@@ -1,3 +1,6 @@
+repo:
+  - ./*
+
 core:
   - packages/core/**
 
@@ -5,4 +8,7 @@ liphe:
   - packages/liphe/**
 
 documentation:
-  - "**/*.md"
+  - ./**/*.md
+
+update-dependencies:
+  - ./yarn.lock
