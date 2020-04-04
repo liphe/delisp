@@ -1,0 +1,15 @@
+repo:
+  - ./*
+  - .github/**
+
+cli:
+  - packages/delisp-cli/**
+
+core:
+  - packages/delisp-core/**
+
+liphe:
+  - packages/liphe/**
+
+dependencies:
+  - yarn.lock
