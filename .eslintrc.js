@@ -9,7 +9,7 @@ module.exports = {
     ecmaVersion: 2018,
     sourceType: "module",
   },
-  plugins: ["import"],
+  plugins: ["import", "simple-import-sort"],
   settings: {
     // In theory, we could remove all the import/* settings when there
     // is a new release of the eslint-plugin-import plugin.
@@ -25,6 +25,7 @@ module.exports = {
   },
   rules: {
     "sort-keys": "off",
+    "simple-import-sort/sort": "error",
     "quote-props": "off",
     "prefer-const": [
       "error",
