@@ -1,63 +1,20 @@
-export {
-  compileModuleToString,
-  compileToString,
-  moduleEnvironment,
-} from "./compiler";
-export {
-  createImportSyntax,
-  WithErrors,
-  collectConvertErrors,
-  readSyntax,
-} from "./syntax-convert";
-export { printHighlightedExpr } from "./error-report";
-export { createSandbox, evaluate, evaluateModule } from "./eval";
-export {
-  defaultEnvironment,
-  getModuleExternalEnvironment,
-  inferExpressionInModule,
-  inferSyntaxInModule,
-  inferModule,
-} from "./infer";
-export {
-  decodeExternalEnvironment,
-  encodeExternalEnvironment,
-  ExternalEnvironment,
-  mergeExternalEnvironments,
-} from "./infer-environment";
-export {
-  addToModule,
-  createModule,
-  moduleDefinitionByName,
-  moduleDefinitions,
-  readModule,
-  removeModuleDefinition,
-  removeModuleTypeDefinition,
-} from "./module";
-export { resolveModuleDependencies } from "./module-dependencies";
-export { Encoder } from "./prettier";
-export { default as primitives } from "./primitives";
-export { pprint, pprintAs, pprintModule, pprintModuleAs } from "./printer";
+export * from "./compiler";
+export * from "./syntax-convert";
+export * from "./error-report";
+export * from "./eval";
+export * from "./infer";
+export * from "./infer-environment";
+export * from "./module";
+export * from "./module-dependencies";
+export * from "./prettier";
+export * from "./primitives";
+export * from "./printer";
 export * from "./syntax";
-export { Typed } from "./syntax-typed";
-export {
-  exprFChildren,
-  findSyntaxByOffset,
-  findSyntaxByRange,
-  wrapInLambda,
-} from "./syntax-utils";
-export {
-  printType,
-  printTypeWithNormalizer,
-  createVariableNormalizer,
-  TypeVariableNormalizer,
-} from "./type-printer";
+export * from "./syntax-typed";
+export * from "./syntax-utils";
+export * from "./type-printer";
 export * from "./type-utils";
 export { Type } from "./types";
 export * as T from "./types";
-export { generateTSModuleDeclaration } from "./typescript-generation";
-export {
-  macroexpandModule,
-  macroexpandSyntax,
-  macroexpandRootExpression,
-  macroexpandExpression,
-} from "./macroexpand";
+export * from "./typescript-generation";
+export * from "./macroexpand";
