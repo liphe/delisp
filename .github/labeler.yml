@@ -1,0 +1,8 @@
+core:
+  - packages/core/**
+
+liphe:
+  - packages/liphe/**
+
+documentation:
+  - "**/*.md"
