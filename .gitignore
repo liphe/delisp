@@ -8,3 +8,5 @@ dist-ts/
 
 # Local Netlify folder
 .netlify
+
+.log/
