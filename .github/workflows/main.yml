@@ -32,5 +32,10 @@ jobs:
     - run: yarn lint
     - run: yarn build:core
     - run: yarn bootstrap
+
     - run: yarn test --coverage
+    - uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
+
     - run: yarn build:liphe
