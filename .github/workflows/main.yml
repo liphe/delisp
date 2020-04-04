@@ -1,4 +1,4 @@
-name: CI
+name: Pipeline CI
 
 on:
   push:
@@ -18,5 +18,6 @@ jobs:
     - run: yarn install --frozen-lockfile      
     - run: yarn lint
     - run: yarn build:core
-
-      
+    - run: yarn bootstrap
+    - run: yarn test --coverage
+    - run: yarn build:liphe
