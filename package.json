@@ -5,11 +5,12 @@
   "repository": "https://github.com/liphe/delisp.git",
   "license": "MIT",
   "scripts": {
-    "build": "tsc --build packages/",
+    "build:core": "tsc --build packages/",
+    "build:liphe": "yarn workspace liphe run build",
     "bootstrap": "yarn workspace delisp run bootstrap",
     "lint": "eslint --ext .ts,.tsx .",
     "test": "yarn workspaces run test",
-    "release": "yarn build; yarn bootstrap; lerna publish"
+    "release": "yarn build:core; yarn bootstrap; lerna publish"
   },
   "devDependencies": {
     "@types/jest": "^25.1.4",

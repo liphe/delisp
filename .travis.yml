@@ -14,7 +14,9 @@ before_script:
 
 script:
   - yarn lint
-  - yarn build
+  - yarn build:core
   - yarn bootstrap
   - yarn test --coverage
   - codecov
+
+  - yarn build:liphe
