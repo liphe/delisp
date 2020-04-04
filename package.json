@@ -10,7 +10,8 @@
     "bootstrap": "yarn workspace delisp run bootstrap",
     "lint": "eslint --ext .ts,.tsx .",
     "test": "yarn workspaces run test",
-    "release": "yarn build:core; yarn bootstrap; lerna publish"
+    "release": "yarn build:core; yarn bootstrap; lerna publish",
+    "release:netlify": "netlify deploy --dir=packages/liphe/dist/"
   },
   "devDependencies": {
     "@types/jest": "^25.1.4",
@@ -25,6 +26,7 @@
     "eslint-plugin-react": "^7.19.0",
     "jest": "^25.1.0",
     "lerna": "^3.20.2",
+    "netlify-cli": "^2.40.0",
     "prettier": "2.0.2",
     "ts-jest": "^25.2.1",
     "typescript": "^3.8.3"

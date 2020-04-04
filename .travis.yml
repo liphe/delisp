@@ -20,3 +20,4 @@ script:
   - codecov
 
   - yarn build:liphe
+  - yarn release:netlify
