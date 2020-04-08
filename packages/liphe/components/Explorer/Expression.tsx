@@ -11,6 +11,7 @@ import { NoneExplorer } from "./None";
 import { NumberExplorer } from "./Number";
 import { RecordExplorer } from "./Record";
 import { StringExplorer } from "./String";
+import { VariableReferenceExplorer } from "./VariableReference";
 
 export const ExpressionExplorer: React.FC<{
   expression: Delisp.Expression<Typed>;
@@ -40,6 +41,13 @@ export const ExpressionExplorer: React.FC<{
       return (
         <FunctionCallExplorer call={{ ...expression, node: expression.node }} />
       );
+    case "variable-reference":
+      return (
+        <VariableReferenceExplorer
+          variable={{ ...expression, node: expression.node }}
+        />
+      );
+
     default: {
       const normalizer = useTypeNormalizer();
       return (
