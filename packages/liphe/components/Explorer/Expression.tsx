@@ -6,6 +6,7 @@ import { GenericSyntaxExplorer } from "../PPrinter";
 import { BooleanExplorer } from "./Boolean";
 import { useTypeNormalizer } from "./common";
 import { FunctionExplorer } from "./Function";
+import { FunctionCallExplorer } from "./FunctionCall";
 import { NoneExplorer } from "./None";
 import { NumberExplorer } from "./Number";
 import { RecordExplorer } from "./Record";
@@ -34,6 +35,10 @@ export const ExpressionExplorer: React.FC<{
     case "record":
       return (
         <RecordExplorer record={{ ...expression, node: expression.node }} />
+      );
+    case "function-call":
+      return (
+        <FunctionCallExplorer call={{ ...expression, node: expression.node }} />
       );
     default: {
       const normalizer = useTypeNormalizer();
