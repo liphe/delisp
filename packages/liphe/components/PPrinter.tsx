@@ -76,6 +76,7 @@ function DefinitionExplorer({
 }
 
 const Code = styled.pre`
+  display: inline-block;
   background-color: white;
   padding: 5px;
   font-family: courier;
