@@ -12,6 +12,7 @@ import { NumberExplorer } from "./Number";
 import { RecordExplorer } from "./Record";
 import { StringExplorer } from "./String";
 import { VariableReferenceExplorer } from "./VariableReference";
+import { ConditionalExplorer } from "./Conditional";
 
 export const ExpressionExplorer: React.FC<{
   expression: Delisp.Expression<Typed>;
@@ -45,6 +46,12 @@ export const ExpressionExplorer: React.FC<{
       return (
         <VariableReferenceExplorer
           variable={{ ...expression, node: expression.node }}
+        />
+      );
+    case "conditional":
+      return (
+        <ConditionalExplorer
+          conditional={{ ...expression, node: expression.node }}
         />
       );
 

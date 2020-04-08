@@ -1,0 +1,26 @@
+.conditional {
+  display: inline-block;
+  border-left: 1px solid #aaa;
+  border-right: 1px solid #aaa;
+  border-radius: 10%;
+  padding: 16px 8px;
+  vertical-align: top;
+}
+
+.condition {
+}
+
+.consequent,
+.alternative {
+  padding: 10px;
+  margin: 10px;
+}
+
+.consequent {
+  display: inline-block;
+  border: 1px solid #00aa00;
+}
+.alternative {
+  display: inline-block;
+  border: 1px solid #aa0000;
+}
