@@ -6,6 +6,7 @@ import styles from "./Function.module.css";
 import { IdentifierExplorer } from "./Identifier";
 import { SyntaxExplorer } from "./Syntax";
 import { TypeExplorer } from "./Type";
+import { useTypeNormalizer } from "./common";
 
 export const EffectTypeExplorer: React.FC<{
   effectType: Delisp.Type;
@@ -127,4 +128,27 @@ export const DetailedFunctionExplorer: React.FC<{
   );
 };
 
-export const FunctionExplorer = DetailedFunctionExplorer;
+const typeToString = (type: Delisp.Type) => {
+  const normalizer = useTypeNormalizer();
+  return Delisp.printTypeWithNormalizer(type, normalizer);
+};
+
+export const FunctionExplorer: React.FC<{
+  fn: Delisp.SFunction<Typed>;
+}> = ({ fn }) => {
+  return (
+    <div>
+      <span title={typeToString(fn.info.selfType)}>
+        <strong>λ</strong>
+      </span>{" "}
+      {fn.node.lambdaList.positionalArguments
+        .slice(1)
+        .map((a) => a.name)
+        .join(" ")}{" "}
+      →{" "}
+      {fn.node.body.map((expr, i) => {
+        return <SyntaxExplorer key={i} syntax={expr} />;
+      })}
+    </div>
+  );
+};
