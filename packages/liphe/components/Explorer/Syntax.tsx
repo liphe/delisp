@@ -5,6 +5,7 @@ import * as React from "react";
 import { GenericSyntaxExplorer } from "../PPrinter";
 import { useTypeNormalizer } from "./common";
 import { ExpressionExplorer } from "./Expression";
+import { DefinitionExplorer } from "./Definition";
 
 export const SyntaxExplorer: React.FC<{ syntax: Delisp.Syntax<Typed> }> = ({
   syntax,
@@ -12,6 +13,8 @@ export const SyntaxExplorer: React.FC<{ syntax: Delisp.Syntax<Typed> }> = ({
   const normalizer = useTypeNormalizer();
   const content = Delisp.isExpression(syntax) ? (
     <ExpressionExplorer expression={syntax} />
+  ) : Delisp.isDefinition(syntax) ? (
+    <DefinitionExplorer definition={syntax} />
   ) : (
     <GenericSyntaxExplorer syntax={syntax} normalizer={normalizer} />
   );

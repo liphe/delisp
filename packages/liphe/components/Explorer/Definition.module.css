@@ -1,0 +1,14 @@
+.definition {
+  border: 1px solid lightGray;
+  padding: 5px;
+}
+
+.definitionLabel {
+  font-size: 2em;
+  font-weight: bold;
+}
+
+.definitionType {
+  font-size: small;
+  margin: 10px;
+}
