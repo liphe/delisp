@@ -73,9 +73,9 @@ export const FunctionInfoSection: React.FC<{ label: string }> = ({
   );
 };
 
-export const FunctionExplorer: React.FC<{ fn: Delisp.SFunction<Typed> }> = ({
-  fn,
-}) => {
+export const DetailedFunctionExplorer: React.FC<{
+  fn: Delisp.SFunction<Typed>;
+}> = ({ fn }) => {
   const selfType = fn.info.selfType;
   if (!Delisp.isFunctionType(selfType)) {
     throw new Error("The type of a function is not a function type??");
@@ -87,8 +87,6 @@ export const FunctionExplorer: React.FC<{ fn: Delisp.SFunction<Typed> }> = ({
 
   return (
     <div className={styles.function}>
-      <span className={styles.functionLabel}>λ</span>
-
       {Delisp.isUnconstraint(contextType, selfType) ? null : (
         <FunctionInfoSection label="*context*">
           <TypeExplorer type={contextType} />
@@ -128,3 +126,5 @@ export const FunctionExplorer: React.FC<{ fn: Delisp.SFunction<Typed> }> = ({
     </div>
   );
 };
+
+export const FunctionExplorer = DetailedFunctionExplorer;
