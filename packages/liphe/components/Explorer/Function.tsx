@@ -4,9 +4,9 @@ import * as React from "react";
 
 import styles from "./Function.module.css";
 import { IdentifierExplorer } from "./Identifier";
-import { SyntaxExplorer } from "./Syntax";
+import { ExpressionExplorer } from "./Expression";
 import { TypeExplorer } from "./Type";
-import { useTypeNormalizer } from "./common";
+import { useTypeNormalizer, Cursor } from "./common";
 
 export const EffectTypeExplorer: React.FC<{
   effectType: Delisp.Type;
@@ -75,8 +75,9 @@ export const FunctionInfoSection: React.FC<{ label: string }> = ({
 };
 
 export const DetailedFunctionExplorer: React.FC<{
-  fn: Delisp.SFunction<Typed>;
-}> = ({ fn }) => {
+  cursor: Cursor<Delisp.SFunction<Typed>>;
+}> = ({ cursor }) => {
+  const fn = cursor.value;
   const selfType = fn.info.selfType;
   if (!Delisp.isFunctionType(selfType)) {
     throw new Error("The type of a function is not a function type??");
@@ -85,6 +86,8 @@ export const DetailedFunctionExplorer: React.FC<{
 
   const [, ...args] = fn.node.lambdaList.positionalArguments;
   const [contextType, ...argsTypes] = type.args;
+
+  const bodyCursor = cursor.prop("node").prop("body");
 
   return (
     <div className={styles.function}>
@@ -120,8 +123,12 @@ export const DetailedFunctionExplorer: React.FC<{
       </FunctionInfoSection>
 
       <FunctionInfoSection label="Implementation:">
-        {fn.node.body.map((expr, i) => {
-          return <SyntaxExplorer key={i} syntax={expr} />;
+        {Cursor.map(bodyCursor, (c, i) => {
+          return (
+            <div key={i}>
+              <ExpressionExplorer cursor={c} />
+            </div>
+          );
         })}
       </FunctionInfoSection>
     </div>
@@ -134,8 +141,10 @@ const typeToString = (type: Delisp.Type) => {
 };
 
 export const FunctionExplorer: React.FC<{
-  fn: Delisp.SFunction<Typed>;
-}> = ({ fn }) => {
+  cursor: Cursor<Delisp.SFunction<Typed>>;
+}> = ({ cursor }) => {
+  const fn = cursor.value;
+  const bodyCursor = cursor.prop("node").prop("body");
   return (
     <div>
       <span title={typeToString(fn.info.selfType)}>
@@ -146,9 +155,15 @@ export const FunctionExplorer: React.FC<{
         .map((a) => a.name)
         .join(" ")}{" "}
       →{" "}
-      {fn.node.body.map((expr, i) => {
-        return <SyntaxExplorer key={i} syntax={expr} />;
-      })}
+      {Cursor.map(bodyCursor, (c, i) => {
+        return (
+          i !== 0 && (
+            <div key={i}>
+              <ExpressionExplorer cursor={c} />
+            </div>
+          )
+        );
+      }).slice(1)}
     </div>
   );
 };

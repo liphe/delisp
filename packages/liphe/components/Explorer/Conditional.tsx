@@ -2,25 +2,27 @@ import * as Delisp from "@delisp/core";
 import { Typed } from "@delisp/core";
 import * as React from "react";
 import { ExpressionExplorer } from "./Expression";
+import { Cursor } from "./common";
 import styles from "./Conditional.module.css";
 
 export const ConditionalExplorer: React.FC<{
-  conditional: Delisp.SConditional<Typed>;
-}> = ({ conditional }) => {
+  cursor: Cursor<Delisp.SConditional<Typed>>;
+}> = ({ cursor }) => {
   return (
     <div className={styles.conditional}>
       <div className={styles.condition}>
-        if <ExpressionExplorer expression={conditional.node.condition} />
+        if <ExpressionExplorer cursor={cursor.prop("node").prop("condition")} />
       </div>
       <div className={styles.branches}>
         <fieldset className={styles.consequent}>
           <legend>then</legend>
-          <ExpressionExplorer expression={conditional.node.consequent} />
+          <ExpressionExplorer cursor={cursor.prop("node").prop("consequent")} />
         </fieldset>
         <fieldset className={styles.alternative}>
           <legend>else</legend>
-
-          <ExpressionExplorer expression={conditional.node.alternative} />
+          <ExpressionExplorer
+            cursor={cursor.prop("node").prop("alternative")}
+          />
         </fieldset>
       </div>
     </div>

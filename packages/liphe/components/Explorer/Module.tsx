@@ -4,32 +4,34 @@ import * as React from "react";
 import { useState } from "react";
 
 import { GenericSyntaxExplorer } from "../PPrinter";
-import { Context } from "./common";
+import { Context, Cursor } from "./common";
 import { SyntaxExplorer } from "./Syntax";
 
-export const ModuleExplorer: React.FC<{ module: Delisp.Module<Typed> }> = ({
-  module,
-}) => {
+export const ModuleExplorer: React.FC<{
+  cursor: Cursor<Delisp.Module<Typed>>;
+}> = ({ cursor }) => {
   return (
     <div>
-      {module.body.map((syntax, i) => (
-        <ToplevelSyntaxExplorer key={i} syntax={syntax} />
+      {Cursor.map(cursor.prop("body"), (c, i) => (
+        <ToplevelSyntaxExplorer key={i} cursor={c} />
       ))}
     </div>
   );
 };
 
 export const ToplevelSyntaxExplorer: React.FC<{
-  syntax: Delisp.Syntax<Typed>;
-}> = ({ syntax }) => {
+  cursor: Cursor<Delisp.Syntax<Typed>>;
+}> = ({ cursor }) => {
   const [raw, setRaw] = useState(false);
   const normalizer = Delisp.createVariableNormalizer();
 
   const content = (() => {
     if (raw) {
-      return <GenericSyntaxExplorer syntax={syntax} normalizer={normalizer} />;
+      return (
+        <GenericSyntaxExplorer syntax={cursor.value} normalizer={normalizer} />
+      );
     } else {
-      return <SyntaxExplorer syntax={syntax} />;
+      return <SyntaxExplorer cursor={cursor} />;
     }
   })();
 

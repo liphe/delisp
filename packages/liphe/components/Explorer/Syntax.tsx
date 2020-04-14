@@ -3,18 +3,19 @@ import { Typed } from "@delisp/core";
 import * as React from "react";
 
 import { GenericSyntaxExplorer } from "../PPrinter";
-import { useTypeNormalizer } from "./common";
+import { useTypeNormalizer, Cursor } from "./common";
 import { ExpressionExplorer } from "./Expression";
 import { DefinitionExplorer } from "./Definition";
 
-export const SyntaxExplorer: React.FC<{ syntax: Delisp.Syntax<Typed> }> = ({
-  syntax,
-}) => {
+export const SyntaxExplorer: React.FC<{
+  cursor: Cursor<Delisp.Syntax<Typed>>;
+}> = ({ cursor }) => {
+  const syntax = cursor.value;
   const normalizer = useTypeNormalizer();
   const content = Delisp.isExpression(syntax) ? (
-    <ExpressionExplorer expression={syntax} />
+    <ExpressionExplorer cursor={cursor as Cursor<Delisp.Expression<Typed>>} />
   ) : Delisp.isDefinition(syntax) ? (
-    <DefinitionExplorer definition={syntax} />
+    <DefinitionExplorer cursor={cursor as Cursor<Delisp.SDefinition<Typed>>} />
   ) : (
     <GenericSyntaxExplorer syntax={syntax} normalizer={normalizer} />
   );

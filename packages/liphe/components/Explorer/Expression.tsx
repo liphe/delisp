@@ -4,7 +4,7 @@ import * as React from "react";
 
 import { GenericSyntaxExplorer } from "../PPrinter";
 import { BooleanExplorer } from "./Boolean";
-import { useTypeNormalizer } from "./common";
+import { useTypeNormalizer, Cursor } from "./common";
 import { FunctionExplorer } from "./Function";
 import { FunctionCallExplorer } from "./FunctionCall";
 import { NoneExplorer } from "./None";
@@ -15,43 +15,48 @@ import { VariableReferenceExplorer } from "./VariableReference";
 import { ConditionalExplorer } from "./Conditional";
 
 export const ExpressionExplorer: React.FC<{
-  expression: Delisp.Expression<Typed>;
-}> = ({ expression }) => {
+  cursor: Cursor<Delisp.Expression<Typed>>;
+}> = ({ cursor }) => {
+  const expression = cursor.value;
   switch (expression.node.tag) {
     case "number":
       return (
-        <NumberExplorer value={{ ...expression, node: expression.node }} />
+        <NumberExplorer cursor={cursor as Cursor<Delisp.SNumber<Typed>>} />
       );
     case "string":
       return (
-        <StringExplorer value={{ ...expression, node: expression.node }} />
+        <StringExplorer cursor={cursor as Cursor<Delisp.SString<Typed>>} />
       );
     case "none":
-      return <NoneExplorer value={{ ...expression, node: expression.node }} />;
+      return <NoneExplorer cursor={cursor as Cursor<Delisp.SNone<Typed>>} />;
     case "boolean":
       return (
-        <BooleanExplorer value={{ ...expression, node: expression.node }} />
+        <BooleanExplorer cursor={cursor as Cursor<Delisp.SBoolean<Typed>>} />
       );
     case "function":
-      return <FunctionExplorer fn={{ ...expression, node: expression.node }} />;
+      return (
+        <FunctionExplorer cursor={cursor as Cursor<Delisp.SFunction<Typed>>} />
+      );
     case "record":
       return (
-        <RecordExplorer record={{ ...expression, node: expression.node }} />
+        <RecordExplorer cursor={cursor as Cursor<Delisp.SRecord<Typed>>} />
       );
     case "function-call":
       return (
-        <FunctionCallExplorer call={{ ...expression, node: expression.node }} />
+        <FunctionCallExplorer
+          cursor={cursor as Cursor<Delisp.SFunctionCall<Typed>>}
+        />
       );
     case "variable-reference":
       return (
         <VariableReferenceExplorer
-          variable={{ ...expression, node: expression.node }}
+          cursor={cursor as Cursor<Delisp.SVariableReference<Typed>>}
         />
       );
     case "conditional":
       return (
         <ConditionalExplorer
-          conditional={{ ...expression, node: expression.node }}
+          cursor={cursor as Cursor<Delisp.SConditional<Typed>>}
         />
       );
 

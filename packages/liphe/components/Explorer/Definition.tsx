@@ -4,15 +4,21 @@ import * as React from "react";
 import { DetailedFunctionExplorer } from "./Function";
 import { ExpressionExplorer } from "./Expression";
 import { TypeExplorer } from "./Type";
+import { Cursor } from "./common";
 import styles from "./Definition.module.css";
 
 const DefinitionValueExplorer: React.FC<{
-  value: Delisp.Expression<Typed>;
-}> = ({ value }) => {
+  cursor: Cursor<Delisp.Expression<Typed>>;
+}> = ({ cursor }) => {
+  const value = cursor.value;
   if (value.node.tag === "function") {
-    return <DetailedFunctionExplorer fn={{ ...value, node: value.node }} />;
+    return (
+      <DetailedFunctionExplorer
+        cursor={cursor as Cursor<Delisp.SFunction<Typed>>}
+      />
+    );
   } else {
-    return <ExpressionExplorer expression={value} />;
+    return <ExpressionExplorer cursor={cursor} />;
   }
 };
 
@@ -27,8 +33,9 @@ const DefinitionValueKindExplorer: React.FC<{
 };
 
 export const DefinitionExplorer: React.FC<{
-  definition: Delisp.SDefinition<Typed>;
-}> = ({ definition }) => {
+  cursor: Cursor<Delisp.SDefinition<Typed>>;
+}> = ({ cursor }) => {
+  const definition = cursor.value;
   return (
     <div className={styles.definition}>
       <span className={styles.definitionLabel}>
@@ -37,7 +44,7 @@ export const DefinitionExplorer: React.FC<{
       <span className={styles.definitionType}>
         <DefinitionValueKindExplorer value={definition.node.value} />
       </span>
-      <DefinitionValueExplorer value={definition.node.value} />
+      <DefinitionValueExplorer cursor={cursor.prop("node").prop("value")} />
     </div>
   );
 };
