@@ -6,5 +6,16 @@ import { Cursor } from "./common";
 export const StringExplorer: React.FC<{
   cursor: Cursor<Delisp.SString<Typed>>;
 }> = ({ cursor }) => {
-  return <span>&quot;{cursor.value.node.value}&quot;</span>;
+  const str = cursor.value.node.value;
+  const updateString = () => {
+    cursor.update({
+      ...cursor.value,
+      node: {
+        ...cursor.value.node,
+        value: window.prompt("New string:", str) || str,
+      },
+    });
+  };
+
+  return <span onClick={updateString}>&quot;{str}&quot;</span>;
 };
