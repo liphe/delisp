@@ -157,13 +157,11 @@ export const FunctionExplorer: React.FC<{
       →{" "}
       {Cursor.map(bodyCursor, (c, i) => {
         return (
-          i !== 0 && (
-            <div key={i}>
-              <ExpressionExplorer cursor={c} />
-            </div>
-          )
+          <div key={i}>
+            <ExpressionExplorer cursor={c} />
+          </div>
         );
-      }).slice(1)}
+      })}
     </div>
   );
 };
