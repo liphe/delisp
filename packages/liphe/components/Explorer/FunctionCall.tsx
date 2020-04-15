@@ -12,7 +12,7 @@ export const FunctionCallExplorer: React.FC<{
   cursor: Cursor<Delisp.SFunctionCall<Typed>>;
 }> = ({ cursor }) => {
   const call = cursor.value;
-  const argCursor = cursor.prop("node").prop("arguments");
+  const argCursor = Cursor.slice(cursor.prop("node").prop("arguments"), 1);
   return (
     <div className={styles.functionCall}>
       <div className={styles.function}>
@@ -25,13 +25,11 @@ export const FunctionCallExplorer: React.FC<{
       >
         {Cursor.map(argCursor, (c, ix) => {
           return (
-            ix > 0 && (
-              <div className={cn("argument")} key={ix}>
-                <ExpressionExplorer cursor={c} />
-              </div>
-            )
+            <div className={cn("argument")} key={ix}>
+              <ExpressionExplorer cursor={c} />
+            </div>
           );
-        }).slice(1)}
+        })}
       </div>
     </div>
   );

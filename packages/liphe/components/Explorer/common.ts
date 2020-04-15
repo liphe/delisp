@@ -41,4 +41,18 @@ export class Cursor<T> {
   ): K[] {
     return cursor.value.map((_elem, ix) => fn(Cursor.index(cursor, ix), ix));
   }
+
+  static slice<T>(
+    cursor: Cursor<T[]>,
+    begin: number,
+    end?: number
+  ): Cursor<T[]> {
+    return new Cursor(cursor.value.slice(begin, end), (newElems: T[]) =>
+      cursor.update([
+        ...cursor.value.slice(0, begin),
+        ...newElems,
+        ...(end !== undefined ? cursor.value.slice(end + 1) : []),
+      ])
+    );
+  }
 }

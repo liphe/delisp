@@ -88,10 +88,10 @@ export const DetailedFunctionExplorer: React.FC<{
   const [contextType, ...argsTypes] = type.args;
 
   const bodyCursor = cursor.prop("node").prop("body");
-  const argsCursor = cursor
-    .prop("node")
-    .prop("lambdaList")
-    .prop("positionalArguments");
+  const argsCursor = Cursor.slice(
+    cursor.prop("node").prop("lambdaList").prop("positionalArguments"),
+    1
+  );
 
   return (
     <div className={styles.function}>
@@ -108,14 +108,12 @@ export const DetailedFunctionExplorer: React.FC<{
           <ul className={styles.functionArguments}>
             {Cursor.map(argsCursor, (arg, argPosition) => {
               return (
-                argPosition > 0 && (
-                  <li key={arg.value.name}>
-                    <IdentifierExplorer cursor={arg} /> -{" "}
-                    <TypeExplorer type={argsTypes[argPosition - 1]} />
-                  </li>
-                )
+                <li key={arg.value.name}>
+                  <IdentifierExplorer cursor={arg} /> -{" "}
+                  <TypeExplorer type={argsTypes[argPosition]} />
+                </li>
               );
-            }).slice(1)}
+            })}
           </ul>
         )}
       </FunctionInfoSection>
@@ -151,24 +149,20 @@ export const FunctionExplorer: React.FC<{
 }> = ({ cursor }) => {
   const fn = cursor.value;
   const bodyCursor = cursor.prop("node").prop("body");
-  const argsCursor = cursor
-    .prop("node")
-    .prop("lambdaList")
-    .prop("positionalArguments");
+  const argsCursor = Cursor.slice(
+    cursor.prop("node").prop("lambdaList").prop("positionalArguments"),
+    1
+  );
   return (
     <div>
       <span title={typeToString(fn.info.selfType)}>
         <strong>λ</strong>
       </span>{" "}
-      {Cursor.map(
-        argsCursor,
-        (c, i) =>
-          i > 0 && (
-            <>
-              <IdentifierExplorer cursor={c} />{" "}
-            </>
-          )
-      ).slice(1)}
+      {Cursor.map(argsCursor, (c) => (
+        <>
+          <IdentifierExplorer cursor={c} />{" "}
+        </>
+      ))}
       →{" "}
       {Cursor.map(bodyCursor, (c, i) => {
         return (
