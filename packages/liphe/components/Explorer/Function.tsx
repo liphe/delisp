@@ -88,6 +88,10 @@ export const DetailedFunctionExplorer: React.FC<{
   const [contextType, ...argsTypes] = type.args;
 
   const bodyCursor = cursor.prop("node").prop("body");
+  const argsCursor = cursor
+    .prop("node")
+    .prop("lambdaList")
+    .prop("positionalArguments");
 
   return (
     <div className={styles.function}>
@@ -102,14 +106,16 @@ export const DetailedFunctionExplorer: React.FC<{
           "None"
         ) : (
           <ul className={styles.functionArguments}>
-            {args.map((arg, argPosition) => {
+            {Cursor.map(argsCursor, (arg, argPosition) => {
               return (
-                <li key={arg.name}>
-                  <IdentifierExplorer identifier={arg} /> -{" "}
-                  <TypeExplorer type={argsTypes[argPosition]} />
-                </li>
+                argPosition > 0 && (
+                  <li key={arg.value.name}>
+                    <IdentifierExplorer cursor={arg} /> -{" "}
+                    <TypeExplorer type={argsTypes[argPosition - 1]} />
+                  </li>
+                )
               );
-            })}
+            }).slice(1)}
           </ul>
         )}
       </FunctionInfoSection>
@@ -145,16 +151,24 @@ export const FunctionExplorer: React.FC<{
 }> = ({ cursor }) => {
   const fn = cursor.value;
   const bodyCursor = cursor.prop("node").prop("body");
+  const argsCursor = cursor
+    .prop("node")
+    .prop("lambdaList")
+    .prop("positionalArguments");
   return (
     <div>
       <span title={typeToString(fn.info.selfType)}>
         <strong>λ</strong>
       </span>{" "}
-      {fn.node.lambdaList.positionalArguments.slice(1).map((i) => (
-        <>
-          <IdentifierExplorer identifier={i} />{" "}
-        </>
-      ))}
+      {Cursor.map(
+        argsCursor,
+        (c, i) =>
+          i > 0 && (
+            <>
+              <IdentifierExplorer cursor={c} />{" "}
+            </>
+          )
+      ).slice(1)}
       →{" "}
       {Cursor.map(bodyCursor, (c, i) => {
         return (

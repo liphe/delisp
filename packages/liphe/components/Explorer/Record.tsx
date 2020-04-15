@@ -18,7 +18,7 @@ export const RecordExplorer: React.FC<{
         {Cursor.map(fieldCursor, (c) => {
           return (
             <li key={c.value.label.name}>
-              <IdentifierExplorer identifier={c.value.label} />{" "}
+              <IdentifierExplorer cursor={c.prop("label")} />{" "}
               <ExpressionExplorer cursor={c.prop("value")} />
             </li>
           );
