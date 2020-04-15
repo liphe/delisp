@@ -150,10 +150,11 @@ export const FunctionExplorer: React.FC<{
       <span title={typeToString(fn.info.selfType)}>
         <strong>λ</strong>
       </span>{" "}
-      {fn.node.lambdaList.positionalArguments
-        .slice(1)
-        .map((a) => a.name)
-        .join(" ")}{" "}
+      {fn.node.lambdaList.positionalArguments.slice(1).map((i) => (
+        <>
+          <IdentifierExplorer identifier={i} />{" "}
+        </>
+      ))}
       →{" "}
       {Cursor.map(bodyCursor, (c, i) => {
         return (

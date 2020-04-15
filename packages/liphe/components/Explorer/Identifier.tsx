@@ -6,7 +6,7 @@ export const IdentifierExplorer: React.FC<{
 }> = ({ identifier }) => {
   return (
     <code>
-      <span>{identifier.name}</span>
+      <span style={{ color: "#0000aa" }}>{identifier.name}</span>
     </code>
   );
 };
