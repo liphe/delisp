@@ -1,9 +1,10 @@
 import * as Delisp from "@delisp/core";
 import { Typed } from "@delisp/core";
 import * as React from "react";
-import { ExpressionExplorer } from "./Expression";
+
 import { Cursor } from "./common";
 import styles from "./Conditional.module.css";
+import { ExpressionExplorer } from "./Expression";
 
 export const ConditionalExplorer: React.FC<{
   cursor: Cursor<Delisp.SConditional<Typed>>;

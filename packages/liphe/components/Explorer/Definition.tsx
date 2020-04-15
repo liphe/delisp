@@ -1,11 +1,12 @@
 import * as Delisp from "@delisp/core";
 import { Typed } from "@delisp/core";
 import * as React from "react";
-import { DetailedFunctionExplorer } from "./Function";
-import { ExpressionExplorer } from "./Expression";
-import { TypeExplorer } from "./Type";
+
 import { Cursor } from "./common";
 import styles from "./Definition.module.css";
+import { ExpressionExplorer } from "./Expression";
+import { DetailedFunctionExplorer } from "./Function";
+import { TypeExplorer } from "./Type";
 
 const DefinitionValueExplorer: React.FC<{
   cursor: Cursor<Delisp.Expression<Typed>>;

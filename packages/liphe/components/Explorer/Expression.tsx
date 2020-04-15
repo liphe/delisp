@@ -4,7 +4,8 @@ import * as React from "react";
 
 import { GenericSyntaxExplorer } from "../PPrinter";
 import { BooleanExplorer } from "./Boolean";
-import { useTypeNormalizer, Cursor } from "./common";
+import { Cursor, useTypeNormalizer } from "./common";
+import { ConditionalExplorer } from "./Conditional";
 import { FunctionExplorer } from "./Function";
 import { FunctionCallExplorer } from "./FunctionCall";
 import { NoneExplorer } from "./None";
@@ -12,7 +13,6 @@ import { NumberExplorer } from "./Number";
 import { RecordExplorer } from "./Record";
 import { StringExplorer } from "./String";
 import { VariableReferenceExplorer } from "./VariableReference";
-import { ConditionalExplorer } from "./Conditional";
 
 export const ExpressionExplorer: React.FC<{
   cursor: Cursor<Delisp.Expression<Typed>>;

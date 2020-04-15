@@ -2,11 +2,11 @@ import * as Delisp from "@delisp/core";
 import { Typed } from "@delisp/core";
 import * as React from "react";
 
+import { Cursor, useTypeNormalizer } from "./common";
+import { ExpressionExplorer } from "./Expression";
 import styles from "./Function.module.css";
 import { IdentifierExplorer } from "./Identifier";
-import { ExpressionExplorer } from "./Expression";
 import { TypeExplorer } from "./Type";
-import { useTypeNormalizer, Cursor } from "./common";
 
 export const EffectTypeExplorer: React.FC<{
   effectType: Delisp.Type;

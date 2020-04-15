@@ -1,7 +1,8 @@
 import * as Delisp from "@delisp/core";
 import { Typed } from "@delisp/core";
 import * as React from "react";
-import { useTypeNormalizer, Cursor } from "./common";
+
+import { Cursor, useTypeNormalizer } from "./common";
 
 export const VariableReferenceExplorer: React.FC<{
   cursor: Cursor<Delisp.SVariableReference<Typed>>;

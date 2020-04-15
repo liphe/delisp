@@ -3,9 +3,9 @@ import { Typed } from "@delisp/core";
 import * as React from "react";
 
 import { GenericSyntaxExplorer } from "../PPrinter";
-import { useTypeNormalizer, Cursor } from "./common";
-import { ExpressionExplorer } from "./Expression";
+import { Cursor, useTypeNormalizer } from "./common";
 import { DefinitionExplorer } from "./Definition";
+import { ExpressionExplorer } from "./Expression";
 
 export const SyntaxExplorer: React.FC<{
   cursor: Cursor<Delisp.Syntax<Typed>>;

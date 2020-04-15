@@ -3,9 +3,9 @@ import { Typed } from "@delisp/core";
 import * as React from "react";
 
 import { Cursor } from "./common";
+import { ExpressionExplorer } from "./Expression";
 import { IdentifierExplorer } from "./Identifier";
 import styles from "./Record.module.css";
-import { ExpressionExplorer } from "./Expression";
 
 export const RecordExplorer: React.FC<{
   cursor: Cursor<Delisp.SRecord<Typed>>;

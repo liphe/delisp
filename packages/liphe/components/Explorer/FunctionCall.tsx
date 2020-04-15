@@ -1,10 +1,11 @@
 import * as Delisp from "@delisp/core";
 import { Typed } from "@delisp/core";
-import * as React from "react";
-import { ExpressionExplorer } from "./Expression";
-import { Cursor } from "./common";
-import styles from "./FunctionCall.module.css";
 import classnames from "classnames/bind";
+import * as React from "react";
+
+import { Cursor } from "./common";
+import { ExpressionExplorer } from "./Expression";
+import styles from "./FunctionCall.module.css";
 
 const cn = classnames.bind(styles);
 
