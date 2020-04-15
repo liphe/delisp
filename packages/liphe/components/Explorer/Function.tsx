@@ -158,10 +158,10 @@ export const FunctionExplorer: React.FC<{
       <span title={typeToString(fn.info.selfType)}>
         <strong>λ</strong>
       </span>{" "}
-      {Cursor.map(argsCursor, (c) => (
-        <>
+      {Cursor.map(argsCursor, (c, i) => (
+        <React.Fragment key={i}>
           <IdentifierExplorer cursor={c} />{" "}
-        </>
+        </React.Fragment>
       ))}
       →{" "}
       {Cursor.map(bodyCursor, (c, i) => {
