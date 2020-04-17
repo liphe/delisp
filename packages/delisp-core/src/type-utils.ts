@@ -11,6 +11,10 @@ export function isTVar(t: T.Type): t is T.Var {
   return t.node.tag === "type-variable";
 }
 
+export function isTConstant(t: T.Type): t is T.Constant {
+  return t.node.tag === "constant";
+}
+
 export function onlyPrimaryType(t: T.Type): T.Type {
   return { ...t, node: { ...t.node } };
 }
