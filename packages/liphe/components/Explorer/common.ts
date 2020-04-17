@@ -51,7 +51,7 @@ export class Cursor<T> {
       cursor.update([
         ...cursor.value.slice(0, begin),
         ...newElems,
-        ...(end !== undefined ? cursor.value.slice(end + 1) : []),
+        ...(end !== undefined ? cursor.value.slice(end) : []),
       ])
     );
   }
