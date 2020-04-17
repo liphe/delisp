@@ -19,6 +19,20 @@ export const ConditionalExplorer: React.FC<{
           <legend>then</legend>
           <ExpressionExplorer cursor={cursor.prop("node").prop("consequent")} />
         </fieldset>
+        <button
+          onClick={() =>
+            cursor.update({
+              ...cursor.value,
+              node: {
+                ...cursor.value.node,
+                consequent: cursor.value.node.alternative,
+                alternative: cursor.value.node.consequent,
+              },
+            })
+          }
+        >
+          ⇆
+        </button>
         <fieldset className={styles.alternative}>
           <legend>else</legend>
           <ExpressionExplorer
