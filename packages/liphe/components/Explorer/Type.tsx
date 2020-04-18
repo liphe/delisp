@@ -215,7 +215,6 @@ export function analyzeFunctionType(
       outputs.fields.length === 0 && !isOutputOpen
         ? null
         : {
-            show: true,
             types: outputs.fields.map((out) => out.labelType),
             extends: isOutputOpen
               ? {

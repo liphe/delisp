@@ -6,61 +6,7 @@ import { Cursor, useTypeNormalizer } from "./common";
 import { ExpressionExplorer } from "./Expression";
 import styles from "./Function.module.css";
 import { IdentifierExplorer } from "./Identifier";
-import { TypeExplorer } from "./Type";
-
-export const EffectTypeExplorer: React.FC<{
-  effectType: Delisp.Type;
-  functionType: Delisp.Type;
-}> = ({ effectType, functionType }) => {
-  const effects = Delisp.normalizeEffect(effectType);
-  const unconstraintedEffect = Delisp.isUnconstraint(
-    effects.extends,
-    functionType
-  );
-
-  if (effects.fields.length === 0 && unconstraintedEffect) {
-    return <p>None</p>;
-  }
-
-  return (
-    <ul>
-      {effects.fields.map((eff, effPosition) => {
-        return (
-          <li className={styles.effect} key={effPosition}>
-            <span className={styles.typeVariable}>{eff.label}</span>
-          </li>
-        );
-      })}
-      {Delisp.isUnconstraint(effects.extends, functionType) ? null : (
-        <li className={styles.effect}>
-          ... <TypeExplorer type={effects.extends} />
-        </li>
-      )}
-    </ul>
-  );
-};
-
-export const ValuesTypeExplorer: React.FC<{
-  type: Delisp.Type;
-}> = ({ type }) => {
-  const row = Delisp.normalizeOutput(type);
-  return (
-    <ul>
-      {row.fields.map((value, valuePosition) => {
-        return (
-          <li key={valuePosition}>
-            <TypeExplorer type={value.labelType}></TypeExplorer>
-          </li>
-        );
-      })}
-      {Delisp.isEmtpyRow(row.extends) ? null : (
-        <li>
-          ... <TypeExplorer type={row.extends} />
-        </li>
-      )}
-    </ul>
-  );
-};
+import { analyzeFunctionType, TypeExplorer } from "./Type";
 
 export const FunctionInfoSection: React.FC<{ label: string }> = ({
   label,
@@ -82,10 +28,8 @@ export const DetailedFunctionExplorer: React.FC<{
   if (!Delisp.isFunctionType(selfType)) {
     throw new Error("The type of a function is not a function type??");
   }
-  const type = Delisp.decomposeFunctionType(selfType);
 
-  const [, ...args] = fn.node.lambdaList.positionalArguments;
-  const [contextType, ...argsTypes] = type.args;
+  const typeParts = analyzeFunctionType(selfType, selfType);
 
   const bodyCursor = cursor.prop("node").prop("body");
   const argsCursor = Cursor.slice(
@@ -95,14 +39,14 @@ export const DetailedFunctionExplorer: React.FC<{
 
   return (
     <div className={styles.function}>
-      {Delisp.isUnconstraint(contextType, selfType) ? null : (
+      {typeParts.context && (
         <FunctionInfoSection label="*context*">
-          <TypeExplorer type={contextType} />
+          <TypeExplorer type={typeParts.context} />
         </FunctionInfoSection>
       )}
 
       <FunctionInfoSection label="Arguments:">
-        {args.length === 0 ? (
+        {!typeParts.args ? (
           "None"
         ) : (
           <ul className={styles.functionArguments}>
@@ -110,7 +54,7 @@ export const DetailedFunctionExplorer: React.FC<{
               return (
                 <li key={arg.value.name}>
                   <IdentifierExplorer cursor={arg} /> -{" "}
-                  <TypeExplorer type={argsTypes[argPosition]} />
+                  <TypeExplorer type={typeParts.args![argPosition]} />
                 </li>
               );
             })}
@@ -119,11 +63,47 @@ export const DetailedFunctionExplorer: React.FC<{
       </FunctionInfoSection>
 
       <FunctionInfoSection label="Output:">
-        <ValuesTypeExplorer type={type.output} />
+        {!typeParts.outputs ? (
+          "None"
+        ) : (
+          <ul>
+            {typeParts.outputs.types.map((t, i) => (
+              <li key={i}>
+                <TypeExplorer type={t} />
+              </li>
+            ))}
+            {typeParts.outputs.extends && (
+              <li>
+                &hellip;
+                {typeParts.outputs.extends.type && (
+                  <TypeExplorer type={typeParts.outputs.extends.type} />
+                )}
+              </li>
+            )}
+          </ul>
+        )}
       </FunctionInfoSection>
 
       <FunctionInfoSection label="Effect:">
-        <EffectTypeExplorer effectType={type.effect} functionType={selfType} />
+        {!typeParts.effects ? (
+          "None"
+        ) : (
+          <ul>
+            {typeParts.effects.labels.map((label, i) => {
+              <li key={i}>
+                <span>{label}</span>
+              </li>;
+            })}
+            {typeParts.effects.extends && (
+              <li>
+                &hellip;
+                {typeParts.effects.extends && (
+                  <TypeExplorer type={typeParts.effects.extends} />
+                )}
+              </li>
+            )}
+          </ul>
+        )}
       </FunctionInfoSection>
 
       <FunctionInfoSection label="Implementation:">
