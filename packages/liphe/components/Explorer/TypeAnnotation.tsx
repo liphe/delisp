@@ -2,7 +2,7 @@ import * as Delisp from "@delisp/core";
 import { Typed } from "@delisp/core";
 import * as React from "react";
 
-import { Keyword, SExprList, Context } from "./common";
+import { Context, Keyword, SExprList } from "./common";
 import { ExpressionExplorer } from "./Expression";
 import { TypeExplorer } from "./Type";
 import { Cursor } from "./utils/Cursor";
