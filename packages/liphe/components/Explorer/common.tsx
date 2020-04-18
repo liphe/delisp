@@ -12,17 +12,21 @@ export function useTypeNormalizer() {
   return useContext(Context);
 }
 
+export const Keyword: React.FC<{ name: string }> = ({ name }) => {
+  return <span className={styles.keyword}>{name}</span>;
+};
+
 export const SExpr: React.FC<{ left: string; right: string }> = ({
   left,
   children,
   right,
 }) => {
   return (
-    <span className={styles.sexpr}>
+    <>
       <span className={styles.delimiter}>{left}</span>
-      {children}
+      <span className={styles.sexpr}>{children}</span>
       <span className={styles.delimiter}>{right}</span>
-    </span>
+    </>
   );
 };
 

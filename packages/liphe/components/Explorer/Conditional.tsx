@@ -2,6 +2,7 @@ import * as Delisp from "@delisp/core";
 import { Typed } from "@delisp/core";
 import * as React from "react";
 
+import { Keyword } from "./common";
 import styles from "./Conditional.module.css";
 import { ExpressionExplorer } from "./Expression";
 import { Cursor } from "./utils/Cursor";
@@ -12,7 +13,8 @@ export const ConditionalExplorer: React.FC<{
   return (
     <div className={styles.conditional}>
       <div className={styles.condition}>
-        if <ExpressionExplorer cursor={cursor.prop("node").prop("condition")} />
+        <Keyword name="if" />{" "}
+        <ExpressionExplorer cursor={cursor.prop("node").prop("condition")} />
       </div>
       <div className={styles.branches}>
         <fieldset className={styles.consequent}>

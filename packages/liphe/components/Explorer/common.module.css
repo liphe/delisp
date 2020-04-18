@@ -1,3 +1,8 @@
+.keyword {
+    color: blue;
+    font-weight: bolder;
+}
+
 .delimiter {
     color: lightGray;
 }
