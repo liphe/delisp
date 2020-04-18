@@ -2,7 +2,7 @@ import * as Delisp from "@delisp/core";
 import * as React from "react";
 import { createContext, useContext } from "react";
 
-import { useTypeNormalizer } from "./common";
+import { SExpr, useTypeNormalizer } from "./common";
 import styles from "./Type.module.css";
 
 export interface TypeContext {
@@ -44,20 +44,6 @@ export const TypeConstantExplorer: React.FC<{ type: Delisp.T.Constant }> = ({
   type,
 }) => {
   return <span className={styles.typeConstant}>{type.node.name}</span>;
-};
-
-const SExpr: React.FC<{ left: string; right: string }> = ({
-  left,
-  children,
-  right,
-}) => {
-  return (
-    <>
-      <span className={styles.delimiter}>{left}</span>
-      {children}
-      <span className={styles.delimiter}>{right}</span>
-    </>
-  );
 };
 
 export const TypePureFunctionExplorer: React.FC<{
