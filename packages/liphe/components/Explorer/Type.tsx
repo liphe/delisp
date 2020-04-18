@@ -60,12 +60,49 @@ const SExpr: React.FC<{ left: string; right: string }> = ({
   );
 };
 
+export const TypePureFunctionExplorer: React.FC<{
+  from: Delisp.Type[];
+  to: Delisp.Type[];
+}> = ({ from, to }) => {
+  return (
+    <SExpr left="(" right=")">
+      <span className={styles.typeFunction}>
+        <span>&rarr;</span>
+        {from.map((t, i) => (
+          <TypeExplorer key={i} type={t} />
+        ))}
+        {to.length === 1 ? (
+          <TypeExplorer type={to[0]} />
+        ) : (
+          <SExpr left="[" right="]">
+            {to.map((t, i) => (
+              <TypeExplorer key={i} type={t} />
+            ))}
+          </SExpr>
+        )}
+      </span>
+    </SExpr>
+  );
+};
+
 export const TypeFunctionExplorer: React.FC<{ tFn: Delisp.T.Application }> = ({
   tFn,
 }) => {
   const { containerType } = useContext(TypeContext);
 
   const parts = analyzeFunctionType(tFn, containerType);
+
+  if (
+    !parts.context &&
+    parts.args &&
+    !parts.effects &&
+    parts.outputs &&
+    !parts.outputs.extends
+  ) {
+    return (
+      <TypePureFunctionExplorer from={parts.args} to={parts.outputs.types} />
+    );
+  }
 
   return (
     <SExpr left="(" right=")">

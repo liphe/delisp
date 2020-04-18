@@ -6,7 +6,7 @@ import { Cursor } from "./common";
 import styles from "./Definition.module.css";
 import { ExpressionExplorer } from "./Expression";
 import { DetailedFunctionExplorer } from "./Function";
-import { TypeExplorer } from "./Type";
+import { TypeContext, TypeExplorer } from "./Type";
 
 const DefinitionValueExplorer: React.FC<{
   cursor: Cursor<Delisp.Expression<Typed>>;
@@ -29,7 +29,11 @@ const DefinitionValueKindExplorer: React.FC<{
   if (value.node.tag === "function") {
     return <span>λ</span>;
   } else {
-    return <TypeExplorer type={value.info.selfType} />;
+    return (
+      <TypeContext.Provider value={{ containerType: value.info.selfType }}>
+        <TypeExplorer type={value.info.selfType} />
+      </TypeContext.Provider>
+    );
   }
 };
 
