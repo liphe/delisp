@@ -15,3 +15,9 @@
     padding-right: 0;
 }
 
+.indent {
+    margin-left: 20px;
+}
+.indent.double {
+    margin-left: 40px;
+}

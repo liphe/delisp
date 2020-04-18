@@ -1,8 +1,11 @@
 import * as Delisp from "@delisp/core";
+import classnames from "classnames/bind";
 import * as React from "react";
 import { useContext } from "react";
 
 import styles from "./common.module.css";
+
+const cn = classnames.bind(styles);
 
 export const Context = React.createContext<
   ReturnType<typeof Delisp.createVariableNormalizer>
@@ -44,4 +47,11 @@ export const SExprArray: React.FC = ({ children }) => {
       {children}
     </SExpr>
   );
+};
+
+export const Indent: React.FC<{ double?: boolean }> = ({
+  double = false,
+  children,
+}) => {
+  return <div className={cn("indent", { double })}>{children}</div>;
 };

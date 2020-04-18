@@ -9,7 +9,65 @@ import { PageLayout } from "../components/PageLayout";
 
 export default function Homepage() {
   const [code, setCode] = useState(`
-(define f map)`);
+(define id (lambda (x) x))
+
+(define >>>
+  (lambda (f1 f2)
+    (lambda (x) (f2 (f1 x)))))
+
+(define over
+  (lambda (lens fn x)
+    (multiple-value-bind (current change)
+        (lens x)
+      (change (fn current)))))
+
+(define constantly
+  (lambda (x) (lambda (y) x)))
+
+(define set
+  (lambda (lens value container)
+    (over lens
+          (constantly value)
+          container)))
+
+(define >>
+  (lambda (outer inner)
+    (lambda (outer-container)
+      (multiple-value-bind (inner-container outer-update)
+          (outer outer-container)
+        (multiple-value-bind (value inner-update)
+            (inner inner-container)
+          (values value
+                  (>>> inner-update
+                       outer-update)))))))
+
+(define fst
+  (lambda (p)
+    (values (%fst p)
+            (lambda (new-value)
+              (pair new-value (%snd p))))))
+
+(define snd
+  (lambda (p)
+    (values (%snd p)
+            (lambda (new-value)
+              (pair (%fst p) new-value)))))
+
+(define string-ref
+  (lambda (k) (substring k (+ k 1))))
+
+
+(export [id
+         >>
+         fst
+         snd
+         string-ref
+         >>>
+         over
+         constantly
+         set])
+
+`);
 
   const [module, setModule] = useState<Delisp.Module<Typed>>();
   const [hasErrors, setHasErrors] = useState(false);

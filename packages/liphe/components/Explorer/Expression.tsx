@@ -8,6 +8,7 @@ import { useTypeNormalizer } from "./common";
 import { ConditionalExplorer } from "./Conditional";
 import { FunctionExplorer } from "./Function";
 import { FunctionCallExplorer } from "./FunctionCall";
+import { MultipleValueBindExplorer } from "./MultipleValueBind";
 import { NoneExplorer } from "./None";
 import { NumberExplorer } from "./Number";
 import { RecordExplorer } from "./Record";
@@ -72,6 +73,13 @@ export const ExpressionExplorer: React.FC<{
       return (
         <ValuesExplorer cursor={cursor as Cursor<Delisp.SValues<Typed>>} />
       );
+    case "multiple-value-bind":
+      return (
+        <MultipleValueBindExplorer
+          cursor={cursor as Cursor<Delisp.SMultipleValueBind<Typed>>}
+        />
+      );
+
     default: {
       const normalizer = useTypeNormalizer();
       return (
