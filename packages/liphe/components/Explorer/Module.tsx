@@ -4,8 +4,9 @@ import * as React from "react";
 import { useState } from "react";
 
 import { GenericSyntaxExplorer } from "../PPrinter";
-import { Context, Cursor } from "./common";
+import { Context } from "./common";
 import { SyntaxExplorer } from "./Syntax";
+import { Cursor } from "./utils/Cursor";
 
 export const ModuleExplorer: React.FC<{
   cursor: Cursor<Delisp.Module<Typed>>;

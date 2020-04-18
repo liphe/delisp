@@ -3,9 +3,9 @@ import { Typed } from "@delisp/core";
 import classnames from "classnames/bind";
 import * as React from "react";
 
-import { Cursor } from "./common";
 import { ExpressionExplorer } from "./Expression";
 import styles from "./FunctionCall.module.css";
+import { Cursor } from "./utils/Cursor";
 
 const cn = classnames.bind(styles);
 

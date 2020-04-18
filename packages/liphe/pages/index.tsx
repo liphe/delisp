@@ -3,8 +3,8 @@ import { Typed } from "@delisp/core";
 import * as React from "react";
 import { useEffect, useState } from "react";
 
-import { Cursor } from "../components/Explorer/common";
 import { ModuleExplorer } from "../components/Explorer/Module";
+import { Cursor } from "../components/Explorer/utils/Cursor";
 import { PageLayout } from "../components/PageLayout";
 
 export default function Homepage() {

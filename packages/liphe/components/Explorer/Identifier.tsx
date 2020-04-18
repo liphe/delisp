@@ -1,7 +1,7 @@
 import * as Delisp from "@delisp/core";
 import * as React from "react";
 
-import { Cursor } from "./common";
+import { Cursor } from "./utils/Cursor";
 
 export const IdentifierExplorer: React.FC<{
   cursor: Cursor<Delisp.Identifier>;
