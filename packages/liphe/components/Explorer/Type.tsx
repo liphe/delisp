@@ -2,7 +2,7 @@ import * as Delisp from "@delisp/core";
 import * as React from "react";
 import { createContext, useContext } from "react";
 
-import { ArrayExplorer, ListExplorer, useTypeNormalizer } from "./common";
+import { SExprArray, SExprList, useTypeNormalizer } from "./common";
 import styles from "./Type.module.css";
 
 export interface TypeContext {
@@ -51,7 +51,7 @@ export const TypePureFunctionExplorer: React.FC<{
   to: Delisp.Type[];
 }> = ({ from, to }) => {
   return (
-    <ListExplorer>
+    <SExprList>
       <span>&rarr;</span>
       {from.map((t, i) => (
         <TypeExplorer key={i} type={t} />
@@ -59,13 +59,13 @@ export const TypePureFunctionExplorer: React.FC<{
       {to.length === 1 ? (
         <TypeExplorer type={to[0]} />
       ) : (
-        <ArrayExplorer>
+        <SExprArray>
           {to.map((t, i) => (
             <TypeExplorer key={i} type={t} />
           ))}
-        </ArrayExplorer>
+        </SExprArray>
       )}
-    </ListExplorer>
+    </SExprList>
   );
 };
 
@@ -89,7 +89,7 @@ export const TypeFunctionExplorer: React.FC<{ tFn: Delisp.T.Application }> = ({
   }
 
   return (
-    <ListExplorer>
+    <SExprList>
       <span>&rarr;</span>
       {parts.context && (
         <>
@@ -100,17 +100,17 @@ export const TypeFunctionExplorer: React.FC<{ tFn: Delisp.T.Application }> = ({
       {parts.args && (
         <>
           <span className={styles.keyword}>:from</span>
-          <ArrayExplorer>
+          <SExprArray>
             {parts.args.map((t, i) => (
               <TypeExplorer key={i} type={t} />
             ))}
-          </ArrayExplorer>
+          </SExprArray>
         </>
       )}
       {parts.effects && (
         <>
           <span className={styles.keyword}>:effect</span>
-          <ArrayExplorer>
+          <SExprArray>
             {parts.effects.labels.map((label, i) => (
               <span key={i}>{label}</span>
             ))}
@@ -121,14 +121,14 @@ export const TypeFunctionExplorer: React.FC<{ tFn: Delisp.T.Application }> = ({
                 <TypeExplorer type={parts.effects.extends} />
               </>
             )}
-          </ArrayExplorer>
+          </SExprArray>
         </>
       )}
 
       {parts.outputs && (
         <>
           <span className={styles.keyword}>:to</span>
-          <ArrayExplorer>
+          <SExprArray>
             {parts.outputs.types.map((t, i) => (
               <TypeExplorer key={i} type={t} />
             ))}
@@ -140,10 +140,10 @@ export const TypeFunctionExplorer: React.FC<{ tFn: Delisp.T.Application }> = ({
                 )}
               </>
             )}
-          </ArrayExplorer>
+          </SExprArray>
         </>
       )}
-    </ListExplorer>
+    </SExprList>
   );
 };
 

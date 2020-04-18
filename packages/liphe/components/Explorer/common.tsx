@@ -30,7 +30,7 @@ export const SExpr: React.FC<{ left: string; right: string }> = ({
   );
 };
 
-export const ListExplorer: React.FC = ({ children }) => {
+export const SExprList: React.FC = ({ children }) => {
   return (
     <SExpr left="(" right=")">
       {children}
@@ -38,7 +38,7 @@ export const ListExplorer: React.FC = ({ children }) => {
   );
 };
 
-export const ArrayExplorer: React.FC = ({ children }) => {
+export const SExprArray: React.FC = ({ children }) => {
   return (
     <SExpr left="[" right="]">
       {children}
