@@ -14,6 +14,7 @@ import { RecordExplorer } from "./Record";
 import { StringExplorer } from "./String";
 import { TypeAnnotationExplorer } from "./TypeAnnotation";
 import { Cursor } from "./utils/Cursor";
+import { ValuesExplorer } from "./Values";
 import { VariableReferenceExplorer } from "./VariableReference";
 
 export const ExpressionExplorer: React.FC<{
@@ -61,14 +62,16 @@ export const ExpressionExplorer: React.FC<{
           cursor={cursor as Cursor<Delisp.SConditional<Typed>>}
         />
       );
-
     case "type-annotation":
       return (
         <TypeAnnotationExplorer
           cursor={cursor as Cursor<Delisp.STypeAnnotation<Typed>>}
         />
       );
-
+    case "values":
+      return (
+        <ValuesExplorer cursor={cursor as Cursor<Delisp.SValues<Typed>>} />
+      );
     default: {
       const normalizer = useTypeNormalizer();
       return (
