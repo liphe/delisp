@@ -18,10 +18,26 @@ export const SExpr: React.FC<{ left: string; right: string }> = ({
   right,
 }) => {
   return (
-    <>
+    <span className={styles.sexpr}>
       <span className={styles.delimiter}>{left}</span>
       {children}
       <span className={styles.delimiter}>{right}</span>
-    </>
+    </span>
+  );
+};
+
+export const ListExplorer: React.FC = ({ children }) => {
+  return (
+    <SExpr left="(" right=")">
+      {children}
+    </SExpr>
+  );
+};
+
+export const ArrayExplorer: React.FC = ({ children }) => {
+  return (
+    <SExpr left="[" right="]">
+      {children}
+    </SExpr>
   );
 };

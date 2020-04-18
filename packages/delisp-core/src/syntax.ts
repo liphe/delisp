@@ -223,6 +223,9 @@ export interface SCaseTag<I = {}> extends Node<I, SCaseTagF<Expression<I>>> {}
 
 export interface SValues<I = {}> extends Node<I, SValuesF<Expression<I>>> {}
 
+export interface STypeAnnotation<I = {}>
+  extends Node<I, STypeAnnotationF<Expression<I>>> {}
+
 export interface SMultipleValueBind<I = {}>
   extends Node<I, SMultipleValueBindF<Expression<I>>> {}
 

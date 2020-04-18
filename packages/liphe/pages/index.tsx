@@ -9,11 +9,7 @@ import { PageLayout } from "../components/PageLayout";
 
 export default function Homepage() {
   const [code, setCode] = useState(`
-(lambda (f g h x)
-  (print x)
-  (f 1 2 3 "foooooo")
-  (g 1 2 3 "foooooo" (h "foo" "bar") 10)
-  )`);
+(define f map)`);
 
   const [module, setModule] = useState<Delisp.Module<Typed>>();
   const [hasErrors, setHasErrors] = useState(false);

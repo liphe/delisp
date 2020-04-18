@@ -2,3 +2,11 @@
     color: lightGray;
 }
 
+.sexpr > * {
+    padding-right: 5px;
+}
+
+.sexpr > *:last-child {
+    padding-right: 0;
+}
+

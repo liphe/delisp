@@ -1,11 +1,4 @@
 
-.typeFunction > * {
-    padding-right: 5px;
-}
-.typeFunction > *:last-child {
-    padding-right: 0;
-}
-
 .typeConstant {
     color: grey;
     font-weight: bolder;

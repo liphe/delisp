@@ -12,6 +12,7 @@ import { NoneExplorer } from "./None";
 import { NumberExplorer } from "./Number";
 import { RecordExplorer } from "./Record";
 import { StringExplorer } from "./String";
+import { TypeAnnotationExplorer } from "./TypeAnnotation";
 import { Cursor } from "./utils/Cursor";
 import { VariableReferenceExplorer } from "./VariableReference";
 
@@ -58,6 +59,13 @@ export const ExpressionExplorer: React.FC<{
       return (
         <ConditionalExplorer
           cursor={cursor as Cursor<Delisp.SConditional<Typed>>}
+        />
+      );
+
+    case "type-annotation":
+      return (
+        <TypeAnnotationExplorer
+          cursor={cursor as Cursor<Delisp.STypeAnnotation<Typed>>}
         />
       );
 

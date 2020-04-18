@@ -2,7 +2,7 @@ import * as Delisp from "@delisp/core";
 import * as React from "react";
 import { createContext, useContext } from "react";
 
-import { SExpr, useTypeNormalizer } from "./common";
+import { ArrayExplorer, ListExplorer, useTypeNormalizer } from "./common";
 import styles from "./Type.module.css";
 
 export interface TypeContext {
@@ -51,23 +51,21 @@ export const TypePureFunctionExplorer: React.FC<{
   to: Delisp.Type[];
 }> = ({ from, to }) => {
   return (
-    <SExpr left="(" right=")">
-      <span className={styles.typeFunction}>
-        <span>&rarr;</span>
-        {from.map((t, i) => (
-          <TypeExplorer key={i} type={t} />
-        ))}
-        {to.length === 1 ? (
-          <TypeExplorer type={to[0]} />
-        ) : (
-          <SExpr left="[" right="]">
-            {to.map((t, i) => (
-              <TypeExplorer key={i} type={t} />
-            ))}
-          </SExpr>
-        )}
-      </span>
-    </SExpr>
+    <ListExplorer>
+      <span>&rarr;</span>
+      {from.map((t, i) => (
+        <TypeExplorer key={i} type={t} />
+      ))}
+      {to.length === 1 ? (
+        <TypeExplorer type={to[0]} />
+      ) : (
+        <ArrayExplorer>
+          {to.map((t, i) => (
+            <TypeExplorer key={i} type={t} />
+          ))}
+        </ArrayExplorer>
+      )}
+    </ListExplorer>
   );
 };
 
@@ -91,63 +89,61 @@ export const TypeFunctionExplorer: React.FC<{ tFn: Delisp.T.Application }> = ({
   }
 
   return (
-    <SExpr left="(" right=")">
-      <span className={styles.typeFunction}>
-        <span>&rarr;</span>
-        {parts.context && (
-          <>
-            <span className={styles.keyword}>:context</span>
-            <TypeExplorer type={parts.context} />
-          </>
-        )}
-        {parts.args && (
-          <>
-            <span className={styles.keyword}>:from</span>
-            <SExpr left="[" right="]">
-              {parts.args.map((t, i) => (
-                <TypeExplorer key={i} type={t} />
-              ))}
-            </SExpr>
-          </>
-        )}
-        {parts.effects && (
-          <>
-            <span className={styles.keyword}>:effect</span>
-            <SExpr left="[" right="]">
-              {parts.effects.labels.map((label, i) => (
-                <span key={i}>{label}</span>
-              ))}
-              {parts.effects.extends && (
-                <>
-                  {" "}
-                  &hellip;
-                  <TypeExplorer type={parts.effects.extends} />
-                </>
-              )}
-            </SExpr>
-          </>
-        )}
+    <ListExplorer>
+      <span>&rarr;</span>
+      {parts.context && (
+        <>
+          <span className={styles.keyword}>:context</span>
+          <TypeExplorer type={parts.context} />
+        </>
+      )}
+      {parts.args && (
+        <>
+          <span className={styles.keyword}>:from</span>
+          <ArrayExplorer>
+            {parts.args.map((t, i) => (
+              <TypeExplorer key={i} type={t} />
+            ))}
+          </ArrayExplorer>
+        </>
+      )}
+      {parts.effects && (
+        <>
+          <span className={styles.keyword}>:effect</span>
+          <ArrayExplorer>
+            {parts.effects.labels.map((label, i) => (
+              <span key={i}>{label}</span>
+            ))}
+            {parts.effects.extends && (
+              <>
+                {" "}
+                &hellip;
+                <TypeExplorer type={parts.effects.extends} />
+              </>
+            )}
+          </ArrayExplorer>
+        </>
+      )}
 
-        {parts.outputs && (
-          <>
-            <span className={styles.keyword}>:to</span>
-            <SExpr left="[" right="]">
-              {parts.outputs.types.map((t, i) => (
-                <TypeExplorer key={i} type={t} />
-              ))}
-              {parts.outputs.extends && (
-                <>
-                  &hellip;
-                  {parts.outputs.extends.type && (
-                    <TypeExplorer type={parts.outputs.extends.type} />
-                  )}
-                </>
-              )}
-            </SExpr>
-          </>
-        )}
-      </span>
-    </SExpr>
+      {parts.outputs && (
+        <>
+          <span className={styles.keyword}>:to</span>
+          <ArrayExplorer>
+            {parts.outputs.types.map((t, i) => (
+              <TypeExplorer key={i} type={t} />
+            ))}
+            {parts.outputs.extends && (
+              <>
+                &hellip;
+                {parts.outputs.extends.type && (
+                  <TypeExplorer type={parts.outputs.extends.type} />
+                )}
+              </>
+            )}
+          </ArrayExplorer>
+        </>
+      )}
+    </ListExplorer>
   );
 };
 

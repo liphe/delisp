@@ -52,4 +52,8 @@ export class TypeWithWildcards {
   print(): string {
     return printType(this.body, false);
   }
+
+  asRawType(): Type {
+    return this.body;
+  }
 }
