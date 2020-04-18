@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { ModuleExplorer } from "../components/Explorer/Module";
 import { Cursor } from "../components/Explorer/utils/Cursor";
 import { PageLayout } from "../components/PageLayout";
+import styles from "./index.module.css";
 
 export default function Homepage() {
   const [code, setCode] = useState(`
@@ -94,7 +95,9 @@ export default function Homepage() {
           }}
         />
         {hasErrors && "with errors!"}
-        {module && <ModuleExplorer cursor={new Cursor(module, setModule)} />}
+        <div className={styles.code}>
+          {module && <ModuleExplorer cursor={new Cursor(module, setModule)} />}
+        </div>
       </PageLayout>
     </div>
   );
