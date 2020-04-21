@@ -10,11 +10,11 @@ import styles from "./index.module.css";
 
 export default function Homepage() {
   const [code, setCode] = useState(`
-(define x 10)
-
-(define test
-  (let {x "foo"}
-    x))
+(define f
+   (lambda (n)
+     (if (= n 0)
+         1
+(* n (f (- n 1 ))))))
 `);
 
   const [untypedModule, setUntypedModule] = useState<Delisp.Module>();

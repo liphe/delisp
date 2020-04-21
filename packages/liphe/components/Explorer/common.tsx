@@ -25,11 +25,11 @@ export const SExpr: React.FC<{ left: string; right: string }> = ({
   right,
 }) => {
   return (
-    <>
+    <span>
       <span className={styles.delimiter}>{left}</span>
       <span className={styles.sexpr}>{children}</span>
       <span className={styles.delimiter}>{right}</span>
-    </>
+    </span>
   );
 };
 
