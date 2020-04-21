@@ -49,6 +49,14 @@ export const SExprArray: React.FC = ({ children }) => {
   );
 };
 
+export const SExprMap: React.FC = ({ children }) => {
+  return (
+    <SExpr left="{" right="}">
+      {children}
+    </SExpr>
+  );
+};
+
 export const Indent: React.FC<{ double?: boolean }> = ({
   double = false,
   children,

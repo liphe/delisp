@@ -49,7 +49,9 @@ export const DefinitionExplorer: React.FC<{
       <span className={styles.definitionType}>
         <DefinitionValueKindExplorer value={definition.node.value} />
       </span>
-      <DefinitionValueExplorer cursor={cursor.prop("node").prop("value")} />
+      <div>
+        <DefinitionValueExplorer cursor={cursor.prop("node").prop("value")} />
+      </div>
     </div>
   );
 };

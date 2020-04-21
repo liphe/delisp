@@ -4,6 +4,7 @@ import * as React from "react";
 
 import { Indent, Keyword, SExprList } from "./common";
 import { ExpressionExplorer } from "./Expression";
+import styles from "./Let.module.css";
 import { Cursor } from "./utils/Cursor";
 
 interface BindingProps {
@@ -39,16 +40,18 @@ export const LetExplorer: React.FC<{
     <SExprList>
       <Keyword name="let" />
 
-      {Cursor.map(bindings, (bind, i) => (
-        <Binding
-          key={i}
-          variable={bind.prop("variable")}
-          value={bind.prop("value")}
-          onDelete={() => {
-            deleteBinding(bind.value.variable.name);
-          }}
-        />
-      ))}
+      <div className={styles.letBindings}>
+        {Cursor.map(bindings, (bind, i) => (
+          <Binding
+            key={i}
+            variable={bind.prop("variable")}
+            value={bind.prop("value")}
+            onDelete={() => {
+              deleteBinding(bind.value.variable.name);
+            }}
+          />
+        ))}
+      </div>
 
       <Indent>
         {Cursor.map(bodyCursor, (c, i) => {

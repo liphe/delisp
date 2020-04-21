@@ -1,0 +1,9 @@
+
+
+.letBindings {
+    display: inline-block;
+    vertical-align: top;
+
+    border-left: 1px solid lightGray;
+    padding-left: 10px;
+}
