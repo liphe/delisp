@@ -8,6 +8,7 @@ import { useTypeNormalizer } from "./common";
 import { ConditionalExplorer } from "./Conditional";
 import { FunctionExplorer } from "./Function";
 import { FunctionCallExplorer } from "./FunctionCall";
+import { LetExplorer } from "./Let";
 import { MultipleValueBindExplorer } from "./MultipleValueBind";
 import { NoneExplorer } from "./None";
 import { NumberExplorer } from "./Number";
@@ -17,7 +18,6 @@ import { TypeAnnotationExplorer } from "./TypeAnnotation";
 import { Cursor } from "./utils/Cursor";
 import { ValuesExplorer } from "./Values";
 import { VariableReferenceExplorer } from "./VariableReference";
-import { LetExplorer } from "./Let";
 
 export const ExpressionExplorer: React.FC<{
   cursor: Cursor<Delisp.Expression<Typed>>;
