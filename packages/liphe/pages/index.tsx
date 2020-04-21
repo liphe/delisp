@@ -10,80 +10,37 @@ import styles from "./index.module.css";
 
 export default function Homepage() {
   const [code, setCode] = useState(`
-(define id (lambda (x) x))
+(define x 10)
 
-(define >>>
-  (lambda (f1 f2)
-    (lambda (x) (f2 (f1 x)))))
-
-(define over
-  (lambda (lens fn x)
-    (multiple-value-bind (current change)
-        (lens x)
-      (change (fn current)))))
-
-(define constantly
-  (lambda (x) (lambda (y) x)))
-
-(define set
-  (lambda (lens value container)
-    (over lens
-          (constantly value)
-          container)))
-
-(define >>
-  (lambda (outer inner)
-    (lambda (outer-container)
-      (multiple-value-bind (inner-container outer-update)
-          (outer outer-container)
-        (multiple-value-bind (value inner-update)
-            (inner inner-container)
-          (values value
-                  (>>> inner-update
-                       outer-update)))))))
-
-(define fst
-  (lambda (p)
-    (values (%fst p)
-            (lambda (new-value)
-              (pair new-value (%snd p))))))
-
-(define snd
-  (lambda (p)
-    (values (%snd p)
-            (lambda (new-value)
-              (pair (%fst p) new-value)))))
-
-(define string-ref
-  (lambda (k) (substring k (+ k 1))))
-
-
-(export [id
-         >>
-         fst
-         snd
-         string-ref
-         >>>
-         over
-         constantly
-         set])
-
+(define test
+  (let {x "foo"}
+    x))
 `);
 
-  const [module, setModule] = useState<Delisp.Module<Typed>>();
+  const [untypedModule, setUntypedModule] = useState<Delisp.Module>();
   const [hasErrors, setHasErrors] = useState(false);
 
   useEffect(() => {
     try {
-      const module = Delisp.macroexpandModule(Delisp.readModule(code));
-      const { typedModule } = Delisp.inferModule(module);
-      setHasErrors(false);
-      setModule(typedModule);
+      const m = Delisp.macroexpandModule(Delisp.readModule(code));
+      setUntypedModule(m);
     } catch (err) {
       console.error(err);
       setHasErrors(true);
     }
   }, [code]);
+
+  const [module, setModule] = useState<Delisp.Module<Typed>>();
+  useEffect(() => {
+    if (!untypedModule) return;
+    try {
+      const { typedModule } = Delisp.inferModule(untypedModule);
+      setModule(typedModule);
+      setHasErrors(false);
+    } catch (err) {
+      setHasErrors(true);
+    }
+  }, [untypedModule]);
 
   return (
     <div>
@@ -96,7 +53,9 @@ export default function Homepage() {
         />
         {hasErrors && "with errors!"}
         <div className={styles.code}>
-          {module && <ModuleExplorer cursor={new Cursor(module, setModule)} />}
+          {module && (
+            <ModuleExplorer cursor={new Cursor(module, setUntypedModule)} />
+          )}
         </div>
       </PageLayout>
     </div>

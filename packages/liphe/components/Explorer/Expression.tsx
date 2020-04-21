@@ -17,6 +17,7 @@ import { TypeAnnotationExplorer } from "./TypeAnnotation";
 import { Cursor } from "./utils/Cursor";
 import { ValuesExplorer } from "./Values";
 import { VariableReferenceExplorer } from "./VariableReference";
+import { LetExplorer } from "./Let";
 
 export const ExpressionExplorer: React.FC<{
   cursor: Cursor<Delisp.Expression<Typed>>;
@@ -79,6 +80,8 @@ export const ExpressionExplorer: React.FC<{
           cursor={cursor as Cursor<Delisp.SMultipleValueBind<Typed>>}
         />
       );
+    case "let-bindings":
+      return <LetExplorer cursor={cursor as Cursor<Delisp.SLet<Typed>>} />;
 
     default: {
       const normalizer = useTypeNormalizer();
