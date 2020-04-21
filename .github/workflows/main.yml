@@ -41,8 +41,15 @@ jobs:
     - run: yarn build:liphe
 
     - name: Deploy preview environment to Netlify
-      id: netlify-deployment
       run: yarn run release:netlify
+      if: github.ref != 'refs/heads/master'
+      env:
+        NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+
+    - name: Deploy master environment to Netlify
+      run: yarn run release:netlify --prod
+      if: github.ref == 'refs/heads/master'
       env:
         NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
