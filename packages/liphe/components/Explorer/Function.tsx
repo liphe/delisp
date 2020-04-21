@@ -91,9 +91,11 @@ export const DetailedFunctionExplorer: React.FC<{
         ) : (
           <ul>
             {typeParts.effects.labels.map((label, i) => {
-              <li key={i}>
-                <span>{label}</span>
-              </li>;
+              return (
+                <li key={i}>
+                  <span>{label}</span>
+                </li>
+              );
             })}
             {typeParts.effects.extends && (
               <li>
