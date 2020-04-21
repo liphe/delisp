@@ -2,7 +2,7 @@ import * as Delisp from "@delisp/core";
 import { Typed } from "@delisp/core";
 import * as React from "react";
 
-import { useTypeNormalizer } from "./common";
+import { Keyword, SExprList, Indent } from "./common";
 import { ExpressionExplorer } from "./Expression";
 import styles from "./Function.module.css";
 import { IdentifierExplorer } from "./Identifier";
@@ -120,38 +120,31 @@ export const DetailedFunctionExplorer: React.FC<{
   );
 };
 
-const typeToString = (type: Delisp.Type) => {
-  const normalizer = useTypeNormalizer();
-  return Delisp.printTypeWithNormalizer(type, normalizer);
-};
-
 export const FunctionExplorer: React.FC<{
   cursor: Cursor<Delisp.SFunction<Typed>>;
 }> = ({ cursor }) => {
-  const fn = cursor.value;
   const bodyCursor = cursor.prop("node").prop("body");
   const argsCursor = Cursor.slice(
     cursor.prop("node").prop("lambdaList").prop("positionalArguments"),
     1
   );
   return (
-    <div>
-      <span title={typeToString(fn.info.selfType)}>
-        <strong>λ</strong>
-      </span>{" "}
-      {Cursor.map(argsCursor, (c, i) => (
-        <React.Fragment key={i}>
-          <IdentifierExplorer cursor={c} />{" "}
-        </React.Fragment>
-      ))}
-      →{" "}
-      {Cursor.map(bodyCursor, (c, i) => {
-        return (
-          <div key={i}>
-            <ExpressionExplorer cursor={c} />
-          </div>
-        );
-      })}
-    </div>
+    <SExprList>
+      <Keyword name="λ" />
+      <SExprList>
+        {Cursor.map(argsCursor, (c, i) => (
+          <IdentifierExplorer key={i} cursor={c} />
+        ))}
+      </SExprList>
+      <Indent>
+        {Cursor.map(bodyCursor, (c, i) => {
+          return (
+            <div key={i}>
+              <ExpressionExplorer cursor={c} />
+            </div>
+          );
+        })}
+      </Indent>
+    </SExprList>
   );
 };
