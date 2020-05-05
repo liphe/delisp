@@ -199,6 +199,14 @@ export function foldExpr<I, A>(
   );
 }
 
+export function unfoldExpr<I, A>(
+  value: A,
+  fn: (value: A) => S.ExpressionF<I, A>
+): S.Expression<I> {
+  const expr = fn(value);
+  return mapExpr(expr, (v) => unfoldExpr(v, fn));
+}
+
 export function transformRecurExpr<I>(
   s: S.Expression<I>,
   fn: (node: S.Expression<I>) => S.Expression<I>

@@ -11,6 +11,7 @@ export * from "./primitives";
 export * from "./printer";
 export * from "./syntax";
 export * from "./syntax-typed";
+export * from "./syntax-scoped";
 export * from "./syntax-utils";
 export * from "./type-printer";
 export * from "./type-utils";
