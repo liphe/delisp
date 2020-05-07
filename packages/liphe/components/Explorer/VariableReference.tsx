@@ -44,6 +44,8 @@ export const VariableReferenceExplorer: React.FC<{
 
   const [editMode, setEditMode] = useState(false);
 
+  const isPlaceholder = variable.node.name.startsWith("__");
+
   return (
     <span
       style={{ color: "#00aa00" }}
@@ -54,6 +56,8 @@ export const VariableReferenceExplorer: React.FC<{
     >
       {editMode ? (
         <Input cursor={cursor} onDone={() => setEditMode(false)} />
+      ) : isPlaceholder ? (
+        "??????"
       ) : (
         variable.node.name
       )}
