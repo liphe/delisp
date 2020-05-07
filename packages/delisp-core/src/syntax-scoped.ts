@@ -1,5 +1,11 @@
 import { moduleDefinitions } from "./module";
-import { Module, Syntax, Expression, isExpression } from "./syntax";
+import {
+  Expression,
+  isDefinition,
+  isExpression,
+  Module,
+  Syntax,
+} from "./syntax";
 import { mapExpr } from "./syntax-utils";
 
 export interface Scoped {
@@ -8,10 +14,10 @@ export interface Scoped {
 
 type Environment = string[];
 
-export function resolveNames<I>(
-  expr: Expression<I>,
+function resolveNamesInExpression<EInfo>(
+  expr: Expression<EInfo>,
   env: Environment
-): Expression<I & Scoped> {
+): Expression<EInfo & Scoped> {
   switch (expr.node.tag) {
     case "function": {
       const args = expr.node.lambdaList.positionalArguments.map((a) => a.name);
@@ -20,7 +26,7 @@ export function resolveNames<I>(
         ...expr,
         node: {
           ...expr.node,
-          body: expr.node.body.map((e) => resolveNames(e, newenv)),
+          body: expr.node.body.map((e) => resolveNamesInExpression(e, newenv)),
         },
         info: {
           ...expr.info,
@@ -39,11 +45,11 @@ export function resolveNames<I>(
           bindings: expr.node.bindings.map((b) => {
             return {
               ...b,
-              value: resolveNames(b.value, env),
+              value: resolveNamesInExpression(b.value, env),
             };
           }),
 
-          body: expr.node.body.map((e) => resolveNames(e, newenv)),
+          body: expr.node.body.map((e) => resolveNamesInExpression(e, newenv)),
         },
         info: {
           ...expr.info,
@@ -54,7 +60,9 @@ export function resolveNames<I>(
 
     // no new names introduced here
     default: {
-      const resolvedExpr = mapExpr(expr, (e) => resolveNames(e, env));
+      const resolvedExpr = mapExpr(expr, (e) =>
+        resolveNamesInExpression(e, env)
+      );
       return {
         ...resolvedExpr,
         info: {
@@ -66,42 +74,33 @@ export function resolveNames<I>(
   }
 }
 
-function resolveNamesInSynstax<I>(
-  syntax: Syntax<I>,
+function resolveNamesInSynstax<EInfo, SInfo>(
+  syntax: Syntax<EInfo, SInfo>,
   env: Environment
-): Syntax<I & Scoped> {
+): Syntax<EInfo & Scoped, SInfo> {
   if (isExpression(syntax)) {
-    return resolveNames(syntax, env);
+    return resolveNamesInExpression(syntax, env);
+  } else if (isDefinition(syntax)) {
+    return {
+      ...syntax,
+      node: {
+        ...syntax.node,
+        value: resolveNamesInExpression(syntax.node.value, env),
+      },
+      info: {
+        ...syntax.info,
+        variables: env,
+      },
+    };
   } else {
-    switch (syntax.node.tag) {
-      case "definition":
-        return {
-          ...syntax,
-          node: {
-            ...syntax.node,
-            value: resolveNames(syntax.node.value, env),
-          },
-          info: {
-            ...syntax.info,
-            variables: env,
-          },
-        };
-      default:
-        return {
-          ...syntax,
-          info: {
-            ...syntax.info,
-            variables: env,
-          },
-        };
-    }
+    return syntax;
   }
 }
 
-export function resolveNamesInModule<I>(
-  m: Module<I>,
+export function resolveNamesInModule<EInfo, SInfo>(
+  m: Module<EInfo, SInfo>,
   env: Environment
-): Module<I & Scoped> {
+): Module<EInfo & Scoped, SInfo> {
   const defs = moduleDefinitions(m).map((d) => d.node.variable.name);
   const newenv = [...env, ...defs];
   return {
