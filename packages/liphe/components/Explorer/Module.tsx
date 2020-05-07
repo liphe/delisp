@@ -1,15 +1,15 @@
 import * as Delisp from "@delisp/core";
-import { Typed } from "@delisp/core";
 import * as React from "react";
 import { useState } from "react";
 
 import { GenericSyntaxExplorer } from "../PPrinter";
+import { Extended } from "./common";
 import { Context } from "./common";
 import { SyntaxExplorer } from "./Syntax";
 import { Cursor } from "./utils/Cursor";
 
 export const ModuleExplorer: React.FC<{
-  cursor: Cursor<Delisp.Module<Typed>>;
+  cursor: Cursor<Delisp.Module<Extended>>;
 }> = ({ cursor }) => {
   return (
     <div>
@@ -21,7 +21,7 @@ export const ModuleExplorer: React.FC<{
 };
 
 export const ToplevelSyntaxExplorer: React.FC<{
-  cursor: Cursor<Delisp.Syntax<Typed>>;
+  cursor: Cursor<Delisp.Syntax<Extended>>;
 }> = ({ cursor }) => {
   const [raw, setRaw] = useState(false);
   const normalizer = Delisp.createVariableNormalizer();

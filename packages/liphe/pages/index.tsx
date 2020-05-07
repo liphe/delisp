@@ -1,11 +1,11 @@
 import * as Delisp from "@delisp/core";
-import { Typed } from "@delisp/core";
 import * as React from "react";
 import { useEffect, useState } from "react";
 
 import { ModuleExplorer } from "../components/Explorer/Module";
 import { Cursor } from "../components/Explorer/utils/Cursor";
 import { PageLayout } from "../components/PageLayout";
+import { Extended } from "../components/Explorer/common";
 import styles from "./index.module.css";
 
 export default function Homepage() {
@@ -30,12 +30,13 @@ export default function Homepage() {
     }
   }, [code]);
 
-  const [module, setModule] = useState<Delisp.Module<Typed>>();
+  const [module, setModule] = useState<Delisp.Module<Extended>>();
   useEffect(() => {
     if (!untypedModule) return;
     try {
       const { typedModule } = Delisp.inferModule(untypedModule);
-      setModule(typedModule);
+      const scopedModule = Delisp.resolveNamesInModule(typedModule, []);
+      setModule(scopedModule);
       setHasErrors(false);
     } catch (err) {
       setHasErrors(true);

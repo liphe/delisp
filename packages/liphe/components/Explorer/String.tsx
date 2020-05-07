@@ -1,11 +1,11 @@
 import * as Delisp from "@delisp/core";
-import { Typed } from "@delisp/core";
 import * as React from "react";
 
+import { Extended } from "./common";
 import { Cursor } from "./utils/Cursor";
 
 export const StringExplorer: React.FC<{
-  cursor: Cursor<Delisp.SString<Typed>>;
+  cursor: Cursor<Delisp.SString<Extended>>;
 }> = ({ cursor }) => {
   const str = cursor.value.node.value;
   const updateString = () => {

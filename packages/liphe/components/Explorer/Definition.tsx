@@ -1,7 +1,7 @@
 import * as Delisp from "@delisp/core";
-import { Typed } from "@delisp/core";
 import * as React from "react";
 
+import { Extended } from "./common";
 import styles from "./Definition.module.css";
 import { ExpressionExplorer } from "./Expression";
 import { DetailedFunctionExplorer } from "./Function";
@@ -9,13 +9,13 @@ import { TypeContext, TypeExplorer } from "./Type";
 import { Cursor } from "./utils/Cursor";
 
 const DefinitionValueExplorer: React.FC<{
-  cursor: Cursor<Delisp.Expression<Typed>>;
+  cursor: Cursor<Delisp.Expression<Extended>>;
 }> = ({ cursor }) => {
   const value = cursor.value;
   if (value.node.tag === "function") {
     return (
       <DetailedFunctionExplorer
-        cursor={cursor as Cursor<Delisp.SFunction<Typed>>}
+        cursor={cursor as Cursor<Delisp.SFunction<Extended>>}
       />
     );
   } else {
@@ -24,21 +24,21 @@ const DefinitionValueExplorer: React.FC<{
 };
 
 const DefinitionValueKindExplorer: React.FC<{
-  value: Delisp.Expression<Typed>;
+  value: Delisp.Expression<Extended>;
 }> = ({ value }) => {
   if (value.node.tag === "function") {
     return <span>λ</span>;
   } else {
     return (
       <TypeContext.Provider value={{ containerType: value.info.selfType }}>
-        <TypeExplorer type={value.info.selfType} />
+        {value.info.selfType && <TypeExplorer type={value.info.selfType} />}
       </TypeContext.Provider>
     );
   }
 };
 
 export const DefinitionExplorer: React.FC<{
-  cursor: Cursor<Delisp.SDefinition<Typed>>;
+  cursor: Cursor<Delisp.SDefinition<Extended>>;
 }> = ({ cursor }) => {
   const definition = cursor.value;
   return (

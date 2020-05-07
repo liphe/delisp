@@ -1,7 +1,7 @@
 import * as Delisp from "@delisp/core";
-import { Typed } from "@delisp/core";
 import * as React from "react";
 
+import { Extended } from "./common";
 import { Indent, Keyword, SExprList } from "./common";
 import { ExpressionExplorer } from "./Expression";
 import styles from "./Let.module.css";
@@ -9,7 +9,7 @@ import { Cursor } from "./utils/Cursor";
 
 interface BindingProps {
   variable: Cursor<Delisp.Identifier>;
-  value: Cursor<Delisp.Expression<Typed>>;
+  value: Cursor<Delisp.Expression<Extended>>;
   onDelete: () => void;
 }
 
@@ -23,7 +23,7 @@ const Binding: React.FC<BindingProps> = ({ variable, value, onDelete }) => {
 };
 
 export const LetExplorer: React.FC<{
-  cursor: Cursor<Delisp.SLet<Typed>>;
+  cursor: Cursor<Delisp.SLet<Extended>>;
 }> = ({ cursor }) => {
   const bindings = cursor.prop("node").prop("bindings");
   const bodyCursor = cursor.prop("node").prop("body");

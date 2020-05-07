@@ -1,14 +1,14 @@
 import * as Delisp from "@delisp/core";
-import { Typed } from "@delisp/core";
 import * as React from "react";
 
+import { Extended } from "./common";
 import { Indent, Keyword, SExprList } from "./common";
 import { ExpressionExplorer } from "./Expression";
 import { IdentifierExplorer } from "./Identifier";
 import { Cursor } from "./utils/Cursor";
 
 export const MultipleValueBindExplorer: React.FC<{
-  cursor: Cursor<Delisp.SMultipleValueBind<Typed>>;
+  cursor: Cursor<Delisp.SMultipleValueBind<Extended>>;
 }> = ({ cursor }) => {
   return (
     <SExprList>

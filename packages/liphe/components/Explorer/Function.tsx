@@ -1,7 +1,7 @@
 import * as Delisp from "@delisp/core";
-import { Typed } from "@delisp/core";
 import * as React from "react";
 
+import { Extended } from "./common";
 import { Indent, Keyword, SExprList } from "./common";
 import { ExpressionExplorer } from "./Expression";
 import styles from "./Function.module.css";
@@ -22,15 +22,15 @@ export const FunctionInfoSection: React.FC<{ label: string }> = ({
 };
 
 export const DetailedFunctionExplorer: React.FC<{
-  cursor: Cursor<Delisp.SFunction<Typed>>;
+  cursor: Cursor<Delisp.SFunction<Extended>>;
 }> = ({ cursor }) => {
   const fn = cursor.value;
   const selfType = fn.info.selfType;
-  if (!Delisp.isFunctionType(selfType)) {
+  if (selfType && !Delisp.isFunctionType(selfType)) {
     throw new Error("The type of a function is not a function type??");
   }
 
-  const typeParts = analyzeFunctionType(selfType, selfType);
+  const typeParts = selfType && analyzeFunctionType(selfType, selfType);
 
   const bodyCursor = cursor.prop("node").prop("body");
   const argsCursor = Cursor.slice(
@@ -40,14 +40,14 @@ export const DetailedFunctionExplorer: React.FC<{
 
   return (
     <div className={styles.function}>
-      {typeParts.context && (
+      {typeParts?.context && (
         <FunctionInfoSection label="*context*">
           <TypeExplorer type={typeParts.context} />
         </FunctionInfoSection>
       )}
 
       <FunctionInfoSection label="Arguments:">
-        {!typeParts.args ? (
+        {!typeParts?.args ? (
           "None"
         ) : (
           <ul className={styles.functionArguments}>
@@ -64,7 +64,7 @@ export const DetailedFunctionExplorer: React.FC<{
       </FunctionInfoSection>
 
       <FunctionInfoSection label="Output:">
-        {!typeParts.outputs ? (
+        {!typeParts?.outputs ? (
           "None"
         ) : (
           <ul>
@@ -86,7 +86,7 @@ export const DetailedFunctionExplorer: React.FC<{
       </FunctionInfoSection>
 
       <FunctionInfoSection label="Effect:">
-        {!typeParts.effects ? (
+        {!typeParts?.effects ? (
           "None"
         ) : (
           <ul>
@@ -123,7 +123,7 @@ export const DetailedFunctionExplorer: React.FC<{
 };
 
 export const FunctionExplorer: React.FC<{
-  cursor: Cursor<Delisp.SFunction<Typed>>;
+  cursor: Cursor<Delisp.SFunction<Extended>>;
 }> = ({ cursor }) => {
   const bodyCursor = cursor.prop("node").prop("body");
   const argsCursor = Cursor.slice(

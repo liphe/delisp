@@ -1,14 +1,14 @@
 import * as Delisp from "@delisp/core";
-import { Typed } from "@delisp/core";
 import * as React from "react";
 
+import { Extended } from "./common";
 import { Context, Keyword, SExprList } from "./common";
 import { ExpressionExplorer } from "./Expression";
 import { TypeExplorer } from "./Type";
 import { Cursor } from "./utils/Cursor";
 
 export const TypeAnnotationExplorer: React.FC<{
-  cursor: Cursor<Delisp.STypeAnnotation<Typed>>;
+  cursor: Cursor<Delisp.STypeAnnotation<Extended>>;
 }> = ({ cursor }) => {
   const noNormalizer = (x: Delisp.T.Var) => x.node.name;
   return (

@@ -1,11 +1,11 @@
 import * as Delisp from "@delisp/core";
-import { Typed } from "@delisp/core";
 import * as React from "react";
 
+import { Extended } from "./common";
 import { Cursor } from "./utils/Cursor";
 
 export const NumberExplorer: React.FC<{
-  cursor: Cursor<Delisp.SNumber<Typed>>;
+  cursor: Cursor<Delisp.SNumber<Extended>>;
 }> = ({ cursor }) => {
   const n = cursor.value.node.value;
   const inc = () =>

@@ -1,4 +1,5 @@
 import * as Delisp from "@delisp/core";
+import { Scoped, Typed } from "@delisp/core";
 import classnames from "classnames/bind";
 import * as React from "react";
 import { useContext } from "react";
@@ -6,6 +7,8 @@ import { useContext } from "react";
 import styles from "./common.module.css";
 
 const cn = classnames.bind(styles);
+
+export type Extended = Partial<Scoped & Typed>;
 
 export const Context = React.createContext<
   ReturnType<typeof Delisp.createVariableNormalizer>
