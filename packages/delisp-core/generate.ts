@@ -1,12 +1,19 @@
 // import * as ts from "typescript";
 import { ASExpr } from "./src/sexpr";
-import { readAllFromString } from "./src/reader";
+import { readAllFromString, readFromString } from "./src/reader";
 
 const example = `
 (define String {:value string})
 (define Number {:value number})
 (define Vector {:elements [Expression] })
 (define Expression String Number Vector)
+
+(define Identifier {:name string})
+(define Definition {:name Identifier :value Expression})
+`;
+
+const meta = `
+{:type string}
 `;
 
 const getKeywordName = (keyword: string): string => {
@@ -36,14 +43,19 @@ const generateTSType = (type: ASExpr): string => {
   }
 };
 
-const generateTSObject = (type: ASExpr, tagName?: string): string => {
+const generateTSObject = (
+  type: ASExpr,
+  tagName?: string,
+  metaDef?: ASExpr
+): string => {
   if (type.tag !== "map") {
     throw new Error("");
   }
 
   const tag = tagName ? `tag: "${tagName}", ` : "";
+  const meta = metaDef ? `meta: ${generateTSType(metaDef)}, ` : "";
 
-  return `{ ${tag}${type.fields
+  return `{ ${tag}${meta}${type.fields
     .map(
       (field) =>
         `${getKeywordName(field.label.name)}: ${generateTSType(field.value)}`
@@ -51,7 +63,10 @@ const generateTSObject = (type: ASExpr, tagName?: string): string => {
     .join(",\n")} }`;
 };
 
-const generateTSDefinitions = (declarations: ASExpr[]): string => {
+const generateTSDefinitions = (
+  declarations: ASExpr[],
+  meta: ASExpr
+): string => {
   return declarations
     .map((decl) => {
       if (decl.tag !== "list") {
@@ -67,10 +82,9 @@ const generateTSDefinitions = (declarations: ASExpr[]): string => {
         case "define":
           const name = getSymbolName(args[0]);
           const def = args.slice(1);
-
           if (def.length === 1) {
             return `interface ${name} ${def.map((a) =>
-              generateTSObject(a, name)
+              generateTSObject(a, name, meta)
             )}`;
           } else {
             return `type ${name} = ${def
@@ -86,4 +100,6 @@ const generateTSDefinitions = (declarations: ASExpr[]): string => {
 
 // console.dir(readAllFromString("(foo 1 2)"), { depth: null });
 
-console.log(generateTSDefinitions(readAllFromString(example)));
+console.log(
+  generateTSDefinitions(readAllFromString(example), readFromString(meta))
+);
