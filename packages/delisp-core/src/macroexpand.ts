@@ -38,7 +38,7 @@ function macroexpandLambda(lambda: S.SFunction): S.Expression {
     node: {
       tag: "function",
       lambdaList: {
-        tag: "function-lambda-list",
+        tag: "lambdaList",
         positionalArguments: [
           { tag: "identifier", name: "*context*", location: lambda.location },
           ...lambdaList.positionalArguments,

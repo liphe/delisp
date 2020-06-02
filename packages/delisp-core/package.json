@@ -4,9 +4,10 @@
   "main": "dist/src/index.js",
   "license": "MIT",
   "scripts": {
-    "build": "tsc --build tsconfig.json",
+    "build": "yarn run generate-syntax && tsc --build tsconfig.json",
     "build:all": "tsc --build tsconfig.all.json",
-    "test": "jest"
+    "test": "jest",
+    "generate-syntax": "ts-node ./generate-syntax.ts"
   },
   "files": [
     "dist/"
