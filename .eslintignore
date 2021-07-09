@@ -3,3 +3,5 @@ dist
 *fixtures*
 dist-test
 dist-ts
+
+*-generated.ts

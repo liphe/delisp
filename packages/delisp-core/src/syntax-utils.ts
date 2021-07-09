@@ -275,7 +275,7 @@ export function wrapInLambda(e: S.Expression): S.Expression {
     node: {
       tag: "function",
       lambdaList: {
-        tag: "function-lambda-list",
+        tag: "lambdaList",
         positionalArguments: [],
         location: e.location,
       },

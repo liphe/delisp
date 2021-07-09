@@ -10,3 +10,4 @@ dist-ts/
 .netlify
 
 .log/
+/packages/delisp-core/src/syntax-generated.ts

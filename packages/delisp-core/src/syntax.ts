@@ -3,37 +3,23 @@
 //
 
 import { Location } from "./input";
-import { TypeWithWildcards } from "./type-wildcards";
-import { Type } from "./types";
-
 //
 // Expressions
 //
+import {
+  Identifier,
+  LambdaList,
+  SBooleanF,
+  SConditionalF,
+  SFunctionF,
+  SNoneF,
+  SNumberF,
+  SStringF,
+} from "./syntax-generated";
+import { TypeWithWildcards } from "./type-wildcards";
+import { Type } from "./types";
 
-interface SNumberF {
-  tag: "number";
-  value: number;
-}
-
-interface SStringF {
-  tag: "string";
-  value: string;
-}
-
-interface SBooleanF {
-  tag: "boolean";
-  value: boolean;
-}
-
-interface SNoneF {
-  tag: "none";
-}
-
-export interface Identifier {
-  tag: "identifier";
-  name: SVar;
-  location: Location;
-}
+export { Identifier, LambdaList };
 
 type SVar = string;
 interface SVariableReferenceF {
@@ -45,13 +31,6 @@ interface SVariableReferenceF {
   closedFunctionEffect?: Type;
 }
 
-interface SConditionalF<E> {
-  tag: "conditional";
-  condition: E;
-  consequent: E;
-  alternative: E;
-}
-
 interface SFunctionCallF<E> {
   tag: "function-call";
   fn: E;
@@ -60,20 +39,6 @@ interface SFunctionCallF<E> {
   // language.
   closedFunctionEffect?: Type;
   arguments: E[];
-}
-
-export interface LambdaList {
-  tag: "function-lambda-list";
-  // The positional arguments for the lambda-list. This is
-  // internal.
-  positionalArguments: Identifier[];
-  location: Location;
-}
-
-interface SFunctionF<E> {
-  tag: "function";
-  lambdaList: LambdaList;
-  body: E[];
 }
 
 interface SVectorConstructorF<E> {
@@ -159,10 +124,10 @@ interface SUnknownF<_E> {
 }
 
 type AnyExpressionF<I = {}, E = Expression<I>> =
-  | SNumberF
-  | SStringF
-  | SBooleanF
-  | SNoneF
+  | SNumberF<E>
+  | SStringF<E>
+  | SBooleanF<E>
+  | SNoneF<E>
   | SVariableReferenceF
   | SConditionalF<E>
   | SFunctionCallF<E>
@@ -193,10 +158,10 @@ export interface Expression<I = {}>
 export interface SVariableReference<I = {}>
   extends Node<I, SVariableReferenceF> {}
 
-export interface SNumber<I = {}> extends Node<I, SNumberF> {}
-export interface SString<I = {}> extends Node<I, SStringF> {}
-export interface SBoolean<I = {}> extends Node<I, SBooleanF> {}
-export interface SNone<I = {}> extends Node<I, SNoneF> {}
+export interface SNumber<I = {}> extends Node<I, SNumberF<Expression<I>>> {}
+export interface SString<I = {}> extends Node<I, SStringF<Expression<I>>> {}
+export interface SBoolean<I = {}> extends Node<I, SBooleanF<Expression<I>>> {}
+export interface SNone<I = {}> extends Node<I, SNoneF<Expression<I>>> {}
 
 export interface SConditional<I = {}>
   extends Node<I, SConditionalF<Expression<I>>> {}

@@ -129,7 +129,7 @@ function parseLambdaList(ll: ASExpr): S.LambdaList {
   });
 
   return {
-    tag: "function-lambda-list",
+    tag: "lambdaList",
     positionalArguments: symbols.map(parseIdentifier),
     location: ll.location,
   };
