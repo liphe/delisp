@@ -22,6 +22,6 @@
     "@types/react": "^16.8.17",
     "@types/react-dom": "^16.8.4",
     "@types/styled-components": "4.1.8",
-    "next": "^9.3.4"
+    "next": "^12.1.0"
   }
 }
